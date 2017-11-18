@@ -15,7 +15,7 @@ class Editor {
         this.element.appendChild(this._canvas);
         this._highlighter = new Highlighter(this.model);
         this.element.addEventListener('wheel', this._onWheel.bind(this), true);
-        this._scrollTop = 0;
+        this._scrollTop = 4000;
         this._scrolLeft = 0;
         this._refreshScheduled = false;
         this._highlighter.on('highlight', ({from, to}) => {
@@ -32,24 +32,16 @@ class Editor {
         this._scrollTop = Math.max(
             Math.min(
                 this._scrollTop + event.deltaY,
-                this.model.lineCount() * this._lineHeight - (this._options.padBottom ? this._lineHeight : this.height)),
+                this.model.lineCount() * this._lineHeight - (this._options.padBottom ? this._lineHeight : this._height)),
             0);
         this._scrolLeft = Math.max(
             Math.min(
                 this._scrolLeft + event.deltaX,
-                this.model.longestLineLength() * this._charWidth - this.width),
+                this.model.longestLineLength() * this._charWidth - this._width),
             0);
         event.preventDefault();
         // TODO partial refresh
         this.scheduleRefresh();
-    }
-
-    get width() {
-        return this._canvas.width / window.devicePixelRatio;
-    }
-
-    get height() {
-        return this._canvas.height / window.devicePixelRatio;
     }
 
     refresh() {
@@ -61,7 +53,7 @@ class Editor {
     viewport() {
         return {
             from: this._lineForOffset(this._scrollTop),
-            to: Math.min(this.model.lineCount() -1, this._lineForOffset(this._scrollTop + this.height))
+            to: Math.min(this.model.lineCount() -1, this._lineForOffset(this._scrollTop + this._height))
         };
     }
 
@@ -90,14 +82,14 @@ class Editor {
             throw new Error('Must call layout() before draw()');
         var start = performance.now();
         ctx.fillStyle = this._backgroundColor;
-        ctx.fillRect(0,0,this.width, this.height);
+        ctx.fillRect(0,0,this._width, this._height);
         var viewport = this.viewport();
         var lineNumbersWidth = this._lineNumbersWidth();
         for (var i = viewport.from; i <= viewport.to; i++) {
             var x = 0;
             for (var token of this._highlighter.tokensForLine(i)) {
                 var width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
-                if (x + width > this._scrolLeft && x < this.width) {
+                if (x + width > this._scrolLeft && x - this._scrolLeft < this._width) {
                     ctx.fillStyle = token.color;
                     ctx.fillText(token.text, x + lineNumbersWidth + 4 - this._scrolLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
                 }
@@ -113,7 +105,7 @@ class Editor {
     }
 
     _lineNumbersWidth() {
-        return Math.max(this._charWidth * Math.floor(Math.log10(this.model.lineCount())) + 4, 22);
+        return Math.max(this._charWidth * Math.ceil(Math.log10(this.model.lineCount())) + 4, 22);
     }
 
     /**
@@ -122,9 +114,9 @@ class Editor {
     _drawLineNumbers(ctx) {
         var width = this._lineNumbersWidth();
         ctx.fillStyle = '#eeeeee';
-        ctx.fillRect(0, 0, width, this.height);
+        ctx.fillRect(0, 0, width, this._height);
         ctx.fillStyle = '#bbbbbb';
-        ctx.fillRect(width - 1, 0, 1, this.height);
+        ctx.fillRect(width - 1, 0, 1, this._height);
 
         ctx.fillStyle = 'rgb(128, 128, 128)';
         var {from, to} = this.viewport();
@@ -137,6 +129,8 @@ class Editor {
         var rect = this.element.getBoundingClientRect();
         this._canvas.width = rect.width * window.devicePixelRatio;
         this._canvas.height = rect.height * window.devicePixelRatio;
+        this._width = rect.width;
+        this._height = rect.height;
         this._canvas.style.width = rect.width + 'px';
         this._canvas.style.height = rect.height + 'px';
         this._ctx.scale(window.devicePixelRatio, window.devicePixelRatio);

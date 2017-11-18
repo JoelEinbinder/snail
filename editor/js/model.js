@@ -15,6 +15,22 @@ class Model extends Emitter {
         return this._longestLineLength;
     }
 
+    /**
+     * @param {number} from
+     * @param {number} to
+     * @return {number}
+     */
+    charCountForLines(from, to) {
+        var total = 0;
+        for (var i = from; i <= to; i++)
+            total += this._lines[i].length;
+        return total;
+    }
+
+    /**
+     * @param {number} i
+     * @return {string}
+     */
     line(i) {
         return this._lines[i];
     }

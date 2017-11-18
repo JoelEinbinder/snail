@@ -34,7 +34,9 @@ class Highlighter extends Emitter {
         this._tokenizeTimeout = setTimeout(() => {
             this._tokenizeTimeout = 0;
             var from = this._lines.length;
-            this._tokenizeUpTo(Math.min(this._lines.length + 100, this._requestLineNumber));
+            var start = Date.now();
+            while (this._lines.length <= this._requestLineNumber && Date.now() - start < 10)
+              this._tokenizeUpTo(this._lines.length);
             this._requestTokenizeUpTo(this._requestLineNumber);
             this.emit('highlight', {from, to: this._lines.length });
         }, 100);
@@ -45,7 +47,7 @@ class Highlighter extends Emitter {
      * @param {number=} max
      */
     _tokenizeUpTo(lineNumber, max) {
-        if (max && lineNumber - this._lines.length > max) {
+        if (max && this._model.charCountForLines(this._lines.length, lineNumber) > max) {
             this._requestTokenizeUpTo(lineNumber);
             return;
         }
@@ -96,7 +98,7 @@ class Highlighter extends Emitter {
      * @return {Array<Token>}
      */
     tokensForLine(lineNumber) {
-        this._tokenizeUpTo(lineNumber, 1000);
+        this._tokenizeUpTo(lineNumber, 10000);
         if (this._lines[lineNumber]) {
             return this._lines[lineNumber].tokens;
         }
