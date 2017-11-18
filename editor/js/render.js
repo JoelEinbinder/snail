@@ -89,7 +89,7 @@ class Editor {
         this._ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
         this._ctx.font = window.getComputedStyle(this._canvas).font;
         this._charHeight = parseInt(window.getComputedStyle(this._canvas).fontSize);
-        this._lineHeight = parseInt(window.getComputedStyle(this._canvas).lineHeight);
+        this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._canvas).lineHeight), this._charHeight);
         this._charWidth = this._ctx.measureText('x').width;
         this.refresh();
     }
