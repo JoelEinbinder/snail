@@ -1,14 +1,17 @@
 class Editor {
     /**
      * @param {Model} model
+     * @param {Editor.Options=} options
      */
-    constructor(model) {
+    constructor(model, options = {}) {
+        this.model = model;
+        this._options = options;
+
         this.element = document.createElement('div');
         this.element.className = 'editor';
         this._canvas = document.createElement('canvas');
         this._ctx = this._canvas.getContext('2d');
         this.element.appendChild(this._canvas);
-        this.model = model;
         this._highlighter = new Highlighter(this.model);
         this.element.addEventListener('wheel', this._onWheel.bind(this), true);
         this._scrollTop = 0;
@@ -25,8 +28,16 @@ class Editor {
      * @param {WheelEvent} event
      */
     _onWheel(event) {
-        this._scrollTop = Math.max(Math.min(this._scrollTop + event.deltaY, this.model.lineCount() * this._lineHeight - this._lineHeight), 0);
-        this._scrolLeft = Math.max(Math.min(this._scrolLeft + event.deltaX, this.model.longestLineLength() * this._charWidth - this.width), 0);
+        this._scrollTop = Math.max(
+            Math.min(
+                this._scrollTop + event.deltaY,
+                this.model.lineCount() * this._lineHeight - (this._options.padBottom ? this._lineHeight : this.height)),
+            0);
+        this._scrolLeft = Math.max(
+            Math.min(
+                this._scrolLeft + event.deltaX,
+                this.model.longestLineLength() * this._charWidth - this.width),
+            0);
         event.preventDefault();
         this.scheduleRefresh();
     }
@@ -107,3 +118,8 @@ class Editor {
         this.refresh();
     }
 }
+
+/**
+ * @typedef {Object} Editor.Options
+ * @property {boolean=} padBottom
+ */

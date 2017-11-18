@@ -11,9 +11,9 @@
         <script src="js/render.js"></script>
         <script>
             async function go() {
-                var content = await (await fetch('text/medium.js')).text();
+                var content = await (await fetch('js/render.js')).text();
 
-                var editor = new Editor(new Model(content.repeat(100)));
+                var editor = new Editor(new Model(content.repeat(1)), {padBottom: true});
                 document.body.appendChild(editor.element);
                 editor.layout();
                 window.addEventListener('resize', event => editor.layout(), false);
