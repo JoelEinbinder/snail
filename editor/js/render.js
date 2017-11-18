@@ -107,13 +107,3 @@ class Editor {
         this.refresh();
     }
 }
-
-async function go() {
-    var content = await (await fetch('text/medium.js')).text();
-
-    var editor = new Editor(new Model(content.repeat(100)));
-    document.body.appendChild(editor.element);
-    editor.layout();
-    window.addEventListener('resize', event => editor.layout(), false);
-}
-go();
