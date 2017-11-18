@@ -19,6 +19,7 @@ class Editor {
         this._scrollLeft = 0;
         this._padding = 4;
         this._refreshScheduled = false;
+        this._savedViewport = {x: 0, y: 0, width: 0, height: 0};
         this._highlighter.on('highlight', ({from, to}) => {
             var viewport = this.viewport();
             if (viewport.from <= to && from <= viewport.to)
@@ -88,17 +89,18 @@ class Editor {
         var start = performance.now();
         ctx.fillStyle = this._backgroundColor;
         ctx.fillRect(0,0,this._width, this._height);
+        var screenRect = {x: 0, y: 0, width: this._width, height: this._height};
         var viewport = this.viewport();
         var lineNumbersWidth = this._lineNumbersWidth();
         for (var i = viewport.from; i <= viewport.to; i++) {
-            var x = 0;
+            var rect = {x: lineNumbersWidth + this._padding - this._scrollLeft, y: i*this._lineHeight - this._scrollTop, width: 0, height: this._lineHeight};
             for (var token of this._highlighter.tokensForLine(i)) {
-                var width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
-                if (x + width > this._scrollLeft && x - this._scrollLeft < this._width) {
+                rect.width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
+                if (intersects(rect, screenRect)) {
                     ctx.fillStyle = token.color;
-                    ctx.fillText(token.text, x + lineNumbersWidth + this._padding - this._scrollLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
+                    ctx.fillText(token.text, rect.x, rect.y + this._charHeight );
                 }
-                x += width;
+                rect.x += rect.width;
             }
         }
 
@@ -155,3 +157,20 @@ class Editor {
  * @property {boolean=} padBottom
  * @property {boolean=} lineNumbers
  */
+
+/**
+ * @typedef {Object} Rect
+ * @property {number} x
+ * @property {number} y
+ * @property {number} width
+ * @property {number} height
+ */
+
+/**
+ * @param {Rect} a
+ * @param {Rect} b
+ * @return {boolean}
+ */
+function intersects(a, b) {
+    return a.x + a.width > b.x && b.x + b.width > a.x && a.y + a.height > b.y && b.y + b.height > a.y;
+}
