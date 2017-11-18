@@ -93,7 +93,7 @@ class Editor {
         for (var i = viewport.from; i <= viewport.to; i++) {
             var x = 0;
             for (var token of this._highlighter.tokensForLine(i)) {
-                var width = ctx.measureText(token.text).width
+                var width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
                 if (x + width > this._scrolLeft && x < this.width) {
                     ctx.fillStyle = token.color;
                     ctx.fillText(token.text, x + lineNumbersWidth + 4 - this._scrolLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
@@ -105,11 +105,12 @@ class Editor {
         if (this._options.lineNumbers)
             this._drawLineNumbers(ctx);
 
+        document.title = String(Math.round(1000 / (performance.now() - start)));
         console.log("frame", performance.now() - start);
     }
 
     _lineNumbersWidth() {
-        return Math.max(this._charWidth * Math.floor(Math.log(this.model.lineCount())) + 4, 22);
+        return Math.max(this._charWidth * Math.floor(Math.log10(this.model.lineCount())) + 4, 22);
     }
 
     /**

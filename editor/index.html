@@ -11,7 +11,7 @@
         <script src="js/render.js"></script>
         <script>
             async function go() {
-                var content = await (await fetch('js/render.js')).text();
+                var content = await (await fetch('node_modules/typescript/lib/tsc.js')).text();
 
                 var editor = new Editor(new Model(content.repeat(1)), {padBottom: true, lineNumbers: true});
                 document.body.appendChild(editor.element);
