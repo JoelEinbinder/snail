@@ -1,16 +1,18 @@
 /** @typedef {{text :string, color: string}} Token */
 
-class Highlighter {
+class Highlighter extends Emitter {
     /**
      * @param {Model} model
      */
     constructor(model) {
+        super();
         this._model = model;
         this._mode = javascriptMode({indentUnit: 2}, {});
         /** @type {Array<{state: any, tokens: Array<Token>>} */
         this._lines = [];
         this._defaultColor = '#222';
-
+        this._requestLineNumber = 0;
+        this._tokenizeTimeout = 0;
         this._colors = [
             ['keyword', "hsl(310, 86%, 36%)"],
             ['number', "hsl(248, 100%, 41%)"],
@@ -25,13 +27,28 @@ class Highlighter {
         ]
     }
 
+    _requestTokenizeUpTo(lineNumber) {
+        this._requestLineNumber = Math.max(lineNumber, this._requestLineNumber);
+        if (this._tokenizeTimeout)
+            return;
+        this._tokenizeTimeout = setTimeout(() => {
+            this._tokenizeTimeout = 0;
+            var from = this._lines.length;
+            this._tokenizeUpTo(Math.min(this._lines.length + 100, this._requestLineNumber));
+            this._requestTokenizeUpTo(this._requestLineNumber);
+            this.emit('highlight', {from, to: this._lines.length });
+        }, 100);
+    }
+
     /**
      * @param {number} lineNumber
      * @param {number=} max
      */
     _tokenizeUpTo(lineNumber, max) {
-        if (max && lineNumber - this._lines.length > max)
+        if (max && lineNumber - this._lines.length > max) {
+            this._requestTokenizeUpTo(lineNumber);
             return;
+        }
         var state = this._lines.length ? this._lines[this._lines.length - 1].state : this._mode.startState();
         for (var i = this._lines.length; i <= lineNumber; i++) {
             var tokens = [];
@@ -89,13 +106,7 @@ class Highlighter {
         // default
         var text = this._model.line(lineNumber);
         var color = this._defaultColor;
-        return [text, color];
-        var retVal = [];
-        for (var i = 0; i < line.length; i+=4) {
-            var color = i % 8 ? '#F00' : '#00F';
-            retVal.push({text: line.substring(i, i+4), color});
-        }
-        return retVal;
+        return [{text, color}];
     }
 }
 

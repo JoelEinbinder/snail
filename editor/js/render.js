@@ -14,6 +14,11 @@ class Editor {
         this._scrollTop = 0;
         this._scrolLeft = 0;
         this._refreshScheduled = false;
+        this._highlighter.on('highlight', ({from, to}) => {
+            var viewport = this.viewport();
+            if (viewport.from <= to && from <= viewport.to)
+                this.scheduleRefresh();
+        });
     }
 
     /**
@@ -38,6 +43,13 @@ class Editor {
         this._ctx.save();
         this.draw(this._ctx);
         this._ctx.restore();
+    }
+
+    viewport() {
+        return {
+            from: this._lineForOffset(this._scrollTop),
+            to: Math.min(this.model.lineCount() -1, this._lineForOffset(this._scrollTop + this.height))
+        };
     }
 
     scheduleRefresh() {
@@ -65,7 +77,8 @@ class Editor {
             throw new Error('Must call layout() before draw()');
         var start = performance.now();
         ctx.clearRect(0,0,this.width, this.height);
-        for (var i = this._lineForOffset(this._scrollTop); i < this.model.lineCount() && i * this._lineHeight - this._scrollTop < this.height; i++) {
+        var viewport = this.viewport();
+        for (var i = viewport.from; i <= viewport.to; i++) {
             var x = 0;
             for (var token of this._highlighter.tokensForLine(i)) {
                 var width = ctx.measureText(token.text).width
