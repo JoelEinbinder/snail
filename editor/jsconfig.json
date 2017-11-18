@@ -5,6 +5,7 @@
         "target": "ES2017"
     },
     "include": [
-        "js"
+        "js",
+        "modes"
     ]
 }
