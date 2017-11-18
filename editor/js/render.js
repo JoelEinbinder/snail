@@ -15,8 +15,9 @@ class Editor {
         this.element.appendChild(this._canvas);
         this._highlighter = new Highlighter(this.model);
         this.element.addEventListener('wheel', this._onWheel.bind(this), true);
-        this._scrollTop = 4000;
+        this._scrollTop = 0;
         this._scrollLeft = 0;
+        this._padding = 4;
         this._refreshScheduled = false;
         this._highlighter.on('highlight', ({from, to}) => {
             var viewport = this.viewport();
@@ -37,11 +38,15 @@ class Editor {
         this._scrollLeft = Math.max(
             Math.min(
                 this._scrollLeft + event.deltaX,
-                this.model.longestLineLength() * this._charWidth - this._width),
+                this._innerWidth() - this._width),
             0);
         event.preventDefault();
         // TODO partial refresh
         this.scheduleRefresh();
+    }
+
+    _innerWidth() {
+        return this._lineNumbersWidth() + this.model.longestLineLength() * this._charWidth + this._padding * 2;
     }
 
     refresh() {
@@ -91,7 +96,7 @@ class Editor {
                 var width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
                 if (x + width > this._scrollLeft && x - this._scrollLeft < this._width) {
                     ctx.fillStyle = token.color;
-                    ctx.fillText(token.text, x + lineNumbersWidth + 4 - this._scrollLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
+                    ctx.fillText(token.text, x + lineNumbersWidth + this._padding - this._scrollLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
                 }
                 x += width;
             }
@@ -107,7 +112,7 @@ class Editor {
     _lineNumbersWidth() {
         if (!this._options.lineNumbers)
             return 0;
-        return Math.max(this._charWidth * Math.ceil(Math.log10(this.model.lineCount())) + 4, 22);
+        return Math.max(this._charWidth * Math.ceil(Math.log10(this.model.lineCount())) + this._padding * 2, 22);
     }
 
     /**
@@ -123,7 +128,7 @@ class Editor {
         ctx.fillStyle = 'rgb(128, 128, 128)';
         var {from, to} = this.viewport();
         for (var i = from; i <= to; i++) {
-            ctx.fillText(String(i+1), width - ctx.measureText(String(i+1)).width - 4, i*this._lineHeight + this._charHeight - this._scrollTop);
+            ctx.fillText(String(i+1), width - ctx.measureText(String(i+1)).width - this._padding, i*this._lineHeight + this._charHeight - this._scrollTop);
         }
     }
 
