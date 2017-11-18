@@ -25,10 +25,10 @@ class Editor {
      * @param {WheelEvent} event
      */
     _onWheel(event) {
-        this._scrollTop = Math.max(Math.min(this._scrollTop + event.deltaY, this.model.lineCount() * this._lineHeight), 0);
+        this._scrollTop = Math.max(Math.min(this._scrollTop + event.deltaY, this.model.lineCount() * this._lineHeight - this._lineHeight), 0);
+        this._scrolLeft = Math.max(Math.min(this._scrolLeft + event.deltaX, this.model.longestLineLength() * this._charWidth - this.width), 0);
         event.preventDefault();
-        // this.scheduleRefresh();
-        this.refresh();
+        this.scheduleRefresh();
     }
 
     get width() {
@@ -84,7 +84,7 @@ class Editor {
                 var width = ctx.measureText(token.text).width
                 if (x + width > this._scrolLeft && x < this.width) {
                     ctx.fillStyle = token.color;
-                    ctx.fillText(token.text, x, i*this._lineHeight + this._charHeight - this._scrollTop );
+                    ctx.fillText(token.text, x - this._scrolLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
                 }
                 x += width;
             }
