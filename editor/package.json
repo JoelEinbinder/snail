@@ -1,0 +1,15 @@
+{
+  "name": "editor",
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^2.6.1"
+  },
+  "scripts": {
+    "lint": "tsc -p .",
+    "test": "npm run lint"
+  },
+  "author": "",
+  "license": "ISC"
+}

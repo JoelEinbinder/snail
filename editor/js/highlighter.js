@@ -8,7 +8,7 @@ class Highlighter extends Emitter {
         super();
         this._model = model;
         this._mode = javascriptMode({indentUnit: 2}, {});
-        /** @type {Array<{state: any, tokens: Array<Token>>} */
+        /** @type {Array<{state: any, tokens: Array<Token>}>} */
         this._lines = [];
         this._defaultColor = '#222';
         this._requestLineNumber = 0;
@@ -79,15 +79,13 @@ class Highlighter extends Emitter {
      */
     _copyState(state) {
         if (Array.isArray(state))
-            return state.slice(0);
-        if (state === null)
-            return null;
-        if (typeof state === 'object') {
+            return /** @type {T & any[]} */ (state.slice(0));
+        if (typeof state === 'object' && state !== null) {
             var copy = {};
             for (var i in state) {
                 copy[i] = this._copyState(state[i]);
             }
-            return copy;
+            return /** @type {T} */(copy);
         }
 
         return state;
