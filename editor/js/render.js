@@ -16,7 +16,7 @@ class Editor {
         this._highlighter = new Highlighter(this.model);
         this.element.addEventListener('wheel', this._onWheel.bind(this), true);
         this._scrollTop = 4000;
-        this._scrolLeft = 0;
+        this._scrollLeft = 0;
         this._refreshScheduled = false;
         this._highlighter.on('highlight', ({from, to}) => {
             var viewport = this.viewport();
@@ -34,9 +34,9 @@ class Editor {
                 this._scrollTop + event.deltaY,
                 this.model.lineCount() * this._lineHeight - (this._options.padBottom ? this._lineHeight : this._height)),
             0);
-        this._scrolLeft = Math.max(
+        this._scrollLeft = Math.max(
             Math.min(
-                this._scrolLeft + event.deltaX,
+                this._scrollLeft + event.deltaX,
                 this.model.longestLineLength() * this._charWidth - this._width),
             0);
         event.preventDefault();
@@ -89,9 +89,9 @@ class Editor {
             var x = 0;
             for (var token of this._highlighter.tokensForLine(i)) {
                 var width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
-                if (x + width > this._scrolLeft && x - this._scrolLeft < this._width) {
+                if (x + width > this._scrollLeft && x - this._scrollLeft < this._width) {
                     ctx.fillStyle = token.color;
-                    ctx.fillText(token.text, x + lineNumbersWidth + 4 - this._scrolLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
+                    ctx.fillText(token.text, x + lineNumbersWidth + 4 - this._scrollLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
                 }
                 x += width;
             }
@@ -105,6 +105,8 @@ class Editor {
     }
 
     _lineNumbersWidth() {
+        if (!this._options.lineNumbers)
+            return 0;
         return Math.max(this._charWidth * Math.ceil(Math.log10(this.model.lineCount())) + 4, 22);
     }
 

@@ -11,9 +11,9 @@
         <script src="js/render.js"></script>
         <script>
             async function go() {
-                var content = await (await fetch('text/minified.js')).text();
+                var content = await (await fetch('js/highlighter.js')).text();
 
-                var editor = new Editor(new Model(content.repeat(1)), {padBottom: true, lineNumbers: true});
+                var editor = new Editor(new Model(content.repeat(1)), {padBottom: true, lineNumbers: false});
                 document.body.appendChild(editor.element);
                 editor.layout();
                 window.addEventListener('resize', event => editor.layout(), false);
