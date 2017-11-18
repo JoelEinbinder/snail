@@ -10,6 +10,7 @@ class Editor {
         this.element = document.createElement('div');
         this.element.className = 'editor';
         this._canvas = document.createElement('canvas');
+        this._canvas.style.backgroundColor = '#FFF';
         this._ctx = this._canvas.getContext('2d');
         this.element.appendChild(this._canvas);
         this._highlighter = new Highlighter(this.model);
@@ -39,6 +40,7 @@ class Editor {
                 this.model.longestLineLength() * this._charWidth - this.width),
             0);
         event.preventDefault();
+        // TODO partial refresh
         this.scheduleRefresh();
     }
 
@@ -87,7 +89,8 @@ class Editor {
         if (!this._lineHeight || !this._charWidth)
             throw new Error('Must call layout() before draw()');
         var start = performance.now();
-        ctx.clearRect(0,0,this.width, this.height);
+        ctx.fillStyle = this._backgroundColor;
+        ctx.fillRect(0,0,this.width, this.height);
         var viewport = this.viewport();
         var lineNumbersWidth = this._lineNumbersWidth();
         for (var i = viewport.from; i <= viewport.to; i++) {
@@ -138,6 +141,7 @@ class Editor {
         this._canvas.style.height = rect.height + 'px';
         this._ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
         this._ctx.font = window.getComputedStyle(this._canvas).font;
+        this._backgroundColor = window.getComputedStyle(this._canvas).backgroundColor;
         this._charHeight = parseInt(window.getComputedStyle(this._canvas).fontSize);
         this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._canvas).lineHeight), this._charHeight);
         this._charWidth = this._ctx.measureText('x').width;
