@@ -13,7 +13,7 @@
             async function go() {
                 var content = await (await fetch('js/render.js')).text();
 
-                var editor = new Editor(new Model(content.repeat(1)), {padBottom: true});
+                var editor = new Editor(new Model(content.repeat(1)), {padBottom: true, lineNumbers: true});
                 document.body.appendChild(editor.element);
                 editor.layout();
                 window.addEventListener('resize', event => editor.layout(), false);

@@ -89,19 +89,44 @@ class Editor {
         var start = performance.now();
         ctx.clearRect(0,0,this.width, this.height);
         var viewport = this.viewport();
+        var lineNumbersWidth = this._lineNumbersWidth();
         for (var i = viewport.from; i <= viewport.to; i++) {
             var x = 0;
             for (var token of this._highlighter.tokensForLine(i)) {
                 var width = ctx.measureText(token.text).width
                 if (x + width > this._scrolLeft && x < this.width) {
                     ctx.fillStyle = token.color;
-                    ctx.fillText(token.text, x - this._scrolLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
+                    ctx.fillText(token.text, x + lineNumbersWidth + 4 - this._scrolLeft, i*this._lineHeight + this._charHeight - this._scrollTop );
                 }
                 x += width;
             }
         }
 
+        if (this._options.lineNumbers)
+            this._drawLineNumbers(ctx);
+
         console.log("frame", performance.now() - start);
+    }
+
+    _lineNumbersWidth() {
+        return Math.max(this._charWidth * Math.floor(Math.log(this.model.lineCount())) + 4, 22);
+    }
+
+    /**
+     * @param {CanvasRenderingContext2D} ctx
+     */
+    _drawLineNumbers(ctx) {
+        var width = this._lineNumbersWidth();
+        ctx.fillStyle = '#eeeeee';
+        ctx.fillRect(0, 0, width, this.height);
+        ctx.fillStyle = '#bbbbbb';
+        ctx.fillRect(width - 1, 0, 1, this.height);
+
+        ctx.fillStyle = 'rgb(128, 128, 128)';
+        var {from, to} = this.viewport();
+        for (var i = from; i <= to; i++) {
+            ctx.fillText(String(i+1), width - ctx.measureText(String(i+1)).width - 4, i*this._lineHeight + this._charHeight - this._scrollTop);
+        }
     }
 
     layout() {
@@ -122,4 +147,5 @@ class Editor {
 /**
  * @typedef {Object} Editor.Options
  * @property {boolean=} padBottom
+ * @property {boolean=} lineNumbers
  */
