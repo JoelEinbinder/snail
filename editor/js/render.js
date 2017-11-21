@@ -20,11 +20,31 @@ class Editor {
         this._padding = 4;
         this._refreshScheduled = false;
         this._savedViewport = {x: 0, y: 0, width: 0, height: 0};
+        /** @type {Array<Sel>} */
+        this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 0}}];
+
         this._highlighter.on('highlight', ({from, to}) => {
             var viewport = this.viewport();
             if (viewport.from <= to && from <= viewport.to)
                 this.scheduleRefresh();
         });
+        this.element.addEventListener('mousedown', event => {
+            if (event.which === 1)
+                this._setSelectionFromPoint(event.offsetX, event.offsetY);
+        });
+        this.element.addEventListener('mousemove', event => {
+            if (event.which === 1)
+                this._setSelectionFromPoint(event.offsetX, event.offsetY);
+        });
+    }
+
+    _setSelectionFromPoint(offsetX, offsetY) {
+        var x = Math.round((offsetX - this._lineNumbersWidth() - this._padding + this._scrollLeft) / this._charWidth)
+        var y = Math.floor((offsetY + this._scrollTop) / this._lineHeight);
+        var line = Math.max(Math.min(y, this.model.lineCount() - 1), 0);
+        var column = Math.min(x, this.model.line(line).length);
+        this._selections = [{start: {line, column}, end: {line, column}}];
+        this.scheduleRefresh();
     }
 
     /**
@@ -107,6 +127,18 @@ class Editor {
         if (this._options.lineNumbers)
             this._drawLineNumbers(ctx);
 
+        ctx.fillStyle = 'rgb(0,0,0,0.8)';
+        for (var selection of this._selections) {
+            var rect = {
+                x: lineNumbersWidth + this._padding - this._scrollLeft + selection.start.column * this._charWidth,
+                y: selection.start.line * this._lineHeight - this._scrollTop,
+                width: 1.5,
+                height: this._lineHeight
+            };
+            if (intersects(rect, screenRect))
+                ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        }
+
         document.title = String(Math.round(1000 / (performance.now() - start)));
         console.log("frame", performance.now() - start);
     }
@@ -174,3 +206,15 @@ class Editor {
 function intersects(a, b) {
     return a.x + a.width > b.x && b.x + b.width > a.x && a.y + a.height > b.y && b.y + b.height > a.y;
 }
+
+/**
+ * @typedef {Object} Loc
+ * @property {number} column
+ * @property {number} line
+ */
+
+/**
+ * @typedef {Object} Sel
+ * @property {Loc} start
+ * @property {Loc} end
+ */
