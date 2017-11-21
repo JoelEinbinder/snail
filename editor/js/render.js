@@ -20,6 +20,10 @@ class Editor {
         this._padding = 4;
         this._refreshScheduled = false;
         this._savedViewport = {x: 0, y: 0, width: 0, height: 0};
+
+        this._overlayLayer = new Layer(this._drawOverlay.bind(this));
+        this.element.appendChild(this._overlayLayer.canvas);
+
         /** @type {Array<Sel>} */
         this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 0}}];
 
@@ -44,7 +48,8 @@ class Editor {
         var line = Math.max(Math.min(y, this.model.lineCount() - 1), 0);
         var column = Math.min(x, this.model.line(line).length);
         this._selections = [{start: {line, column}, end: {line, column}}];
-        this.scheduleRefresh();
+        this._overlayLayer.invalidate();
+        this._overlayLayer.refresh();
     }
 
     /**
@@ -118,7 +123,7 @@ class Editor {
                 rect.width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
                 if (intersects(rect, screenRect)) {
                     ctx.fillStyle = token.color;
-                    ctx.fillText(token.text, rect.x, rect.y + this._charHeight );
+                    ctx.fillText(token.text, rect.x, rect.y + this._charHeight);
                 }
                 rect.x += rect.width;
             }
@@ -127,20 +132,31 @@ class Editor {
         if (this._options.lineNumbers)
             this._drawLineNumbers(ctx);
 
-        ctx.fillStyle = 'rgb(0,0,0,0.8)';
-        for (var selection of this._selections) {
-            var rect = {
-                x: lineNumbersWidth + this._padding - this._scrollLeft + selection.start.column * this._charWidth,
-                y: selection.start.line * this._lineHeight - this._scrollTop,
-                width: 1.5,
-                height: this._lineHeight
-            };
-            if (intersects(rect, screenRect))
-                ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-        }
+        // this._overlayLayer.refresh();
+        // ctx.drawImage(this._overlayLayer.canvas, 0, 0, this._width, this._height);
 
         document.title = String(Math.round(1000 / (performance.now() - start)));
         console.log("frame", performance.now() - start);
+    }
+
+    /**
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {Array<Rect>} rects
+     */
+    _drawOverlay(ctx, rects) {
+        ctx.clearRect(0, 0, this._width, this._height);
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        var lineNumbersWidth = this._lineNumbersWidth();
+        for (var selection of this._selections) {
+            var rect = {
+                x: lineNumbersWidth + this._padding - this._scrollLeft + selection.start.column * this._charWidth,
+                y: selection.start.line * this._lineHeight - this._scrollTop + (this._lineHeight - this._charHeight)/4 - 1,
+                width: 1.5,
+                height: this._charHeight + 2
+            };
+            if (rects.find(otherRect => intersects(otherRect, rect)))
+                ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        }
     }
 
     _lineNumbersWidth() {
@@ -174,13 +190,71 @@ class Editor {
         this._height = rect.height;
         this._canvas.style.width = rect.width + 'px';
         this._canvas.style.height = rect.height + 'px';
+        this._canvas.style.position = 'absolute';
+        this._canvas.style.top = '0';
+        this._canvas.style.left = '0';
         this._ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
         this._ctx.font = window.getComputedStyle(this._canvas).font;
         this._backgroundColor = window.getComputedStyle(this._canvas).backgroundColor;
         this._charHeight = parseInt(window.getComputedStyle(this._canvas).fontSize);
         this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._canvas).lineHeight), this._charHeight);
         this._charWidth = this._ctx.measureText('x').width;
+        this._overlayLayer.layout(rect.width, rect.height);
         this.refresh();
+    }
+}
+
+class Layer {
+    /**
+     * @param {function(CanvasRenderingContext2D, Array<Rect>)} draw
+     */
+    constructor(draw) {
+        this.canvas = document.createElement('canvas');
+        this._ctx = this.canvas.getContext('2d');
+        this._draw = draw;
+        /** @type {Array<Rect>} */
+        this._rects = [];
+        this._width = 0;
+        this._height = 0;
+    }
+
+    refresh() {
+        if (this._rects.length)
+            this._draw(this._ctx, this._rects);
+        this._rects = [];
+    }
+
+    /**
+     * @param {Rect=} rect
+     */
+    invalidate(rect) {
+        if (!rect) {
+            this._rects = [{x: 0, y: 0, width: this._width, height: this._height}];
+            return;
+        }
+
+        var newRects = [rect];
+        for (var otherRect of this._rects) {
+            if (contains(rect, otherRect))
+                return;
+            if (!contains(otherRect, rect))
+                newRects.push(otherRect);
+        }
+        this._rects = newRects;
+    }
+
+    layout(width, height) {
+        this.canvas.width = width * window.devicePixelRatio;
+        this.canvas.height = height * window.devicePixelRatio;
+        this._width = width;
+        this._height = height;
+        this.canvas.style.width = width + 'px';
+        this.canvas.style.height = height + 'px';
+        this.canvas.style.position = 'absolute';
+        this.canvas.style.top = '0';
+        this.canvas.style.left = '0';
+        this._ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        this.invalidate();
     }
 }
 
@@ -205,6 +279,15 @@ class Editor {
  */
 function intersects(a, b) {
     return a.x + a.width > b.x && b.x + b.width > a.x && a.y + a.height > b.y && b.y + b.height > a.y;
+}
+
+/**
+ * @param {Rect} inside
+ * @param {Rect} outside
+ * @return {boolean}
+ */
+function contains(inside, outside) {
+    return inside.x >= outside.x && inside.x + inside.width <= outside.x + outside.width && inside.y >= outside.y && inside.y + inside.height <= outside.y + outside.height;
 }
 
 /**
