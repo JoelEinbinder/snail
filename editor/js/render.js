@@ -68,6 +68,8 @@ class Editor {
             0);
         event.preventDefault();
         // TODO partial refresh
+        this._overlayLayer.invalidate();
+        this._overlayLayer.refresh();
         this.scheduleRefresh();
     }
 
