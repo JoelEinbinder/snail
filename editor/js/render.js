@@ -9,10 +9,6 @@ class Editor {
 
         this.element = document.createElement('div');
         this.element.className = 'editor';
-        this._canvas = document.createElement('canvas');
-        this._canvas.style.backgroundColor = '#FFF';
-        this._ctx = this._canvas.getContext('2d');
-        this.element.appendChild(this._canvas);
         this._highlighter = new Highlighter(this.model);
         this.element.addEventListener('wheel', this._onWheel.bind(this), true);
         this._scrollTop = 0;
@@ -21,7 +17,12 @@ class Editor {
         this._refreshScheduled = false;
         this._savedViewport = {x: 0, y: 0, width: 0, height: 0};
 
+        this._textLayer = new Layer(this._drawText.bind(this));
         this._overlayLayer = new Layer(this._drawOverlay.bind(this));
+
+        this._textLayer.canvas.style.backgroundColor = '#FFF';
+
+        this.element.appendChild(this._textLayer.canvas);
         this.element.appendChild(this._overlayLayer.canvas);
 
         /** @type {Array<Sel>} */
@@ -69,7 +70,7 @@ class Editor {
         event.preventDefault();
         // TODO partial refresh
         this._overlayLayer.invalidate();
-        this._overlayLayer.refresh();
+        this._textLayer.invalidate();
         this.scheduleRefresh();
     }
 
@@ -78,9 +79,8 @@ class Editor {
     }
 
     refresh() {
-        this._ctx.save();
-        this.draw(this._ctx);
-        this._ctx.restore();
+        this._overlayLayer.refresh();
+        this._textLayer.refresh();
     }
 
     viewport() {
@@ -109,8 +109,9 @@ class Editor {
 
     /**
      * @param {CanvasRenderingContext2D} ctx
+     * @param {Array<Rect>} rects
      */
-    draw(ctx) {
+    _drawText(ctx, rects) {
         if (!this._lineHeight || !this._charWidth)
             throw new Error('Must call layout() before draw()');
         var start = performance.now();
@@ -133,9 +134,6 @@ class Editor {
 
         if (this._options.lineNumbers)
             this._drawLineNumbers(ctx);
-
-        // this._overlayLayer.refresh();
-        // ctx.drawImage(this._overlayLayer.canvas, 0, 0, this._width, this._height);
 
         document.title = String(Math.round(1000 / (performance.now() - start)));
         console.log("frame", performance.now() - start);
@@ -186,22 +184,14 @@ class Editor {
 
     layout() {
         var rect = this.element.getBoundingClientRect();
-        this._canvas.width = rect.width * window.devicePixelRatio;
-        this._canvas.height = rect.height * window.devicePixelRatio;
         this._width = rect.width;
         this._height = rect.height;
-        this._canvas.style.width = rect.width + 'px';
-        this._canvas.style.height = rect.height + 'px';
-        this._canvas.style.position = 'absolute';
-        this._canvas.style.top = '0';
-        this._canvas.style.left = '0';
-        this._ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        this._ctx.font = window.getComputedStyle(this._canvas).font;
-        this._backgroundColor = window.getComputedStyle(this._canvas).backgroundColor;
-        this._charHeight = parseInt(window.getComputedStyle(this._canvas).fontSize);
-        this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._canvas).lineHeight), this._charHeight);
-        this._charWidth = this._ctx.measureText('x').width;
+        this._backgroundColor = window.getComputedStyle(this._textLayer.canvas).backgroundColor;
+        this._charHeight = parseInt(window.getComputedStyle(this._textLayer.canvas).fontSize);
+        this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._textLayer.canvas).lineHeight), this._charHeight);
         this._overlayLayer.layout(rect.width, rect.height);
+        this._textLayer.layout(rect.width, rect.height);
+        this._charWidth = this._textLayer.canvas.getContext('2d').measureText('x').width;
         this.refresh();
     }
 }
@@ -221,8 +211,11 @@ class Layer {
     }
 
     refresh() {
-        if (this._rects.length)
+        if (this._rects.length) {
+            this._ctx.save();
             this._draw(this._ctx, this._rects);
+            this._ctx.restore();
+        }
         this._rects = [];
     }
 
@@ -256,6 +249,7 @@ class Layer {
         this.canvas.style.top = '0';
         this.canvas.style.left = '0';
         this._ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        this._ctx.font = window.getComputedStyle(this.canvas).font;
         this.invalidate();
     }
 }
