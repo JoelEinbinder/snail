@@ -10,7 +10,7 @@ class Model extends Emitter {
             this._longestLineLength = Math.max(this._longestLineLength, line.length);
         }
         /** @type {Array<Sel>} */
-        this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 0}}];
+        this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 2}}];
     }
 
     longestLineLength() {
@@ -61,3 +61,11 @@ class Model extends Emitter {
  * @property {Loc} start
  * @property {Loc} end
  */
+
+ /**
+  * @param {Sel} selection
+  * @return {boolean}
+  */
+ function isSelectionCollapsed(selection) {
+     return selection.start.line === selection.end.line && selection.start.column === selection.end.column;
+ }

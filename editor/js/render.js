@@ -122,7 +122,12 @@ class Editor {
             for (var token of this._highlighter.tokensForLine(i)) {
                 rect.width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
                 if (intersects(rect, screenRect)) {
-                    ctx.fillStyle = token.color;
+                    if (token.background) {
+                        console.log(token.background);
+                        ctx.fillStyle = token.background;
+                        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+                    }
+                    ctx.fillStyle = token.color || '#222';
                     ctx.fillText(token.text, rect.x, rect.y + this._charHeight);
                 }
                 rect.x += rect.width;
@@ -145,6 +150,8 @@ class Editor {
         ctx.fillStyle = 'rgba(0,0,0,0.8)';
         var lineNumbersWidth = this._lineNumbersWidth();
         for (var selection of this.model.selections) {
+            if (!isSelectionCollapsed(selection))
+                continue;
             var rect = {
                 x: lineNumbersWidth + this._padding - this._scrollLeft + selection.start.column * this._charWidth,
                 y: selection.start.line * this._lineHeight - this._scrollTop + (this._lineHeight - this._charHeight)/4 - 1,

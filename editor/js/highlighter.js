@@ -1,4 +1,9 @@
-/** @typedef {{text :string, color: string}} Token */
+/**
+ * @typedef {Object} Token
+ * @property {string} text
+ * @property {string=} color
+ * @property {string=} background
+ */
 
 class Highlighter extends Emitter {
     /**
@@ -10,7 +15,6 @@ class Highlighter extends Emitter {
         this._mode = javascriptMode({indentUnit: 2}, {});
         /** @type {Array<{state: any, tokens: Array<Token>}>} */
         this._lines = [];
-        this._defaultColor = '#222';
         this._requestLineNumber = 0;
         this._tokenizeTimeout = 0;
         this._colors = [
@@ -60,7 +64,7 @@ class Highlighter extends Emitter {
             while (!stream.eol()) {
                 var className = this._mode.token(stream, state) || '';
                 var text = stream.string.substring(stream.start, stream.pos);
-                var color = this._defaultColor;
+                var color = null;
                 for (var [name, c] of this._colors) {
                     if (className.indexOf(name) !== -1)
                         color = c;
@@ -98,15 +102,87 @@ class Highlighter extends Emitter {
      * @return {Array<Token>}
      */
     tokensForLine(lineNumber) {
-        this._tokenizeUpTo(lineNumber, 10000);
-        if (this._lines[lineNumber]) {
-            return this._lines[lineNumber].tokens;
+        /**
+         * @param {Array<Token>} a
+         * @param {Array<Token>} b
+         * @return {Array<Token>}
+         */
+        const mergeTokens = (a, b) => {
+          var tokens = [];
+          var line = this._model.line(lineNumber);
+          var text = "";
+          var color = null;
+          var background = null;
+          var aIndex = 0;
+          var bIndex = 0;
+          var aToken = a[aIndex];
+          var bToken = b[aIndex];
+          var aCount = 0;
+          var bCount = 0;
+          for (var i = 0; i < line.length; i++) {
+            if (aCount >= aToken.text.length) {
+              aIndex++;
+              aCount = 0;
+            }
+            if (bCount >= bToken.text.length) {
+              bIndex++;
+              bCount = 0;
+            }
+            aToken = a[aIndex];
+            bToken = b[bIndex];
+            const nextColor = bToken.color || aToken.color;
+            const nextBackground = bToken.background || aToken.background;
+            if ((nextColor !== color || nextBackground !== background) && text) {
+              tokens.push({text, color, background});
+              text = "";
+            }
+            color = nextColor;
+            background = nextBackground;
+            text += line.charAt(i);
+            aCount ++;
+            bCount ++;
+          }
+          if (text)
+            tokens.push({text, color, background});
+          return tokens;
         }
+
+        this._tokenizeUpTo(lineNumber, 10000);
+        if (this._lines[lineNumber])
+          return mergeTokens(this._lines[lineNumber].tokens, this._selectionTokens(lineNumber));
 
         // default
         var text = this._model.line(lineNumber);
-        var color = this._defaultColor;
-        return [{text, color}];
+        return mergeTokens([{text}], this._selectionTokens(lineNumber));
+    }
+
+    /**
+     * @param {number} lineNumber
+     * @return {Array<Token>}
+     */
+    _selectionTokens(lineNumber) {
+      var ranges = [];
+      var tokens = [];
+      var line = this._model.line(lineNumber);
+      for (var selection of this._model.selections) {
+        if (!isSelectionCollapsed(selection) && selection.start.line <= lineNumber && selection.end.line >= lineNumber) {
+          ranges.push({
+            start: selection.start.line === lineNumber ? selection.start.column : 0,
+            end: selection.end.line === lineNumber ? selection.end.column : line.length
+          });
+        }
+      }
+      ranges.sort((a, b) => a.start - b.start);
+      var index = 0;
+      for (var range of ranges) {
+        if (index !== range.start)
+          tokens.push({text: line.substring(index, range.start)})
+        tokens.push({text: line.substring(range.start, range.end), color: '#FFF', background: '#000'})
+        index = range.end;
+      }
+      if (index !== line.length)
+        tokens.push({text: line.substring(index, line.length)});
+      return tokens;
     }
 }
 
