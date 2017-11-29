@@ -9,6 +9,8 @@ const fs = require('fs');
 let server = require('http').createServer(function (request, response) {
     request.addListener('end', function () {
         let pathName = url.parse(request.url).path;
+        if (pathName.indexOf('?') !== -1)
+            pathName = pathName.substring(0, pathName.indexOf('?'));
         if (pathName === '/')
             pathName = '/index.html';
         pathName = path.join(__dirname, '..', pathName.substring(1));
@@ -37,6 +39,7 @@ describe('Editor', function() {
     }));
     beforeEach(SX(async function(){
         page = await browser.newPage();
+        // page.on('console', console.log);
     }));
     afterEach(SX(async function(){
         await page.close();
@@ -46,9 +49,30 @@ describe('Editor', function() {
         await browser.close();
     }));
     imageTest('should work', async function(){
-        await page.goto('http://localhost:3000/');
+        await page.goto('http://localhost:3000/?test');
         await page.evaluate(() => {
-            return new Promise(done => requestAnimationFrame(done))
+            var editor = new Editor(new Model(`// Hello World!`), {padBottom: true, lineNumbers: true});
+            document.body.appendChild(editor.element);
+            editor.layout();
+        });
+    });
+    imageTest('should have selection', async function(){
+        await page.goto('http://localhost:3000/?test');
+        await page.evaluate(async () => {
+            var editor = new Editor(new Model(`// Select this word.`), {padBottom: true, lineNumbers: true});
+            document.body.appendChild(editor.element);
+            editor.layout();
+            editor.model.setSelections([{
+                start: {
+                    line: 0,
+                    column: '// Select this '.length
+                },
+                end: {
+                    line: 0,
+                    column: '// Select this word'.length
+                }
+            }]);
+            await new Promise(done => requestAnimationFrame(done));
         });
     });
 

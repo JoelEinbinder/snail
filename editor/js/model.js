@@ -10,7 +10,7 @@ class Model extends Emitter {
             this._longestLineLength = Math.max(this._longestLineLength, line.length);
 
         /** @type {Array<Sel>} */
-        this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 2}}];
+        this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 0}}];
     }
 
     longestLineLength() {

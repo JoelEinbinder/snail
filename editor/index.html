@@ -18,7 +18,8 @@
                 editor.layout();
                 window.addEventListener('resize', event => editor.layout(), false);
             }
-            go();
+            if (document.location.search !== "?test")
+                go();
         </script>
     </body>
 </html>
