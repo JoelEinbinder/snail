@@ -6,9 +6,9 @@ class Model extends Emitter {
         super();
         this._lines = data.split('\n');
         this._longestLineLength = 0;
-        for (var line of this._lines) {
+        for (var line of this._lines)
             this._longestLineLength = Math.max(this._longestLineLength, line.length);
-        }
+
         /** @type {Array<Sel>} */
         this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 2}}];
     }
@@ -42,7 +42,12 @@ class Model extends Emitter {
     }
 
     setSelections(selections) {
+        const previousSelections = selections;
         this._selections = selections;
+        this.emit('selectionChanged', {
+            selections,
+            previousSelections
+        })
     }
 
     get selections() {

@@ -12,6 +12,12 @@ class Highlighter extends Emitter {
     constructor(model) {
         super();
         this._model = model;
+        this._model.on('selectionChanged', ({selections, previousSelections}) => {
+          for (var selection of selections)
+            this.emit('highlight', {from: selection.start.line, to: selection.end.line});
+          for (var selection of previousSelections)
+            this.emit('highlight', {from: selection.start.line, to: selection.end.line});
+        });
         this._mode = javascriptMode({indentUnit: 2}, {});
         /** @type {Array<{state: any, tokens: Array<Token>}>} */
         this._lines = [];

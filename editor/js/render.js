@@ -27,8 +27,10 @@ class Editor {
 
         this._highlighter.on('highlight', ({from, to}) => {
             var viewport = this.viewport();
-            if (viewport.from <= to && from <= viewport.to)
+            if (viewport.from <= to && from <= viewport.to) {
+                this._textLayer.invalidate();
                 this.scheduleRefresh();
+            }
         });
         this.element.addEventListener('mousedown', event => {
             if (event.which === 1)
@@ -123,7 +125,6 @@ class Editor {
                 rect.width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
                 if (intersects(rect, screenRect)) {
                     if (token.background) {
-                        console.log(token.background);
                         ctx.fillStyle = token.background;
                         ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
                     }
