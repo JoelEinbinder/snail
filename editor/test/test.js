@@ -56,6 +56,14 @@ describe('Editor', function() {
             editor.layout();
         });
     });
+    imageTest('should have no line numbers', async function() {
+        await page.goto('http://localhost:3000/?test');
+        await page.evaluate(() => {
+            var editor = new Editor(new Model(`// Hello World!`), {padBottom: true});
+            document.body.appendChild(editor.element);
+            editor.layout();
+        });
+    });
     imageTest('should have selection', async function(){
         await page.goto('http://localhost:3000/?test');
         await page.evaluate(async () => {
@@ -86,7 +94,7 @@ describe('Editor', function() {
             it(name, SX(async function() {
                 await fn();
                 await page.screenshot({
-                    path: path.join(__dirname, 'out', name + '.png')
+                    path: path.join(__dirname, 'out', name.replace(/ /g, '_') + '.png')
                 });
             }));
         });
