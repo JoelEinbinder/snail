@@ -9,6 +9,8 @@ class Model extends Emitter {
         for (var line of this._lines) {
             this._longestLineLength = Math.max(this._longestLineLength, line.length);
         }
+        /** @type {Array<Sel>} */
+        this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 0}}];
     }
 
     longestLineLength() {
@@ -38,4 +40,24 @@ class Model extends Emitter {
     lineCount() {
         return this._lines.length;
     }
+
+    setSelections(selections) {
+        this._selections = selections;
+    }
+
+    get selections() {
+        return this._selections;
+    }
 }
+
+/**
+ * @typedef {Object} Loc
+ * @property {number} column
+ * @property {number} line
+ */
+
+/**
+ * @typedef {Object} Sel
+ * @property {Loc} start
+ * @property {Loc} end
+ */

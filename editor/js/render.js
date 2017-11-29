@@ -25,9 +25,6 @@ class Editor {
         this.element.appendChild(this._textLayer.canvas);
         this.element.appendChild(this._overlayLayer.canvas);
 
-        /** @type {Array<Sel>} */
-        this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 0}}];
-
         this._highlighter.on('highlight', ({from, to}) => {
             var viewport = this.viewport();
             if (viewport.from <= to && from <= viewport.to)
@@ -48,7 +45,7 @@ class Editor {
         var y = Math.floor((offsetY + this._scrollTop) / this._lineHeight);
         var line = Math.max(Math.min(y, this.model.lineCount() - 1), 0);
         var column = Math.min(x, this.model.line(line).length);
-        this._selections = [{start: {line, column}, end: {line, column}}];
+        this.model.setSelections([{start: {line, column}, end: {line, column}}]);
         this._overlayLayer.invalidate();
         this._overlayLayer.refresh();
     }
@@ -147,7 +144,7 @@ class Editor {
         ctx.clearRect(0, 0, this._width, this._height);
         ctx.fillStyle = 'rgba(0,0,0,0.8)';
         var lineNumbersWidth = this._lineNumbersWidth();
-        for (var selection of this._selections) {
+        for (var selection of this.model.selections) {
             var rect = {
                 x: lineNumbersWidth + this._padding - this._scrollLeft + selection.start.column * this._charWidth,
                 y: selection.start.line * this._lineHeight - this._scrollTop + (this._lineHeight - this._charHeight)/4 - 1,
@@ -285,15 +282,3 @@ function intersects(a, b) {
 function contains(inside, outside) {
     return inside.x >= outside.x && inside.x + inside.width <= outside.x + outside.width && inside.y >= outside.y && inside.y + inside.height <= outside.y + outside.height;
 }
-
-/**
- * @typedef {Object} Loc
- * @property {number} column
- * @property {number} line
- */
-
-/**
- * @typedef {Object} Sel
- * @property {Loc} start
- * @property {Loc} end
- */
