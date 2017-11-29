@@ -2,13 +2,21 @@
   "name": "editor",
   "version": "1.0.0",
   "description": "",
-  "dependencies": {},
+  "dependencies": {
+  },
   "devDependencies": {
+    "jasmine": "^2.8.0",
+    "joel-lgtm": "file:../lgtm",
+    "puppeteer": "file:../puppeteer",
+    "mkdirp": "^0.5.1",
+    "rimraf": "^2.6.2",
     "typescript": "^2.6.1"
   },
   "scripts": {
     "lint": "tsc -p .",
-    "test": "npm run lint"
+    "unit": "jasmine test/test.js",
+    "image": "node node_modules/joel-lgtm/index.js test/out test/golden",
+    "test": "npm run lint && npm run unit && npm run image"
   },
   "author": "",
   "license": "ISC"
