@@ -56,14 +56,20 @@ class Editor {
      * @param {WheelEvent} event
      */
     _onWheel(event) {
+        var deltaY = event.deltaY;
+        var deltaX = event.deltaX;
+        if (Math.abs(deltaX) > Math.abs(deltaY))
+            deltaY = 0
+        else
+            deltaX = 0;
         this._scrollTop = Math.max(
             Math.min(
-                this._scrollTop + event.deltaY,
+                this._scrollTop + deltaY,
                 this.model.lineCount() * this._lineHeight - (this._options.padBottom ? this._lineHeight : this._height)),
             0);
         this._scrollLeft = Math.max(
             Math.min(
-                this._scrollLeft + event.deltaX,
+                this._scrollLeft + deltaX,
                 this._innerWidth() - this._width),
             0);
         event.preventDefault();
