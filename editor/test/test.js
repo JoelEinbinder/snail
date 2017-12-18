@@ -83,6 +83,14 @@ describe('Editor', function() {
             await new Promise(done => requestAnimationFrame(done));
         });
     });
+    imageTest('should say hi', async function(){
+        await page.goto('http://localhost:3000/?test');
+        await page.evaluate(async () => {
+            var editor = new Editor(new Model(`"hi"`), {padBottom: true, lineNumbers: true});
+            document.body.appendChild(editor.element);
+            editor.layout();
+        });
+    });
 
 
     /**
