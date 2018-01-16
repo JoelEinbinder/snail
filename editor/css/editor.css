@@ -10,3 +10,10 @@
     line-height: 18px;
     letter-spacing: 0;
 }
+
+textarea {
+    display: block;
+    white-space: pre;
+    resize: none;
+    overflow: hidden;
+}

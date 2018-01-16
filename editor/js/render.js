@@ -10,7 +10,10 @@ class Editor {
         this.element = document.createElement('div');
         this.element.className = 'editor';
         this._highlighter = new Highlighter(this.model);
-        this.element.addEventListener('wheel', this._onWheel.bind(this), true);
+        this.element.addEventListener('wheel', this._onWheel.bind(this), {
+            capture: true,
+            passive: false
+        });
         this._scrollTop = 0;
         this._scrollLeft = 0;
         this._padding = 4;
@@ -25,6 +28,9 @@ class Editor {
         this.element.appendChild(this._textLayer.canvas);
         this.element.appendChild(this._overlayLayer.canvas);
 
+        this._input = new Input(this.element, this.model);
+        this._selectionManager = new SelectionManger(this);
+
         this._highlighter.on('highlight', ({from, to}) => {
             var viewport = this.viewport();
             if (viewport.from <= to && from <= viewport.to) {
@@ -32,24 +38,26 @@ class Editor {
                 this.scheduleRefresh();
             }
         });
-        this.element.addEventListener('mousedown', event => {
-            if (event.which === 1)
-                this._setSelectionFromPoint(event.offsetX, event.offsetY);
+        this.model.on('selectionChanged', () => {
+            this._overlayLayer.invalidate();
+            this._overlayLayer.refresh();
         });
-        this.element.addEventListener('mousemove', event => {
-            if (event.which === 1)
-                this._setSelectionFromPoint(event.offsetX, event.offsetY);
+
+        this.element.addEventListener('mousedown', event => {
+            this.focus();
+            event.preventDefault();
         });
     }
 
-    _setSelectionFromPoint(offsetX, offsetY) {
+    locationFromPoint(offsetX, offsetY) {
         var x = Math.round((offsetX - this._lineNumbersWidth() - this._padding + this._scrollLeft) / this._charWidth)
         var y = Math.floor((offsetY + this._scrollTop) / this._lineHeight);
         var line = Math.max(Math.min(y, this.model.lineCount() - 1), 0);
         var column = Math.min(x, this.model.line(line).length);
-        this.model.setSelections([{start: {line, column}, end: {line, column}}]);
-        this._overlayLayer.invalidate();
-        this._overlayLayer.refresh();
+        return {
+            line,
+            column
+        }
     }
 
     /**
@@ -145,7 +153,6 @@ class Editor {
             this._drawLineNumbers(ctx);
 
         document.title = String(Math.round(1000 / (performance.now() - start)));
-        console.log("frame", performance.now() - start);
     }
 
     /**
@@ -204,6 +211,10 @@ class Editor {
         this._textLayer.layout(rect.width, rect.height);
         this._charWidth = this._textLayer.canvas.getContext('2d').measureText('x').width;
         this.refresh();
+    }
+
+    focus() {
+        this._input.focus();
     }
 }
 

@@ -9,7 +9,7 @@ class Model extends Emitter {
         for (var line of this._lines)
             this._longestLineLength = Math.max(this._longestLineLength, line.length);
 
-        /** @type {Array<Sel>} */
+        /** @type {Array<TextRange>} */
         this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 0}}];
     }
 
@@ -41,6 +41,9 @@ class Model extends Emitter {
         return this._lines.length;
     }
 
+    /**
+     * @param {Array<TextRange>} selections
+     */
     setSelections(selections) {
         const previousSelections = selections;
         this._selections = selections;
@@ -53,6 +56,44 @@ class Model extends Emitter {
     get selections() {
         return this._selections;
     }
+
+    /**
+     * @param {TextRange=} range
+     * @return {string}
+     */
+    text(range = this.fullRange()) {
+        if (range.start.line === range.end.line)
+            return this._lines[range.start.line].substring(range.start.column, range.end.column);
+        var content = this._lines.slice(range.start.line, range.end.line + 1);
+        content[0] = content[0].substring(range.start.column);
+        content[content.length - 1] = content[content.length - 1].substring(0, range.end.column);
+        return content.join('\n');
+    }
+
+    /**
+     * @return {TextRange}
+     */
+    fullRange() {
+        return {
+            start: {
+                line: 0,
+                column: 0,
+            },
+            end: {
+                line: this._lines.length,
+                column: this._lines[this._lines.length - 1].length
+            }
+        }
+    }
+
+    /**
+     *
+     * @param {string} text
+     * @param {TextRange} range
+     */
+    replaceRange(text, range) {
+        throw 'todo';
+    }
 }
 
 /**
@@ -62,13 +103,13 @@ class Model extends Emitter {
  */
 
 /**
- * @typedef {Object} Sel
+ * @typedef {Object} TextRange
  * @property {Loc} start
  * @property {Loc} end
  */
 
  /**
-  * @param {Sel} selection
+  * @param {TextRange} selection
   * @return {boolean}
   */
  function isSelectionCollapsed(selection) {
