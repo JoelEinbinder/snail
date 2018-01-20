@@ -10,8 +10,6 @@ class Editor {
         this.element = document.createElement('div');
         this.element.className = 'editor';
         this._highlighter = new Highlighter(this.model);
-        this._scrollTop = 0;
-        this._scrollLeft = 0;
         this._padding = 4;
         this._refreshScheduled = false;
         this._savedViewport = {x: 0, y: 0, width: 0, height: 0};
@@ -52,9 +50,17 @@ class Editor {
         this.element.addEventListener('focus', this.focus.bind(this), false);
     }
 
+    get scrollTop() {
+        return this._scrollingElement.scrollTop;
+    }
+
+    get scrollLeft() {
+        return this._scrollingElement.scrollLeft;
+    }
+
     locationFromPoint(offsetX, offsetY) {
-        var x = Math.round((offsetX - this._lineNumbersWidth() - this._padding + this._scrollLeft) / this._charWidth)
-        var y = Math.floor((offsetY + this._scrollTop) / this._lineHeight);
+        var x = Math.round((offsetX - this._lineNumbersWidth() - this._padding + this.scrollLeft) / this._charWidth)
+        var y = Math.floor((offsetY + this.scrollTop) / this._lineHeight);
         var line = Math.max(Math.min(y, this.model.lineCount() - 1), 0);
         var column = Math.max(0, Math.min(x, this.model.line(line).length));
         return {
@@ -67,8 +73,6 @@ class Editor {
      * @param {Event} event
      */
     _onScroll(event) {
-        this._scrollTop = this._scrollingElement.scrollTop;
-        this._scrollLeft = this._scrollingElement.scrollLeft;
         // // TODO partial refresh
         this._overlayLayer.invalidate();
         this._textLayer.invalidate();
@@ -100,8 +104,8 @@ class Editor {
 
     viewport() {
         return {
-            from: this._lineForOffset(this._scrollTop),
-            to: Math.min(this.model.lineCount() -1, this._lineForOffset(this._scrollTop + this._height))
+            from: this._lineForOffset(this.scrollTop),
+            to: Math.min(this.model.lineCount() -1, this._lineForOffset(this.scrollTop + this._height))
         };
     }
 
@@ -136,7 +140,7 @@ class Editor {
         var viewport = this.viewport();
         var lineNumbersWidth = this._lineNumbersWidth();
         for (var i = viewport.from; i <= viewport.to; i++) {
-            var rect = {x: lineNumbersWidth + this._padding - this._scrollLeft, y: i*this._lineHeight - this._scrollTop, width: 0, height: this._lineHeight};
+            var rect = {x: lineNumbersWidth + this._padding - this.scrollLeft, y: i*this._lineHeight - this.scrollTop, width: 0, height: this._lineHeight};
             for (var token of this._highlighter.tokensForLine(i)) {
                 rect.width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
                 if (intersects(rect, screenRect)) {
@@ -169,8 +173,8 @@ class Editor {
             if (!isSelectionCollapsed(selection))
                 continue;
             var rect = {
-                x: lineNumbersWidth + this._padding - this._scrollLeft + selection.start.column * this._charWidth,
-                y: selection.start.line * this._lineHeight - this._scrollTop + (this._lineHeight - this._charHeight)/4 - 1,
+                x: lineNumbersWidth + this._padding - this.scrollLeft + selection.start.column * this._charWidth,
+                y: selection.start.line * this._lineHeight - this.scrollTop + (this._lineHeight - this._charHeight)/4 - 1,
                 width: 1.5,
                 height: this._charHeight + 2
             };
@@ -198,7 +202,7 @@ class Editor {
         ctx.fillStyle = 'rgb(128, 128, 128)';
         var {from, to} = this.viewport();
         for (var i = from; i <= to; i++) {
-            ctx.fillText(String(i+1), width - ctx.measureText(String(i+1)).width - this._padding, i*this._lineHeight + this._charHeight - this._scrollTop);
+            ctx.fillText(String(i+1), width - ctx.measureText(String(i+1)).width - this._padding, i*this._lineHeight + this._charHeight - this.scrollTop);
         }
     }
 
