@@ -145,19 +145,24 @@ class Editor extends Emitter{
         var screenRect = {x: 0, y: 0, width: this._width, height: this._height};
         var viewport = this.viewport();
         var lineNumbersWidth = this._lineNumbersWidth();
+        var CHUNK_SIZE = 100;
         for (var i = viewport.from; i <= viewport.to; i++) {
             var rect = {x: lineNumbersWidth + this._padding - this.scrollLeft, y: i*this._lineHeight - this.scrollTop, width: 0, height: this._lineHeight};
             for (var token of this._highlighter.tokensForLine(i)) {
-                rect.width = token.text.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
-                if (intersects(rect, screenRect)) {
-                    if (token.background) {
-                        ctx.fillStyle = token.background;
-                        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+                // we dont want too overdraw too much for big tokens
+                for (var j = 0; j < token.text.length; j += CHUNK_SIZE) {
+                    var chunk = token.text.substring(j, j + CHUNK_SIZE);
+                    rect.width = chunk.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
+                    if (intersects(rect, screenRect)) {
+                        if (token.background) {
+                            ctx.fillStyle = token.background;
+                            ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+                        }
+                        ctx.fillStyle = token.color || '#222';
+                        ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
                     }
-                    ctx.fillStyle = token.color || '#222';
-                    ctx.fillText(token.text, rect.x, rect.y + this._charHeight);
+                    rect.x += rect.width;
                 }
-                rect.x += rect.width;
             }
         }
 
