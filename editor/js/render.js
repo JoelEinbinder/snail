@@ -46,6 +46,10 @@ class Editor extends Emitter{
             capture: true,
             passive: false
         });
+        this.element.addEventListener('wheel', this._gutterWheel.bind(this), {
+            capture: true,
+            passive: false
+        });
         this._fillerElement.addEventListener('mousedown', event => {
             this.emit('contentMouseDown', event);
         });
@@ -67,7 +71,7 @@ class Editor extends Emitter{
      * @param {number} offsetY
      */
     locationFromPoint(offsetX, offsetY) {
-        var x = Math.round((offsetX - this._lineNumbersWidth() - this._padding + this.scrollLeft) / this._charWidth)
+        var x = Math.round((offsetX - this._padding + this.scrollLeft) / this._charWidth)
         var y = Math.floor((offsetY + this.scrollTop) / this._lineHeight);
         var line = Math.max(Math.min(y, this.model.lineCount() - 1), 0);
         var column = Math.max(0, Math.min(x, this.model.line(line).length));
@@ -82,6 +86,21 @@ class Editor extends Emitter{
      */
     scrollLocationIntoView(location) {
         //todo
+    }
+
+    /**
+     * @param {WheelEvent} event
+     */
+    _gutterWheel(event) {
+        var node = /** @type {Node} */ (event.target);
+        if (node === this._scrollingElement || this._scrollingElement.contains(node))
+            return;
+        var deltaY = event.deltaY;
+        var deltaX = event.deltaX;
+        if (Math.abs(deltaX) > Math.abs(deltaY))
+            this._scrollingElement.scrollLeft += deltaX;
+        else
+            this._scrollingElement.scrollTop += deltaY;
     }
 
     /**
@@ -101,12 +120,13 @@ class Editor extends Emitter{
     }
 
     _innerWidth() {
-        return this._lineNumbersWidth() + this.model.longestLineLength() * this._charWidth + this._padding * 2;
+        return this.model.longestLineLength() * this._charWidth + this._padding * 2;
     }
 
     refresh() {
         this._overlayLayer.refresh();
         this._textLayer.refresh();
+        this._scrollingElement.style.left = this._lineNumbersWidth() + 'px';
         this._fillerElement.style.width = this._innerWidth() + 'px';
         var height = this._innerHeight();
         if (this._options.padBottom) {
