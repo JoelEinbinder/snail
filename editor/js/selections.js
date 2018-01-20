@@ -7,7 +7,7 @@ class SelectionManger extends Emitter{
         this._renderer = renderer;
         this._anchor = null;
         this._cursor = null;
-        renderer.element.addEventListener('mousedown', event => {
+        this._renderer.on('contentMouseDown', event => {
             if (event.which !== 1)
                 return;
             this._cursor = {

@@ -46,6 +46,9 @@ class Editor extends Emitter{
             capture: true,
             passive: false
         });
+        this._fillerElement.addEventListener('mousedown', event => {
+            this.emit('contentMouseDown', event);
+        });
         this.element.appendChild(this._scrollingElement);
         this.element.tabIndex = -1;
         this.element.addEventListener('focus', this.focus.bind(this), false);
