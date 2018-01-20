@@ -16,16 +16,28 @@ class SelectionManger extends Emitter{
             };
             this._anchor = null;
             this._updateSelection();
+            this._trackDrag();
         });
-        renderer.element.addEventListener('mousemove', event => {
-            if (event.which !== 1)
-                return;
+    }
+
+    _trackDrag() {
+        // We have to listen on the window so that you can select outside the bounds
+        var window = this._renderer.element.ownerDocument.defaultView;
+        /** @type {function(MouseEvent)} */
+        var mousemove = event => {
             this._cursor = {
                 x: event.layerX,
                 y: event.layerY
             };
             this._updateSelection();
-        });
+        };
+        /** @type {function(MouseEvent)} */
+        var mouseup = event => {
+            window.removeEventListener('mousemove', mousemove, true);
+            window.removeEventListener('mouseup', mouseup, true)
+        };
+        window.addEventListener('mousemove', mousemove, true)
+        window.addEventListener('mouseup', mouseup, true)
     }
 
     _updateSelection() {
