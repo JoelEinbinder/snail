@@ -11,8 +11,8 @@ class SelectionManger extends Emitter{
             if (event.which !== 1)
                 return;
             this._cursor = {
-                x: event.offsetX,
-                y: event.offsetY
+                x: event.layerX,
+                y: event.layerY
             };
             this._anchor = null;
             this._updateSelection();
@@ -21,8 +21,8 @@ class SelectionManger extends Emitter{
             if (event.which !== 1)
                 return;
             this._cursor = {
-                x: event.offsetX,
-                y: event.offsetY
+                x: event.layerX,
+                y: event.layerY
             };
             this._updateSelection();
         });

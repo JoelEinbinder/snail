@@ -10,10 +10,6 @@ class Editor {
         this.element = document.createElement('div');
         this.element.className = 'editor';
         this._highlighter = new Highlighter(this.model);
-        this.element.addEventListener('wheel', this._onWheel.bind(this), {
-            capture: true,
-            passive: false
-        });
         this._scrollTop = 0;
         this._scrollLeft = 0;
         this._padding = 4;
@@ -43,17 +39,24 @@ class Editor {
             this._overlayLayer.refresh();
         });
 
-        this.element.addEventListener('mousedown', event => {
-            this.focus();
-            event.preventDefault();
+        this._scrollingElement = document.createElement('div');
+        this._scrollingElement.classList.add('scroller');
+        this._fillerElement = document.createElement('div');
+        this._scrollingElement.appendChild(this._fillerElement);
+        this._scrollingElement.addEventListener('scroll', this._onScroll.bind(this), {
+            capture: true,
+            passive: false
         });
+        this.element.appendChild(this._scrollingElement);
+        this.element.tabIndex = -1;
+        this.element.addEventListener('focus', this.focus.bind(this), false);
     }
 
     locationFromPoint(offsetX, offsetY) {
         var x = Math.round((offsetX - this._lineNumbersWidth() - this._padding + this._scrollLeft) / this._charWidth)
         var y = Math.floor((offsetY + this._scrollTop) / this._lineHeight);
         var line = Math.max(Math.min(y, this.model.lineCount() - 1), 0);
-        var column = Math.min(x, this.model.line(line).length);
+        var column = Math.max(0, Math.min(x, this.model.line(line).length));
         return {
             line,
             column
@@ -61,30 +64,20 @@ class Editor {
     }
 
     /**
-     * @param {WheelEvent} event
+     * @param {Event} event
      */
-    _onWheel(event) {
-        var deltaY = event.deltaY;
-        var deltaX = event.deltaX;
-        if (Math.abs(deltaX) > Math.abs(deltaY))
-            deltaY = 0
-        else
-            deltaX = 0;
-        this._scrollTop = Math.max(
-            Math.min(
-                this._scrollTop + deltaY,
-                this.model.lineCount() * this._lineHeight - (this._options.padBottom ? this._lineHeight : this._height)),
-            0);
-        this._scrollLeft = Math.max(
-            Math.min(
-                this._scrollLeft + deltaX,
-                this._innerWidth() - this._width),
-            0);
-        event.preventDefault();
-        // TODO partial refresh
+    _onScroll(event) {
+        this._scrollTop = this._scrollingElement.scrollTop;
+        this._scrollLeft = this._scrollingElement.scrollLeft;
+        // // TODO partial refresh
         this._overlayLayer.invalidate();
         this._textLayer.invalidate();
         this.scheduleRefresh();
+    }
+
+
+    _innerHeight() {
+        return this.model.lineCount() * this._lineHeight;
     }
 
     _innerWidth() {
@@ -94,6 +87,15 @@ class Editor {
     refresh() {
         this._overlayLayer.refresh();
         this._textLayer.refresh();
+        this._fillerElement.style.width = this._innerWidth() + 'px';
+        var height = this._innerHeight();
+        if (this._options.padBottom) {
+            // there is always a y-scroll, so set height first to a big value
+            this._fillerElement.style.height = (height + this._scrollingElement.clientHeight * 2) + 'px';
+            // Now that there is a y-scrll, we can correctly set the y value
+            height += this._scrollingElement.clientHeight - this._lineHeight;
+        }
+        this._fillerElement.style.height = height + 'px';
     }
 
     viewport() {
