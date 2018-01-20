@@ -35,9 +35,14 @@ class SelectionManger extends Emitter{
         var mouseup = event => {
             window.removeEventListener('mousemove', mousemove, true);
             window.removeEventListener('mouseup', mouseup, true)
+            this._renderer.off('scroll', scroll);
+        };
+        var scroll = () => {
+            this._updateSelection();
         };
         window.addEventListener('mousemove', mousemove, true)
         window.addEventListener('mouseup', mouseup, true)
+        this._renderer.on('scroll', scroll);
     }
 
     _updateSelection() {

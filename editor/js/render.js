@@ -1,9 +1,10 @@
-class Editor {
+class Editor extends Emitter{
     /**
      * @param {Model} model
      * @param {Editor.Options=} options
      */
     constructor(model, options = {}) {
+        super();
         this.model = model;
         this._options = options;
 
@@ -58,6 +59,10 @@ class Editor {
         return this._scrollingElement.scrollLeft;
     }
 
+    /**
+     * @param {number} offsetX
+     * @param {number} offsetY
+     */
     locationFromPoint(offsetX, offsetY) {
         var x = Math.round((offsetX - this._lineNumbersWidth() - this._padding + this.scrollLeft) / this._charWidth)
         var y = Math.floor((offsetY + this.scrollTop) / this._lineHeight);
@@ -77,6 +82,7 @@ class Editor {
         this._overlayLayer.invalidate();
         this._textLayer.invalidate();
         this.scheduleRefresh();
+        this.emit('scroll');
     }
 
 
