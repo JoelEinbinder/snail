@@ -7,17 +7,22 @@ class SelectionManger extends Emitter{
         this._renderer = renderer;
         this._anchor = null;
         this._cursor = null;
-        this._renderer.on('contentMouseDown', event => {
-            if (event.which !== 1)
-                return;
-            this._cursor = {
-                x: event.layerX,
-                y: event.layerY
-            };
-            this._anchor = null;
-            this._updateSelection();
-            this._trackDrag();
-        });
+        this._renderer.on('contentMouseDown', this._contentMouseDown.bind(this));
+    }
+
+    /**
+     * @param {MouseEvent} event
+     */
+    _contentMouseDown(event) {
+        if (event.which !== 1)
+            return;
+        this._cursor = {
+            x: event.layerX + this._renderer.scrollLeft,
+            y: event.layerY + this._renderer.scrollTop
+        };
+        this._anchor = null;
+        this._updateSelection();
+        this._trackDrag();
     }
 
     _trackDrag() {
@@ -26,8 +31,8 @@ class SelectionManger extends Emitter{
         /** @type {function(MouseEvent)} */
         var mousemove = event => {
             this._cursor = {
-                x: event.layerX,
-                y: event.layerY
+                x: event.layerX + this._renderer.scrollLeft,
+                y: event.layerY + this._renderer.scrollTop
             };
             this._updateSelection();
         };
@@ -47,7 +52,7 @@ class SelectionManger extends Emitter{
 
     _updateSelection() {
         console.assert(!!this._cursor, 'cursor should be defined');
-        var head = this._renderer.locationFromPoint(this._cursor.x, this._cursor.y);
+        var head = this._renderer.locationFromPoint(this._cursor.x - this._renderer.scrollLeft, this._cursor.y - this._renderer.scrollTop);
         if (!this._anchor)
             this._anchor = head;
         var start, end;
@@ -69,6 +74,7 @@ class SelectionManger extends Emitter{
                 }
             }
         ]);
+        this._renderer.scrollLocationIntoView(head);
     }
 
 }

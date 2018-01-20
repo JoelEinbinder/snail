@@ -78,6 +78,13 @@ class Editor extends Emitter{
     }
 
     /**
+     * @param {Loc} location
+     */
+    scrollLocationIntoView(location) {
+        //todo
+    }
+
+    /**
      * @param {Event} event
      */
     _onScroll(event) {
