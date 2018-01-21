@@ -17,8 +17,8 @@ class SelectionManger extends Emitter{
         if (event.which !== 1)
             return;
         this._cursor = {
-            x: event.layerX + this._renderer.scrollLeft,
-            y: event.layerY + this._renderer.scrollTop
+            x: event.clientX,
+            y: event.clientY
         };
         this._anchor = null;
         this._updateSelection();
@@ -31,8 +31,8 @@ class SelectionManger extends Emitter{
         /** @type {function(MouseEvent)} */
         var mousemove = event => {
             this._cursor = {
-                x: event.layerX + this._renderer.scrollLeft,
-                y: event.layerY + this._renderer.scrollTop
+                x: event.clientX,
+                y: event.clientY
             };
             this._updateSelection();
         };
@@ -52,7 +52,7 @@ class SelectionManger extends Emitter{
 
     _updateSelection() {
         console.assert(!!this._cursor, 'cursor should be defined');
-        var head = this._renderer.locationFromPoint(this._cursor.x - this._renderer.scrollLeft, this._cursor.y - this._renderer.scrollTop);
+        var head = this._renderer.locationFromPoint(this._cursor.x, this._cursor.y);
         if (!this._anchor)
             this._anchor = head;
         var start, end;

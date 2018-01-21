@@ -71,8 +71,9 @@ class Editor extends Emitter{
      * @param {number} offsetY
      */
     locationFromPoint(offsetX, offsetY) {
-        var x = Math.round((offsetX - this._padding + this.scrollLeft) / this._charWidth)
-        var y = Math.floor((offsetY + this.scrollTop) / this._lineHeight);
+        var rect = this._scrollingElement.getBoundingClientRect();
+        var x = Math.round((offsetX - this._padding + this.scrollLeft - rect.left) / this._charWidth)
+        var y = Math.floor((offsetY + this.scrollTop - rect.top) / this._lineHeight);
         var line = Math.max(Math.min(y, this.model.lineCount() - 1), 0);
         var column = Math.max(0, Math.min(x, this.model.line(line).length));
         return {
@@ -85,7 +86,19 @@ class Editor extends Emitter{
      * @param {Loc} location
      */
     scrollLocationIntoView(location) {
-        //todo
+        var top = location.line * this._lineHeight;
+        var left = location.column * this._charWidth + this._padding;
+        var bottom = top + this._lineHeight;
+        var right = left + this._charWidth;
+        if (top < this.scrollTop)
+            this._scrollingElement.scrollTop = top;
+        else if (bottom > this.scrollTop + this._scrollingElement.clientHeight)
+            this._scrollingElement.scrollTop = bottom - this._scrollingElement.clientHeight;
+
+        if (left < this.scrollLeft)
+            this._scrollingElement.scrollLeft = left;
+        else if (right > this.scrollLeft + this._scrollingElement.clientWidth)
+            this._scrollingElement.scrollLeft = right - this._scrollingElement.clientWidth;
     }
 
     /**
