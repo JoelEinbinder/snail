@@ -86,10 +86,10 @@ class Editor extends Emitter{
      * @param {Loc} location
      */
     scrollLocationIntoView(location) {
-        var top = location.line * this._lineHeight;
-        var left = location.column * this._charWidth + this._padding;
-        var bottom = top + this._lineHeight;
-        var right = left + this._charWidth;
+        var top = location.line * this._lineHeight - this._padding;
+        var left = location.column * this._charWidth;
+        var bottom = top + this._lineHeight + this._padding * 2;
+        var right = left + this._charWidth + this._padding * 2;
         if (top < this.scrollTop)
             this._scrollingElement.scrollTop = top;
         else if (bottom > this.scrollTop + this._scrollingElement.clientHeight)
