@@ -1,99 +1,97 @@
 class Model extends Emitter {
-    /**
-     * @param {string} data
-     */
-    constructor(data) {
-        super();
-        this._lines = data.split('\n');
-        this._longestLineLength = 0;
-        for (var line of this._lines)
-            this._longestLineLength = Math.max(this._longestLineLength, line.length);
+  /**
+   * @param {string} data
+   */
+  constructor(data) {
+    super();
+    this._lines = data.split('\n');
+    this._longestLineLength = 0;
+    for (var line of this._lines) this._longestLineLength = Math.max(this._longestLineLength, line.length);
 
-        /** @type {Array<TextRange>} */
-        this._selections = [{start: {line: 0, column: 0}, end: {line: 0, column: 0}}];
-    }
+    /** @type {Array<TextRange>} */
+    this._selections = [{ start: { line: 0, column: 0 }, end: { line: 0, column: 0 } }];
+  }
 
-    longestLineLength() {
-        return this._longestLineLength;
-    }
+  longestLineLength() {
+    return this._longestLineLength;
+  }
 
-    /**
-     * @param {number} from
-     * @param {number} to
-     * @return {number}
-     */
-    charCountForLines(from, to) {
-        var total = 0;
-        for (var i = from; i <= to; i++)
-            total += this._lines[i].length;
-        return total;
-    }
+  /**
+   * @param {number} from
+   * @param {number} to
+   * @return {number}
+   */
+  charCountForLines(from, to) {
+    var total = 0;
+    for (var i = from; i <= to; i++) total += this._lines[i].length;
+    return total;
+  }
 
-    /**
-     * @param {number} i
-     * @return {string}
-     */
-    line(i) {
-        return this._lines[i];
-    }
+  /**
+   * @param {number} i
+   * @return {string}
+   */
+  line(i) {
+    return this._lines[i];
+  }
 
-    lineCount() {
-        return this._lines.length;
-    }
+  lineCount() {
+    return this._lines.length;
+  }
 
-    /**
-     * @param {Array<TextRange>} selections
-     */
-    setSelections(selections) {
-        const previousSelections = selections;
-        this._selections = selections;
-        this.emit('selectionChanged', {
-            selections,
-            previousSelections
-        })
-    }
+  /**
+   * @param {Array<TextRange>} selections
+   */
+  setSelections(selections) {
+    const previousSelections = selections;
+    this._selections = selections;
+    this.emit('selectionChanged', {
+      selections,
+      previousSelections
+    });
+  }
 
-    get selections() {
-        return this._selections;
-    }
+  get selections() {
+    return this._selections;
+  }
 
-    /**
-     * @param {TextRange=} range
-     * @return {string}
-     */
-    text(range = this.fullRange()) {
-        if (range.start.line === range.end.line)
-            return this._lines[range.start.line].substring(range.start.column, range.end.column);
-        var content = this._lines.slice(range.start.line, range.end.line + 1);
-        content[0] = content[0].substring(range.start.column);
-        content[content.length - 1] = content[content.length - 1].substring(0, range.end.column);
-        return content.join('\n');
-    }
+  /**
+   * @param {TextRange=} range
+   * @return {string}
+   */
+  text(range = this.fullRange()) {
+    if (range.start.line === range.end.line)
+      return this._lines[range.start.line].substring(range.start.column, range.end.column);
+    var content = this._lines.slice(range.start.line, range.end.line + 1);
+    content[0] = content[0].substring(range.start.column);
+    content[content.length - 1] = content[content.length - 1].substring(0, range.end.column);
+    return content.join('\n');
+  }
 
-    /**
-     * @return {TextRange}
-     */
-    fullRange() {
-        return {
-            start: {
-                line: 0,
-                column: 0,
-            },
-            end: {
-                line: this._lines.length - 1,
-                column: this._lines[this._lines.length - 1].length
-            }
-        }
-    }
+  /**
+   * @return {TextRange}
+   */
+  fullRange() {
+    return {
+      start: {
+        line: 0,
+        column: 0
+      },
+      end: {
+        line: this._lines.length - 1,
+        column: this._lines[this._lines.length - 1].length
+      }
+    };
+  }
 
-    /**
-     *
-     * @param {string} text
-     * @param {TextRange} range
-     */
-    replaceRange(text, range) {
-        throw 'todo';
-    }
+  /**
+   *
+   * @param {string} text
+   * @param {TextRange} range
+   */
+  replaceRange(text, range) {
+    throw 'todo';
+  }
 }
 
 /**
@@ -108,10 +106,10 @@ class Model extends Emitter {
  * @property {Loc} end
  */
 
- /**
-  * @param {TextRange} selection
-  * @return {boolean}
-  */
- function isSelectionCollapsed(selection) {
-     return selection.start.line === selection.end.line && selection.start.column === selection.end.column;
- }
+/**
+ * @param {TextRange} selection
+ * @return {boolean}
+ */
+function isSelectionCollapsed(selection) {
+  return selection.start.line === selection.end.line && selection.start.column === selection.end.column;
+}

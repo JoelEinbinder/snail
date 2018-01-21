@@ -12,8 +12,7 @@ class Emitter {
    */
   on(eventName, listener) {
     var set = this._listeners.get(eventName);
-    if (!set)
-      this._listeners.set(eventName, set = new Set());
+    if (!set) this._listeners.set(eventName, (set = new Set()));
     set.add(listener);
   }
 
@@ -24,8 +23,7 @@ class Emitter {
    */
   off(eventName, listener) {
     var set = this._listeners.get(eventName);
-    if (!set)
-      return false;
+    if (!set) return false;
     return set.delete(listener);
   }
 
@@ -35,8 +33,7 @@ class Emitter {
    */
   emit(eventName, data) {
     var set = this._listeners.get(eventName);
-    if (!set)
-      return;
+    if (!set) return;
     set.forEach(listener => listener(data));
   }
 
@@ -46,7 +43,7 @@ class Emitter {
    */
   once(eventName) {
     var fulfill;
-    var promise = new Promise(x => fulfill = x);
+    var promise = new Promise(x => (fulfill = x));
     var listener = data => {
       this.off(eventName, listener);
       fulfill(data);
