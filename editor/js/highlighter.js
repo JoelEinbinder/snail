@@ -23,6 +23,7 @@ class Highlighter extends Emitter {
         this._lines = [];
         this._requestLineNumber = 0;
         this._tokenizeTimeout = 0;
+        this.MAX_TOKENS = 1000;
         this._colors = [
             ['keyword', "hsl(310, 86%, 36%)"],
             ['number', "hsl(248, 100%, 41%)"],
@@ -77,6 +78,11 @@ class Highlighter extends Emitter {
                 }
                 tokens.push({text, color});
                 stream.start = stream.pos;
+                if (tokens.length > this.MAX_TOKENS) {
+                    state = this._mode.startState();
+                    tokens.push({text: stream.string.substring(stream.start), color: null})
+                    break;
+                }
             }
 
             this._lines.push({state, tokens})
@@ -125,12 +131,15 @@ class Highlighter extends Emitter {
           var bToken = b[aIndex];
           var aCount = 0;
           var bCount = 0;
-          for (var i = 0; i < line.length; i++) {
+          var i = 0;
+          while (i < line.length) {
             if (aCount >= aToken.text.length) {
+              console.assert(aCount == aToken.text.length);
               aIndex++;
               aCount = 0;
             }
             if (bCount >= bToken.text.length) {
+              console.assert(bCount == bToken.text.length);
               bIndex++;
               bCount = 0;
             }
@@ -139,14 +148,16 @@ class Highlighter extends Emitter {
             const nextColor = bToken.color || aToken.color;
             const nextBackground = bToken.background || aToken.background;
             if ((nextColor !== color || nextBackground !== background) && text) {
-              tokens.push({text, color, background});
+              tokens.push({ text, color, background });
               text = "";
             }
             color = nextColor;
             background = nextBackground;
-            text += line.charAt(i);
-            aCount ++;
-            bCount ++;
+            var amount = Math.min(aToken.text.length - aCount, bToken.text.length - bCount);
+            text += line.substr(i, amount);
+            aCount+=amount;
+            bCount+=amount;
+            i+=amount;
           }
           if (text)
             tokens.push({text, color, background});
