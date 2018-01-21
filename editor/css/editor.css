@@ -16,6 +16,8 @@ textarea {
     white-space: pre;
     resize: none;
     overflow: hidden;
+    position: absolute;
+    left: -999em;
 }
 
 .scroller {
