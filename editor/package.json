@@ -4,17 +4,13 @@
   "description": "",
   "dependencies": {},
   "devDependencies": {
-    "jasmine": "^2.8.0",
-    "mkdirp": "^0.5.1",
     "prettier": "^1.10.2",
-    "rimraf": "^2.6.2",
     "typescript": "^2.6.1"
   },
   "scripts": {
     "lint": "tsc -p .",
-    "unit": "jasmine test/test.js",
     "format": "npx prettier --write --single-quote --print-width 120 \"js/**/*.js\"",
-    "test": "npm run lint && npm run unit && npm run image"
+    "all": "npm run lint && npm run format"
   },
   "author": "",
   "license": "ISC"
