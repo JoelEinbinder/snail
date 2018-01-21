@@ -80,7 +80,7 @@ class Model extends Emitter {
                 column: 0,
             },
             end: {
-                line: this._lines.length,
+                line: this._lines.length - 1,
                 column: this._lines[this._lines.length - 1].length
             }
         }

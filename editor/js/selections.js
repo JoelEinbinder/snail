@@ -16,12 +16,17 @@ class SelectionManger extends Emitter{
     _contentMouseDown(event) {
         if (event.which !== 1)
             return;
+        if (event.detail >= 4) {
+            this._renderer.model.setSelections([this._renderer.model.fullRange()])
+            return;
+        }
+        this._increment = event.detail;
         this._cursor = {
             x: event.clientX,
             y: event.clientY
         };
         this._anchor = null;
-        this._updateSelection();
+        this._update();
         this._trackDrag();
     }
 
@@ -34,7 +39,7 @@ class SelectionManger extends Emitter{
                 x: event.clientX,
                 y: event.clientY
             };
-            this._updateSelection();
+            this._update();
         };
         /** @type {function(MouseEvent)} */
         var mouseup = event => {
@@ -43,15 +48,16 @@ class SelectionManger extends Emitter{
             this._renderer.off('scroll', scroll);
         };
         var scroll = () => {
-            this._updateSelection();
+            this._update();
         };
         window.addEventListener('mousemove', mousemove, true)
         window.addEventListener('mouseup', mouseup, true)
         this._renderer.on('scroll', scroll);
     }
 
-    _updateSelection() {
+    _update() {
         console.assert(!!this._cursor, 'cursor should be defined');
+        console.assert(this._increment > 0 && this._increment <= 3, 'unknown increment');
         var head = this._renderer.locationFromPoint(this._cursor.x, this._cursor.y);
         if (!this._anchor)
             this._anchor = head;
@@ -63,7 +69,8 @@ class SelectionManger extends Emitter{
             end = head;
             start = this._anchor;
         }
-        this._renderer.model.setSelections([{
+        if (this._increment === 1) {
+            this._renderer.model.setSelections([{
                 start: {
                     line: start.line,
                     column: start.column
@@ -72,9 +79,64 @@ class SelectionManger extends Emitter{
                     line: end.line,
                     column: end.column
                 }
+            }]);
+        }
+        else if (this._increment === 2) {
+            var startColumn = start.column;
+            var text = this._renderer.model.line(start.line);
+            if (startColumn > 0 && startColumn < text.length) {
+                var type = this._charType(text[startColumn])
+                for (var i = startColumn - 1; i >= 0 && type === this._charType(text[i]); i--)
+                    startColumn = i;
             }
-        ]);
+
+            var endColumn = end.column;
+            text = this._renderer.model.line(end.line);
+            if (endColumn < text.length) {
+                var type = this._charType(text[endColumn])
+                for (var i = endColumn + 1; i <= text.length && type === this._charType(text[i - 1]); i++)
+                    endColumn = i;
+            }
+
+
+            this._renderer.model.setSelections([{
+                start: {
+                    line: start.line,
+                    column: startColumn
+                },
+                end: {
+                    line: end.line,
+                    column: endColumn
+                }
+            }]);
+        }
+        else if (this._increment === 3) {
+            this._renderer.model.setSelections([{
+                start: {
+                    line: start.line,
+                    column: 0
+                },
+                end: {
+                    line: end.line,
+                    column: this._renderer.model.line(end.line).length
+                }
+            }]);
+        }
         this._renderer.scrollLocationIntoView(head);
+    }
+
+    /**
+     * @param {string} character
+     * @return {number}
+     */
+    _charType(character) {
+        if (character.match(/\s/))
+            return 0;
+        if (character.match(/[0-9a-zA-Z]/))
+            return 1;
+        if (character)
+            return 2;
+        return -1;
     }
 
 }
