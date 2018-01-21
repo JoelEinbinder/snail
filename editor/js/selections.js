@@ -1,13 +1,27 @@
 class SelectionManger extends Emitter {
   /**
    * @param {Editor} renderer
+   * @param {Model} model
+   * @param {CommandManager} commandManager
    */
-  constructor(renderer) {
+  constructor(renderer, model, commandManager) {
     super();
     this._renderer = renderer;
+    this._commandManager = commandManager;
+    this._model = model;
     this._anchor = null;
     this._cursor = null;
     this._renderer.on('contentMouseDown', this._contentMouseDown.bind(this));
+
+    this._commandManager.addCommand(
+      () => {
+        this._model.setSelections([this._model.fullRange()]);
+        return true;
+      },
+      'selectAll',
+      'Ctrl+A',
+      'Meta+A'
+    );
   }
 
   /**
@@ -16,7 +30,7 @@ class SelectionManger extends Emitter {
   _contentMouseDown(event) {
     if (event.which !== 1) return;
     if (event.detail >= 4) {
-      this._renderer.model.setSelections([this._renderer.model.fullRange()]);
+      this._model.setSelections([this._model.fullRange()]);
       return;
     }
     this._increment = event.detail;
@@ -68,7 +82,7 @@ class SelectionManger extends Emitter {
       start = this._anchor;
     }
     if (this._increment === 1) {
-      this._renderer.model.setSelections([
+      this._model.setSelections([
         {
           start: {
             line: start.line,
@@ -82,20 +96,20 @@ class SelectionManger extends Emitter {
       ]);
     } else if (this._increment === 2) {
       var startColumn = start.column;
-      var text = this._renderer.model.line(start.line);
+      var text = this._model.line(start.line);
       if (startColumn > 0 && startColumn < text.length) {
         var type = this._charType(text[startColumn]);
         for (var i = startColumn - 1; i >= 0 && type === this._charType(text[i]); i--) startColumn = i;
       }
 
       var endColumn = end.column;
-      text = this._renderer.model.line(end.line);
+      text = this._model.line(end.line);
       if (endColumn < text.length) {
         var type = this._charType(text[endColumn]);
         for (var i = endColumn + 1; i <= text.length && type === this._charType(text[i - 1]); i++) endColumn = i;
       }
 
-      this._renderer.model.setSelections([
+      this._model.setSelections([
         {
           start: {
             line: start.line,
@@ -108,7 +122,7 @@ class SelectionManger extends Emitter {
         }
       ]);
     } else if (this._increment === 3) {
-      this._renderer.model.setSelections([
+      this._model.setSelections([
         {
           start: {
             line: start.line,
@@ -116,7 +130,7 @@ class SelectionManger extends Emitter {
           },
           end: {
             line: end.line,
-            column: this._renderer.model.line(end.line).length
+            column: this._model.line(end.line).length
           }
         }
       ]);

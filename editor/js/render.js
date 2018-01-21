@@ -23,8 +23,9 @@ class Editor extends Emitter {
     this.element.appendChild(this._textLayer.canvas);
     this.element.appendChild(this._overlayLayer.canvas);
 
+    this._commandManager = new CommandManager(this.element);
     this._input = new Input(this.element, this.model);
-    this._selectionManager = new SelectionManger(this);
+    this._selectionManager = new SelectionManger(this, this.model, this._commandManager);
 
     this._highlighter.on('highlight', ({ from, to }) => {
       var viewport = this.viewport();
