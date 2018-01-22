@@ -65,9 +65,7 @@ class Input extends Emitter {
   /**
    * @param {!Event} event
    */
-  _onKeyDown(event) {
-
-  }
+  _onKeyDown(event) {}
 
   /**
    * @return {string}

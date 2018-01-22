@@ -9,9 +9,17 @@ class SelectionManger extends Emitter {
     this._renderer = renderer;
     this._commandManager = commandManager;
     this._model = model;
+    /** @type {Loc} */
     this._anchor = null;
+    /** @type {{x: number, y: number}} */
     this._cursor = null;
+    /** @type {Loc} */
+    this._desiredLocation = null;
     this._renderer.on('contentMouseDown', this._contentMouseDown.bind(this));
+    this._model.on('selectionChanged', () => {
+      this._anchor = null;
+      this._desiredLocation = null;
+    });
 
     this._commandManager.addCommand(
       () => {
@@ -26,7 +34,15 @@ class SelectionManger extends Emitter {
     this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, 0), 'moveLeft', 'ArrowLeft');
     this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, 0), 'moveRight', 'ArrowRight');
     this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, 0, true), 'extendLeft', 'Shift+ArrowLeft');
-    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, 0, true), 'extendRight', 'Shift+ArrowRight');
+    this._commandManager.addCommand(
+      this.moveCursorHorizontal.bind(this, 1, 0, true),
+      'extendRight',
+      'Shift+ArrowRight'
+    );
+    this._commandManager.addCommand(this.moveCursorVertical.bind(this, -1), 'moveUp', 'ArrowUp');
+    this._commandManager.addCommand(this.moveCursorVertical.bind(this, 1), 'moveDown', 'ArrowDown');
+    this._commandManager.addCommand(this.moveCursorVertical.bind(this, -1, true), 'extendUp', 'Shift+ArrowUp');
+    this._commandManager.addCommand(this.moveCursorVertical.bind(this, 1, true), 'extendDown', 'Shift+ArrowDown');
   }
 
   /**
@@ -77,14 +93,14 @@ class SelectionManger extends Emitter {
     console.assert(!!this._cursor, 'cursor should be defined');
     console.assert(this._increment > 0 && this._increment <= 3, 'unknown increment');
     var head = this._renderer.locationFromPoint(this._cursor.x, this._cursor.y);
-    if (!this._anchor) this._anchor = head;
+    var anchor = this._anchor || head;
     var start, end;
-    if (head.line < this._anchor.line || (head.line === this._anchor.line && head.column < this._anchor.column)) {
+    if (head.line < anchor.line || (head.line === anchor.line && head.column < anchor.column)) {
       start = head;
-      end = this._anchor;
+      end = anchor;
     } else {
       end = head;
-      start = this._anchor;
+      start = anchor;
     }
     if (this._increment === 1) {
       this._model.setSelections([
@@ -140,6 +156,8 @@ class SelectionManger extends Emitter {
         }
       ]);
     }
+    this._anchor = anchor;
+    this._desiredLocation = head;
     this._renderer.scrollLocationIntoView(head);
   }
 
@@ -159,6 +177,20 @@ class SelectionManger extends Emitter {
   }
 
   /**
+   * @param {-1|1} direction
+   * @param {boolean} extend
+   * @return {boolean}
+   */
+  _startIsHead(direction, extend) {
+    if (!extend) return direction < 0;
+    var selection = this._model.selections[0];
+    var anchorIsStart = !!this._anchor && !compareLocation(this._anchor, selection.start);
+    var anchorIsEnd = !!this._anchor && !compareLocation(this._anchor, selection.end);
+    if (anchorIsStart === anchorIsEnd) return direction < 0;
+    return !anchorIsStart;
+  }
+
+  /**
    * @param {1|-1} direction
    * @param {0} increment
    * @param {boolean=} extend
@@ -166,25 +198,17 @@ class SelectionManger extends Emitter {
    */
   moveCursorHorizontal(direction, increment, extend) {
     var selection = this._model.selections[0];
-    var modifyStart;
-    var anchorIsStart = !compareLocation(this._anchor, selection.start);
-    var anchorIsEnd = !compareLocation(this._anchor, selection.end)
-    if (anchorIsStart === anchorIsEnd)
-      modifyStart = direction < 0;
-    else
-      modifyStart = !anchorIsStart;
+    var modifyStart = this._startIsHead(direction, extend);
 
     var point = modifyStart ? copyLocation(selection.start) : copyLocation(selection.end);
     var text = this._model.line(point.line);
-    if (increment === 0)
-      point.column += direction;
+    if ((isSelectionCollapsed(selection) || extend) && increment === 0) point.column += direction;
     if (point.column < 0) {
       point.line--;
       if (point.line < 0) {
         point.line = 0;
         point.column = 0;
-      } else
-        point.column = this._model.line(point.line).length;
+      } else point.column = this._model.line(point.line).length;
     } else if (point.column > text.length) {
       point.line++;
       if (point.line >= this._model.lineCount()) {
@@ -196,14 +220,48 @@ class SelectionManger extends Emitter {
     }
     if (!extend) {
       selection = { start: point, end: point };
-      this._anchor = point;
-    } else if (modifyStart)
-      selection = { start: point, end: selection.end };
-    else
-      selection = { start: selection.start, end: point };
-    if (this._model.selections.length === 1 && !compareRange(this._model.selections[0], selection))
-      return false;
+    } else if (modifyStart) selection = { start: point, end: selection.end };
+    else selection = { start: selection.start, end: point };
+
+    if (this._model.selections.length === 1 && !compareRange(this._model.selections[0], selection)) return false;
+    var anchor = extend ? this._anchor || point : point;
     this._model.setSelections([selection]);
+    this._anchor = anchor;
+    this._desiredLocation = point;
+    this._renderer.scrollLocationIntoView(point);
+    return true;
+  }
+
+  /**
+   * @param {1|-1} direction
+   * @param {boolean=} extend
+   * @return {boolean}
+   */
+  moveCursorVertical(direction, extend) {
+    var selection = this._model.selections[0];
+    var modifyStart = this._startIsHead(direction, extend);
+
+    var point = modifyStart ? copyLocation(selection.start) : copyLocation(selection.end);
+    var desiredLocation = copyLocation(this._desiredLocation || point);
+    point.line += direction;
+    desiredLocation.line = point.line;
+    if (point.line < 0) {
+      point.line = 0;
+      point.column = 0;
+    } else if (point.line >= this._model.lineCount()) {
+      point.line = this._model.lineCount() - 1;
+      point.column = this._model.line(point.line).length;
+    } else {
+      point.column = Math.min(desiredLocation.column, this._model.line(point.line).length);
+    }
+    var anchor = extend ? this._anchor || point : point;
+    if (compareLocation(point, anchor) < 0) selection = { start: point, end: anchor };
+    else selection = { start: anchor, end: point };
+
+    if (this._model.selections.length === 1 && !compareRange(this._model.selections[0], selection)) return false;
+    this._model.setSelections([selection]);
+    this._anchor = anchor;
+    this._desiredLocation = desiredLocation;
     this._renderer.scrollLocationIntoView(point);
     return true;
   }

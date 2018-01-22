@@ -70,6 +70,7 @@ class Editor extends Emitter {
   /**
    * @param {number} offsetX
    * @param {number} offsetY
+   * @return {Loc}
    */
   locationFromPoint(offsetX, offsetY) {
     var rect = this._scrollingElement.getBoundingClientRect();

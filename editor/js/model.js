@@ -140,9 +140,7 @@ function compareRange(a, b) {
  * @return {-1|0|1}
  */
 function compareLocation(a, b) {
-  if (a.line !== b.line)
-    return a.line > b.line ? 1 : -1;
-  if (a.column !== b.column)
-    return a.column > b.column ? 1 : -1;
+  if (a.line !== b.line) return a.line > b.line ? 1 : -1;
+  if (a.column !== b.column) return a.column > b.column ? 1 : -1;
   return 0;
 }
