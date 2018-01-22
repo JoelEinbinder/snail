@@ -4,16 +4,10 @@ class Model extends Emitter {
    */
   constructor(data) {
     super();
-    this._lines = data.split('\n');
-    this._longestLineLength = 0;
-    for (var line of this._lines) this._longestLineLength = Math.max(this._longestLineLength, line.length);
+    this._lines = data.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
 
     /** @type {Array<TextRange>} */
     this._selections = [{ start: { line: 0, column: 0 }, end: { line: 0, column: 0 } }];
-  }
-
-  longestLineLength() {
-    return this._longestLineLength;
   }
 
   /**

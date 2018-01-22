@@ -153,7 +153,7 @@ class Highlighter extends Emitter {
         const nextColor = bToken.color || aToken.color;
         const nextBackground = bToken.background || aToken.background;
         if ((nextColor !== color || nextBackground !== background) && text) {
-          tokens.push({ text, color, background });
+          tokens.push({ text: text, color, background });
           text = '';
         }
         color = nextColor;
@@ -164,7 +164,7 @@ class Highlighter extends Emitter {
         bCount += amount;
         i += amount;
       }
-      if (text) tokens.push({ text, color, background });
+      if (text) tokens.push({ text: text, color, background });
       return tokens;
     };
 

@@ -16,7 +16,7 @@
         <script>
             var editor;
             async function go() {
-                var content = await (await fetch('text/minified.js')).text();
+                var content = await (await fetch('text/tabs.js')).text();
 
                 editor = new Editor(new Model(content.repeat(1)), {padBottom: true, lineNumbers: true});
                 document.body.appendChild(editor.element);

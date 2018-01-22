@@ -6,6 +6,8 @@ class Editor extends Emitter {
   constructor(model, options = {}) {
     super();
     this.model = model;
+    this.TAB = '    ';
+
     this._options = options;
 
     this.element = document.createElement('div');
@@ -57,6 +59,10 @@ class Editor extends Emitter {
     this.element.appendChild(this._scrollingElement);
     this.element.tabIndex = -1;
     this.element.addEventListener('focus', this.focus.bind(this), false);
+
+    this._longestLineLength = 0;
+    for (var i = 0; i < this.model.lineCount(); i++)
+      this._longestLineLength = Math.max(this._longestLineLength, model.line(i).replace(/\t/g, this.TAB).length);
   }
 
   get scrollTop() {
@@ -76,8 +82,28 @@ class Editor extends Emitter {
     var rect = this._scrollingElement.getBoundingClientRect();
     var x = Math.round((offsetX - this._padding + this.scrollLeft - rect.left) / this._charWidth);
     var y = Math.floor((offsetY + this.scrollTop - rect.top) / this._lineHeight);
-    var line = Math.max(Math.min(y, this.model.lineCount() - 1), 0);
-    var column = Math.max(0, Math.min(x, this.model.line(line).length));
+    if (y >= this.model.lineCount()) {
+      return {
+        line: this.model.lineCount() - 1,
+        column: this.model.line(this.model.lineCount() - 1).length
+      }
+    }
+    if (y < 0) {
+      return {
+        line: 0,
+        column: 0
+      }
+    }
+
+    var line = y;
+    var text = this.model.line(line);
+    var column = 0;
+    while (column < text.length) {
+      x -= text[column] === '\t' ? this.TAB.length : 1;
+      if (x < 0)
+        break;
+      column++;
+    }
     return {
       line,
       column
@@ -88,10 +114,12 @@ class Editor extends Emitter {
    * @param {Loc} location
    */
   scrollLocationIntoView(location) {
-    var top = location.line * this._lineHeight - this._padding;
-    var left = location.column * this._charWidth;
+    var point = this.pointFromLocation(location);
+    var top = point.y - this._padding;
+    var left = point.x;
     var bottom = top + this._lineHeight + this._padding * 2;
-    var right = left + this._charWidth + this._padding * 2;
+    var textSize = this.model.line(location.line).charAt(location.column).replace(/\t/g, this.TAB).length;
+    var right = left + textSize * this._charWidth + this._padding * 2;
     if (top < this.scrollTop) this._scrollingElement.scrollTop = top;
     else if (bottom > this.scrollTop + this._scrollingElement.clientHeight)
       this._scrollingElement.scrollTop = bottom - this._scrollingElement.clientHeight;
@@ -99,6 +127,18 @@ class Editor extends Emitter {
     if (left < this.scrollLeft) this._scrollingElement.scrollLeft = left;
     else if (right > this.scrollLeft + this._scrollingElement.clientWidth)
       this._scrollingElement.scrollLeft = right - this._scrollingElement.clientWidth;
+  }
+
+  /**
+   * @param {Loc} location
+   * @return {{x: number, y: number}}
+   */
+  pointFromLocation(location) {
+    var text = this.model.line(location.line);
+    return {
+      x: text.substring(0, location.column).replace(/\t/g, this.TAB).length * this._charWidth,
+      y: location.line * this._lineHeight
+    }
   }
 
   /**
@@ -129,7 +169,7 @@ class Editor extends Emitter {
   }
 
   _innerWidth() {
-    return this.model.longestLineLength() * this._charWidth + this._padding * 2;
+    return this._longestLineLength * this._charWidth + this._padding * 2;
   }
 
   refresh() {
@@ -193,8 +233,8 @@ class Editor extends Emitter {
       for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
         for (var j = 0; j < token.text.length; j += CHUNK_SIZE) {
-          var chunk = token.text.substring(j, j + CHUNK_SIZE);
-          rect.width = chunk.length * this._charWidth; // TODO tabs. Maybe the highlighter should handle that?
+          var chunk = token.text.substring(j, j + CHUNK_SIZE).replace(/\t/g, this.TAB);
+          rect.width = chunk.length * this._charWidth;
           if (intersects(rect, screenRect)) {
             if (token.background) {
               ctx.fillStyle = token.background;
@@ -223,9 +263,10 @@ class Editor extends Emitter {
     var lineNumbersWidth = this._lineNumbersWidth();
     for (var selection of this.model.selections) {
       if (!isSelectionCollapsed(selection)) continue;
+      var point = this.pointFromLocation(selection.start);
       var rect = {
-        x: lineNumbersWidth + this._padding - this.scrollLeft + selection.start.column * this._charWidth,
-        y: selection.start.line * this._lineHeight - this.scrollTop + (this._lineHeight - this._charHeight) / 4 - 1,
+        x: lineNumbersWidth + this._padding - this.scrollLeft + point.x,
+        y: point.y - this.scrollTop + (this._lineHeight - this._charHeight) / 4 - 1,
         width: 1.5,
         height: this._charHeight + 2
       };
