@@ -113,3 +113,36 @@ class Model extends Emitter {
 function isSelectionCollapsed(selection) {
   return selection.start.line === selection.end.line && selection.start.column === selection.end.column;
 }
+
+/**
+ * @param {Loc} location
+ * @return {Loc}
+ */
+function copyLocation(location) {
+  return {
+    line: location.line,
+    column: location.column
+  };
+}
+
+/**
+ * @param {TextRange} a
+ * @param {TextRange} b
+ * @return {-1|0|1}
+ */
+function compareRange(a, b) {
+  return compareLocation(a.start, b.start) || compareLocation(a.end, b.end);
+}
+
+/**
+ * @param {Loc} a
+ * @param {Loc} b
+ * @return {-1|0|1}
+ */
+function compareLocation(a, b) {
+  if (a.line !== b.line)
+    return a.line > b.line ? 1 : -1;
+  if (a.column !== b.column)
+    return a.column > b.column ? 1 : -1;
+  return 0;
+}

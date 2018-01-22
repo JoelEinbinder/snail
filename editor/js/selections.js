@@ -15,13 +15,18 @@ class SelectionManger extends Emitter {
 
     this._commandManager.addCommand(
       () => {
-        this._model.setSelections([this._model.fullRange()]);
+        this.selectAll();
         return true;
       },
       'selectAll',
       'Ctrl+A',
       'Meta+A'
     );
+
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, 0), 'moveLeft', 'ArrowLeft');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, 0), 'moveRight', 'ArrowRight');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, 0, true), 'extendLeft', 'Shift+ArrowLeft');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, 0, true), 'extendRight', 'Shift+ArrowRight');
   }
 
   /**
@@ -30,7 +35,7 @@ class SelectionManger extends Emitter {
   _contentMouseDown(event) {
     if (event.which !== 1) return;
     if (event.detail >= 4) {
-      this._model.setSelections([this._model.fullRange()]);
+      this.selectAll();
       return;
     }
     this._increment = event.detail;
@@ -140,12 +145,66 @@ class SelectionManger extends Emitter {
 
   /**
    * @param {string} character
-   * @return {number}
+   * @return {-1|0|1|2}
    */
   _charType(character) {
     if (character.match(/\s/)) return 0;
     if (character.match(/[0-9a-zA-Z]/)) return 1;
     if (character) return 2;
     return -1;
+  }
+
+  selectAll() {
+    this._model.setSelections([this._model.fullRange()]);
+  }
+
+  /**
+   * @param {1|-1} direction
+   * @param {0} increment
+   * @param {boolean=} extend
+   * @return {boolean}
+   */
+  moveCursorHorizontal(direction, increment, extend) {
+    var selection = this._model.selections[0];
+    var modifyStart;
+    var anchorIsStart = !compareLocation(this._anchor, selection.start);
+    var anchorIsEnd = !compareLocation(this._anchor, selection.end)
+    if (anchorIsStart === anchorIsEnd)
+      modifyStart = direction < 0;
+    else
+      modifyStart = !anchorIsStart;
+
+    var point = modifyStart ? copyLocation(selection.start) : copyLocation(selection.end);
+    var text = this._model.line(point.line);
+    if (increment === 0)
+      point.column += direction;
+    if (point.column < 0) {
+      point.line--;
+      if (point.line < 0) {
+        point.line = 0;
+        point.column = 0;
+      } else
+        point.column = this._model.line(point.line).length;
+    } else if (point.column > text.length) {
+      point.line++;
+      if (point.line >= this._model.lineCount()) {
+        point.line = this._model.lineCount() - 1;
+        point.column = text.length;
+      } else {
+        point.column = 0;
+      }
+    }
+    if (!extend) {
+      selection = { start: point, end: point };
+      this._anchor = point;
+    } else if (modifyStart)
+      selection = { start: point, end: selection.end };
+    else
+      selection = { start: selection.start, end: point };
+    if (this._model.selections.length === 1 && !compareRange(this._model.selections[0], selection))
+      return false;
+    this._model.setSelections([selection]);
+    this._renderer.scrollLocationIntoView(point);
+    return true;
   }
 }
