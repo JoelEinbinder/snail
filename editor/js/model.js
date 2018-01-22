@@ -4,7 +4,10 @@ class Model extends Emitter {
    */
   constructor(data) {
     super();
-    this._lines = data.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    this._lines = data
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n');
 
     /** @type {Array<TextRange>} */
     this._selections = [{ start: { line: 0, column: 0 }, end: { line: 0, column: 0 } }];

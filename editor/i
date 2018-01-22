@@ -1,0 +1,17 @@
+#!/bin/bash
+GRAY='\033[1;30m'
+PURPLE='\033[0;35m'
+NC='\033[0m' # No Color
+set -e
+npm run all
+printf "${GRAY}Adding all${NC}\n"
+git add .
+printf "${GRAY}Committing${NC}\n"
+git commit
+printf "${GRAY}Pusing to server${NC}\n"
+git push
+printf "${GRAY}Pulling on Firecaster${NC}\n"
+
+printf "${PURPLE}"
+ssh joel@git.firecaster.com "cd /home/joel/firecaster.com/editor; git pull;"
+printf "${NC}"

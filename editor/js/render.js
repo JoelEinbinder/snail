@@ -86,13 +86,13 @@ class Editor extends Emitter {
       return {
         line: this.model.lineCount() - 1,
         column: this.model.line(this.model.lineCount() - 1).length
-      }
+      };
     }
     if (y < 0) {
       return {
         line: 0,
         column: 0
-      }
+      };
     }
 
     var line = y;
@@ -100,8 +100,7 @@ class Editor extends Emitter {
     var column = 0;
     while (column < text.length) {
       x -= text[column] === '\t' ? this.TAB.length : 1;
-      if (x < 0)
-        break;
+      if (x < 0) break;
       column++;
     }
     return {
@@ -118,7 +117,10 @@ class Editor extends Emitter {
     var top = point.y - this._padding;
     var left = point.x;
     var bottom = top + this._lineHeight + this._padding * 2;
-    var textSize = this.model.line(location.line).charAt(location.column).replace(/\t/g, this.TAB).length;
+    var textSize = this.model
+      .line(location.line)
+      .charAt(location.column)
+      .replace(/\t/g, this.TAB).length;
     var right = left + textSize * this._charWidth + this._padding * 2;
     if (top < this.scrollTop) this._scrollingElement.scrollTop = top;
     else if (bottom > this.scrollTop + this._scrollingElement.clientHeight)
@@ -138,7 +140,7 @@ class Editor extends Emitter {
     return {
       x: text.substring(0, location.column).replace(/\t/g, this.TAB).length * this._charWidth,
       y: location.line * this._lineHeight
-    }
+    };
   }
 
   /**
