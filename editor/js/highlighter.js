@@ -9,8 +9,9 @@ class Highlighter extends Emitter {
   /**
    * @param {Model} model
    * @param {string} language
-   s   */
-  constructor(model, language = 'js') {
+   * @param {function(number,  string):Array<Token>} underlay
+   */
+  constructor(model, language = 'js', underlay = null) {
     super();
     this._model = model;
     this._model.on('selectionChanged', ({ selections, previousSelections }) => {
@@ -35,6 +36,7 @@ class Highlighter extends Emitter {
             background: '#b3d8fd'
           };
     this._mode = language === 'js' ? javascriptMode({ indentUnit: 2 }, {}) : cssMode({ indentUnit: 2 }, {});
+    this._underlay = underlay;
     /** @type {Array<{state: any, tokens: Array<Token>}>} */
     this._lines = [];
     this._requestLineNumber = 0;
@@ -195,11 +197,13 @@ class Highlighter extends Emitter {
     };
 
     this._tokenizeUpTo(lineNumber, 10000);
-    if (this._lines[lineNumber]) return mergeTokens(this._lines[lineNumber].tokens, this._selectionTokens(lineNumber));
-
-    // default
     var text = this._model.line(lineNumber);
-    return mergeTokens([{ text }], this._selectionTokens(lineNumber));
+    var mergedTokens = this._lines[lineNumber]
+      ? mergeTokens(this._lines[lineNumber].tokens, this._selectionTokens(lineNumber))
+      : mergeTokens([{ text }], this._selectionTokens(lineNumber)); // default
+
+    if (this._underlay) return mergeTokens(this._underlay.call(null, lineNumber, text), mergedTokens);
+    return mergedTokens;
   }
 
   /**

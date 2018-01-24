@@ -19,7 +19,14 @@
             async function go() {
                 var content = await (await fetch('text/medium.css')).text();
 
-                editor = new Editor(content, {padBottom: true, lineNumbers: true, language: 'css'});
+                editor = new Editor(content, {
+                    padBottom: true,
+                    lineNumbers: true,
+                    language: 'css',
+                    // underlay: (lineNumber, text) => {
+                    //     return lineNumber % 2 ? [{text}] : [{text, background: '#eee'}]
+                    // }
+                });
                 document.body.appendChild(editor.element);
                 editor.layout();
                 window.addEventListener('resize', event => editor.layout(), false);

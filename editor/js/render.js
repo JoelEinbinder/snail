@@ -12,7 +12,7 @@ class Editor extends Emitter {
 
     this.element = document.createElement('div');
     this.element.className = 'editor';
-    this._highlighter = new Highlighter(this.model, options.language);
+    this._highlighter = new Highlighter(this.model, options.language, options.underlay);
     this._padding = 4;
     this._refreshScheduled = false;
     this._savedViewport = { x: 0, y: 0, width: 0, height: 0 };
@@ -386,6 +386,7 @@ class Layer {
  * @property {boolean=} padBottom
  * @property {boolean=} lineNumbers
  * @property {string=} language
+ * @property {function(number,string):Array<Token>} [underlay]
  */
 
 /**
