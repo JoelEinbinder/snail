@@ -42,7 +42,12 @@ class Editor extends Emitter {
     });
 
     this._scrollingElement = document.createElement('div');
-    this._scrollingElement.classList.add('scroller');
+    this._scrollingElement.style.overflow = 'auto';
+    this._scrollingElement.style.position = 'absolute';
+    this._scrollingElement.style.top = '0';
+    this._scrollingElement.style.left = '0';
+    this._scrollingElement.style.right = '0';
+    this._scrollingElement.style.bottom = '0';
     this._fillerElement = document.createElement('div');
     this._scrollingElement.appendChild(this._fillerElement);
     this._scrollingElement.addEventListener('scroll', this._onScroll.bind(this), {

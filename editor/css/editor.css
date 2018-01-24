@@ -10,21 +10,3 @@
     line-height: 18px;
     letter-spacing: 0;
 }
-
-textarea {
-    display: block;
-    white-space: pre;
-    resize: none;
-    overflow: hidden;
-    position: absolute;
-    left: -999em;
-}
-
-.scroller {
-    position: absolute;
-    top:0;
-    left:0;
-    right:0;
-    bottom:0;
-    overflow: auto;
-}

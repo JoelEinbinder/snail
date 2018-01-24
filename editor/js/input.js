@@ -10,6 +10,11 @@ class Input extends Emitter {
     this._bufferRange = null;
     this._editable = true;
     this._textarea = document.createElement('textarea');
+    this._textarea.style.whiteSpace = 'pre';
+    this._textarea.style.resize = 'none';
+    this._textarea.style.overflow = 'hidden';
+    this._textarea.style.position = 'absolute';
+    this._textarea.style.left = '-999em';
     this._textarea.addEventListener('input', this.update.bind(this), false);
     this._textarea.disabled = !this._editable;
     this._textarea.spellcheck = false;
