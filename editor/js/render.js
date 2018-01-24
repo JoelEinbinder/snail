@@ -12,7 +12,7 @@ class Editor extends Emitter {
 
     this.element = document.createElement('div');
     this.element.className = 'editor';
-    this._highlighter = new Highlighter(this.model);
+    this._highlighter = new Highlighter(this.model, options.language);
     this._padding = 4;
     this._refreshScheduled = false;
     this._savedViewport = { x: 0, y: 0, width: 0, height: 0 };
@@ -245,7 +245,7 @@ class Editor extends Emitter {
           if (intersects(rect, screenRect)) {
             if (token.background) {
               ctx.fillStyle = token.background;
-              ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+              ctx.fillRect(rect.x, rect.y, 1 + rect.width, 1 + rect.height);
             }
             ctx.fillStyle = token.color || '#222';
             ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
@@ -385,6 +385,7 @@ class Layer {
  * @typedef {Object} Editor.Options
  * @property {boolean=} padBottom
  * @property {boolean=} lineNumbers
+ * @property {string=} language
  */
 
 /**

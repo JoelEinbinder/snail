@@ -6,6 +6,7 @@
     </head>
     <body role="application">
         <script src="modes/javascript.js"></script>
+        <script src="modes/css.js"></script>
         <script src="js/emitter.js"></script>
         <script src="js/model.js"></script>
         <script src="js/highlighter.js"></script>
@@ -16,9 +17,9 @@
         <script>
             var editor;
             async function go() {
-                var content = await (await fetch('text/tabs.js')).text();
+                var content = await (await fetch('text/medium.css')).text();
 
-                editor = new Editor(content, {padBottom: true, lineNumbers: true});
+                editor = new Editor(content, {padBottom: true, lineNumbers: true, language: 'css'});
                 document.body.appendChild(editor.element);
                 editor.layout();
                 window.addEventListener('resize', event => editor.layout(), false);

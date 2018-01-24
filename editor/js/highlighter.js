@@ -8,8 +8,9 @@
 class Highlighter extends Emitter {
   /**
    * @param {Model} model
-   */
-  constructor(model) {
+   * @param {string} language
+   s   */
+  constructor(model, language = 'js') {
     super();
     this._model = model;
     this._model.on('selectionChanged', ({ selections, previousSelections }) => {
@@ -24,24 +25,49 @@ class Highlighter extends Emitter {
           to: selection.end.line
         });
     });
-    this._mode = javascriptMode({ indentUnit: 2 }, {});
+    this._selectionColors =
+      navigator.platform.indexOf('Mac') === -1
+        ? {
+            color: '#ffffff',
+            background: '#308efe'
+          }
+        : {
+            background: '#b3d8fd'
+          };
+    this._mode = language === 'js' ? javascriptMode({ indentUnit: 2 }, {}) : cssMode({ indentUnit: 2 }, {});
     /** @type {Array<{state: any, tokens: Array<Token>}>} */
     this._lines = [];
     this._requestLineNumber = 0;
     this._tokenizeTimeout = 0;
     this.MAX_TOKENS = 1000;
-    this._colors = [
-      ['keyword', 'hsl(310, 86%, 36%)'],
-      ['number', 'hsl(248, 100%, 41%)'],
-      ['comment', 'hsl(120, 100%, 23%)'],
-      ['string', 'hsl(1, 80%, 43%)'],
-      ['string', 'hsl(1, 99%, 39%)'],
-      ['atom', 'hsl(310, 86%, 36%)'],
-      ['def', 'hsl(240, 73%, 38%)'],
-      ['operator', 'hsl(27, 100%, 30%)'],
-      ['meta', 'hsl(27, 100%, 30%)'],
-      ['variable', 'hsl(240, 73%, 38%)']
-    ];
+    this._colors =
+      language === 'js'
+        ? [
+            ['keyword', 'hsl(310, 86%, 36%)'],
+            ['number', 'hsl(248, 100%, 41%)'],
+            ['comment', 'hsl(120, 100%, 23%)'],
+            ['string', 'hsl(1, 80%, 43%)'],
+            ['string', 'hsl(1, 99%, 39%)'],
+            ['atom', 'hsl(310, 86%, 36%)'],
+            ['def', 'hsl(240, 73%, 38%)'],
+            ['operator', 'hsl(27, 100%, 30%)'],
+            ['meta', 'hsl(27, 100%, 30%)'],
+            ['variable', 'hsl(240, 73%, 38%)']
+          ]
+        : [
+            ['keyword ', 'rgb(7, 144, 154)'],
+            ['number', 'rgb(50, 0, 255)'],
+            ['comment', 'rgb(0, 116, 0)'],
+            ['def', 'rgb(200, 0, 0)'],
+            ['meta', 'rgb(200, 0, 0)'],
+            ['atom', 'rgb(7, 144, 154)'],
+            ['string', 'rgb(7, 144, 154)'],
+            ['string-2', 'rgb(7, 144, 154)'],
+            ['link', 'rgb(7, 144, 154)'],
+            ['variable', 'rgb(200, 0, 0)'],
+            ['variable-2', 'rgb(0, 0, 128)'],
+            ['property', 'rgb(200, 0, 0)']
+          ];
   }
 
   _requestTokenizeUpTo(lineNumber) {
@@ -198,8 +224,8 @@ class Highlighter extends Emitter {
       if (index !== range.start) tokens.push({ text: line.substring(index, range.start) });
       tokens.push({
         text: line.substring(range.start, range.end),
-        color: '#FFF',
-        background: '#000'
+        color: this._selectionColors.color,
+        background: this._selectionColors.background
       });
       index = range.end;
     }
