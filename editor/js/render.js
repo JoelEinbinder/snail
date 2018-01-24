@@ -1,11 +1,11 @@
 class Editor extends Emitter {
   /**
-   * @param {Model} model
+   * @param {string} data
    * @param {Editor.Options=} options
    */
-  constructor(model, options = {}) {
+  constructor(data, options = {}) {
     super();
-    this.model = model;
+    this.model = new Model(data);
     this.TAB = '    ';
 
     this._options = options;
@@ -67,7 +67,7 @@ class Editor extends Emitter {
 
     this._longestLineLength = 0;
     for (var i = 0; i < this.model.lineCount(); i++)
-      this._longestLineLength = Math.max(this._longestLineLength, model.line(i).replace(/\t/g, this.TAB).length);
+      this._longestLineLength = Math.max(this._longestLineLength, this.model.line(i).replace(/\t/g, this.TAB).length);
   }
 
   get scrollTop() {

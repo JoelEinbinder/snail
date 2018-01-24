@@ -18,7 +18,7 @@
             async function go() {
                 var content = await (await fetch('text/tabs.js')).text();
 
-                editor = new Editor(new Model(content.repeat(1)), {padBottom: true, lineNumbers: true});
+                editor = new Editor(content, {padBottom: true, lineNumbers: true});
                 document.body.appendChild(editor.element);
                 editor.layout();
                 window.addEventListener('resize', event => editor.layout(), false);

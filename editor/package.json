@@ -10,7 +10,8 @@
   "scripts": {
     "lint": "tsc -p .",
     "format": "npx prettier --write --single-quote --print-width 120 \"js/**/*.js\"",
-    "all": "npm run lint && npm run format"
+    "build": "node node/build.js",
+    "all": "npm run lint && npm run format && npm run build"
   },
   "author": "",
   "license": "ISC"
