@@ -1,6 +1,6 @@
 class Input extends Emitter {
   /**
-   * @param {Element} parent
+   * @param {HTMLElement} parent
    * @param {Model} model
    */
   constructor(parent, model) {
@@ -15,14 +15,62 @@ class Input extends Emitter {
     this._textarea.style.overflow = 'hidden';
     this._textarea.style.position = 'absolute';
     this._textarea.style.left = '-999em';
+    this._textarea.style.opacity = '0';
     this._textarea.addEventListener('input', this.update.bind(this), false);
     this._textarea.disabled = !this._editable;
     this._textarea.spellcheck = false;
     this._textarea.addEventListener('copy', this._onCopy.bind(this), false);
     this._textarea.addEventListener('cut', this._onCut.bind(this), false);
+
+    this._setupContextMenuListeners(parent);
+
     parent.appendChild(this._textarea);
 
     model.on('selectionChanged', this._selectionChanged.bind(this));
+  }
+
+  /**
+   * @param {HTMLElement} parent
+   */
+  _setupContextMenuListeners(parent) {
+    parent.addEventListener('mouseup', event => {
+      if (event.which !== 3) return;
+      this._textarea.style.left = event.layerX - 1 + 'px';
+      this._textarea.style.top = event.layerY - 1 + 'px';
+      this._textarea.style.zIndex = '1000';
+      var valueNeedsReset = false;
+      if (!this._textarea.value) {
+        this._textarea.value = '<BLANK LINE>';
+        valueNeedsReset = true;
+      }
+      var state = {
+        start: this._textarea.selectionStart,
+        end: this._textarea.selectionEnd,
+        value: this._textarea.value
+      };
+      parent.addEventListener(
+        'mousemove',
+        () => {
+          if (
+            state.value === this._textarea.value &&
+            (this._textarea.selectionStart < state.start || this._textarea.selectionEnd > state.end)
+          ) {
+            this._model.setSelections([this._model.fullRange()]);
+          } else if (valueNeedsReset) {
+            this._textarea.value = '';
+          }
+        },
+        {
+          once: true
+        }
+      );
+      var cleanup = () => {
+        this._textarea.style.left = '-999em';
+        this._textarea.style.removeProperty('z-index');
+        cancelAnimationFrame(raf);
+      };
+      var raf = requestAnimationFrame(cleanup);
+    });
   }
 
   /**
