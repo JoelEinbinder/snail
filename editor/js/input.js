@@ -48,22 +48,31 @@ class Input extends Emitter {
         end: this._textarea.selectionEnd,
         value: this._textarea.value
       };
-      parent.addEventListener(
-        'mousemove',
-        () => {
-          if (
-            state.value === this._textarea.value &&
-            (this._textarea.selectionStart < state.start || this._textarea.selectionEnd > state.end)
-          ) {
-            this._model.setSelections([this._model.fullRange()]);
-          } else if (valueNeedsReset) {
-            this._textarea.value = '';
-          }
-        },
-        {
-          once: true
+      var done = () => {
+        parent.removeEventListener('mousemove', checkDone, true);
+        parent.removeEventListener('keydown', checkDone, true);
+        window.removeEventListener('blur', checkDone, true);
+        clearInterval(selectAllInterval);
+      }
+      var checkDone = () => {
+        if (!checkSelectAll() && valueNeedsReset)
+          this._textarea.value = '';
+        done();
+      }
+      var checkSelectAll = () => {
+        if (state.value !== this._textarea.value)
+          return true;
+        if (this._textarea.selectionStart < state.start || this._textarea.selectionEnd > state.end) {
+          this._model.setSelections([this._model.fullRange()]);
+          done();
+          return true;
         }
-      );
+        return false;
+      }
+      var selectAllInterval = setInterval(checkSelectAll, 100);
+      parent.addEventListener('mousemove', checkDone, true);
+      parent.addEventListener('keydown', checkDone, true);
+      window.addEventListener('blur', checkDone, true);
       var cleanup = () => {
         this._textarea.style.left = '-999em';
         this._textarea.style.removeProperty('z-index');
