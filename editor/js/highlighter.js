@@ -82,7 +82,7 @@ class Highlighter extends Emitter {
       while (this._lines.length <= this._requestLineNumber && Date.now() - start < 10)
         this._tokenizeUpTo(this._lines.length);
       this._requestTokenizeUpTo(this._requestLineNumber);
-      this.emit('highlight', { from, to: this._lines.length });
+      this.emit('highlight', { from, to: this._lines.length - 1 });
     }, 100);
   }
 

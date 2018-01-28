@@ -53,22 +53,20 @@ class Input extends Emitter {
         parent.removeEventListener('keydown', checkDone, true);
         window.removeEventListener('blur', checkDone, true);
         clearInterval(selectAllInterval);
-      }
+      };
       var checkDone = () => {
-        if (!checkSelectAll() && valueNeedsReset)
-          this._textarea.value = '';
+        if (!checkSelectAll() && valueNeedsReset) this._textarea.value = '';
         done();
-      }
+      };
       var checkSelectAll = () => {
-        if (state.value !== this._textarea.value)
-          return true;
+        if (state.value !== this._textarea.value) return true;
         if (this._textarea.selectionStart < state.start || this._textarea.selectionEnd > state.end) {
           this._model.setSelections([this._model.fullRange()]);
           done();
           return true;
         }
         return false;
-      }
+      };
       var selectAllInterval = setInterval(checkSelectAll, 100);
       parent.addEventListener('mousemove', checkDone, true);
       parent.addEventListener('keydown', checkDone, true);

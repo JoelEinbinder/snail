@@ -40,7 +40,7 @@ class Model extends Emitter {
    * @param {Array<TextRange>} selections
    */
   setSelections(selections) {
-    const previousSelections = selections;
+    const previousSelections = this._selections;
     this._selections = selections;
     this.emit('selectionChanged', {
       selections,

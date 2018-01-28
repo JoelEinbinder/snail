@@ -18,12 +18,12 @@
         <script>
             var editor;
             async function go() {
-                var content = await (await fetch('text/medium.css')).text();
+                var content = await (await fetch('text/heavy.js')).text();
 
                 editor = new Editor(content, {
                     padBottom: true,
                     lineNumbers: true,
-                    language: 'css',
+                    language: 'js',
                     // underlay: (lineNumber, text) => {
                     //     return lineNumber % 2 ? [{text}] : [{text, background: '#eee'}]
                     // }

@@ -9,6 +9,7 @@ class Editor extends Emitter {
     this.TAB = '    ';
 
     this._options = options;
+    this._debugPainting = true;
 
     this.element = document.createElement('div');
     this.element.className = 'editor';
@@ -32,7 +33,15 @@ class Editor extends Emitter {
     this._highlighter.on('highlight', ({ from, to }) => {
       var viewport = this.viewport();
       if (viewport.from <= to && from <= viewport.to) {
-        this._textLayer.invalidate();
+        var y = Math.floor(this.pointFromLocation({ column: 0, line: from }).y - this.scrollTop);
+        var height =
+          Math.ceil(this.pointFromLocation({ column: 0, line: to }).y + this._lineHeight - this.scrollTop - y) + 1;
+        this._textLayer.invalidate({
+          x: 0,
+          y,
+          width: this._width,
+          height
+        });
         this.scheduleRefresh();
       }
     });
@@ -64,6 +73,10 @@ class Editor extends Emitter {
     this.element.appendChild(this._scrollingElement);
     this.element.tabIndex = -1;
     this.element.addEventListener('focus', this.focus.bind(this), false);
+    this._lastScrollOffset = {
+      top: 0,
+      left: 0
+    };
 
     this._longestLineLength = 0;
     for (var i = 0; i < this.model.lineCount(); i++)
@@ -164,10 +177,28 @@ class Editor extends Emitter {
    * @param {Event} event
    */
   _onScroll(event) {
-    // // TODO partial refresh
-    this._overlayLayer.invalidate();
-    this._textLayer.invalidate();
+    var rects = [];
+    var deltaX = this.scrollLeft - this._lastScrollOffset.left;
+    if (deltaX) {
+      rects.push({ x: 0, y: 0, width: this._width, height: this._height });
+    } else {
+      var deltaY = this.scrollTop - this._lastScrollOffset.top;
+      if (deltaX > 0) rects.push({ x: this._width - deltaX, y: 0, width: deltaX, height: this._height });
+      if (deltaX < 0) rects.push({ x: 0, y: 0, width: -deltaX, height: this._height });
+      if (deltaY > 0) rects.push({ x: 0, y: this._height - deltaY, width: this._width, height: deltaY });
+      if (deltaY < 0) rects.push({ x: 0, y: 0, width: this._width, height: -deltaY });
+      this._textLayer.translate(deltaY);
+      this._overlayLayer.translate(deltaY);
+    }
+    for (var rect of rects) {
+      this._overlayLayer.invalidate(rect);
+      this._textLayer.invalidate(rect);
+    }
     this.scheduleRefresh();
+    this._lastScrollOffset = {
+      top: this.scrollTop,
+      left: this.scrollLeft
+    };
     this.emit('scroll');
   }
 
@@ -219,14 +250,21 @@ class Editor extends Emitter {
 
   /**
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Array<Rect>} rects
+   * @param {Rect} clipRect
    */
-  _drawText(ctx, rects) {
+  _drawText(ctx, clipRect) {
     if (!this._lineHeight || !this._charWidth) throw new Error('Must call layout() before draw()');
+    if (this._debugPainting) {
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(0, 0, this._width, this._height);
+    }
+
     var start = performance.now();
+    ctx.beginPath();
+    ctx.rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+    ctx.clip();
     ctx.fillStyle = this._backgroundColor;
     ctx.fillRect(0, 0, this._width, this._height);
-    var screenRect = { x: 0, y: 0, width: this._width, height: this._height };
     var viewport = this.viewport();
     var lineNumbersWidth = this._lineNumbersWidth();
     var CHUNK_SIZE = 100;
@@ -234,15 +272,17 @@ class Editor extends Emitter {
       var rect = {
         x: lineNumbersWidth + this._padding - this.scrollLeft,
         y: i * this._lineHeight - this.scrollTop,
-        width: 0,
+        width: this._width,
         height: this._lineHeight
       };
+      if (!intersects(rect, clipRect)) continue;
+      rect.width = 0;
       for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
         for (var j = 0; j < token.text.length; j += CHUNK_SIZE) {
           var chunk = token.text.substring(j, j + CHUNK_SIZE).replace(/\t/g, this.TAB);
           rect.width = chunk.length * this._charWidth;
-          if (intersects(rect, screenRect)) {
+          if (intersects(rect, clipRect)) {
             if (token.background) {
               ctx.fillStyle = token.background;
               ctx.fillRect(rect.x, rect.y, 1 + rect.width, 1 + rect.height);
@@ -262,9 +302,9 @@ class Editor extends Emitter {
 
   /**
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Array<Rect>} rects
+   * @param {Rect} clipRect
    */
-  _drawOverlay(ctx, rects) {
+  _drawOverlay(ctx, clipRect) {
     ctx.clearRect(0, 0, this._width, this._height);
     ctx.fillStyle = 'rgba(0,0,0,0.8)';
     var lineNumbersWidth = this._lineNumbersWidth();
@@ -277,7 +317,7 @@ class Editor extends Emitter {
         width: 1.5,
         height: this._charHeight + 2
       };
-      if (rects.find(otherRect => intersects(otherRect, rect))) ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      if (intersects(rect, clipRect)) ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
     }
   }
 
@@ -327,7 +367,7 @@ class Editor extends Emitter {
 
 class Layer {
   /**
-   * @param {function(CanvasRenderingContext2D, Array<Rect>)} draw
+   * @param {function(CanvasRenderingContext2D, Rect)} draw
    */
   constructor(draw) {
     this.canvas = document.createElement('canvas');
@@ -337,12 +377,28 @@ class Layer {
     this._rects = [];
     this._width = 0;
     this._height = 0;
+    this._translation = 0;
   }
 
   refresh() {
+    if (this._translation) {
+      this._ctx.drawImage(this.canvas, 0, -this._translation, this._width, this._height);
+      this._translation = 0;
+    }
+    var clipRect = this._rects[0];
+    for (var rect of this._rects) {
+      var x = Math.min(clipRect.x, rect.x);
+      var y = Math.min(clipRect.y, rect.y);
+      clipRect = {
+        x,
+        y,
+        width: Math.max(clipRect.x + clipRect.width, rect.x + rect.width) - x,
+        height: Math.max(clipRect.y + clipRect.height, rect.y + rect.height) - y
+      };
+    }
     if (this._rects.length) {
       this._ctx.save();
-      this._draw(this._ctx, this._rects);
+      this._draw(this._ctx, clipRect);
       this._ctx.restore();
     }
     this._rects = [];
@@ -378,6 +434,16 @@ class Layer {
     this._ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     this._ctx.font = window.getComputedStyle(this.canvas).font;
     this.invalidate();
+  }
+
+  /**
+   * @param {number} y
+   */
+  translate(y) {
+    for (var rect of this._rects) {
+      rect.y -= y;
+    }
+    this._translation += y;
   }
 }
 
