@@ -378,7 +378,9 @@ class Layer {
 
   refresh() {
     if (this._translation.x || this._translation.y) {
-      this._ctx.drawImage(this.canvas, -this._translation.x, -this._translation.y, this._width, this._height);
+      if (this._supportsTranslating())
+        this._ctx.drawImage(this.canvas, -this._translation.x, -this._translation.y, this._width, this._height);
+      else this.invalidate();
       this._translation = { x: 0, y: 0 };
     }
     if (this._rects.length) {
@@ -406,9 +408,14 @@ class Layer {
     this._rects = newRects;
   }
 
+  _supportsTranslating() {
+    return !!window['chrome'] && Math.floor(window.devicePixelRatio) === window.devicePixelRatio;
+  }
+
   layout(width, height) {
-    this.canvas.width = width * window.devicePixelRatio;
-    this.canvas.height = height * window.devicePixelRatio;
+    var dpr = window.devicePixelRatio;
+    this.canvas.width = width * dpr;
+    this.canvas.height = height * dpr;
     this._width = width;
     this._height = height;
     this.canvas.style.width = width + 'px';
@@ -416,8 +423,10 @@ class Layer {
     this.canvas.style.position = 'absolute';
     this.canvas.style.top = '0';
     this.canvas.style.left = '0';
-    this._ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    this._ctx.font = window.getComputedStyle(this.canvas).font;
+    this._ctx.scale(dpr, dpr);
+    var computedStyle = window.getComputedStyle(this.canvas);
+
+    this._ctx.font = `${computedStyle.fontSize} / ${computedStyle.lineHeight} ${computedStyle.fontFamily}`;
     this.invalidate();
   }
 
