@@ -9,7 +9,7 @@ class Editor extends Emitter {
     this.TAB = '    ';
 
     this._options = options;
-    this._debugPainting = true;
+    this._debugPainting = false;
 
     this.element = document.createElement('div');
     this.element.className = 'editor';
@@ -179,16 +179,15 @@ class Editor extends Emitter {
   _onScroll(event) {
     var rects = [];
     var deltaX = this.scrollLeft - this._lastScrollOffset.left;
-    if (deltaX) {
-      rects.push({ x: 0, y: 0, width: this._width, height: this._height });
-    } else {
-      var deltaY = this.scrollTop - this._lastScrollOffset.top;
-      if (deltaX > 0) rects.push({ x: this._width - deltaX, y: 0, width: deltaX, height: this._height });
-      if (deltaX < 0) rects.push({ x: 0, y: 0, width: -deltaX, height: this._height });
-      if (deltaY > 0) rects.push({ x: 0, y: this._height - deltaY, width: this._width, height: deltaY });
-      if (deltaY < 0) rects.push({ x: 0, y: 0, width: this._width, height: -deltaY });
-      this._textLayer.translate(deltaY);
+    var deltaY = this.scrollTop - this._lastScrollOffset.top;
+    if (deltaX > 0) {
+      rects.push({ x: this._width - deltaX, y: 0, width: deltaX, height: this._height });
+      rects.push({ x: 0, y: 0, width: this._lineNumbersWidth(), height: this._height });
     }
+    if (deltaX < 0) rects.push({ x: 0, y: 0, width: this._lineNumbersWidth() + 1 - deltaX, height: this._height });
+    if (deltaY > 0) rects.push({ x: 0, y: this._height - deltaY, width: this._width, height: deltaY });
+    if (deltaY < 0) rects.push({ x: 0, y: 0, width: this._width, height: -deltaY });
+    this._textLayer.translate(deltaX, deltaY);
     for (var rect of rects) this._textLayer.invalidate(rect);
     this._overlayLayer.invalidate(); // we dont optimize the overlay layer because its transparent/not worth it.
     this.scheduleRefresh();
@@ -269,7 +268,7 @@ class Editor extends Emitter {
       var rect = {
         x: lineNumbersWidth + this._padding - this.scrollLeft,
         y: i * this._lineHeight - this.scrollTop,
-        width: this._width,
+        width: Infinity,
         height: this._lineHeight
       };
       if (!clipRects.some(clipRect => intersects(rect, clipRect))) continue;
@@ -374,13 +373,13 @@ class Layer {
     this._rects = [];
     this._width = 0;
     this._height = 0;
-    this._translation = 0;
+    this._translation = { x: 0, y: 0 };
   }
 
   refresh() {
-    if (this._translation) {
-      this._ctx.drawImage(this.canvas, 0, -this._translation, this._width, this._height);
-      this._translation = 0;
+    if (this._translation.x || this._translation.y) {
+      this._ctx.drawImage(this.canvas, -this._translation.x, -this._translation.y, this._width, this._height);
+      this._translation = { x: 0, y: 0 };
     }
     if (this._rects.length) {
       this._ctx.save();
@@ -423,13 +422,16 @@ class Layer {
   }
 
   /**
+   * @param {number} x
    * @param {number} y
    */
-  translate(y) {
+  translate(x, y) {
     for (var rect of this._rects) {
+      rect.x -= x;
       rect.y -= y;
     }
-    this._translation += y;
+    this._translation.x += x;
+    this._translation.y += y;
   }
 }
 
