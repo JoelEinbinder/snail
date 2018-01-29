@@ -188,12 +188,9 @@ class Editor extends Emitter {
       if (deltaY > 0) rects.push({ x: 0, y: this._height - deltaY, width: this._width, height: deltaY });
       if (deltaY < 0) rects.push({ x: 0, y: 0, width: this._width, height: -deltaY });
       this._textLayer.translate(deltaY);
-      this._overlayLayer.translate(deltaY);
     }
-    for (var rect of rects) {
-      this._overlayLayer.invalidate(rect);
-      this._textLayer.invalidate(rect);
-    }
+    for (var rect of rects) this._textLayer.invalidate(rect);
+    this._overlayLayer.invalidate(); // we dont optimize the overlay layer because its transparent/not worth it.
     this.scheduleRefresh();
     this._lastScrollOffset = {
       top: this.scrollTop,
@@ -250,9 +247,9 @@ class Editor extends Emitter {
 
   /**
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Rect} clipRect
+   * @param {Array<Rect>} clipRects
    */
-  _drawText(ctx, clipRect) {
+  _drawText(ctx, clipRects) {
     if (!this._lineHeight || !this._charWidth) throw new Error('Must call layout() before draw()');
     if (this._debugPainting) {
       ctx.fillStyle = 'rgba(0,0,0,0.1)';
@@ -261,7 +258,7 @@ class Editor extends Emitter {
 
     var start = performance.now();
     ctx.beginPath();
-    ctx.rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+    for (var clipRect of clipRects) ctx.rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
     ctx.clip();
     ctx.fillStyle = this._backgroundColor;
     ctx.fillRect(0, 0, this._width, this._height);
@@ -275,14 +272,14 @@ class Editor extends Emitter {
         width: this._width,
         height: this._lineHeight
       };
-      if (!intersects(rect, clipRect)) continue;
+      if (!clipRects.some(clipRect => intersects(rect, clipRect))) continue;
       rect.width = 0;
       for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
         for (var j = 0; j < token.text.length; j += CHUNK_SIZE) {
           var chunk = token.text.substring(j, j + CHUNK_SIZE).replace(/\t/g, this.TAB);
           rect.width = chunk.length * this._charWidth;
-          if (intersects(rect, clipRect)) {
+          if (clipRects.some(clipRect => intersects(rect, clipRect))) {
             if (token.background) {
               ctx.fillStyle = token.background;
               ctx.fillRect(rect.x, rect.y, 1 + rect.width, 1 + rect.height);
@@ -302,9 +299,9 @@ class Editor extends Emitter {
 
   /**
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Rect} clipRect
+   * @param {Array<Rect>} clipRects
    */
-  _drawOverlay(ctx, clipRect) {
+  _drawOverlay(ctx, clipRects) {
     ctx.clearRect(0, 0, this._width, this._height);
     ctx.fillStyle = 'rgba(0,0,0,0.8)';
     var lineNumbersWidth = this._lineNumbersWidth();
@@ -317,7 +314,7 @@ class Editor extends Emitter {
         width: 1.5,
         height: this._charHeight + 2
       };
-      if (intersects(rect, clipRect)) ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
     }
   }
 
@@ -367,7 +364,7 @@ class Editor extends Emitter {
 
 class Layer {
   /**
-   * @param {function(CanvasRenderingContext2D, Rect)} draw
+   * @param {function(CanvasRenderingContext2D, Array<Rect>)} draw
    */
   constructor(draw) {
     this.canvas = document.createElement('canvas');
@@ -385,20 +382,9 @@ class Layer {
       this._ctx.drawImage(this.canvas, 0, -this._translation, this._width, this._height);
       this._translation = 0;
     }
-    var clipRect = this._rects[0];
-    for (var rect of this._rects) {
-      var x = Math.min(clipRect.x, rect.x);
-      var y = Math.min(clipRect.y, rect.y);
-      clipRect = {
-        x,
-        y,
-        width: Math.max(clipRect.x + clipRect.width, rect.x + rect.width) - x,
-        height: Math.max(clipRect.y + clipRect.height, rect.y + rect.height) - y
-      };
-    }
     if (this._rects.length) {
       this._ctx.save();
-      this._draw(this._ctx, clipRect);
+      this._draw(this._ctx, this._rects);
       this._ctx.restore();
     }
     this._rects = [];
