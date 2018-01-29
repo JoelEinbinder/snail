@@ -14,6 +14,8 @@ class Editor extends Emitter {
     this.element = document.createElement('div');
     this.element.className = 'editor';
     this._highlighter = new Highlighter(this.model, options.language, options.underlay);
+    /** @type {WeakMap<Token, string>} */
+    this._rasterizedTokens = new WeakMap();
     this._padding = 4;
     this._refreshScheduled = false;
     this._savedViewport = { x: 0, y: 0, width: 0, height: 0 };
@@ -262,6 +264,7 @@ class Editor extends Emitter {
     ctx.fillStyle = this._backgroundColor;
     ctx.fillRect(0, 0, this._width, this._height);
     var viewport = this.viewport();
+    var farRight = Math.max(...clipRects.map(clipRect => clipRect.x + clipRect.width));
     var lineNumbersWidth = this._lineNumbersWidth();
     var CHUNK_SIZE = 100;
     for (var i = viewport.from; i <= viewport.to; i++) {
@@ -273,7 +276,7 @@ class Editor extends Emitter {
       };
       if (!clipRects.some(clipRect => intersects(rect, clipRect))) continue;
       rect.width = 0;
-      for (var token of this._highlighter.tokensForLine(i)) {
+      outer: for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
         for (var j = 0; j < token.text.length; j += CHUNK_SIZE) {
           var chunk = token.text.substring(j, j + CHUNK_SIZE).replace(/\t/g, this.TAB);
@@ -287,6 +290,7 @@ class Editor extends Emitter {
             ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
           }
           rect.x += rect.width;
+          if (rect.x > farRight) break outer;
         }
       }
     }
