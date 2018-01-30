@@ -117,14 +117,14 @@ class SelectionManger extends Emitter {
       ]);
     } else if (this._increment === 2) {
       var startColumn = start.column;
-      var text = this._model.line(start.line);
+      var { text } = this._model.line(start.line);
       if (startColumn > 0 && startColumn < text.length) {
         var type = this._charType(text[startColumn]);
         for (var i = startColumn - 1; i >= 0 && type === this._charType(text[i]); i--) startColumn = i;
       }
 
       var endColumn = end.column;
-      text = this._model.line(end.line);
+      var { text } = this._model.line(end.line);
       if (endColumn < text.length) {
         var type = this._charType(text[endColumn]);
         for (var i = endColumn + 1; i <= text.length && type === this._charType(text[i - 1]); i++) endColumn = i;
@@ -151,7 +151,7 @@ class SelectionManger extends Emitter {
           },
           end: {
             line: end.line,
-            column: this._model.line(end.line).length
+            column: this._model.line(end.line).text.length
           }
         }
       ]);
@@ -201,14 +201,14 @@ class SelectionManger extends Emitter {
     var modifyStart = this._startIsHead(direction, extend);
 
     var point = modifyStart ? copyLocation(selection.start) : copyLocation(selection.end);
-    var text = this._model.line(point.line);
+    var { text } = this._model.line(point.line);
     if ((isSelectionCollapsed(selection) || extend) && increment === 0) point.column += direction;
     if (point.column < 0) {
       point.line--;
       if (point.line < 0) {
         point.line = 0;
         point.column = 0;
-      } else point.column = this._model.line(point.line).length;
+      } else point.column = this._model.line(point.line).text.length;
     } else if (point.column > text.length) {
       point.line++;
       if (point.line >= this._model.lineCount()) {
@@ -250,9 +250,9 @@ class SelectionManger extends Emitter {
       point.column = 0;
     } else if (point.line >= this._model.lineCount()) {
       point.line = this._model.lineCount() - 1;
-      point.column = this._model.line(point.line).length;
+      point.column = this._model.line(point.line).text.length;
     } else {
-      point.column = Math.min(desiredLocation.column, this._model.line(point.line).length);
+      point.column = Math.min(desiredLocation.column, this._model.line(point.line).text.length);
     }
     var anchor = extend ? this._anchor || point : point;
     if (compareLocation(point, anchor) < 0) selection = { start: point, end: anchor };

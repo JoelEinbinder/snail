@@ -89,7 +89,7 @@ class Input extends Emitter {
       start: { line: mainSelection.start.line, column: 0 },
       end: {
         line: mainSelection.end.line,
-        column: this._model.line(mainSelection.end.line).length
+        column: this._model.line(mainSelection.end.line).text.length
       }
     };
     this._buffer = this._model.text(this._bufferRange);

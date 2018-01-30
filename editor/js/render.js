@@ -82,7 +82,10 @@ class Editor extends Emitter {
 
     this._longestLineLength = 0;
     for (var i = 0; i < this.model.lineCount(); i++)
-      this._longestLineLength = Math.max(this._longestLineLength, this.model.line(i).replace(/\t/g, this.TAB).length);
+      this._longestLineLength = Math.max(
+        this._longestLineLength,
+        this.model.line(i).text.replace(/\t/g, this.TAB).length
+      );
   }
 
   get scrollTop() {
@@ -105,7 +108,7 @@ class Editor extends Emitter {
     if (y >= this.model.lineCount()) {
       return {
         line: this.model.lineCount() - 1,
-        column: this.model.line(this.model.lineCount() - 1).length
+        column: this.model.line(this.model.lineCount() - 1).text.length
       };
     }
     if (y < 0) {
@@ -116,7 +119,7 @@ class Editor extends Emitter {
     }
 
     var line = y;
-    var text = this.model.line(line);
+    var { text } = this.model.line(line);
     var column = 0;
     while (column < text.length) {
       x -= text[column] === '\t' ? this.TAB.length : 1;
@@ -139,7 +142,7 @@ class Editor extends Emitter {
     var bottom = top + this._lineHeight + this._padding * 2;
     var textSize = this.model
       .line(location.line)
-      .charAt(location.column)
+      .text.charAt(location.column)
       .replace(/\t/g, this.TAB).length;
     var right = left + textSize * this._charWidth + this._padding * 2;
     if (top < this.scrollTop) this._scrollingElement.scrollTop = top;
@@ -156,7 +159,7 @@ class Editor extends Emitter {
    * @return {{x: number, y: number}}
    */
   pointFromLocation(location) {
-    var text = this.model.line(location.line);
+    var { text } = this.model.line(location.line);
     return {
       x: text.substring(0, location.column).replace(/\t/g, this.TAB).length * this._charWidth,
       y: location.line * this._lineHeight

@@ -37,8 +37,9 @@ class Highlighter extends Emitter {
           };
     this._mode = language === 'js' ? javascriptMode({ indentUnit: 2 }, {}) : cssMode({ indentUnit: 2 }, {});
     this._underlay = underlay;
-    /** @type {Array<{state: any, tokens: Array<Token>}>} */
-    this._lines = [];
+    /** @type {WeakMap<Line, {state: any, tokens: Array<Token>}>} */
+    this._lineInfo = new WeakMap();
+    this._currentLineNumber = 0;
     this._requestLineNumber = 0;
     this._tokenizeTimeout = 0;
     this.MAX_TOKENS = 1000;
@@ -77,12 +78,12 @@ class Highlighter extends Emitter {
     if (this._tokenizeTimeout) return;
     this._tokenizeTimeout = setTimeout(() => {
       this._tokenizeTimeout = 0;
-      var from = this._lines.length;
+      var from = this._currentLineNumber;
       var start = Date.now();
-      while (this._lines.length <= this._requestLineNumber && Date.now() - start < 10)
-        this._tokenizeUpTo(this._lines.length);
+      while (this._currentLineNumber <= this._requestLineNumber && Date.now() - start < 10)
+        this._tokenizeUpTo(this._currentLineNumber);
       this._requestTokenizeUpTo(this._requestLineNumber);
-      this.emit('highlight', { from, to: this._lines.length - 1 });
+      this.emit('highlight', { from, to: this._currentLineNumber - 1 });
     }, 100);
   }
 
@@ -91,14 +92,17 @@ class Highlighter extends Emitter {
    * @param {number=} max
    */
   _tokenizeUpTo(lineNumber, max) {
-    if (max && this._model.charCountForLines(this._lines.length, lineNumber) > max) {
+    if (max && this._model.charCountForLines(this._currentLineNumber, lineNumber) > max) {
       this._requestTokenizeUpTo(lineNumber);
       return;
     }
-    var state = this._lines.length ? this._lines[this._lines.length - 1].state : this._mode.startState();
-    for (var i = this._lines.length; i <= lineNumber; i++) {
+    var state = this._currentLineNumber
+      ? this._lineInfo.get(this._model.line(this._currentLineNumber - 1)).state
+      : this._mode.startState();
+    for (; this._currentLineNumber <= lineNumber; this._currentLineNumber++) {
       var tokens = [];
-      var stream = new StringStream(this._model.line(i));
+      var line = this._model.line(this._currentLineNumber);
+      var stream = new StringStream(line.text);
       if (stream.eol() && this._mode.blankLine) this._mode.blankLine(state);
       while (!stream.eol()) {
         var className = this._mode.token(stream, state) || '';
@@ -118,8 +122,7 @@ class Highlighter extends Emitter {
           break;
         }
       }
-
-      this._lines.push({ state, tokens });
+      this._lineInfo.set(line, { state, tokens });
       state = this._copyState(state);
     }
   }
@@ -165,7 +168,7 @@ class Highlighter extends Emitter {
       var aCount = 0;
       var bCount = 0;
       var i = 0;
-      while (i < line.length) {
+      while (i < line.text.length) {
         if (aCount >= aToken.text.length) {
           console.assert(aCount == aToken.text.length);
           aIndex++;
@@ -187,7 +190,7 @@ class Highlighter extends Emitter {
         color = nextColor;
         background = nextBackground;
         var amount = Math.min(aToken.text.length - aCount, bToken.text.length - bCount);
-        text += line.substr(i, amount);
+        text += line.text.substr(i, amount);
         aCount += amount;
         bCount += amount;
         i += amount;
@@ -197,9 +200,10 @@ class Highlighter extends Emitter {
     };
 
     this._tokenizeUpTo(lineNumber, 10000);
-    var text = this._model.line(lineNumber);
-    var mergedTokens = this._lines[lineNumber]
-      ? mergeTokens(this._lines[lineNumber].tokens, this._selectionTokens(lineNumber))
+    var line = this._model.line(lineNumber);
+    var { text } = line;
+    var mergedTokens = this._lineInfo.has(line)
+      ? mergeTokens(this._lineInfo.get(line).tokens, this._selectionTokens(lineNumber))
       : mergeTokens([{ text }], this._selectionTokens(lineNumber)); // default
 
     if (this._underlay) return mergeTokens(this._underlay.call(null, lineNumber, text), mergedTokens);
@@ -213,27 +217,27 @@ class Highlighter extends Emitter {
   _selectionTokens(lineNumber) {
     var ranges = [];
     var tokens = [];
-    var line = this._model.line(lineNumber);
+    var { text } = this._model.line(lineNumber);
     for (var selection of this._model.selections) {
       if (!isSelectionCollapsed(selection) && selection.start.line <= lineNumber && selection.end.line >= lineNumber) {
         ranges.push({
           start: selection.start.line === lineNumber ? selection.start.column : 0,
-          end: selection.end.line === lineNumber ? selection.end.column : line.length
+          end: selection.end.line === lineNumber ? selection.end.column : text.length
         });
       }
     }
     ranges.sort((a, b) => a.start - b.start);
     var index = 0;
     for (var range of ranges) {
-      if (index !== range.start) tokens.push({ text: line.substring(index, range.start) });
+      if (index !== range.start) tokens.push({ text: text.substring(index, range.start) });
       tokens.push({
-        text: line.substring(range.start, range.end),
+        text: text.substring(range.start, range.end),
         color: this._selectionColors.color,
         background: this._selectionColors.background
       });
       index = range.end;
     }
-    if (index !== line.length) tokens.push({ text: line.substring(index, line.length) });
+    if (index !== text.length) tokens.push({ text: text.substring(index, text.length) });
     return tokens;
   }
 }
