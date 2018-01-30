@@ -261,8 +261,9 @@ class Editor extends Emitter {
     ctx.beginPath();
     for (var clipRect of clipRects) ctx.rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
     ctx.clip();
+    var extendedRect = combineRects(...clipRects);
     ctx.fillStyle = this._backgroundColor;
-    ctx.fillRect(0, 0, this._width, this._height);
+    ctx.fillRect(extendedRect.x, extendedRect.y, extendedRect.width, extendedRect.height);
     var viewport = this.viewport();
     var farRight = Math.max(...clipRects.map(clipRect => clipRect.x + clipRect.width));
     var lineNumbersWidth = this._lineNumbersWidth();
@@ -485,4 +486,16 @@ function contains(inside, outside) {
     inside.y >= outside.y &&
     inside.y + inside.height <= outside.y + outside.height
   );
+}
+
+/**
+ * @param {Array<Rect>} rects
+ * @return {Rect}
+ */
+function combineRects(...rects) {
+  var x = Math.min(...rects.map(rect => rect.x));
+  var y = Math.min(...rects.map(rect => rect.y));
+  var width = Math.max(...rects.map(rect => rect.x + rect.width)) - x;
+  var height = Math.max(...rects.map(rect => rect.y + rect.height)) - y;
+  return { x, y, width, height };
 }
