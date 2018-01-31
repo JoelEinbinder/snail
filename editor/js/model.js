@@ -7,7 +7,8 @@ class Model extends Emitter {
     this._lines = data
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')
-      .split('\n');
+      .split('\n')
+      .map(text => ({ text }));
 
     /** @type {Array<TextRange>} */
     this._selections = [{ start: { line: 0, column: 0 }, end: { line: 0, column: 0 } }];
@@ -20,13 +21,13 @@ class Model extends Emitter {
    */
   charCountForLines(from, to) {
     var total = 0;
-    for (var i = from; i <= to; i++) total += this._lines[i].length;
+    for (var i = from; i <= to; i++) total += this._lines[i].text.length;
     return total;
   }
 
   /**
    * @param {number} i
-   * @return {string}
+   * @return {Line}
    */
   line(i) {
     return this._lines[i];
@@ -58,8 +59,8 @@ class Model extends Emitter {
    */
   text(range = this.fullRange()) {
     if (range.start.line === range.end.line)
-      return this._lines[range.start.line].substring(range.start.column, range.end.column);
-    var content = this._lines.slice(range.start.line, range.end.line + 1);
+      return this._lines[range.start.line].text.substring(range.start.column, range.end.column);
+    var content = this._lines.slice(range.start.line, range.end.line + 1).map(line => line.text);
     content[0] = content[0].substring(range.start.column);
     content[content.length - 1] = content[content.length - 1].substring(0, range.end.column);
     return content.join('\n');
@@ -76,7 +77,7 @@ class Model extends Emitter {
       },
       end: {
         line: this._lines.length - 1,
-        column: this._lines[this._lines.length - 1].length
+        column: this._lines[this._lines.length - 1].text.length
       }
     };
   }
@@ -90,6 +91,11 @@ class Model extends Emitter {
     throw 'todo';
   }
 }
+
+/**
+ * @typedef {Object} Line
+ * @property {string} text
+ */
 
 /**
  * @typedef {Object} Loc
