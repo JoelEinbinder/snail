@@ -18,9 +18,9 @@
         <script>
             var editor;
             async function go() {
-                var content = await (await fetch('text/heavy.js')).text();
+                var content = await (await fetch('text/medium.js')).text();
 
-                editor = new Editor(content, {
+                editor = new Editor(content.repeat(100), {
                     padBottom: true,
                     lineNumbers: true,
                     language: 'js',

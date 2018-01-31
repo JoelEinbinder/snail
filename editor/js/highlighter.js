@@ -92,7 +92,11 @@ class Highlighter extends Emitter {
    * @param {number=} max
    */
   _tokenizeUpTo(lineNumber, max) {
-    if (max && this._model.charCountForLines(this._currentLineNumber, lineNumber) > max) {
+    if (
+      max &&
+      (lineNumber - this._currentLineNumber > max / 10 ||
+        this._model.charCountForLines(this._currentLineNumber, lineNumber) > max)
+    ) {
       this._requestTokenizeUpTo(lineNumber);
       return;
     }
