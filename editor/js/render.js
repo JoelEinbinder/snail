@@ -17,6 +17,8 @@ class Editor extends Emitter {
     /** @type {WeakMap<Token, string>} */
     this._rasterizedTokens = new WeakMap();
     this._padding = 4;
+    this._scrollTop = 0;
+    this._scrollLeft = 0;
     this._refreshScheduled = false;
     this._savedViewport = { x: 0, y: 0, width: 0, height: 0 };
 
@@ -35,9 +37,9 @@ class Editor extends Emitter {
     this._highlighter.on('highlight', ({ from, to }) => {
       var viewport = this.viewport();
       if (viewport.from <= to && from <= viewport.to) {
-        var y = Math.floor(this.pointFromLocation({ column: 0, line: from }).y - this.scrollTop);
+        var y = Math.floor(this.pointFromLocation({ column: 0, line: from }).y - this.scrollTop) - 1;
         var height =
-          Math.ceil(this.pointFromLocation({ column: 0, line: to }).y + this._lineHeight - this.scrollTop - y) + 1;
+          Math.ceil(this.pointFromLocation({ column: 0, line: to }).y + this._lineHeight - this.scrollTop - y) + 2;
         this._textLayer.invalidate({
           x: 0,
           y,
@@ -86,11 +88,13 @@ class Editor extends Emitter {
   }
 
   get scrollTop() {
-    return this._scrollingElement.scrollTop;
+    // return this._scrollingElement.scrollTop;
+    return this._scrollTop;
   }
 
   get scrollLeft() {
-    return this._scrollingElement.scrollLeft;
+    // return this._scrollingElement.scrollLeft;
+    return this._scrollLeft; //this._scrollingElement.scrollLeft;
   }
 
   /**
@@ -175,20 +179,20 @@ class Editor extends Emitter {
     else this._scrollingElement.scrollTop += deltaY;
   }
 
-  /**
-   * @param {Event} event
-   */
-  _onScroll(event) {
+  _onScroll() {
+    this._scrollTop = Math.round(this._scrollingElement.scrollTop * window.devicePixelRatio) / window.devicePixelRatio;
+    this._scrollLeft =
+      Math.round(this._scrollingElement.scrollLeft * window.devicePixelRatio) / window.devicePixelRatio;
     var rects = [];
     var deltaX = this.scrollLeft - this._lastScrollOffset.left;
     var deltaY = this.scrollTop - this._lastScrollOffset.top;
     if (deltaX > 0) {
-      rects.push({ x: this._width - deltaX, y: 0, width: deltaX, height: this._height });
-      rects.push({ x: 0, y: 0, width: this._lineNumbersWidth(), height: this._height });
+      rects.push({ x: this._width - deltaX - 1, y: 0, width: deltaX + 1, height: this._height });
+      rects.push({ x: 0, y: 0, width: this._lineNumbersWidth() + 1, height: this._height });
     }
-    if (deltaX < 0) rects.push({ x: 0, y: 0, width: this._lineNumbersWidth() + 1 - deltaX, height: this._height });
-    if (deltaY > 0) rects.push({ x: 0, y: this._height - deltaY, width: this._width, height: deltaY });
-    if (deltaY < 0) rects.push({ x: 0, y: 0, width: this._width, height: -deltaY });
+    if (deltaX < 0) rects.push({ x: 0, y: 0, width: this._lineNumbersWidth() + 1 - deltaX + 1, height: this._height });
+    if (deltaY > 0) rects.push({ x: 0, y: this._height - deltaY - 1, width: this._width, height: deltaY + 1 });
+    if (deltaY < 0) rects.push({ x: 0, y: 0, width: this._width, height: -deltaY + 1 });
     this._textLayer.translate(deltaX, deltaY);
     for (var rect of rects) this._textLayer.invalidate(rect);
     this._overlayLayer.invalidate(); // we dont optimize the overlay layer because its transparent/not worth it.
@@ -378,18 +382,18 @@ class Layer {
     this._rects = [];
     this._width = 0;
     this._height = 0;
+    this._dpr = 1;
     this._translation = { x: 0, y: 0 };
   }
 
   refresh() {
     if (this._translation.x || this._translation.y) {
-      if (this._supportsTranslating())
-        this._ctx.drawImage(this.canvas, -this._translation.x, -this._translation.y, this._width, this._height);
-      else this.invalidate();
+      this._ctx.drawImage(this.canvas, -this._translation.x, -this._translation.y);
       this._translation = { x: 0, y: 0 };
     }
     if (this._rects.length) {
       this._ctx.save();
+      this._ctx.scale(this._dpr, this._dpr);
       this._draw(this._ctx, this._rects);
       this._ctx.restore();
     }
@@ -413,10 +417,6 @@ class Layer {
     this._rects = newRects;
   }
 
-  _supportsTranslating() {
-    return !!window['chrome'] && Math.floor(window.devicePixelRatio) === window.devicePixelRatio;
-  }
-
   layout(width, height) {
     var dpr = window.devicePixelRatio;
     this.canvas.width = width * dpr;
@@ -428,7 +428,7 @@ class Layer {
     this.canvas.style.position = 'absolute';
     this.canvas.style.top = '0';
     this.canvas.style.left = '0';
-    this._ctx.scale(dpr, dpr);
+    this._dpr = dpr;
     var computedStyle = window.getComputedStyle(this.canvas);
 
     this._ctx.font = `${computedStyle.fontSize} / ${computedStyle.lineHeight} ${computedStyle.fontFamily}`;
@@ -444,8 +444,8 @@ class Layer {
       rect.x -= x;
       rect.y -= y;
     }
-    this._translation.x += x;
-    this._translation.y += y;
+    this._translation.x += Math.round(x * this._dpr);
+    this._translation.y += Math.round(y * this._dpr);
   }
 }
 
