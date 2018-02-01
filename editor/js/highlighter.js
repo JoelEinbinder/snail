@@ -26,6 +26,13 @@ class Highlighter extends Emitter {
           to: selection.end.line
         });
     });
+    this._model.on('change', range => {
+      this._currentLineNumber = Math.min(this._currentLineNumber, range.start.line - 1);
+      this.emit('highlight', {
+        from: range.start.line,
+        to: model.lineCount() - 1
+      });
+    });
     this._selectionColors =
       navigator.platform.indexOf('Mac') === -1
         ? {
@@ -126,8 +133,7 @@ class Highlighter extends Emitter {
           break;
         }
       }
-      this._lineInfo.set(line, { state, tokens });
-      state = this._copyState(state);
+      this._lineInfo.set(line, { state: this._copyState(state), tokens });
     }
   }
 

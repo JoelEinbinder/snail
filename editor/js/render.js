@@ -304,8 +304,6 @@ class Editor extends Emitter {
     }
 
     if (this._options.lineNumbers) this._drawLineNumbers(ctx);
-
-    document.title = String(Math.round(1000 / (performance.now() - start)));
   }
 
   /**

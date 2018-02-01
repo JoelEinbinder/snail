@@ -17,9 +17,12 @@ class CommandManager {
         var shortcut = this._eventToString(event);
         for (var i = this._shortcuts.length - 1; i >= 0; i--) {
           if (this._shortcuts[i].shortcut !== shortcut) continue;
-          if (this._commands.get(this._shortcuts[i].command)()) return true;
+          if (this._commands.get(this._shortcuts[i].command)()) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
         }
-        return false;
       },
       false
     );

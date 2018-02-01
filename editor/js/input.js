@@ -136,8 +136,30 @@ class Input extends Emitter {
 
   update(event) {
     var value = this._textarea.value;
-    if (value === this._buffer) return;
-    this._model.replaceRange(value, this._bufferRange);
+    var buffer = this._buffer;
+    if (value === buffer) return;
+    var start = copyLocation(this._bufferRange.start);
+    var selectionStart = this._textarea.selectionStart;
+    var selectionEnd = this._textarea.selectionEnd;
+    for (var i = 0; i < selectionStart; i++) {
+      if (value[i] !== buffer[i]) break;
+      start.column++;
+      if (value[i] === '\n') {
+        start.line++;
+        start.column = 0;
+      }
+    }
+    var end = copyLocation(this._bufferRange.end);
+    for (var j = value.length - 1; j >= selectionEnd; j--) {
+      if (value[j] !== buffer[j - value.length + buffer.length]) break;
+      end.column--;
+      if (value[j] === '\n') {
+        end.line--;
+        end.column = this._model.line(end.line).text.length;
+      }
+    }
+    var loc = this._model.replaceRange(value.substring(i, j + 1), { start, end });
+    this._model.setSelections([{ start: loc, end: loc }]);
   }
 
   focus() {

@@ -4,12 +4,7 @@ class Model extends Emitter {
    */
   constructor(data) {
     super();
-    this._lines = data
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
-      .split('\n')
-      .map(text => ({ text }));
-
+    this._lines = this._createLines(data);
     /** @type {Array<TextRange>} */
     this._selections = [{ start: { line: 0, column: 0 }, end: { line: 0, column: 0 } }];
   }
@@ -86,9 +81,32 @@ class Model extends Emitter {
    *
    * @param {string} text
    * @param {TextRange} range
+   * @return {Loc}
    */
   replaceRange(text, range) {
-    throw 'todo';
+    var lines = this._createLines(text);
+    lines[0].text = this._lines[range.start.line].text.substring(0, range.start.column) + lines[0].text;
+    var endColumn = lines[lines.length - 1].text.length;
+    lines[lines.length - 1].text += this._lines[range.end.line].text.substring(range.end.column);
+    this._lines.splice(range.start.line, range.end.line - range.start.line + 1, ...lines);
+
+    this.emit('change', range);
+    return {
+      line: range.start.line + lines.length - 1,
+      column: endColumn
+    };
+  }
+
+  /**
+   * @param {string} data
+   * @return {Array<Line>}
+   */
+  _createLines(data) {
+    return data
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map(text => ({ text }));
   }
 }
 
