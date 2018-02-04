@@ -59,7 +59,7 @@ class SelectionManger extends Emitter {
       x: event.clientX,
       y: event.clientY
     };
-    this._anchor = null;
+    if (!event.shiftKey) this._anchor = null;
     this._update();
     this._trackDrag();
   }
@@ -218,18 +218,7 @@ class SelectionManger extends Emitter {
         point.column = 0;
       }
     }
-    if (!extend) {
-      selection = { start: point, end: point };
-    } else if (modifyStart) selection = { start: point, end: selection.end };
-    else selection = { start: selection.start, end: point };
-
-    if (this._model.selections.length === 1 && !compareRange(this._model.selections[0], selection)) return false;
-    var anchor = extend ? this._anchor || point : point;
-    this._model.setSelections([selection]);
-    this._anchor = anchor;
-    this._desiredLocation = point;
-    this._renderer.scrollLocationIntoView(point);
-    return true;
+    return this.moveCursor(point, extend);
   }
 
   /**
@@ -254,6 +243,18 @@ class SelectionManger extends Emitter {
     } else {
       point.column = Math.min(desiredLocation.column, this._model.line(point.line).text.length);
     }
+    if (!this.moveCursor(point, extend)) return false;
+    this._desiredLocation = desiredLocation;
+    return true;
+  }
+
+  /**
+   * @param {Loc} point
+   * @param {boolean=} extend
+   * @return {boolean}
+   */
+  moveCursor(point, extend) {
+    var selection = this._model.selections[0];
     var anchor = extend ? this._anchor || point : point;
     if (compareLocation(point, anchor) < 0) selection = { start: point, end: anchor };
     else selection = { start: anchor, end: point };
@@ -261,7 +262,7 @@ class SelectionManger extends Emitter {
     if (this._model.selections.length === 1 && !compareRange(this._model.selections[0], selection)) return false;
     this._model.setSelections([selection]);
     this._anchor = anchor;
-    this._desiredLocation = desiredLocation;
+    this._desiredLocation = point;
     this._renderer.scrollLocationIntoView(point);
     return true;
   }
