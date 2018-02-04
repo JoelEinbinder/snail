@@ -289,9 +289,7 @@ class Editor extends Emitter {
       outer: for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
         for (var j = 0; j < token.length; j += CHUNK_SIZE) {
-          var chunk = text
-            .substring(index + j, index + Math.min(j + CHUNK_SIZE, token.length))
-            .replace(/\t/g, this.TAB);
+          var chunk = text.substring(index, index + Math.min(CHUNK_SIZE, token.length)).replace(/\t/g, this.TAB);
           rect.width = chunk.length * this._charWidth;
           if (clipRects.some(clipRect => intersects(rect, clipRect))) {
             if (token.background) {

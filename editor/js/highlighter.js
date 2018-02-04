@@ -27,7 +27,7 @@ class Highlighter extends Emitter {
         });
     });
     this._model.on('change', range => {
-      this._currentLineNumber = Math.min(this._currentLineNumber, range.start.line - 1);
+      this._findCurrentLineNumber(range.start.line);
       this.emit('highlight', {
         from: range.start.line,
         to: model.lineCount() - 1
@@ -44,7 +44,7 @@ class Highlighter extends Emitter {
           };
     this._mode = language === 'js' ? javascriptMode({ indentUnit: 2 }, {}) : cssMode({ indentUnit: 2 }, {});
     this._underlay = underlay;
-    /** @type {WeakMap<Line, {state: any, tokens: Array<Token>}>} */
+    /** @type {WeakMap<Line, {state: Object, tokens: Array<Token>}>} */
     this._lineInfo = new WeakMap();
     this._currentLineNumber = 0;
     this._requestLineNumber = 0;
@@ -80,25 +80,38 @@ class Highlighter extends Emitter {
           ];
   }
 
+  /**
+   * @param {number} from
+   */
+  _findCurrentLineNumber(from) {
+    this._currentLineNumber = Math.min(this._currentLineNumber, from);
+    while (this._currentLineNumber) {
+      var lineinfo = this._lineInfo.get(this._model.line(this._currentLineNumber - 1));
+      if (lineinfo && lineinfo.state) break;
+      this._currentLineNumber--;
+    }
+  }
+
   _requestTokenizeUpTo(lineNumber) {
     this._requestLineNumber = Math.max(lineNumber, this._requestLineNumber);
     if (this._tokenizeTimeout) return;
-    this._tokenizeTimeout = setTimeout(() => {
+    var fn = () => {
       this._tokenizeTimeout = 0;
       var from = this._currentLineNumber;
-      var start = Date.now();
-      while (this._currentLineNumber <= this._requestLineNumber && Date.now() - start < 10)
-        this._tokenizeUpTo(this._currentLineNumber);
-      this._requestTokenizeUpTo(this._requestLineNumber);
+      this._tokenizeUpTo(this._requestLineNumber, undefined, 32);
+      if (this._currentLineNumber < this._requestLineNumber) this._requestTokenizeUpTo(this._requestLineNumber);
       this.emit('highlight', { from, to: this._currentLineNumber - 1 });
-    }, 100);
+    };
+    this._tokenizeTimeout = window['requestIdleCallback'] ? window['requestIdleCallback'](fn) : setTimeout(fn, 100);
   }
 
   /**
    * @param {number} lineNumber
    * @param {number=} max
+   * @param {number=} timeLimit
    */
-  _tokenizeUpTo(lineNumber, max) {
+  _tokenizeUpTo(lineNumber, max, timeLimit) {
+    if (this._currentLineNumber > lineNumber) return;
     if (
       max &&
       (lineNumber - this._currentLineNumber > max / 10 ||
@@ -107,10 +120,15 @@ class Highlighter extends Emitter {
       this._requestTokenizeUpTo(lineNumber);
       return;
     }
+    var start = timeLimit && Date.now();
     var state = this._currentLineNumber
-      ? this._lineInfo.get(this._model.line(this._currentLineNumber - 1)).state
+      ? this._copyState(this._lineInfo.get(this._model.line(this._currentLineNumber - 1)).state)
       : this._mode.startState();
-    for (; this._currentLineNumber <= lineNumber; this._currentLineNumber++) {
+    for (
+      ;
+      this._currentLineNumber <= lineNumber && (!timeLimit || Date.now() - start < timeLimit);
+      this._currentLineNumber++
+    ) {
       var tokens = [];
       var line = this._model.line(this._currentLineNumber);
       var stream = new StringStream(line.text);
@@ -132,8 +150,9 @@ class Highlighter extends Emitter {
           break;
         }
       }
-      this._lineInfo.set(line, { state: this._copyState(state), tokens });
+      this._lineInfo.set(line, { state: null, tokens });
     }
+    if (line) this._lineInfo.get(line).state = this._copyState(state);
   }
 
   /**
