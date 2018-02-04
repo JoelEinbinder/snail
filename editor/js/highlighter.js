@@ -1,6 +1,6 @@
 /**
  * @typedef {Object} Token
- * @property {string} text
+ * @property {number} length
  * @property {string=} color
  * @property {string=} background
  */
@@ -117,17 +117,16 @@ class Highlighter extends Emitter {
       if (stream.eol() && this._mode.blankLine) this._mode.blankLine(state);
       while (!stream.eol()) {
         var className = this._mode.token(stream, state) || '';
-        var text = stream.string.substring(stream.start, stream.pos);
         var color = null;
         for (var [name, c] of this._colors) {
           if (className.indexOf(name) !== -1) color = c;
         }
-        tokens.push({ text, color });
+        tokens.push({ length: stream.pos - stream.start, color });
         stream.start = stream.pos;
         if (tokens.length > this.MAX_TOKENS) {
           state = this._mode.startState();
           tokens.push({
-            text: stream.string.substring(stream.start),
+            length: stream.string.length - stream.start,
             color: null
           });
           break;
@@ -168,7 +167,7 @@ class Highlighter extends Emitter {
     const mergeTokens = (a, b) => {
       var tokens = [];
       var line = this._model.line(lineNumber);
-      var text = '';
+      var length = 0;
       var color = null;
       var background = null;
       var aIndex = 0;
@@ -179,13 +178,13 @@ class Highlighter extends Emitter {
       var bCount = 0;
       var i = 0;
       while (i < line.text.length) {
-        if (aCount >= aToken.text.length) {
-          console.assert(aCount == aToken.text.length);
+        if (aCount >= aToken.length) {
+          console.assert(aCount == aToken.length);
           aIndex++;
           aCount = 0;
         }
-        if (bCount >= bToken.text.length) {
-          console.assert(bCount == bToken.text.length);
+        if (bCount >= bToken.length) {
+          console.assert(bCount == bToken.length);
           bIndex++;
           bCount = 0;
         }
@@ -193,19 +192,19 @@ class Highlighter extends Emitter {
         bToken = b[bIndex];
         const nextColor = bToken.color || aToken.color;
         const nextBackground = bToken.background || aToken.background;
-        if ((nextColor !== color || nextBackground !== background) && text) {
-          tokens.push({ text: text, color, background });
-          text = '';
+        if ((nextColor !== color || nextBackground !== background) && length) {
+          tokens.push({ length, color, background });
+          length = 0;
         }
         color = nextColor;
         background = nextBackground;
-        var amount = Math.min(aToken.text.length - aCount, bToken.text.length - bCount);
-        text += line.text.substr(i, amount);
+        var amount = Math.min(aToken.length - aCount, bToken.length - bCount);
+        length += amount;
         aCount += amount;
         bCount += amount;
         i += amount;
       }
-      if (text) tokens.push({ text: text, color, background });
+      if (length) tokens.push({ length, color, background });
       return tokens;
     };
 
@@ -214,7 +213,7 @@ class Highlighter extends Emitter {
     var { text } = line;
     var mergedTokens = this._lineInfo.has(line)
       ? mergeTokens(this._lineInfo.get(line).tokens, this._selectionTokens(lineNumber))
-      : mergeTokens([{ text }], this._selectionTokens(lineNumber)); // default
+      : mergeTokens([{ length: text.length }], this._selectionTokens(lineNumber)); // default
 
     if (this._underlay) return mergeTokens(this._underlay.call(null, lineNumber, text), mergedTokens);
     return mergedTokens;
@@ -239,15 +238,15 @@ class Highlighter extends Emitter {
     ranges.sort((a, b) => a.start - b.start);
     var index = 0;
     for (var range of ranges) {
-      if (index !== range.start) tokens.push({ text: text.substring(index, range.start) });
+      if (index !== range.start) tokens.push({ length: range.start - index });
       tokens.push({
-        text: text.substring(range.start, range.end),
+        length: range.end - range.start,
         color: this._selectionColors.color,
         background: this._selectionColors.background
       });
       index = range.end;
     }
-    if (index !== text.length) tokens.push({ text: text.substring(index, text.length) });
+    if (index !== text.length) tokens.push({ length: text.length - index });
     return tokens;
   }
 }

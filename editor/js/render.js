@@ -284,10 +284,14 @@ class Editor extends Emitter {
       };
       if (!clipRects.some(clipRect => intersects(rect, clipRect))) continue;
       rect.width = 0;
+      var text = this.model.line(i).text;
+      var index = 0;
       outer: for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
-        for (var j = 0; j < token.text.length; j += CHUNK_SIZE) {
-          var chunk = token.text.substring(j, j + CHUNK_SIZE).replace(/\t/g, this.TAB);
+        for (var j = 0; j < token.length; j += CHUNK_SIZE) {
+          var chunk = text
+            .substring(index + j, index + Math.min(j + CHUNK_SIZE, token.length))
+            .replace(/\t/g, this.TAB);
           rect.width = chunk.length * this._charWidth;
           if (clipRects.some(clipRect => intersects(rect, clipRect))) {
             if (token.background) {
@@ -297,6 +301,7 @@ class Editor extends Emitter {
             ctx.fillStyle = token.color || '#222';
             ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
           }
+          index += chunk.length;
           rect.x += rect.width;
           if (rect.x > farRight) break outer;
         }
