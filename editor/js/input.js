@@ -19,6 +19,9 @@ class Input extends Emitter {
     this._textarea.addEventListener('input', this.update.bind(this), false);
     this._textarea.disabled = !this._editable;
     this._textarea.spellcheck = false;
+    this._textarea.setAttribute('autocomplete', 'off')
+    this._textarea.setAttribute('autocorrect', 'off')
+    this._textarea.setAttribute('autocapitalize', 'off')
     this._textarea.addEventListener('copy', this._onCopy.bind(this), false);
     this._textarea.addEventListener('cut', this._onCut.bind(this), false);
 

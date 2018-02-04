@@ -163,6 +163,8 @@ class Editor extends Emitter {
    * @return {{x: number, y: number}}
    */
   pointFromLocation(location) {
+    if (location.line >= this.model.lineCount())
+      location = editor.model.fullRange().end;
     var { text } = this.model.line(location.line);
     return {
       x: text.substring(0, location.column).replace(/\t/g, this.TAB).length * this._charWidth,

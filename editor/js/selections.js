@@ -43,6 +43,35 @@ class SelectionManger extends Emitter {
     this._commandManager.addCommand(this.moveCursorVertical.bind(this, 1), 'moveDown', 'ArrowDown');
     this._commandManager.addCommand(this.moveCursorVertical.bind(this, -1, true), 'extendUp', 'Shift+ArrowUp');
     this._commandManager.addCommand(this.moveCursorVertical.bind(this, 1, true), 'extendDown', 'Shift+ArrowDown');
+    this._commandManager.addCommand(
+      () => this.moveCursor({ column: 0, line: this._model.selections[0].start.line }),
+      'moveLineStart',
+      'Home'
+    );
+    this._commandManager.addCommand(
+      () => {
+        var selection = this._model.selections[0];
+        return this.moveCursor({ column: this._model.line(selection.end.line).text.length, line: selection.end.line });
+      },
+      'moveLineEnd',
+      'End'
+    );
+    this._commandManager.addCommand(
+      () => this.moveCursor({ column: 0, line: this._model.selections[0].start.line }, true),
+      'extendLineStart',
+      'Shift+Home'
+    );
+    this._commandManager.addCommand(
+      () => {
+        var selection = this._model.selections[0];
+        return this.moveCursor(
+          { column: this._model.line(selection.end.line).text.length, line: selection.end.line },
+          true
+        );
+      },
+      'extendLineEnd',
+      'Shift+End'
+    );
   }
 
   /**
