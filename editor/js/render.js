@@ -40,8 +40,19 @@ class Editor extends Emitter {
       });
     }
 
+    var lastDpr = window.devicePixelRatio;
+    window.addEventListener(
+      'resize',
+      event => {
+        if (lastDpr === window.devicePixelRatio) return;
+        lastDpr = window.devicePixelRatio;
+        this.layout();
+      },
+      false
+    );
+
     this._commandManager = new CommandManager(this.element);
-    this._input = new Input(this.element, this.model);
+    this._input = new Input(this.element, this.model, this._options.readOnly);
     this._selectionManager = new SelectionManger(this, this.model, this._commandManager);
 
     this._highlighter.on('highlight', ({ from, to }) => {
@@ -98,6 +109,13 @@ class Editor extends Emitter {
         this._longestLineLength,
         this.model.line(i).text.replace(/\t/g, this.TAB).length
       );
+  }
+
+  /**
+   * @param {string} text
+   */
+  setText(text) {
+    this.model.replaceRange(text, this.model.fullRange());
   }
 
   get scrollTop() {
@@ -331,7 +349,7 @@ class Editor extends Emitter {
     ctx.fillStyle = 'rgba(0,0,0,0.8)';
     var lineNumbersWidth = this._lineNumbersWidth();
     for (var selection of this.model.selections) {
-      if (!isSelectionCollapsed(selection)) continue;
+      if (this._options.readOnly || !isSelectionCollapsed(selection)) continue;
       var point = this.pointFromLocation(selection.start);
       var rect = {
         x: lineNumbersWidth + this._padding - this.scrollLeft + point.x,
@@ -475,6 +493,7 @@ class Layer {
  * @property {boolean=} lineNumbers
  * @property {string=} language
  * @property {boolean=} inline
+ * @property {boolean=} readOnly
  * @property {function(number,string):Array<Token>} [underlay]
  */
 

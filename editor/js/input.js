@@ -2,8 +2,9 @@ class Input extends Emitter {
   /**
    * @param {HTMLElement} parent
    * @param {Model} model
+   * @param {boolean=} disabled
    */
-  constructor(parent, model) {
+  constructor(parent, model, disabled) {
     super();
     this._model = model;
     this._buffer = '';
@@ -11,7 +12,7 @@ class Input extends Emitter {
       start: { line: 0, column: 0 },
       end: { line: 0, column: 0 }
     };
-    this._editable = true;
+    this._editable = !disabled;
     this._textarea = document.createElement('textarea');
     this._textarea.style.whiteSpace = 'pre';
     this._textarea.style.resize = 'none';

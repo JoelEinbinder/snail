@@ -24,13 +24,14 @@
                     padBottom: true,
                     lineNumbers: true,
                     language: 'js',
+                    readOnly: true
                     // underlay: (lineNumber, text) => {
                     //     return lineNumber % 2 ? [{text}] : [{text, background: '#eee'}]
                     // }
                 });
+                window.addEventListener('resize', event => editor.layout(), false);
                 document.body.appendChild(editor.element);
                 editor.layout();
-                window.addEventListener('resize', event => editor.layout(), false);
             }
             if (document.location.search !== "?test")
                 go();
