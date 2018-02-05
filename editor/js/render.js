@@ -30,6 +30,16 @@ class Editor extends Emitter {
     this.element.appendChild(this._textLayer.canvas);
     this.element.appendChild(this._overlayLayer.canvas);
 
+    if (this._options.inline) {
+      this._options.padBottom = false;
+      var lineCount = 1;
+      this.model.on('change', () => {
+        if (this.model.lineCount() === lineCount) return;
+        lineCount = this.model.lineCount();
+        this.layout();
+      });
+    }
+
     this._commandManager = new CommandManager(this.element);
     this._input = new Input(this.element, this.model);
     this._selectionManager = new SelectionManger(this, this.model, this._commandManager);
@@ -163,8 +173,7 @@ class Editor extends Emitter {
    * @return {{x: number, y: number}}
    */
   pointFromLocation(location) {
-    if (location.line >= this.model.lineCount())
-      location = editor.model.fullRange().end;
+    if (location.line >= this.model.lineCount()) location = this.model.fullRange().end;
     var { text } = this.model.line(location.line);
     return {
       x: text.substring(0, location.column).replace(/\t/g, this.TAB).length * this._charWidth,
@@ -361,12 +370,15 @@ class Editor extends Emitter {
   }
 
   layout() {
-    var rect = this.element.getBoundingClientRect();
-    this._width = rect.width;
-    this._height = rect.height;
     this._backgroundColor = window.getComputedStyle(this._textLayer.canvas).backgroundColor;
     this._charHeight = parseInt(window.getComputedStyle(this._textLayer.canvas).fontSize);
     this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._textLayer.canvas).lineHeight), this._charHeight);
+    if (this._options.inline) {
+      this.element.style.height = this._innerHeight() + 'px';
+    }
+    var rect = this.element.getBoundingClientRect();
+    this._width = rect.width;
+    this._height = rect.height;
     this._overlayLayer.layout(rect.width, rect.height);
     this._textLayer.layout(rect.width, rect.height);
     this._charWidth = this._textLayer.canvas.getContext('2d').measureText('x').width;
@@ -462,6 +474,7 @@ class Layer {
  * @property {boolean=} padBottom
  * @property {boolean=} lineNumbers
  * @property {string=} language
+ * @property {boolean=} inline
  * @property {function(number,string):Array<Token>} [underlay]
  */
 

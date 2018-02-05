@@ -7,7 +7,10 @@ class Input extends Emitter {
     super();
     this._model = model;
     this._buffer = '';
-    this._bufferRange = null;
+    this._bufferRange = {
+      start: { line: 0, column: 0 },
+      end: { line: 0, column: 0 }
+    };
     this._editable = true;
     this._textarea = document.createElement('textarea');
     this._textarea.style.whiteSpace = 'pre';
@@ -19,9 +22,9 @@ class Input extends Emitter {
     this._textarea.addEventListener('input', this.update.bind(this), false);
     this._textarea.disabled = !this._editable;
     this._textarea.spellcheck = false;
-    this._textarea.setAttribute('autocomplete', 'off')
-    this._textarea.setAttribute('autocorrect', 'off')
-    this._textarea.setAttribute('autocapitalize', 'off')
+    this._textarea.setAttribute('autocomplete', 'off');
+    this._textarea.setAttribute('autocorrect', 'off');
+    this._textarea.setAttribute('autocapitalize', 'off');
     this._textarea.addEventListener('copy', this._onCopy.bind(this), false);
     this._textarea.addEventListener('cut', this._onCut.bind(this), false);
 
