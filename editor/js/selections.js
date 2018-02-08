@@ -10,14 +10,14 @@ class SelectionManger extends Emitter {
     this._commandManager = commandManager;
     this._model = model;
     /** @type {Loc} */
-    this._anchor = null;
+    this._anchor = this._model.selections[0].start;
     /** @type {{x: number, y: number}} */
     this._cursor = null;
     /** @type {Loc} */
     this._desiredLocation = null;
     this._renderer.on('contentMouseDown', this._contentMouseDown.bind(this));
     this._model.on('selectionChanged', () => {
-      this._anchor = null;
+      this._anchor = this._model.selections[0].start;
       this._desiredLocation = null;
     });
 
@@ -88,8 +88,8 @@ class SelectionManger extends Emitter {
       x: event.clientX,
       y: event.clientY
     };
-    if (!event.shiftKey) this._anchor = null;
-    this._update();
+    if (!event.shiftKey) this._anchor = this._renderer.locationFromPoint(this._cursor.x, this._cursor.y);;
+    this._updateMouseSelection();
     this._trackDrag();
   }
 
@@ -102,7 +102,7 @@ class SelectionManger extends Emitter {
         x: event.clientX,
         y: event.clientY
       };
-      this._update();
+      this._updateMouseSelection();
     };
     /** @type {function(MouseEvent)} */
     var mouseup = event => {
@@ -111,18 +111,18 @@ class SelectionManger extends Emitter {
       this._renderer.off('scroll', scroll);
     };
     var scroll = () => {
-      this._update();
+      this._updateMouseSelection();
     };
     window.addEventListener('mousemove', mousemove, true);
     window.addEventListener('mouseup', mouseup, true);
     this._renderer.on('scroll', scroll);
   }
 
-  _update() {
+  _updateMouseSelection() {
     console.assert(!!this._cursor, 'cursor should be defined');
     console.assert(this._increment > 0 && this._increment <= 3, 'unknown increment');
     var head = this._renderer.locationFromPoint(this._cursor.x, this._cursor.y);
-    var anchor = this._anchor || head;
+    var anchor = this._anchor;
     var start, end;
     if (head.line < anchor.line || (head.line === anchor.line && head.column < anchor.column)) {
       start = head;
