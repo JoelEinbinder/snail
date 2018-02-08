@@ -248,7 +248,7 @@ class Editor extends Emitter {
     this._overlayLayer.refresh();
     this._textLayer.refresh();
     this._scrollingElement.style.left = this._lineNumbersWidth() + 'px';
-    this._fillerElement.style.width = this._innerWidth() + 'px';
+    this._fillerElement.style.width = Math.max(this._innerWidth(), this._width - this._lineNumbersWidth()) + 'px';
     var height = this._innerHeight();
     if (this._options.padBottom) {
       // there is always a y-scroll, so set height first to a big value

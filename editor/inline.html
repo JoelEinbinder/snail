@@ -35,6 +35,7 @@
                     inline: true
                 });
                 document.body.appendChild(editor.element);
+                window.addEventListener('resize', () => {editor.layout()}, false);
                 editor.layout();
             }
             if (document.location.search !== "?test")
