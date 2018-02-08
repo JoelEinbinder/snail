@@ -2,9 +2,9 @@ class Input extends Emitter {
   /**
    * @param {HTMLElement} parent
    * @param {Model} model
-   * @param {boolean=} disabled
+   * @param {boolean=} readOnly
    */
-  constructor(parent, model, disabled) {
+  constructor(parent, model, readOnly) {
     super();
     this._model = model;
     this._buffer = '';
@@ -12,7 +12,7 @@ class Input extends Emitter {
       start: { line: 0, column: 0 },
       end: { line: 0, column: 0 }
     };
-    this._editable = !disabled;
+    this._editable = !readOnly;
     this._textarea = document.createElement('textarea');
     this._textarea.style.whiteSpace = 'pre';
     this._textarea.style.resize = 'none';
@@ -21,7 +21,7 @@ class Input extends Emitter {
     this._textarea.style.left = '-999em';
     this._textarea.style.opacity = '0';
     this._textarea.addEventListener('input', this.update.bind(this), false);
-    this._textarea.disabled = !this._editable;
+    this._textarea.readOnly = !this._editable;
     this._textarea.spellcheck = false;
     this._textarea.setAttribute('autocomplete', 'off');
     this._textarea.setAttribute('autocorrect', 'off');
