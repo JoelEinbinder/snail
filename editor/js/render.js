@@ -51,7 +51,7 @@ class Editor extends Emitter {
     );
 
     this._commandManager = new CommandManager(this.element);
-    this._input = new Input(this.element, this.model, this._options.readOnly);
+    this._input = new Input(this.element, this.model, this._commandManager, this._options.readOnly);
     this._selectionManager = new SelectionManger(this, this.model, this._commandManager);
 
     this._highlighter.on('highlight', ({ from, to }) => {

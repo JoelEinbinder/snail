@@ -2,11 +2,13 @@ class Input extends Emitter {
   /**
    * @param {HTMLElement} parent
    * @param {Model} model
+   * @param {CommandManager} commandManager
    * @param {boolean=} readOnly
    */
-  constructor(parent, model, readOnly) {
+  constructor(parent, model, commandManager, readOnly) {
     super();
     this._model = model;
+    this._commandManager = commandManager;
     this._buffer = '';
     this._bufferRange = {
       start: { line: 0, column: 0 },
@@ -34,6 +36,8 @@ class Input extends Emitter {
     parent.appendChild(this._textarea);
 
     model.on('selectionChanged', this._selectionChanged.bind(this));
+    this._commandManager.addCommand(this._deleteChar.bind(this, true), 'backspace', 'Backspace');
+    this._commandManager.addCommand(this._deleteChar.bind(this, false), 'delete', 'Delete');
   }
 
   /**
@@ -171,5 +175,58 @@ class Input extends Emitter {
 
   focus() {
     this._textarea.focus();
+  }
+
+  /**
+   * @param {boolean} backwards
+   * @return {boolean}
+   */
+  _deleteChar(backwards) {
+    var range = this._model.selections[0];
+    if (isSelectionCollapsed(range)) {
+      var line = range.start.line;
+      var column = range.start.column;
+      if (backwards) {
+        column--;
+        if (column < 0) {
+          line--;
+          if (line < 0) {
+            line = 0;
+            column = 0;
+          } else {
+            column = this._model.line(line).text.length;
+          }
+        }
+        range = {
+          start: {
+            line,
+            column
+          },
+          end: range.start
+        };
+      } else {
+        column++;
+        if (column > this._model.line(line).text.length) {
+          line++;
+          if (line >= this._model.lineCount()) {
+            line = this._model.lineCount() - 1;
+            column = this._model.line(line).text.length;
+          } else {
+            column = 0;
+          }
+        }
+        range = {
+          start: range.start,
+          end: {
+            line,
+            column
+          }
+        };
+      }
+    }
+    this._model.replaceRange('', range);
+    this._model.setSelections([{ start: range.start, end: range.start }]);
+
+    return true;
   }
 }

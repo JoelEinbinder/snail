@@ -88,7 +88,7 @@ class SelectionManger extends Emitter {
       x: event.clientX,
       y: event.clientY
     };
-    if (!event.shiftKey) this._anchor = this._renderer.locationFromPoint(this._cursor.x, this._cursor.y);;
+    if (!event.shiftKey) this._anchor = this._renderer.locationFromPoint(this._cursor.x, this._cursor.y);
     this._updateMouseSelection();
     this._trackDrag();
   }
