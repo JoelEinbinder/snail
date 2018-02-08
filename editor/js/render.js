@@ -20,7 +20,6 @@ class Editor extends Emitter {
     this._scrollTop = 0;
     this._scrollLeft = 0;
     this._refreshScheduled = false;
-    this._savedViewport = { x: 0, y: 0, width: 0, height: 0 };
 
     this._textLayer = new Layer(this._drawText.bind(this));
     this._overlayLayer = new Layer(this._drawOverlay.bind(this));
