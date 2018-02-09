@@ -1,6 +1,6 @@
 class SelectionManger extends Emitter {
   /**
-   * @param {Editor} renderer
+   * @param {Renderer} renderer
    * @param {Model} model
    * @param {CommandManager} commandManager
    */

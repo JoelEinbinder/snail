@@ -1,19 +1,21 @@
-class Editor extends Emitter {
+class Renderer extends Emitter {
   /**
-   * @param {string} data
+   * @param {Model} model
+   * @param {HTMLElement} element
+   * @param {Highlighter} highlighter
    * @param {Editor.Options=} options
    */
-  constructor(data, options = {}) {
+  constructor(model, element, highlighter, options = {}) {
     super();
-    this.model = new Model(data);
     this.TAB = '    ';
+    this._model = model;
 
     this._options = options;
     this._debugPainting = false;
 
-    this.element = document.createElement('div');
-    this.element.className = 'editor';
-    this._highlighter = new Highlighter(this.model, options.language, options.underlay);
+    this._highlighter = highlighter;
+    this.element = element;
+
     /** @type {WeakMap<Token, string>} */
     this._rasterizedTokens = new WeakMap();
     this._padding = 4;
@@ -32,9 +34,9 @@ class Editor extends Emitter {
     if (this._options.inline) {
       this._options.padBottom = false;
       var lineCount = 1;
-      this.model.on('change', () => {
-        if (this.model.lineCount() === lineCount) return;
-        lineCount = this.model.lineCount();
+      this._model.on('change', () => {
+        if (this._model.lineCount() === lineCount) return;
+        lineCount = this._model.lineCount();
         this.layout();
       });
     }
@@ -49,10 +51,6 @@ class Editor extends Emitter {
       },
       false
     );
-
-    this._commandManager = new CommandManager(this.element);
-    this._input = new Input(this.element, this.model, this._commandManager, this._options.readOnly);
-    this._selectionManager = new SelectionManger(this, this.model, this._commandManager);
 
     this._highlighter.on('highlight', ({ from, to }) => {
       var viewport = this.viewport();
@@ -69,7 +67,7 @@ class Editor extends Emitter {
         this.scheduleRefresh();
       }
     });
-    this.model.on('selectionChanged', () => {
+    this._model.on('selectionChanged', () => {
       this._overlayLayer.invalidate();
       this._overlayLayer.refresh();
     });
@@ -95,18 +93,16 @@ class Editor extends Emitter {
       this.emit('contentMouseDown', event);
     });
     this.element.appendChild(this._scrollingElement);
-    this.element.tabIndex = -1;
-    this.element.addEventListener('focus', this.focus.bind(this), false);
     this._lastScrollOffset = {
       top: 0,
       left: 0
     };
 
     this._longestLineLength = 0;
-    for (var i = 0; i < this.model.lineCount(); i++)
+    for (var i = 0; i < this._model.lineCount(); i++)
       this._longestLineLength = Math.max(
         this._longestLineLength,
-        this.model.line(i).text.replace(/\t/g, this.TAB).length
+        this._model.line(i).text.replace(/\t/g, this.TAB).length
       );
   }
 
@@ -114,7 +110,7 @@ class Editor extends Emitter {
    * @param {string} text
    */
   setText(text) {
-    this.model.replaceRange(text, this.model.fullRange());
+    this._model.replaceRange(text, this._model.fullRange());
   }
 
   get scrollTop() {
@@ -136,10 +132,10 @@ class Editor extends Emitter {
     var rect = this._scrollingElement.getBoundingClientRect();
     var x = Math.round((offsetX - this._padding + this.scrollLeft - rect.left) / this._charWidth);
     var y = Math.floor((offsetY + this.scrollTop - rect.top) / this._lineHeight);
-    if (y >= this.model.lineCount()) {
+    if (y >= this._model.lineCount()) {
       return {
-        line: this.model.lineCount() - 1,
-        column: this.model.line(this.model.lineCount() - 1).text.length
+        line: this._model.lineCount() - 1,
+        column: this._model.line(this._model.lineCount() - 1).text.length
       };
     }
     if (y < 0) {
@@ -150,7 +146,7 @@ class Editor extends Emitter {
     }
 
     var line = y;
-    var { text } = this.model.line(line);
+    var { text } = this._model.line(line);
     var column = 0;
     while (column < text.length) {
       x -= text[column] === '\t' ? this.TAB.length : 1;
@@ -171,7 +167,7 @@ class Editor extends Emitter {
     var top = point.y - this._padding;
     var left = point.x;
     var bottom = top + this._lineHeight + this._padding * 2;
-    var textSize = this.model
+    var textSize = this._model
       .line(location.line)
       .text.charAt(location.column)
       .replace(/\t/g, this.TAB).length;
@@ -190,8 +186,8 @@ class Editor extends Emitter {
    * @return {{x: number, y: number}}
    */
   pointFromLocation(location) {
-    if (location.line >= this.model.lineCount()) location = this.model.fullRange().end;
-    var { text } = this.model.line(location.line);
+    if (location.line >= this._model.lineCount()) location = this._model.fullRange().end;
+    var { text } = this._model.line(location.line);
     return {
       x: text.substring(0, location.column).replace(/\t/g, this.TAB).length * this._charWidth,
       y: location.line * this._lineHeight
@@ -236,7 +232,7 @@ class Editor extends Emitter {
   }
 
   _innerHeight() {
-    return this.model.lineCount() * this._lineHeight;
+    return this._model.lineCount() * this._lineHeight;
   }
 
   _innerWidth() {
@@ -261,7 +257,7 @@ class Editor extends Emitter {
   viewport() {
     return {
       from: this._lineForOffset(this.scrollTop),
-      to: Math.min(this.model.lineCount() - 1, this._lineForOffset(this.scrollTop + this._height))
+      to: Math.min(this._model.lineCount() - 1, this._lineForOffset(this.scrollTop + this._height))
     };
   }
 
@@ -312,7 +308,7 @@ class Editor extends Emitter {
       };
       if (!clipRects.some(clipRect => intersects(rect, clipRect))) continue;
       rect.width = 0;
-      var text = this.model.line(i).text;
+      var text = this._model.line(i).text;
       var index = 0;
       outer: for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
@@ -347,7 +343,7 @@ class Editor extends Emitter {
     ctx.clearRect(0, 0, this._width, this._height);
     ctx.fillStyle = 'rgba(0,0,0,0.8)';
     var lineNumbersWidth = this._lineNumbersWidth();
-    for (var selection of this.model.selections) {
+    for (var selection of this._model.selections) {
       if (this._options.readOnly || !isSelectionCollapsed(selection)) continue;
       var point = this.pointFromLocation(selection.start);
       var rect = {
@@ -362,7 +358,7 @@ class Editor extends Emitter {
 
   _lineNumbersWidth() {
     if (!this._options.lineNumbers) return 0;
-    return Math.max(this._charWidth * Math.ceil(Math.log10(this.model.lineCount())) + this._padding * 2, 22);
+    return Math.max(this._charWidth * Math.ceil(Math.log10(this._model.lineCount())) + this._padding * 2, 22);
   }
 
   /**
@@ -400,10 +396,6 @@ class Editor extends Emitter {
     this._textLayer.layout(rect.width, rect.height);
     this._charWidth = this._textLayer.canvas.getContext('2d').measureText('x').width;
     this.refresh();
-  }
-
-  focus() {
-    this._input.focus();
   }
 }
 
@@ -485,16 +477,6 @@ class Layer {
     this._translation.y += Math.round(y * this._dpr);
   }
 }
-
-/**
- * @typedef {Object} Editor.Options
- * @property {boolean=} padBottom
- * @property {boolean=} lineNumbers
- * @property {string=} language
- * @property {boolean=} inline
- * @property {boolean=} readOnly
- * @property {function(number,string):Array<Token>} [underlay]
- */
 
 /**
  * @typedef {Object} Rect

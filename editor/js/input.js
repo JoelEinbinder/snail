@@ -7,6 +7,7 @@ class Input extends Emitter {
    */
   constructor(parent, model, commandManager, readOnly) {
     super();
+    parent.addEventListener('focus', this.focus.bind(this), false);
     this._model = model;
     this._commandManager = commandManager;
     this._buffer = '';
