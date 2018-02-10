@@ -95,10 +95,10 @@ class Highlighter extends Emitter {
   _requestTokenizeUpTo(lineNumber) {
     this._requestLineNumber = Math.max(lineNumber, this._requestLineNumber);
     if (this._tokenizeTimeout) return;
-    var fn = () => {
+    var fn = idleDeadline => {
       this._tokenizeTimeout = 0;
       var from = this._currentLineNumber;
-      this._tokenizeUpTo(this._requestLineNumber, undefined, 32);
+      this._tokenizeUpTo(this._requestLineNumber, undefined, idleDeadline ? idleDeadline.timeRemaining() : 32);
       if (this._currentLineNumber < this._requestLineNumber) this._requestTokenizeUpTo(this._requestLineNumber);
       this.emit('highlight', { from, to: this._currentLineNumber - 1 });
     };
@@ -158,14 +158,15 @@ class Highlighter extends Emitter {
   /**
    * @template T
    * @param {T} state
+   * @param {number=} depth
    * @return {T}
    */
-  _copyState(state) {
+  _copyState(state, depth = 1) {
     if (Array.isArray(state)) return /** @type {T & any[]} */ (state.slice(0));
-    if (typeof state === 'object' && state !== null) {
+    if (depth && typeof state === 'object' && state !== null) {
       var copy = {};
       for (var i in state) {
-        copy[i] = this._copyState(state[i]);
+        copy[i] = this._copyState(state[i], depth - 1);
       }
       return /** @type {T} */ (copy);
     }

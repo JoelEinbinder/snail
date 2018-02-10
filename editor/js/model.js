@@ -88,7 +88,12 @@ class Model extends Emitter {
     lines[0].text = this._lines[range.start.line].text.substring(0, range.start.column) + lines[0].text;
     var endColumn = lines[lines.length - 1].text.length;
     lines[lines.length - 1].text += this._lines[range.end.line].text.substring(range.end.column);
-    this._lines.splice(range.start.line, range.end.line - range.start.line + 1, ...lines);
+    var amount = range.end.line - range.start.line + 1;
+    var CHUNK = 20000;
+    for (var i = 0; i < lines.length; i += CHUNK) {
+      this._lines.splice(range.start.line + i, amount, ...lines.slice(i, i + CHUNK));
+      amount = 0;
+    }
 
     this.emit('change', range);
     return {
@@ -102,18 +107,50 @@ class Model extends Emitter {
    * @return {Array<Line>}
    */
   _createLines(data) {
-    return data
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
-      .split('\n')
-      .map(text => ({ text }));
+    // /** @type {Array<Line>} */
+    // var lines = [];
+    // var i = this.indexOf(string);
+    // while (i !== -1) {
+    //   matches.push(i);
+    //   i = this.indexOf(string, i + string.length);
+    // }
+    return data.split(/\n|\r\n|\r/).map(text => ({ text }));
   }
 }
 
-/**
- * @typedef {Object} Line
- * @property {string} text
- */
+/** @typedef {{text: string}} Line */
+
+// class Line {
+
+//   /**
+//    * @param {string} sourceString
+//    * @param {number} start
+//    * @param {number} end
+//    */
+//   constructor(sourceString, start, end) {
+//     this._rasterized = false;
+//     this._start = start;
+//     this._end = end;
+//     this._text = null;
+//     this._sourceString = sourceString;
+//   }
+
+//   _rasterize() {
+//     if (this._rasterized)
+//       return;
+//     this._text = this._sourceString.substring(this._start, this._end);
+//     this._sourceString = null;
+//     this._rasterized = true;
+//   }
+
+//   /**
+//    * @return {string}
+//    */
+//   get text() {
+//     this._rasterize();
+//     return this._text;
+//   }
+// }
 
 /**
  * @typedef {Object} Loc

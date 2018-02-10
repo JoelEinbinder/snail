@@ -11,7 +11,7 @@ class Renderer extends Emitter {
     this._model = model;
 
     this._options = options;
-    this._debugPainting = false;
+    this._debugPainting = true;
 
     this._highlighter = highlighter;
     this.element = element;
@@ -55,9 +55,8 @@ class Renderer extends Emitter {
     this._highlighter.on('highlight', ({ from, to }) => {
       var viewport = this.viewport();
       if (viewport.from <= to && from <= viewport.to) {
-        var y = Math.floor(this.pointFromLocation({ column: 0, line: from }).y - this.scrollTop) - 1;
-        var height =
-          Math.ceil(this.pointFromLocation({ column: 0, line: to }).y + this._lineHeight - this.scrollTop - y) + 2;
+        var y = Math.floor(from * this._lineHeight - this.scrollTop) - 1;
+        var height = Math.ceil((to + 1) * this._lineHeight - this.scrollTop - y) + 2;
         this._textLayer.invalidate({
           x: 0,
           y,

@@ -31,6 +31,7 @@ class Input extends Emitter {
     this._textarea.setAttribute('autocapitalize', 'off');
     this._textarea.addEventListener('copy', this._onCopy.bind(this), false);
     this._textarea.addEventListener('cut', this._onCut.bind(this), false);
+    this._textarea.addEventListener('paste', this._onPaste.bind(this), false);
 
     this._setupContextMenuListeners(parent);
 
@@ -104,8 +105,11 @@ class Input extends Emitter {
         column: this._model.line(mainSelection.end.line).text.length
       }
     };
-    this._buffer = this._model.text(this._bufferRange);
-    if (this._buffer.length > 1000) {
+
+    if (
+      this._bufferRange.end.line - this._bufferRange.start.line > 1000 ||
+      (this._buffer = this._model.text(this._bufferRange)).length > 1000
+    ) {
       this._buffer = '...Content too long...';
       this._textarea.value = this._buffer;
       this._textarea.setSelectionRange(0, this._buffer.length);
@@ -129,8 +133,23 @@ class Input extends Emitter {
   /**
    * @param {ClipboardEvent} event
    */
+  _onPaste(event) {
+    if (event.clipboardData.types.indexOf('text/plain') === -1) return;
+
+    var text = event.clipboardData.getData('text/plain');
+    var loc = this._model.replaceRange(text, this._model.selections[0]);
+    this._model.setSelections([{ start: loc, end: loc }]);
+    event.preventDefault();
+  }
+
+  /**
+   * @param {ClipboardEvent} event
+   */
   _onCut(event) {
-    if (this._editable) return; // todo actually cut
+    if (!this._editable) return;
+    event.clipboardData.setData('text/plain', this._selectionsText());
+    var loc = this._model.replaceRange('', this._model.selections[0]);
+    this._model.setSelections([{ start: loc, end: loc }]);
     event.preventDefault();
   }
 
