@@ -102,7 +102,7 @@ class Input extends Emitter {
       start: { line: mainSelection.start.line, column: 0 },
       end: {
         line: mainSelection.end.line,
-        column: this._model.line(mainSelection.end.line).text.length
+        column: this._model.line(mainSelection.end.line).length
       }
     };
 
@@ -186,7 +186,7 @@ class Input extends Emitter {
       end.column--;
       if (value[j] === '\n') {
         end.line--;
-        end.column = this._model.line(end.line).text.length;
+        end.column = this._model.line(end.line).length;
       }
     }
     var loc = this._model.replaceRange(value.substring(i, j + 1), { start, end });
@@ -214,7 +214,7 @@ class Input extends Emitter {
             line = 0;
             column = 0;
           } else {
-            column = this._model.line(line).text.length;
+            column = this._model.line(line).length;
           }
         }
         range = {
@@ -226,11 +226,11 @@ class Input extends Emitter {
         };
       } else {
         column++;
-        if (column > this._model.line(line).text.length) {
+        if (column > this._model.line(line).length) {
           line++;
           if (line >= this._model.lineCount()) {
             line = this._model.lineCount() - 1;
-            column = this._model.line(line).text.length;
+            column = this._model.line(line).length;
           } else {
             column = 0;
           }

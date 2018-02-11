@@ -172,18 +172,33 @@ class SelectionManger extends Emitter {
         }
       ]);
     } else if (this._increment === 3) {
-      this._model.setSelections([
-        {
-          start: {
-            line: start.line,
-            column: 0
-          },
-          end: {
-            line: end.line,
-            column: this._model.line(end.line).text.length
+      if (end.line === this._model.lineCount()) {
+        this._model.setSelections([
+          {
+            start: {
+              line: start.line,
+              column: 0
+            },
+            end: {
+              line: end.line,
+              column: this._model.line(end.line).length
+            }
           }
-        }
-      ]);
+        ]);
+      } else {
+        this._model.setSelections([
+          {
+            start: {
+              line: start.line,
+              column: 0
+            },
+            end: {
+              line: end.line + 1,
+              column: 0
+            }
+          }
+        ]);
+      }
     }
     this._anchor = anchor;
     this._desiredLocation = head;

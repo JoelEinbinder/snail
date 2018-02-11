@@ -11,7 +11,7 @@ class Renderer extends Emitter {
     this._model = model;
 
     this._options = options;
-    this._debugPainting = true;
+    this._debugPainting = false;
 
     this._highlighter = highlighter;
     this.element = element;
@@ -134,7 +134,7 @@ class Renderer extends Emitter {
     if (y >= this._model.lineCount()) {
       return {
         line: this._model.lineCount() - 1,
-        column: this._model.line(this._model.lineCount() - 1).text.length
+        column: this._model.line(this._model.lineCount() - 1).length
       };
     }
     if (y < 0) {

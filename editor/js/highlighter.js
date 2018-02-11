@@ -197,7 +197,7 @@ class Highlighter extends Emitter {
       var aCount = 0;
       var bCount = 0;
       var i = 0;
-      while (i < line.text.length) {
+      while (i < line.length) {
         if (aCount >= aToken.length) {
           console.assert(aCount == aToken.length);
           aIndex++;
@@ -230,12 +230,11 @@ class Highlighter extends Emitter {
 
     this._tokenizeUpTo(lineNumber, 10000);
     var line = this._model.line(lineNumber);
-    var { text } = line;
     var mergedTokens = this._lineInfo.has(line)
       ? mergeTokens(this._lineInfo.get(line).tokens, this._selectionTokens(lineNumber))
-      : mergeTokens([{ length: text.length }], this._selectionTokens(lineNumber)); // default
+      : mergeTokens([{ length: line.length }], this._selectionTokens(lineNumber)); // default
 
-    if (this._underlay) return mergeTokens(this._underlay.call(null, lineNumber, text), mergedTokens);
+    if (this._underlay) return mergeTokens(this._underlay.call(null, lineNumber, line.text), mergedTokens);
     return mergedTokens;
   }
 
@@ -246,12 +245,12 @@ class Highlighter extends Emitter {
   _selectionTokens(lineNumber) {
     var ranges = [];
     var tokens = [];
-    var { text } = this._model.line(lineNumber);
+    var { length } = this._model.line(lineNumber);
     for (var selection of this._model.selections) {
       if (!isSelectionCollapsed(selection) && selection.start.line <= lineNumber && selection.end.line >= lineNumber) {
         ranges.push({
           start: selection.start.line === lineNumber ? selection.start.column : 0,
-          end: selection.end.line === lineNumber ? selection.end.column : text.length
+          end: selection.end.line === lineNumber ? selection.end.column : length
         });
       }
     }
@@ -266,7 +265,7 @@ class Highlighter extends Emitter {
       });
       index = range.end;
     }
-    if (index !== text.length) tokens.push({ length: text.length - index });
+    if (index !== length) tokens.push({ length: length - index });
     return tokens;
   }
 }
