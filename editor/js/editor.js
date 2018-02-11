@@ -13,7 +13,7 @@ class Editor extends Emitter {
     this._highlighter = new Highlighter(this._model, options.language, options.underlay);
     this._renderer = new Renderer(this._model, this.element, this._highlighter, options);
     this._commandManager = new CommandManager(this.element);
-    this._input = new Input(this.element, this._model, this._commandManager, options.readOnly);
+    this._input = new Input(this.element, this._model, this._commandManager, this._renderer, options.readOnly);
     this._selectionManager = new SelectionManger(this._renderer, this._model, this._commandManager);
   }
 

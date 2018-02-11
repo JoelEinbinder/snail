@@ -3,13 +3,15 @@ class Input extends Emitter {
    * @param {HTMLElement} parent
    * @param {Model} model
    * @param {CommandManager} commandManager
+   * @param {Renderer} renderer
    * @param {boolean=} readOnly
    */
-  constructor(parent, model, commandManager, readOnly) {
+  constructor(parent, model, commandManager, renderer, readOnly) {
     super();
     parent.addEventListener('focus', this.focus.bind(this), false);
     this._model = model;
     this._commandManager = commandManager;
+    this._renderer = renderer;
     this._buffer = '';
     this._bufferRange = {
       start: { line: 0, column: 0 },
@@ -139,6 +141,7 @@ class Input extends Emitter {
     var text = event.clipboardData.getData('text/plain');
     var loc = this._model.replaceRange(text, this._model.selections[0]);
     this._model.setSelections([{ start: loc, end: loc }]);
+    this._renderer.scrollLocationIntoView(loc);
     event.preventDefault();
   }
 
@@ -150,6 +153,7 @@ class Input extends Emitter {
     event.clipboardData.setData('text/plain', this._selectionsText());
     var loc = this._model.replaceRange('', this._model.selections[0]);
     this._model.setSelections([{ start: loc, end: loc }]);
+    this._renderer.scrollLocationIntoView(loc);
     event.preventDefault();
   }
 
@@ -191,6 +195,7 @@ class Input extends Emitter {
     }
     var loc = this._model.replaceRange(value.substring(i, j + 1), { start, end });
     this._model.setSelections([{ start: loc, end: loc }]);
+    this._renderer.scrollLocationIntoView(loc);
   }
 
   focus() {
@@ -246,7 +251,7 @@ class Input extends Emitter {
     }
     this._model.replaceRange('', range);
     this._model.setSelections([{ start: range.start, end: range.start }]);
-
+    this._renderer.scrollLocationIntoView(range.start);
     return true;
   }
 }

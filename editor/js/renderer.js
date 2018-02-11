@@ -162,6 +162,7 @@ class Renderer extends Emitter {
    * @param {Loc} location
    */
   scrollLocationIntoView(location) {
+    this._updateMetrics();
     var point = this.pointFromLocation(location);
     var top = point.y - this._padding;
     var left = point.x;
@@ -241,6 +242,10 @@ class Renderer extends Emitter {
   refresh() {
     this._overlayLayer.refresh();
     this._textLayer.refresh();
+    this._updateMetrics();
+  }
+
+  _updateMetrics() {
     this._scrollingElement.style.left = this._lineNumbersWidth() + 'px';
     this._fillerElement.style.width = Math.max(this._innerWidth(), this._width - this._lineNumbersWidth()) + 'px';
     var height = this._innerHeight();
