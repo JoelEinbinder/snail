@@ -55,18 +55,12 @@ class Model extends Emitter {
   text(range = this.fullRange()) {
     if (range.start.line === range.end.line)
       return this._lines[range.start.line].text.substring(range.start.column, range.end.column);
-    console.time('text');
-    // var content = this._lines.slice(range.start.line, range.end.line + 1).map(line => line.text);
-    // content[0] = content[0].substring(range.start.column);
-    // content[content.length - 1] = content[content.length - 1].substring(0, range.end.column);
-    // var result = content.join('\n');
 
     var result =
       this._lines[range.start.line].text.substring(range.start.column) +
       '\n' +
       this._rasterizeLines(range.start.line + 1, range.end.line - 1) +
       this._lines[range.end.line].text.substring(0, range.end.column);
-    console.timeEnd('text');
     return result;
   }
 
@@ -86,7 +80,6 @@ class Model extends Emitter {
         continue;
       }
       if (anchor) {
-        console.log(start, end);
         text += anchor.substring(start, end);
         anchor = null;
       }
@@ -99,7 +92,6 @@ class Model extends Emitter {
       }
     }
     if (anchor) {
-      console.log(start, end);
       text += anchor.substring(start, end) + '\n';
     }
     return text;
