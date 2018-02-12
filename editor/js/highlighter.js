@@ -42,7 +42,16 @@ class Highlighter extends Emitter {
         : {
             background: '#b3d8fd'
           };
-    this._mode = language === 'js' ? javascriptMode({ indentUnit: 2 }, {}) : cssMode({ indentUnit: 2 }, {});
+    switch (language) {
+      case 'js':
+        this._mode = javascriptMode({ indentUnit: 2 }, {});
+        break;
+      case 'css':
+        this._mode = cssMode({ indentUnit: 2 }, {});
+        break;
+      default:
+        this._mode = null;
+    }
     this._underlay = underlay;
     /** @type {WeakMap<Line, {state: Object, tokens: Array<Token>}>} */
     this._lineInfo = new WeakMap();
@@ -111,6 +120,7 @@ class Highlighter extends Emitter {
    * @param {number=} timeLimit
    */
   _tokenizeUpTo(lineNumber, max, timeLimit) {
+    if (!this._mode) return;
     if (this._currentLineNumber > lineNumber) return;
     if (
       max &&
