@@ -99,6 +99,7 @@ class Highlighter extends Emitter {
       if (lineinfo && lineinfo.state) break;
       this._currentLineNumber--;
     }
+    this._requestLineNumber = this._currentLineNumber;
   }
 
   _requestTokenizeUpTo(lineNumber) {
