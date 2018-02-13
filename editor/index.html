@@ -22,7 +22,7 @@
                 var url = 'text/medium.js';
                 var content = await (await fetch(url)).text();
 
-                editor = new Editor(content.repeat(100), {
+                editor = new Editor(content.repeat(2), {
                     padBottom: true,
                     lineNumbers: true,
                     language: url.substring(url.lastIndexOf('.') + 1),

@@ -28,6 +28,9 @@ class Renderer extends Emitter {
 
     this._textLayer.canvas.style.backgroundColor = '#FFF';
 
+    /** @type {WeakMap<Line, Array<{column: number, offset: number}>>} */
+    this._lineMetrics = new WeakMap();
+
     this.element.appendChild(this._textLayer.canvas);
     this.element.appendChild(this._overlayLayer.canvas);
 
@@ -189,9 +192,48 @@ class Renderer extends Emitter {
     if (location.line >= this._model.lineCount()) location = this._model.fullRange().end;
     var { text } = this._model.line(location.line);
     return {
-      x: text.substring(0, location.column).replace(/\t/g, this.TAB).length * this._charWidth,
+      x: this._xOffsetFromLocation(location),
       y: location.line * this._lineHeight
     };
+  }
+
+  /**
+   * @param {Loc} location
+   * @return {number}
+   */
+  _xOffsetFromLocation(location) {
+    var line = this._model.line(location.line);
+    var metrics = this._lineMetrics.get(line);
+    if (!metrics) this._lineMetrics.set(line, (metrics = [{ column: 0, offset: 0 }]));
+    var alpha = 0;
+    var beta = metrics.length - 1;
+    var diff = Infinity;
+    while (beta >= alpha) {
+      var index = Math.floor((alpha + beta) / 2);
+      var value = metrics[index];
+      if (value.column === location.column) return value.offset;
+      if (location.column > value.column) alpha = index + 1;
+      else beta = index - 1;
+    }
+    /** @type {function(string):number} */
+    var measure = text => {
+      for (var i = 0; i < text.length; i++)
+        if (text.charCodeAt(i) < 32 || text.charCodeAt(i) >= 127)
+          return this._textLayer._ctx.measureText(text.replace(/\t/g, this.TAB)).width;
+      return text.length * this._charWidth;
+    };
+    var entry =
+      location.column > value.column
+        ? {
+            column: location.column,
+            offset: value.offset + measure(line.text.substring(value.column, location.column))
+          }
+        : {
+            column: location.column,
+            offset: value.offset - measure(line.text.substring(location.column, value.column))
+          };
+    metrics.splice(location.column > value.column ? index + 1 : index, 0, entry);
+    return entry.offset;
   }
 
   /**
@@ -292,7 +334,6 @@ class Renderer extends Emitter {
       ctx.fillRect(0, 0, this._width, this._height);
     }
 
-    var start = performance.now();
     ctx.beginPath();
     for (var clipRect of clipRects) ctx.rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
     ctx.clip();
@@ -314,13 +355,14 @@ class Renderer extends Emitter {
       rect.width = 0;
       var text = this._model.line(i).text;
       var index = 0;
+      var lastX = this._xOffsetFromLocation({ line: i, column: 0 });
       outer: for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
         for (var j = 0; j < token.length; j += CHUNK_SIZE) {
-          var chunk = text
-            .substring(index + j, index + Math.min(j + CHUNK_SIZE, token.length))
-            .replace(/\t/g, this.TAB);
-          rect.width = chunk.length * this._charWidth;
+          var start = index + j;
+          var end = index + Math.min(j + CHUNK_SIZE, token.length);
+          var chunk = text.substring(start, end).replace(/\t/g, this.TAB);
+          rect.width = this._xOffsetFromLocation({ line: i, column: end }) - lastX;
           if (clipRects.some(clipRect => intersects(rect, clipRect))) {
             if (token.background) {
               ctx.fillStyle = token.background;
@@ -330,6 +372,7 @@ class Renderer extends Emitter {
             ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
           }
           rect.x += rect.width;
+          lastX += rect.width;
           if (rect.x > farRight) break outer;
         }
         index += token.length;
@@ -398,7 +441,9 @@ class Renderer extends Emitter {
     this._height = rect.height;
     this._overlayLayer.layout(rect.width, rect.height);
     this._textLayer.layout(rect.width, rect.height);
+    var last = this._charWidth;
     this._charWidth = this._textLayer.canvas.getContext('2d').measureText('x').width;
+    if (this._charWidth !== last) this._lineMetrics = new WeakMap();
     this.refresh();
   }
 }
