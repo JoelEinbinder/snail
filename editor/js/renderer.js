@@ -365,6 +365,7 @@ class Renderer extends Emitter {
       var text = this._model.line(i).text;
       var index = 0;
       var lastX = this._xOffsetFromLocation({ line: i, column: 0 });
+      var count = 0;
       outer: for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
         for (var j = 0; j < token.length; j += CHUNK_SIZE) {
@@ -378,6 +379,7 @@ class Renderer extends Emitter {
               ctx.fillRect(rect.x, rect.y, 1 + rect.width, 1 + rect.height);
             }
             ctx.fillStyle = token.color || '#222';
+            count += chunk.length;
             ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
           }
           rect.x += rect.width;
@@ -387,7 +389,6 @@ class Renderer extends Emitter {
         index += token.length;
       }
     }
-
     if (this._options.lineNumbers) this._drawLineNumbers(ctx);
   }
 
@@ -483,7 +484,21 @@ class Layer {
     if (this._rects.length) {
       this._ctx.save();
       this._ctx.scale(this._dpr, this._dpr);
-      this._draw(this._ctx, this._rects);
+      var cleanRects = [];
+      for (var rect of this._rects) {
+        if (rect.x < 0) {
+          rect.width += rect.x;
+          rect.x = 0;
+        }
+        if (rect.y < 0) {
+          rect.height += rect.y;
+          rect.y = 0;
+        }
+        if (rect.width + rect.x > this._width) rect.width = this._width - rect.x;
+        if (rect.height + rect.y > this._height) rect.height = this._height - rect.y;
+        if (rect.y < this._height && rect.x < this._width) cleanRects.push(rect);
+      }
+      this._draw(this._ctx, cleanRects);
       this._ctx.restore();
     }
     this._rects = [];
