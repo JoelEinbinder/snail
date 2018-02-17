@@ -19,7 +19,7 @@
         <script>
             var editor;
             async function go() {
-                var url = 'text/medium.js';
+                var url = 'text/heavy.js';
                 var content = await (await fetch(url)).text();
 
                 editor = new Editor(content.repeat(2), {

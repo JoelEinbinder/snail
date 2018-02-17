@@ -5,8 +5,8 @@
     right: 0;
     bottom: 0;
     overflow: hidden;
-    font-family: Menlo, Monaco, "Courier New", monospace;
-    /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
+    /* font-family: Menlo, Monaco, "Courier New", monospace; */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 12px;
     line-height: 18px;
     letter-spacing: 0;

@@ -22,6 +22,7 @@ class Renderer extends Emitter {
     this._scrollTop = 0;
     this._scrollLeft = 0;
     this._refreshScheduled = false;
+    this._proportional = false;
 
     this._textLayer = new Layer(this._drawText.bind(this));
     this._overlayLayer = new Layer(this._drawOverlay.bind(this));
@@ -132,7 +133,6 @@ class Renderer extends Emitter {
    */
   locationFromPoint(offsetX, offsetY) {
     var rect = this._scrollingElement.getBoundingClientRect();
-    var x = Math.round((offsetX - this._padding + this.scrollLeft - rect.left) / this._charWidth);
     var y = Math.floor((offsetY + this.scrollTop - rect.top) / this._lineHeight);
     if (y >= this._model.lineCount()) {
       return {
@@ -149,12 +149,21 @@ class Renderer extends Emitter {
 
     var line = y;
     var { text } = this._model.line(line);
-    var column = 0;
-    while (column < text.length) {
-      x -= text[column] === '\t' ? this.TAB.length : 1;
-      if (x < 0) break;
-      column++;
+    var x = offsetX - this._padding + this._scrollLeft - rect.left;
+    var alpha = 0;
+    var beta = text.length;
+    var column;
+    while (beta > alpha) {
+      column = Math.floor((alpha + beta) / 2);
+      var value = this._xOffsetFromLocation({ column, line });
+      if (x > value) alpha = Math.min(column + 1, text.length);
+      else beta = Math.max(column - 1, 0);
     }
+    column =
+      Math.abs(this._xOffsetFromLocation({ column: alpha, line }) - x) >
+      Math.abs(this._xOffsetFromLocation({ column: beta, line }) - x)
+        ? beta
+        : alpha;
     return {
       line,
       column
@@ -218,7 +227,7 @@ class Renderer extends Emitter {
     /** @type {function(string):number} */
     var measure = text => {
       for (var i = 0; i < text.length; i++)
-        if (text.charCodeAt(i) < 32 || text.charCodeAt(i) >= 127)
+        if (this._proportional || text.charCodeAt(i) < 32 || text.charCodeAt(i) >= 127)
           return this._textLayer._ctx.measureText(text.replace(/\t/g, this.TAB)).width;
       return text.length * this._charWidth;
     };
@@ -442,7 +451,9 @@ class Renderer extends Emitter {
     this._overlayLayer.layout(rect.width, rect.height);
     this._textLayer.layout(rect.width, rect.height);
     var last = this._charWidth;
-    this._charWidth = this._textLayer.canvas.getContext('2d').measureText('x').width;
+    var ctx = this._textLayer.canvas.getContext('2d');
+    this._charWidth = ctx.measureText('x').width;
+    this._proportional = ctx.measureText('i').width !== this._charWidth;
     if (this._charWidth !== last) this._lineMetrics = new WeakMap();
     this.refresh();
   }
