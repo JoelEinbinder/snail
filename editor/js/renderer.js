@@ -31,6 +31,7 @@ class Renderer extends Emitter {
 
     /** @type {WeakMap<Line, Array<{column: number, offset: number}>>} */
     this._lineMetrics = new WeakMap();
+    this._charWidths = {};
 
     this.element.appendChild(this._textLayer.canvas);
     this.element.appendChild(this._overlayLayer.canvas);
@@ -217,19 +218,32 @@ class Renderer extends Emitter {
     var alpha = 0;
     var beta = metrics.length - 1;
     var diff = Infinity;
+    var lastIndex = 0;
+    var index = 0;
+    var value;
     while (beta >= alpha) {
-      var index = Math.floor((alpha + beta) / 2);
-      var value = metrics[index];
+      lastIndex = index;
+      index = Math.floor((alpha + beta) / 2);
+      value = metrics[index];
       if (value.column === location.column) return value.offset;
       if (location.column > value.column) alpha = index + 1;
       else beta = index - 1;
     }
+    if (Math.abs(value.column - location.column) > Math.abs(metrics[lastIndex].column - location.column)) {
+      index = lastIndex;
+      value = metrics[index];
+    }
     /** @type {function(string):number} */
     var measure = text => {
-      for (var i = 0; i < text.length; i++)
-        if (this._proportional || text.charCodeAt(i) < 32 || text.charCodeAt(i) >= 127)
-          return this._textLayer._ctx.measureText(text.replace(/\t/g, this.TAB)).width;
-      return text.length * this._charWidth;
+      var width = 0;
+      for (var i = 0; i < text.length; i++) {
+        var char = text[i];
+        var charIndex = char.charCodeAt(0);
+        if (!(charIndex in this._charWidths))
+          this._charWidths[charIndex] = this._textLayer._ctx.measureText(char === '\t' ? this.TAB : char).width;
+        width += this._charWidths[charIndex];
+      }
+      return width;
     };
     var entry =
       location.column > value.column
@@ -455,7 +469,10 @@ class Renderer extends Emitter {
     var ctx = this._textLayer.canvas.getContext('2d');
     this._charWidth = ctx.measureText('x').width;
     this._proportional = ctx.measureText('i').width !== this._charWidth;
-    if (this._charWidth !== last) this._lineMetrics = new WeakMap();
+    if (this._charWidth !== last) {
+      this._lineMetrics = new WeakMap();
+      this._charWidths = {};
+    }
     this.refresh();
   }
 }
@@ -466,6 +483,7 @@ class Layer {
    */
   constructor(draw) {
     this.canvas = document.createElement('canvas');
+    this.canvas.style.setProperty('font-kerning', 'none');
     this._ctx = this.canvas.getContext('2d');
     this._draw = draw;
     /** @type {Array<Rect>} */
