@@ -22,7 +22,6 @@ class Renderer extends Emitter {
     this._scrollTop = 0;
     this._scrollLeft = 0;
     this._refreshScheduled = false;
-    this._proportional = false;
 
     this._textLayer = new Layer(this._drawText.bind(this));
     this._overlayLayer = new Layer(this._drawOverlay.bind(this));
@@ -468,7 +467,6 @@ class Renderer extends Emitter {
     var last = this._charWidth;
     var ctx = this._textLayer.canvas.getContext('2d');
     this._charWidth = ctx.measureText('x').width;
-    this._proportional = ctx.measureText('i').width !== this._charWidth;
     if (this._charWidth !== last) {
       this._lineMetrics = new WeakMap();
       this._charWidths = {};
