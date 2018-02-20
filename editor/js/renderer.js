@@ -71,6 +71,7 @@ class Renderer extends Emitter {
       }
     });
     this._model.on('selectionChanged', () => {
+      this._highlightWordOccurrences = false;
       this._overlayLayer.invalidate();
       this._overlayLayer.refresh();
     });
@@ -100,6 +101,12 @@ class Renderer extends Emitter {
       top: 0,
       left: 0
     };
+  }
+
+  highlightWordOccurrences() {
+    this._highlightWordOccurrences = true;
+    this._overlayLayer.invalidate();
+    this._overlayLayer.refresh();
   }
 
   /**
@@ -352,33 +359,39 @@ class Renderer extends Emitter {
    */
   _drawOverlay(ctx, clipRects) {
     ctx.clearRect(0, 0, this._width, this._height);
-
     var selection = this._model.selections[0];
     var word;
     if (isSelectionCollapsed(selection)) {
-      word = '';
-      // var text = this._model.line(selection.start.line).text;
-      // var pos = selection.start.column;
-      // var left = text.slice(0, pos).search(/[A-Za-z0-9_]+$/);
-      // if (left < 0)
-      //   left = pos;
+      if (this._highlightWordOccurrences) {
+        var text = this._model.line(selection.start.line).text;
+        var pos = selection.start.column;
+        var left = text.slice(0, pos).search(/[A-Za-z0-9_]+$/);
+        if (left < 0) left = pos;
 
-      // var right = text.slice(pos).search(/[^A-Za-z0-9_]/) + pos;
-      // if (right < pos)
-      //   right = text.length;
-      // word = text.substring(left, right).toLowerCase();
+        var right = text.slice(pos).search(/[^A-Za-z0-9_]/) + pos;
+        if (right < pos) right = text.length;
+        word = text.substring(left, right).toLowerCase();
+      } else {
+        word = '';
+      }
     } else {
       word = this._model.text(selection).toLowerCase();
     }
+    if (word.match(/^\s+$/)) word = '';
     var lineNumbersWidth = this._lineNumbersWidth();
-    ctx.fillStyle = 'rgba(0,128,255,0.075)';
-
+    ctx.fillStyle = 'rgba(0,128,255,0.1)';
     if (word) {
       var viewport = this.viewport();
       for (var i = viewport.from; i <= viewport.to; i++) {
         var text = this._model.line(i).text.toLowerCase();
         var index = -1;
         while ((index = text.indexOf(word, index + 1)) !== -1) {
+          if (
+            i === selection.start.line &&
+            index === selection.start.column &&
+            index + word.length === selection.end.column
+          )
+            continue;
           var start = this.pointFromLocation({ line: i, column: index });
           var end = this.pointFromLocation({ line: i, column: index + word.length });
           ctx.fillRect(

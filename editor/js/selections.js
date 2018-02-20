@@ -233,6 +233,7 @@ class SelectionManger extends Emitter {
     this._anchor = anchor;
     this._desiredLocation = head;
     this._renderer.scrollLocationIntoView(head);
+    this._renderer.highlightWordOccurrences();
   }
 
   /**
@@ -338,6 +339,7 @@ class SelectionManger extends Emitter {
     this._anchor = anchor;
     this._desiredLocation = point;
     this._renderer.scrollLocationIntoView(point);
+    this._renderer.highlightWordOccurrences();
     return true;
   }
 }
