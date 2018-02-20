@@ -352,8 +352,46 @@ class Renderer extends Emitter {
    */
   _drawOverlay(ctx, clipRects) {
     ctx.clearRect(0, 0, this._width, this._height);
-    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+
+    var selection = this._model.selections[0];
+    var word;
+    if (isSelectionCollapsed(selection)) {
+      word = '';
+      // var text = this._model.line(selection.start.line).text;
+      // var pos = selection.start.column;
+      // var left = text.slice(0, pos).search(/[A-Za-z0-9_]+$/);
+      // if (left < 0)
+      //   left = pos;
+
+      // var right = text.slice(pos).search(/[^A-Za-z0-9_]/) + pos;
+      // if (right < pos)
+      //   right = text.length;
+      // word = text.substring(left, right).toLowerCase();
+    } else {
+      word = this._model.text(selection).toLowerCase();
+    }
     var lineNumbersWidth = this._lineNumbersWidth();
+    ctx.fillStyle = 'rgba(0,128,255,0.075)';
+
+    if (word) {
+      var viewport = this.viewport();
+      for (var i = viewport.from; i <= viewport.to; i++) {
+        var text = this._model.line(i).text.toLowerCase();
+        var index = -1;
+        while ((index = text.indexOf(word, index + 1)) !== -1) {
+          var start = this.pointFromLocation({ line: i, column: index });
+          var end = this.pointFromLocation({ line: i, column: index + word.length });
+          ctx.fillRect(
+            start.x + lineNumbersWidth + this._padding - this._scrollLeft,
+            start.y - this.scrollTop,
+            end.x - start.x,
+            this._lineHeight
+          );
+        }
+      }
+    }
+
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
     for (var selection of this._model.selections) {
       if (this._options.readOnly || !isSelectionCollapsed(selection)) continue;
       var point = this.pointFromLocation(selection.start);

@@ -211,7 +211,7 @@ class SelectionManger extends Emitter {
    */
   _charType(character) {
     if (character.match(/\s/)) return 0;
-    if (character.match(/[0-9a-zA-Z]/)) return 1;
+    if (character.match(/[_0-9a-zA-Z]/)) return 1;
     if (character) return 2;
     return -1;
   }
