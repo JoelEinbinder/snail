@@ -72,6 +72,36 @@ class SelectionManger extends Emitter {
       'extendLineEnd',
       'Shift+End'
     );
+
+    this._commandManager.addCommand(
+      () => {
+        var selection = this._model.selections[0];
+        if (!isSelectionCollapsed(selection)) return false;
+        var text = this._model.line(selection.start.line).text;
+        var column = selection.start.column;
+        var left = text.slice(0, column).search(/[A-Za-z0-9_]+$/);
+        if (left < 0) left = column;
+
+        var right = text.slice(column).search(/[^A-Za-z0-9_]/) + column;
+        if (right < column) right = text.length;
+        this._model.setSelections([
+          {
+            start: {
+              line: selection.start.line,
+              column: left
+            },
+            end: {
+              line: selection.end.line,
+              column: right
+            }
+          }
+        ]);
+        return true;
+      },
+      'selectNext',
+      'Ctrl+D',
+      'Meta+D'
+    );
   }
 
   /**
