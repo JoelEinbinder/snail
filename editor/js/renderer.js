@@ -100,13 +100,6 @@ class Renderer extends Emitter {
       top: 0,
       left: 0
     };
-
-    this._longestLineLength = 0;
-    for (var i = 0; i < this._model.lineCount(); i++)
-      this._longestLineLength = Math.max(
-        this._longestLineLength,
-        this._model.line(i).text.replace(/\t/g, this.TAB).length
-      );
   }
 
   /**
@@ -147,25 +140,25 @@ class Renderer extends Emitter {
       };
     }
 
-    var line = y;
-    var { text } = this._model.line(line);
+    var lineNumber = y;
+    var line = this._model.line(lineNumber);
     var x = offsetX - this._padding + this._scrollLeft - rect.left;
     var alpha = 0;
-    var beta = text.length;
+    var beta = line.length;
     var column;
     while (beta > alpha) {
       column = Math.floor((alpha + beta) / 2);
-      var value = this._xOffsetFromLocation({ column, line });
-      if (x > value) alpha = Math.min(column + 1, text.length);
+      var value = this._textMeasuring.xOffsetFromLocation(line, column);
+      if (x > value) alpha = Math.min(column + 1, line.length);
       else beta = Math.max(column - 1, 0);
     }
     column =
-      Math.abs(this._xOffsetFromLocation({ column: alpha, line }) - x) >
-      Math.abs(this._xOffsetFromLocation({ column: beta, line }) - x)
+      Math.abs(this._textMeasuring.xOffsetFromLocation(line, alpha) - x) >
+      Math.abs(this._textMeasuring.xOffsetFromLocation(line, beta) - x)
         ? beta
         : alpha;
     return {
-      line,
+      line: lineNumber,
       column
     };
   }
@@ -199,63 +192,11 @@ class Renderer extends Emitter {
    */
   pointFromLocation(location) {
     if (location.line >= this._model.lineCount()) location = this._model.fullRange().end;
-    var { text } = this._model.line(location.line);
+    var line = this._model.line(location.line);
     return {
-      x: this._xOffsetFromLocation(location),
+      x: this._textMeasuring.xOffsetFromLocation(line, location.column),
       y: location.line * this._lineHeight
     };
-  }
-
-  /**
-   * @param {Loc} location
-   * @return {number}
-   */
-  _xOffsetFromLocation(location) {
-    var line = this._model.line(location.line);
-    var metrics = this._lineMetrics.get(line);
-    if (!metrics) this._lineMetrics.set(line, (metrics = [{ column: 0, offset: 0 }]));
-    var alpha = 0;
-    var beta = metrics.length - 1;
-    var diff = Infinity;
-    var lastIndex = 0;
-    var index = 0;
-    var value;
-    while (beta >= alpha) {
-      lastIndex = index;
-      index = Math.floor((alpha + beta) / 2);
-      value = metrics[index];
-      if (value.column === location.column) return value.offset;
-      if (location.column > value.column) alpha = index + 1;
-      else beta = index - 1;
-    }
-    if (Math.abs(value.column - location.column) > Math.abs(metrics[lastIndex].column - location.column)) {
-      index = lastIndex;
-      value = metrics[index];
-    }
-    /** @type {function(string):number} */
-    var measure = text => {
-      var width = 0;
-      for (var i = 0; i < text.length; i++) {
-        var char = text[i];
-        var charIndex = char.charCodeAt(0);
-        if (!(charIndex in this._charWidths))
-          this._charWidths[charIndex] = this._textLayer._ctx.measureText(char === '\t' ? this.TAB : char).width;
-        width += this._charWidths[charIndex];
-      }
-      return width;
-    };
-    var entry =
-      location.column > value.column
-        ? {
-            column: location.column,
-            offset: value.offset + measure(line.text.substring(value.column, location.column))
-          }
-        : {
-            column: location.column,
-            offset: value.offset - measure(line.text.substring(location.column, value.column))
-          };
-    metrics.splice(location.column > value.column ? index + 1 : index, 0, entry);
-    return entry.offset;
   }
 
   /**
@@ -300,7 +241,7 @@ class Renderer extends Emitter {
   }
 
   _innerWidth() {
-    return this._longestLineLength * this._charWidth + this._padding * 2;
+    return this._textMeasuring.longestLineLength() + this._padding * 2;
   }
 
   refresh() {
@@ -311,7 +252,7 @@ class Renderer extends Emitter {
 
   _updateMetrics() {
     this._scrollingElement.style.left = this._lineNumbersWidth() + 'px';
-    this._fillerElement.style.width = Math.max(this._innerWidth(), this._width - this._lineNumbersWidth()) + 'px';
+    this._fillerElement.style.minWidth = this._innerWidth() + 'px';
     var height = this._innerHeight();
     if (this._options.padBottom) {
       // there is always a y-scroll, so set height first to a big value
@@ -377,7 +318,7 @@ class Renderer extends Emitter {
       rect.width = 0;
       var text = this._model.line(i).text;
       var index = 0;
-      var lastX = this._xOffsetFromLocation({ line: i, column: 0 });
+      var lastX = this._textMeasuring.xOffsetFromLocation(this._model.line(i), 0);
       var count = 0;
       outer: for (var token of this._highlighter.tokensForLine(i)) {
         // we dont want too overdraw too much for big tokens
@@ -385,7 +326,7 @@ class Renderer extends Emitter {
           var start = index + j;
           var end = index + Math.min(j + CHUNK_SIZE, token.length);
           var chunk = text.substring(start, end).replace(/\t/g, this.TAB);
-          rect.width = this._xOffsetFromLocation({ line: i, column: end }) - lastX;
+          rect.width = this._textMeasuring.xOffsetFromLocation(this._model.line(i), end) - lastX;
           if (clipRects.some(clipRect => intersects(rect, clipRect))) {
             if (token.background) {
               ctx.fillStyle = token.background;
@@ -467,10 +408,10 @@ class Renderer extends Emitter {
     var last = this._charWidth;
     var ctx = this._textLayer.canvas.getContext('2d');
     this._charWidth = ctx.measureText('x').width;
-    if (this._charWidth !== last) {
-      this._lineMetrics = new WeakMap();
-      this._charWidths = {};
-    }
+    if (this._charWidth !== last)
+      this._textMeasuring = new TextMeasuring(
+        char => this._textLayer._ctx.measureText(char === '\t' ? this.TAB : char).width
+      );
     this.refresh();
   }
 }
@@ -566,6 +507,85 @@ class Layer {
     }
     this._translation.x += Math.round(x * this._dpr);
     this._translation.y += Math.round(y * this._dpr);
+  }
+}
+
+class TextMeasuring {
+  /**
+   * @param {function(string):number} measure
+   */
+  constructor(measure) {
+    this._lineMetrics = new WeakMap();
+    this._charWidths = {};
+    /** @type {function(string):number} */
+    this._measure = text => {
+      var width = 0;
+      for (var i = 0; i < text.length; i++) {
+        var char = text.charAt(i);
+        var charIndex = char.charCodeAt(0);
+        if (!(charIndex in this._charWidths)) this._charWidths[charIndex] = measure(char);
+        width += this._charWidths[charIndex];
+      }
+      return width;
+    };
+    this._longestLineLength = 0;
+  }
+
+  longestLineLength() {
+    return this._longestLineLength;
+  }
+
+  /**
+   * @param {?Line} line
+   * @param {number} column
+   * @return {number}
+   */
+  xOffsetFromLocation(line, column) {
+    if (!line) return 0;
+    var metrics = this._computeLineMetrics(line);
+    var alpha = 0;
+    var beta = metrics.length - 1;
+    var diff = Infinity;
+    var lastIndex = 0;
+    var index = 0;
+    var value;
+    while (beta >= alpha) {
+      lastIndex = index;
+      index = Math.floor((alpha + beta) / 2);
+      value = metrics[index];
+      if (value.column === column) return value.offset;
+      if (column > value.column) alpha = index + 1;
+      else beta = index - 1;
+    }
+
+    if (Math.abs(value.column - column) > Math.abs(metrics[lastIndex].column - column)) {
+      index = lastIndex;
+      value = metrics[index];
+    }
+    var offset =
+      column > value.column
+        ? value.offset + this._measure(line.text.substring(value.column, column))
+        : value.offset - this._measure(line.text.substring(column, value.column));
+    metrics.splice(index, 0, { column, offset });
+    return offset;
+  }
+
+  /**
+   * @param {Line} line
+   * @return {Array<{column: number, offset: number}>}
+   */
+  _computeLineMetrics(line) {
+    if (this._lineMetrics.has(line)) return this._lineMetrics.get(line);
+    var metrics = [{ column: 0, offset: 0 }];
+    var text = line.text;
+    var offset = 0;
+    for (var index = 0; index < text.length; index++) {
+      offset += this._measure(text[index]);
+      if (!(index % 200) || index === text.length - 1) metrics.push({ column: index + 1, offset });
+    }
+    if (offset > this._longestLineLength) this._longestLineLength = offset;
+    this._lineMetrics.set(line, metrics);
+    return metrics;
   }
 }
 

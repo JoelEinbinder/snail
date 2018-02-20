@@ -3,7 +3,7 @@
        "noEmit": true,
        "allowJs": true,
        "checkJs": true,
-       "target": "es2017"
+       "target": "es2017",
     },
     "include": [
         "js",
