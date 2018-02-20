@@ -102,6 +102,25 @@ class SelectionManger extends Emitter {
       'Ctrl+D',
       'Meta+D'
     );
+
+    this._commandManager.addCommand(
+      () => {
+        this._model.undo();
+        return true;
+      },
+      'undo',
+      'Ctrl+Z',
+      'Meta+Z'
+    );
+    this._commandManager.addCommand(
+      () => {
+        this._model.redo();
+        return true;
+      },
+      'redo',
+      'Ctrl+Y',
+      'Meta+Shift+Z'
+    );
   }
 
   /**

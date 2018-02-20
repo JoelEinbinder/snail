@@ -7,6 +7,11 @@ class Model extends Emitter {
     this._lines = this._createLines(data);
     /** @type {Array<TextRange>} */
     this._selections = [{ start: { line: 0, column: 0 }, end: { line: 0, column: 0 } }];
+
+    /** @type {Array<{range: TextRange, text: string, selections:Array<TextRange>}>} */
+    this._undoStack = [];
+    /** @type {Array<{range: TextRange, text: string, selections:Array<TextRange>}>} */
+    this._redoStack = [];
   }
 
   /**
@@ -58,7 +63,7 @@ class Model extends Emitter {
 
     var result =
       this._lines[range.start.line].text.substring(range.start.column) +
-      '\n' +
+      this._lines[range.start.line].lineEnding +
       this._rasterizeLines(range.start.line + 1, range.end.line - 1) +
       this._lines[range.end.line].text.substring(0, range.end.column);
     return result;
@@ -74,11 +79,14 @@ class Model extends Emitter {
     var anchor = null;
     var end = 0;
     var start = 0;
+    var lastLineEnding = null;
     for (var i = from; i <= to; i++) {
-      if (anchor && end === this._lines[i]._start - 1 && this._lines[i]._sourceString === anchor) {
+      if (anchor && end === this._lines[i]._start - lastLineEnding.length && this._lines[i]._sourceString === anchor) {
         end = this._lines[i]._end;
+        lastLineEnding = this._lines[i].lineEnding;
         continue;
       }
+      lastLineEnding = this._lines[i].lineEnding;
       if (anchor) {
         text += anchor.substring(start, end);
         anchor = null;
@@ -88,7 +96,7 @@ class Model extends Emitter {
         start = this._lines[i]._start;
         end = this._lines[i]._end;
       } else {
-        text += this._lines[i].text + '\n';
+        text += this._lines[i].text + this._lines[i].lineEnding;
       }
     }
     if (anchor) {
@@ -114,12 +122,53 @@ class Model extends Emitter {
   }
 
   /**
-   *
    * @param {string} text
    * @param {TextRange} range
    * @return {Loc}
    */
   replaceRange(text, range) {
+    var replacedText = this.text(range);
+    var endLocation = this._replaceRange(text, range);
+    if (replacedText !== text) {
+      this._undoStack.push({
+        text: replacedText,
+        range: {
+          start: range.start,
+          end: endLocation
+        },
+        selections: this._selections
+      });
+    }
+    return endLocation;
+  }
+
+  /**
+   * @param {string} text
+   * @param {TextRange} range
+   * @return {Loc}
+   */
+  _undoReplaceRange(text, range) {
+    var replacedText = this.text(range);
+    var endLocation = this._replaceRange(text, range);
+    if (replacedText !== text) {
+      this._redoStack.push({
+        text: replacedText,
+        range: {
+          start: range.start,
+          end: endLocation
+        },
+        selections: this._selections
+      });
+    }
+    return endLocation;
+  }
+
+  /**
+   * @param {string} text
+   * @param {TextRange} range
+   * @return {Loc}
+   */
+  _replaceRange(text, range) {
     var before = this._lines[range.start.line].text.substring(0, range.start.column);
     var after = this._lines[range.end.line].text.substring(range.end.column);
     var lines = this._createLines(before + text + after);
@@ -139,6 +188,28 @@ class Model extends Emitter {
   }
 
   /**
+   * @return {boolean}
+   */
+  undo() {
+    if (!this._undoStack.length) return false;
+    var undoItem = this._undoStack.pop();
+    this._undoReplaceRange(undoItem.text, undoItem.range);
+    this.setSelections(undoItem.selections);
+    return true;
+  }
+
+  /**
+   * @return {boolean}
+   */
+  redo() {
+    if (!this._redoStack.length) return false;
+    var redoItem = this._redoStack.pop();
+    this.replaceRange(redoItem.text, redoItem.range);
+    this.setSelections(redoItem.selections);
+    return true;
+  }
+
+  /**
    * @param {string} data
    * @return {Array<Line>}
    */
@@ -151,8 +222,8 @@ class Model extends Emitter {
       start = end + 1;
       end = data.indexOf('\n', start);
       if (end === -1) end = data.length;
-      if (data[end - 1] === '\r') lines.push(new Line(data, start, end - 1));
-      else lines.push(new Line(data, start, end));
+      if (data[end - 1] === '\r') lines.push(new Line(data, start, end - 1, '\r\n'));
+      else lines.push(new Line(data, start, end, '\n'));
     }
     return lines;
   }
@@ -163,13 +234,19 @@ class Line {
    * @param {string} sourceString
    * @param {number} start
    * @param {number} end
+   * @param {string} lineEnding
    */
-  constructor(sourceString, start, end) {
+  constructor(sourceString, start, end, lineEnding) {
     this._rasterized = false;
     this._start = start;
     this._end = end;
     this._text = null;
     this._sourceString = sourceString;
+    this._lineEnding = lineEnding;
+  }
+
+  get lineEnding() {
+    return this._lineEnding;
   }
 
   _rasterize() {

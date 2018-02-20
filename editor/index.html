@@ -22,7 +22,7 @@
                 var url = 'out/kangaroo.js';
                 var content = await (await fetch(url)).text();
 
-                editor = new Editor(content.repeat(2), {
+                editor = new Editor(content, {
                     padBottom: true,
                     lineNumbers: true,
                     language: url.substring(url.lastIndexOf('.') + 1),
