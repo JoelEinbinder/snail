@@ -151,7 +151,8 @@ class Model extends Emitter {
       start = end + 1;
       end = data.indexOf('\n', start);
       if (end === -1) end = data.length;
-      lines.push(new Line(data, start, end));
+      if (data[end - 1] === '\r') lines.push(new Line(data, start, end - 1));
+      else lines.push(new Line(data, start, end));
     }
     return lines;
   }
