@@ -88,7 +88,7 @@ class Model extends Emitter {
       }
       lastLineEnding = this._lines[i].lineEnding;
       if (anchor) {
-        text += anchor.substring(start, end);
+        text += anchor.substring(start, end) + '\n';
         anchor = null;
       }
       if (this._lines[i]._sourceString) {

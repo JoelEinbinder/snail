@@ -21,11 +21,21 @@ describe('model', function () {
     await loadScript('emitter.js');
     await loadScript('model.js');
   });
-  it('text', async function () {
-    await page.evaluate(() => {
-      const model = new Model('this is the text');
-      assertEqual(model.text(), 'this is the text');
-      assertEqual(model.text({ start: { line: 0, column: 'this '.length }, end: {line:0, column: 'this is'.length}}), 'is');
+  describe('text', function () {
+    it('should take a subrange', async function () {
+      await page.evaluate(() => {
+        const model = new Model('this is the text');
+        assertEqual(model.text(), 'this is the text');
+        assertEqual(model.text({ start: { line: 0, column: 'this '.length }, end: {line:0, column: 'this is'.length}}), 'is');
+      });
+    });
+    it('should work with a bunch of lines', async function () {
+      await page.evaluate(() => {
+        const model = new Model('hello\n'.repeat(5));
+        // rasterize some random line for safety
+        model.line(3).text;
+        assertEqual(model.text(), 'hello\n'.repeat(5));
+      });
     });
   });
   it('fullRange', async function () {

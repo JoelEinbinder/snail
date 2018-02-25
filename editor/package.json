@@ -10,10 +10,10 @@
     "typescript": "^2.6.1"
   },
   "scripts": {
-    "lint": "tsc -p .",
+    "lint": "tsc --pretty -p .",
     "format": "npx prettier --write --single-quote --print-width 120 \"js/**/*.js\"",
     "build": "node node/build.js",
-    "test": "mocha test/test.js",
+    "test": "mocha -c test/test.js",
     "all": "npm run lint && npm run format && npm run test && npm run build"
   },
   "author": "",
