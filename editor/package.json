@@ -4,14 +4,17 @@
   "description": "",
   "dependencies": {},
   "devDependencies": {
+    "mocha": "^5.0.1",
     "prettier": "^1.10.2",
+    "puppeteer": "^1.1.0",
     "typescript": "^2.6.1"
   },
   "scripts": {
     "lint": "tsc -p .",
     "format": "npx prettier --write --single-quote --print-width 120 \"js/**/*.js\"",
     "build": "node node/build.js",
-    "all": "npm run lint && npm run format && npm run build"
+    "test": "mocha test/test.js",
+    "all": "npm run lint && npm run format && npm run test && npm run build"
   },
   "author": "",
   "license": "ISC"
