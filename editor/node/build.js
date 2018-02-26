@@ -1,5 +1,14 @@
 var fs = require('fs');
-var files = fs.readdirSync('js');
+var files = [
+  'emitter.js',
+  'model.js',
+  'commands.js',
+  'highlighter.js',
+  'input.js',
+  'renderer.js',
+  'selections.js',
+  'editor.js'
+];
 var contents = [];
 files.forEach(file => {
     contents.push(fs.readFileSync('js/' + file, 'utf8'));
