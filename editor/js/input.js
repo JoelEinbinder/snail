@@ -42,6 +42,8 @@ class Input extends Emitter {
     model.on('selectionChanged', this._selectionChanged.bind(this));
     this._commandManager.addCommand(this._deleteChar.bind(this, true), 'backspace', 'Backspace');
     this._commandManager.addCommand(this._deleteChar.bind(this, false), 'delete', 'Delete');
+    this._commandManager.addCommand(this._indent.bind(this), 'indent', 'Tab');
+    this._commandManager.addCommand(this._dedent.bind(this), 'dedent', 'Shift+Tab');
   }
 
   /**
@@ -271,6 +273,15 @@ class Input extends Emitter {
         }
       })
     );
+    return true;
+  }
+
+  _indent() {
+    this._replaceRanges('\t', this._model.selections);
+    return true;
+  }
+
+  _dedent() {
     return true;
   }
 }
