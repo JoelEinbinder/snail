@@ -76,32 +76,23 @@ class Model extends Emitter {
    */
   _rasterizeLines(from, to) {
     var text = '';
-    var anchor = null;
+    var anchor = '';
     var end = 0;
     var start = 0;
     var lastLineEnding = '';
     for (var i = from; i <= to; i++) {
-      if (anchor && end === this._lines[i]._start - lastLineEnding.length && this._lines[i]._sourceString === anchor) {
+      if (end === this._lines[i]._start - lastLineEnding.length && this._lines[i]._sourceString === anchor) {
         end = this._lines[i]._end;
         lastLineEnding = this._lines[i].lineEnding;
         continue;
       }
-      if (anchor) {
-        text += anchor.substring(start, end) + lastLineEnding;
-        anchor = null;
-      }
-      lastLineEnding = this._lines[i].lineEnding;
-      if (this._lines[i]._sourceString) {
-        anchor = this._lines[i]._sourceString;
-        start = this._lines[i]._start;
-        end = this._lines[i]._end;
-      } else {
-        text += this._lines[i].text + this._lines[i].lineEnding;
-      }
-    }
-    if (anchor) {
       text += anchor.substring(start, end) + lastLineEnding;
+      lastLineEnding = this._lines[i].lineEnding;
+      anchor = this._lines[i]._sourceString;
+      start = this._lines[i]._start;
+      end = this._lines[i]._end;
     }
+    text += anchor.substring(start, end) + lastLineEnding;
     return text;
   }
 
@@ -227,6 +218,23 @@ class Model extends Emitter {
     }
     return lines;
   }
+
+  /**
+   * @param {string} needle
+   * @param {Loc} from
+   * @return {?Loc}
+   */
+  search(needle, from = { line: 0, column: 0 }) {
+    let { line, column } = from;
+    let index;
+    while (line < this._lines.length) {
+      index = this._lines[line].text.indexOf(needle, column);
+      if (index !== -1) return { line, column: index };
+      column = 0;
+      line++;
+    }
+    return null;
+  }
 }
 
 class Line {
@@ -252,7 +260,9 @@ class Line {
   _rasterize() {
     if (this._rasterized) return;
     this._text = this._sourceString.substring(this._start, this._end);
-    this._sourceString = null;
+    this._sourceString = this._text;
+    this._start = 0;
+    this._end = this._text.length;
     this._rasterized = true;
   }
 

@@ -76,7 +76,7 @@ describe('model', function () {
   it('fullRange', async function () {
     await page.evaluate(() => {
       const model = new Model('two\nlines');
-      assertEqual(JSON.stringify(model.fullRange()), JSON.stringify({ start: { line: 0, column: 0 }, end: {line: 1, column: 'lines'.length}}));
+      assertEqual(model.fullRange(), { start: { line: 0, column: 0 }, end: {line: 1, column: 'lines'.length}}, true);
     });
   });
   it('replace range', async function () {
@@ -86,6 +86,14 @@ describe('model', function () {
       assertEqual(model.text(), 'this was the text');
     });
   });
+  describe('search', function () {
+    it('should work', async function () {
+      await page.evaluate(() => {
+        const model = new Model('Hello World!');
+        assertEqual(model.search('World'), { line: 0, column: 'Hello '.length }, true);
+      });
+    });
+  })
 });
 
 after(async function () {
@@ -97,7 +105,14 @@ async function loadScript(scriptName) {
   await page.addScriptTag({ path: path.resolve(__dirname, '..', 'js', scriptName) });
 }
 
-function assertEqual(one, two) {
+function assertEqual(one, two, soft) {
+  if (soft) {
+    var softOne = JSON.stringify(one);
+    var softTwo = JSON.stringify(two);
+    if (softOne === softTwo)
+      return;
+    throw new Error(`${JSON.stringify(softOne)} !== ${JSON.stringify(softTwo)}`);
+  }
   if (one === two)
     return;
   throw new Error(`${JSON.stringify(one)} !== ${JSON.stringify(two)}`);
