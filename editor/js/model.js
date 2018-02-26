@@ -79,18 +79,18 @@ class Model extends Emitter {
     var anchor = null;
     var end = 0;
     var start = 0;
-    var lastLineEnding = null;
+    var lastLineEnding = '';
     for (var i = from; i <= to; i++) {
       if (anchor && end === this._lines[i]._start - lastLineEnding.length && this._lines[i]._sourceString === anchor) {
         end = this._lines[i]._end;
         lastLineEnding = this._lines[i].lineEnding;
         continue;
       }
-      lastLineEnding = this._lines[i].lineEnding;
       if (anchor) {
-        text += anchor.substring(start, end) + '\n';
+        text += anchor.substring(start, end) + lastLineEnding;
         anchor = null;
       }
+      lastLineEnding = this._lines[i].lineEnding;
       if (this._lines[i]._sourceString) {
         anchor = this._lines[i]._sourceString;
         start = this._lines[i]._start;
@@ -100,7 +100,7 @@ class Model extends Emitter {
       }
     }
     if (anchor) {
-      text += anchor.substring(start, end) + '\n';
+      text += anchor.substring(start, end) + lastLineEnding;
     }
     return text;
   }

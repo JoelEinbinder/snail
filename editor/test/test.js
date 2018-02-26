@@ -33,8 +33,43 @@ describe('model', function () {
       await page.evaluate(() => {
         const model = new Model('hello\n'.repeat(5));
         // rasterize some random line for safety
-        model.line(3).text;
+        assertEqual(model.line(3).text, 'hello');
         assertEqual(model.text(), 'hello\n'.repeat(5));
+      });
+    });
+    it('should work with \\r\\n lines', async function () {
+      await page.evaluate(() => {
+        const model = new Model('hello\r\n'.repeat(5));
+        // rasterize some random line for safety
+        assertEqual(model.line(3).text, 'hello');
+        assertEqual(model.text(), 'hello\r\n'.repeat(5));
+      });
+    });
+    it('should work with an empty document', async function () {
+      await page.evaluate(() => {
+        const model = new Model('');
+        assertEqual(model.text(), '');
+        model.line(0).text;
+        assertEqual(model.text(), '');
+      });
+    });
+  });
+  describe('lineCount', function () {
+    it('should work', async function () {
+      await page.evaluate(() => {
+        assertEqual(new Model('').lineCount(), 1);
+        assertEqual(new Model('\n').lineCount(), 2);
+        assertEqual(new Model('1').lineCount(), 1);
+        assertEqual(new Model('hi\n'.repeat(5)).lineCount(), 6);
+        assertEqual(new Model('hi\r\n'.repeat(5)).lineCount(), 6);
+      });
+    });
+    it('should work after changing the text', async function () {
+      await page.evaluate(() => {
+        const model = new Model('hi\nbye');
+        assertEqual(model.lineCount(), 2);
+        model.replaceRange('hello\ngoodbye\nok', model.fullRange());
+        assertEqual(model.text(), 'hello\ngoodbye\nok');
       });
     });
   });
