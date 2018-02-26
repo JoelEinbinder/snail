@@ -56,6 +56,7 @@ class CommandManager {
   registerShortcut(command, shortcut, macShortcut) {
     console.assert(this._commands.has(command), `Command not found "${command}"`);
     if (macShortcut && navigator.platform.indexOf('Mac') > -1) shortcut = macShortcut;
+    if (!shortcut) return;
     shortcut = shortcut.toLowerCase();
     this._shortcuts.push({ shortcut, command });
   }

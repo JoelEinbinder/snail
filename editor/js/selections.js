@@ -99,9 +99,24 @@ class SelectionManger extends Emitter {
 
     this._commandManager.addCommand(
       () => {
-        var selection = this._model.selections[0];
+        const selection = this._model.selections[0];
         if (isSelectionCollapsed(selection)) return this._commandManager.trigger('selectWord');
-        return false;
+        const needle = this._model.text(selection);
+        let nextLocation = this._model.search(needle, this._model.selections[this._model.selections.length - 1].end);
+        if (!nextLocation) nextLocation = this._model.search(needle);
+        if (compareLocation(nextLocation, selection.start) === 0) return true; // we wrapped around to the start
+        const selections = this._model.selections.slice(0);
+        const end = {
+          line: nextLocation.line,
+          column: nextLocation.column + needle.length
+        };
+        selections.push({
+          start: nextLocation,
+          end
+        });
+        this._model.setSelections(selections);
+        this._renderer.scrollLocationIntoView(end);
+        return true;
       },
       'selectNext',
       'Ctrl+D',
