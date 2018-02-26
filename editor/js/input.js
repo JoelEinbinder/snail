@@ -193,7 +193,22 @@ class Input extends Emitter {
         end.column = this._model.line(end.line).length;
       }
     }
-    var loc = this._model.replaceRange(value.substring(i, j + 1), { start, end });
+    const text = value.substring(i, j + 1);
+    if (compareRange({ start, end }, this._model.selections[0]) === 0) {
+      let selections = this._model.selections;
+      /** @type {Array<TextRange>} */
+      let cursors = [];
+      for (let i = 0; i < selections.length; i++) {
+        loc = this._model.replaceRange(text, selections[i]);
+        selections = selections.map(selection => rebaseRange(selection, selections[i], loc));
+        cursors = cursors.map(cursor => rebaseRange(cursor, selections[i], loc));
+        cursors.push({ start: loc, end: loc });
+      }
+      this._model.setSelections(cursors);
+      this._renderer.scrollLocationIntoView(cursors[0].start);
+      return;
+    }
+    var loc = this._model.replaceRange(text, { start, end });
     this._model.setSelections([{ start: loc, end: loc }]);
     this._renderer.scrollLocationIntoView(loc);
   }
@@ -254,4 +269,30 @@ class Input extends Emitter {
     this._renderer.scrollLocationIntoView(range.start);
     return true;
   }
+}
+
+/**
+ * @param {TextRange} target
+ * @param {TextRange} from
+ * @param {Loc} to
+ * @return {TextRange}
+ */
+function rebaseRange(target, from, to) {
+  const start = rebaseLoc(target.start, from, to);
+  const end = rebaseLoc(target.end, from, to);
+  return { start, end };
+}
+
+/**
+ * @param {Loc} target
+ * @param {TextRange} from
+ * @param {Loc} to
+ * @return {Loc}
+ */
+function rebaseLoc(target, from, to) {
+  if (compareLocation(target, from.start) <= 0) return target;
+  const loc = { line: target.line, column: target.column };
+  if (loc.line === from.end.line) loc.column += to.column - from.end.column;
+  loc.line += to.line - from.end.line;
+  return loc;
 }
