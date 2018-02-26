@@ -194,23 +194,26 @@ class Input extends Emitter {
       }
     }
     const text = value.substring(i, j + 1);
-    if (compareRange({ start, end }, this._model.selections[0]) === 0) {
-      let selections = this._model.selections;
-      /** @type {Array<TextRange>} */
-      let cursors = [];
-      for (let i = 0; i < selections.length; i++) {
-        loc = this._model.replaceRange(text, selections[i]);
-        selections = selections.map(selection => rebaseRange(selection, selections[i], loc));
-        cursors = cursors.map(cursor => rebaseRange(cursor, selections[i], loc));
-        cursors.push({ start: loc, end: loc });
-      }
-      this._model.setSelections(cursors);
-      this._renderer.scrollLocationIntoView(cursors[0].start);
-      return;
+    if (compareRange({ start, end }, this._model.selections[0]) !== 0) {
+      const loc = this._model.replaceRange(text, { start, end });
+      this._model.setSelections([{ start: loc, end: loc }]);
+      this._renderer.scrollLocationIntoView(loc);
+    } else {
+      this._replaceRanges(text, this._model.selections);
     }
-    var loc = this._model.replaceRange(text, { start, end });
-    this._model.setSelections([{ start: loc, end: loc }]);
-    this._renderer.scrollLocationIntoView(loc);
+  }
+
+  _replaceRanges(text, ranges) {
+    /** @type {Array<TextRange>} */
+    let cursors = [];
+    for (let i = 0; i < ranges.length; i++) {
+      const loc = this._model.replaceRange(text, ranges[i]);
+      ranges = ranges.map(selection => rebaseRange(selection, ranges[i], loc));
+      cursors = cursors.map(cursor => rebaseRange(cursor, ranges[i], loc));
+      cursors.push({ start: loc, end: loc });
+    }
+    this._model.setSelections(cursors);
+    this._renderer.scrollLocationIntoView(cursors[0].start);
   }
 
   focus() {
@@ -222,51 +225,52 @@ class Input extends Emitter {
    * @return {boolean}
    */
   _deleteChar(backwards) {
-    var range = this._model.selections[0];
-    if (isSelectionCollapsed(range)) {
-      var line = range.start.line;
-      var column = range.start.column;
-      if (backwards) {
-        column--;
-        if (column < 0) {
-          line--;
-          if (line < 0) {
-            line = 0;
-            column = 0;
-          } else {
-            column = this._model.line(line).length;
+    this._replaceRanges(
+      '',
+      this._model.selections.map(range => {
+        if (!isSelectionCollapsed(range)) return range;
+
+        var line = range.start.line;
+        var column = range.start.column;
+        if (backwards) {
+          column--;
+          if (column < 0) {
+            line--;
+            if (line < 0) {
+              line = 0;
+              column = 0;
+            } else {
+              column = this._model.line(line).length;
+            }
           }
+          return {
+            start: {
+              line,
+              column
+            },
+            end: range.start
+          };
+        } else {
+          column++;
+          if (column > this._model.line(line).length) {
+            line++;
+            if (line >= this._model.lineCount()) {
+              line = this._model.lineCount() - 1;
+              column = this._model.line(line).length;
+            } else {
+              column = 0;
+            }
+          }
+          return {
+            start: range.start,
+            end: {
+              line,
+              column
+            }
+          };
         }
-        range = {
-          start: {
-            line,
-            column
-          },
-          end: range.start
-        };
-      } else {
-        column++;
-        if (column > this._model.line(line).length) {
-          line++;
-          if (line >= this._model.lineCount()) {
-            line = this._model.lineCount() - 1;
-            column = this._model.line(line).length;
-          } else {
-            column = 0;
-          }
-        }
-        range = {
-          start: range.start,
-          end: {
-            line,
-            column
-          }
-        };
-      }
-    }
-    this._model.replaceRange('', range);
-    this._model.setSelections([{ start: range.start, end: range.start }]);
-    this._renderer.scrollLocationIntoView(range.start);
+      })
+    );
     return true;
   }
 }
