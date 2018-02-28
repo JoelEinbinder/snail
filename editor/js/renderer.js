@@ -35,15 +35,21 @@ class Renderer extends Emitter {
     this.element.appendChild(this._textLayer.canvas);
     this.element.appendChild(this._overlayLayer.canvas);
 
-    if (this._options.inline) {
-      this._options.padBottom = false;
-      var lineCount = 1;
-      this._model.on('change', () => {
-        if (this._model.lineCount() === lineCount) return;
-        lineCount = this._model.lineCount();
-        this.layout();
-      });
-    }
+    if (this._options.inline) this._options.padBottom = false;
+    var lineCount = 1;
+    this._model.on('change', () => {
+      if (this._model.lineCount() === lineCount) return;
+      if (this._options.inline) this.layout();
+      else {
+        const from = Math.min(lineCount, this._model.lineCount());
+        const to = Math.max(lineCount, this._model.lineCount());
+        const y = Math.floor(from * this._lineHeight - this.scrollTop) - 1;
+        const height = Math.ceil((to + 1) * this._lineHeight - this.scrollTop - y) + 2;
+        this._textLayer.invalidate({ x: 0, y, width: this._width, height });
+        this.scheduleRefresh();
+      }
+      lineCount = this._model.lineCount();
+    });
 
     var lastDpr = window.devicePixelRatio;
     window.addEventListener(
