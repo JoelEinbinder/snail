@@ -224,6 +224,7 @@ export class MockBuffer implements IBuffer {
   public savedX!: number;
   public savedCharset: ICharset | undefined;
   public savedCurAttrData = new AttributeData();
+  public htmls = [];
   public translateBufferLineToString(lineIndex: number, trimRight: boolean, startCol?: number, endCol?: number): string {
     return Buffer.prototype.translateBufferLineToString.apply(this, arguments as any);
   }

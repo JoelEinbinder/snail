@@ -16,12 +16,13 @@ import { EventEmitter, IEvent } from 'common/EventEmitter';
 import { IParsingState, IDcsHandler, IEscapeSequenceParser, IParams, IFunctionIdentifier } from 'common/parser/Types';
 import { NULL_CELL_CODE, NULL_CELL_WIDTH, Attributes, FgFlags, BgFlags, Content, UnderlineStyle } from 'common/buffer/Constants';
 import { CellData } from 'common/buffer/CellData';
-import { AttributeData } from 'common/buffer/AttributeData';
+import { AttributeData, ExtendedAttrs } from 'common/buffer/AttributeData';
 import { ICoreService, IBufferService, IOptionsService, ILogService, IDirtyRowService, ICoreMouseService, ICharsetService, IUnicodeService, LogLevelEnum } from 'common/services/Services';
 import { OscHandler } from 'common/parser/OscParser';
 import { DcsHandler } from 'common/parser/DcsParser';
 import { IBuffer } from 'common/buffer/Types';
 import { parseColor } from 'common/input/XParseColor';
+import { HTMLBlock } from 'common/buffer/HTMLBlock';
 
 /**
  * Map collect to glevel. Used in `selectCharset`.
@@ -318,6 +319,7 @@ export class InputHandler extends Disposable implements IInputHandler {
      * print handler
      */
     this._parser.setPrintHandler((data, start, end) => this.print(data, start, end));
+    this._parser.setHTMLHandler(html => this.html(html));
 
     /**
      * CSI handler
@@ -736,6 +738,17 @@ export class InputHandler extends Disposable implements IInputHandler {
     }
 
     this._dirtyRowService.markDirty(this._activeBuffer.y);
+  }
+
+  public html(html: string): void {
+    const buffer = this._bufferService.buffer;
+    this._dirtyRowService.markDirty(buffer.y);
+    this._bufferService.buffer.htmls.push(new HTMLBlock(buffer.x, buffer.y + buffer.ybase, html));
+    this._dirtyRowService.markDirty(buffer.y);
+    buffer.x = 0;
+    for (let i = 0; i < 5; i++) {
+      this.lineFeed();
+    }
   }
 
   /**
@@ -2428,6 +2441,7 @@ export class InputHandler extends Disposable implements IInputHandler {
       this._curAttrData.bg = DEFAULT_ATTR_DATA.bg;
       return true;
     }
+    // console.log(params);
 
     const l = params.length;
     let p;

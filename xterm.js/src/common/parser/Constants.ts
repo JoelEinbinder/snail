@@ -20,7 +20,8 @@ export const enum ParserState {
   DCS_PARAM = 10,
   DCS_IGNORE = 11,
   DCS_INTERMEDIATE = 12,
-  DCS_PASSTHROUGH = 13
+  DCS_PASSTHROUGH = 13,
+  HTML_BLOCK = 14,
 }
 
 /**
@@ -41,7 +42,8 @@ export const enum ParserAction {
   CLEAR = 11,
   DCS_HOOK = 12,
   DCS_PUT = 13,
-  DCS_UNHOOK = 14
+  DCS_UNHOOK = 14,
+  HTML_BLOCK = 15,
 }
 
 /**

@@ -24,8 +24,8 @@ export abstract class BaseRenderLayer implements IRenderLayer {
   protected _ctx!: CanvasRenderingContext2D;
   private _scaledCharWidth: number = 0;
   private _scaledCharHeight: number = 0;
-  private _scaledCellWidth: number = 0;
-  private _scaledCellHeight: number = 0;
+  protected _scaledCellWidth: number = 0;
+  protected _scaledCellHeight: number = 0;
   private _scaledCharLeft: number = 0;
   private _scaledCharTop: number = 0;
 
@@ -420,11 +420,11 @@ export abstract class BaseRenderLayer implements IRenderLayer {
    * Gets the current font.
    * @param isBold If we should use the bold fontWeight.
    */
-  protected _getFont(isBold: boolean, isItalic: boolean): string {
+  protected _getFont(isBold: boolean, isItalic: boolean, forHTML?: boolean): string {
     const fontWeight = isBold ? this._optionsService.options.fontWeightBold : this._optionsService.options.fontWeight;
     const fontStyle = isItalic ? 'italic' : '';
 
-    return `${fontStyle} ${fontWeight} ${this._optionsService.options.fontSize * window.devicePixelRatio}px ${this._optionsService.options.fontFamily}`;
+    return `${fontStyle} ${fontWeight} ${this._optionsService.options.fontSize * (forHTML ? 1 : window.devicePixelRatio)}px ${this._optionsService.options.fontFamily}`;
   }
 
   private _getContrastColor(cell: CellData): IColor | undefined {

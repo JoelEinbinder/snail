@@ -268,6 +268,11 @@ export class TextRenderLayer extends BaseRenderLayer {
     this._clearCells(0, firstRow, this._bufferService.cols, lastRow - firstRow + 1);
     this._drawBackground(firstRow, lastRow);
     this._drawForeground(firstRow, lastRow);
+    // update HTML
+    const htmlFont = this._getFont(false, false, true);
+    for (const html of this._bufferService.buffer.htmls) {
+      html.render(this._bufferService.buffer.ydisp, this._bufferService.buffer.ydisp + this._bufferService.rows, this._scaledCellWidth, this._scaledCellHeight, htmlFont, this._ctx.canvas.parentElement!);
+    }
   }
 
   public onOptionsChanged(): void {

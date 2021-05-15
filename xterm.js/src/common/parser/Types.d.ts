@@ -175,6 +175,9 @@ export interface IEscapeSequenceParser extends IDisposable {
   setPrintHandler(handler: PrintHandlerType): void;
   clearPrintHandler(): void;
 
+  setHTMLHandler(handler: (html: string) => void): void;
+  clearHTMLHandler(): void;
+
   registerEscHandler(id: IFunctionIdentifier, handler: EscHandlerType): IDisposable;
   clearEscHandler(id: IFunctionIdentifier): void;
   setEscHandlerFallback(handler: EscFallbackHandlerType): void;

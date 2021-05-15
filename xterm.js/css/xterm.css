@@ -103,6 +103,7 @@
 
 .xterm .xterm-screen {
     position: relative;
+    overflow: hidden;
 }
 
 .xterm .xterm-screen canvas {

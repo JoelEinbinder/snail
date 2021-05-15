@@ -405,6 +405,13 @@ declare module 'xterm' {
     onDispose: IEvent<void>;
   }
 
+  export interface IHTMLBlock {
+    x: number;
+    y: number;
+    html: string;
+    render(top: number, bottom: number, cellWidth: number, cellHeight: number, font: string, container: HTMLElement): void;
+  }
+
   /**
    * The set of localizable strings.
    */

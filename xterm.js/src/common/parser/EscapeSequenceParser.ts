@@ -28,6 +28,7 @@ const enum TableAccess {
  */
 export class TransitionTable {
   public table: Uint8Array;
+  public codes = new Set();
 
   constructor(length: number) {
     this.table = new Uint8Array(length);
@@ -159,6 +160,9 @@ export const VT500_TRANSITION_TABLE = (function (): TransitionTable {
   table.addMany(r(0x51, 0x58), ParserState.ESCAPE, ParserAction.ESC_DISPATCH, ParserState.GROUND);
   table.addMany([0x59, 0x5a, 0x5c], ParserState.ESCAPE, ParserAction.ESC_DISPATCH, ParserState.GROUND);
   table.addMany(r(0x60, 0x7f), ParserState.ESCAPE, ParserAction.ESC_DISPATCH, ParserState.GROUND);
+  table.add(0x4b, ParserState.ESCAPE, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
+  table.add(0x1b, ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.GROUND);
+  table.addMany(PRINTABLES, ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
   // dcs entry
   table.add(0x50, ParserState.ESCAPE, ParserAction.CLEAR, ParserState.DCS_ENTRY);
   table.addMany(EXECUTABLES, ParserState.DCS_ENTRY, ParserAction.IGNORE, ParserState.DCS_ENTRY);
@@ -236,9 +240,11 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
   // buffers over several parse calls
   protected _params: Params;
   protected _collect: number;
+  protected _html: string|null = null;
 
   // handler lookup containers
   protected _printHandler: PrintHandlerType;
+  protected _htmlHandler: (html: string) => void;
   protected _executeHandlers: { [flag: number]: ExecuteHandlerType };
   protected _csiHandlers: IHandlerCollection<CsiHandlerType>;
   protected _escHandlers: IHandlerCollection<EscHandlerType>;
@@ -248,6 +254,7 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
 
   // fallback handlers
   protected _printHandlerFb: PrintFallbackHandlerType;
+  protected _htmlHandlerFb: (html: string) => void;
   protected _executeHandlerFb: ExecuteFallbackHandlerType;
   protected _csiHandlerFb: CsiFallbackHandlerType;
   protected _escHandlerFb: EscFallbackHandlerType;
@@ -276,11 +283,13 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
 
     // set default fallback handlers and handler lookup containers
     this._printHandlerFb = (data, start, end): void => { };
+    this._htmlHandlerFb = (html): void => { };
     this._executeHandlerFb = (code: number): void => { };
     this._csiHandlerFb = (ident: number, params: IParams): void => { };
     this._escHandlerFb = (ident: number): void => { };
     this._errorHandlerFb = (state: IParsingState): IParsingState => state;
     this._printHandler = this._printHandlerFb;
+    this._htmlHandler = this._htmlHandlerFb;
     this._executeHandlers = Object.create(null);
     this._csiHandlers = Object.create(null);
     this._escHandlers = Object.create(null);
@@ -351,6 +360,14 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
   }
   public clearPrintHandler(): void {
     this._printHandler = this._printHandlerFb;
+  }
+
+  public setHTMLHandler(handler: (html: string) => void): void {
+    this._htmlHandler = handler;
+  }
+
+  public clearHTMLHandler(): void {
+    this._htmlHandler = this._htmlHandlerFb;
   }
 
   public registerEscHandler(id: IFunctionIdentifier, handler: EscHandlerType): IDisposable {
@@ -788,6 +805,16 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
           this._params.addParam(0); // ZDM
           this._collect = 0;
           this.precedingCodepoint = 0;
+          break;
+        case ParserAction.HTML_BLOCK:
+          if (this._html === null)
+            this._html = '';
+          else if (code == 27) {
+            this._htmlHandler(this._html)
+            this._html = null;
+          } else {
+            this._html += String.fromCharCode(code);
+          }
           break;
       }
       this.currentState = transition & TableAccess.TRANSITION_STATE_MASK;
