@@ -1289,6 +1289,7 @@ export class Terminal extends CoreTerminal implements ITerminal {
    * Clear the entire buffer, making the prompt line the new first line.
    */
   public clear(): void {
+    console.log('terminal clear');
     if (this.buffer.ybase === 0 && this.buffer.y === 0) {
       // Don't clear if it's already clear
       return;

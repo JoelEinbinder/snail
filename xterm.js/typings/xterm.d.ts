@@ -408,8 +408,10 @@ declare module 'xterm' {
   export interface IHTMLBlock {
     x: number;
     y: number;
+    height: number;
     html: string;
-    render(top: number, bottom: number, cellWidth: number, cellHeight: number, font: string, container: HTMLElement): void;
+    render(top: number, bottom: number, cellWidth: number, cellHeight: number, font: string, colors: any, container: HTMLElement): void;
+    dispose(): void;
   }
 
   /**

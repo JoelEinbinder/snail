@@ -244,7 +244,7 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
 
   // handler lookup containers
   protected _printHandler: PrintHandlerType;
-  protected _htmlHandler: (html: string) => void;
+  protected _htmlHandler: (height: number, html: string) => void;
   protected _executeHandlers: { [flag: number]: ExecuteHandlerType };
   protected _csiHandlers: IHandlerCollection<CsiHandlerType>;
   protected _escHandlers: IHandlerCollection<EscHandlerType>;
@@ -254,7 +254,7 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
 
   // fallback handlers
   protected _printHandlerFb: PrintFallbackHandlerType;
-  protected _htmlHandlerFb: (html: string) => void;
+  protected _htmlHandlerFb: (height: number, html: string) => void;
   protected _executeHandlerFb: ExecuteFallbackHandlerType;
   protected _csiHandlerFb: CsiFallbackHandlerType;
   protected _escHandlerFb: EscFallbackHandlerType;
@@ -362,7 +362,7 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
     this._printHandler = this._printHandlerFb;
   }
 
-  public setHTMLHandler(handler: (html: string) => void): void {
+  public setHTMLHandler(handler: (height: number, html: string) => void): void {
     this._htmlHandler = handler;
   }
 
@@ -809,8 +809,9 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
         case ParserAction.HTML_BLOCK:
           if (this._html === null)
             this._html = '';
-          else if (code == 27) {
-            this._htmlHandler(this._html)
+          else if (code === 27) {
+            const height = /^\d*/.exec(this._html)![0];
+            this._htmlHandler(parseInt(height), this._html.slice(height?.length));
             this._html = null;
           } else {
             this._html += String.fromCharCode(code);

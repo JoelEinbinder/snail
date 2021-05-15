@@ -253,6 +253,7 @@ export abstract class CoreTerminal extends Disposable implements ICoreTerminal {
   }
 
   public reset(): void {
+    console.log('CoreTerminal reset');
     this._inputHandler.reset();
     this._bufferService.reset();
     this._charsetService.reset();

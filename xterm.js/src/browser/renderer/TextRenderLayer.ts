@@ -271,7 +271,7 @@ export class TextRenderLayer extends BaseRenderLayer {
     // update HTML
     const htmlFont = this._getFont(false, false, true);
     for (const html of this._bufferService.buffer.htmls) {
-      html.render(this._bufferService.buffer.ydisp, this._bufferService.buffer.ydisp + this._bufferService.rows, this._scaledCellWidth, this._scaledCellHeight, htmlFont, this._ctx.canvas.parentElement!);
+      html.render(this._bufferService.buffer.ydisp, this._bufferService.buffer.ydisp + this._bufferService.rows, this._scaledCellWidth, this._scaledCellHeight, htmlFont, this._colors, this._ctx.canvas.parentElement!);
     }
   }
 

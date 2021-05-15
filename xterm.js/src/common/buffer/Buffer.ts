@@ -618,7 +618,12 @@ export class Buffer implements IBuffer {
   public iterator(trimRight: boolean, startIndex?: number, endIndex?: number, startOverscan?: number, endOverscan?: number): IBufferStringIterator {
     return new BufferStringIterator(this, trimRight, startIndex, endIndex, startOverscan, endOverscan);
   }
-}
+
+  public dispose(): void {
+    for (const html of this.htmls)
+      html.dispose();
+    this.htmls.length = 0;
+  }}
 
 /**
  * Iterator to get unwrapped content strings from the buffer.
