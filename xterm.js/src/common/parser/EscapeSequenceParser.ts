@@ -162,7 +162,7 @@ export const VT500_TRANSITION_TABLE = (function (): TransitionTable {
   table.addMany(r(0x60, 0x7f), ParserState.ESCAPE, ParserAction.ESC_DISPATCH, ParserState.GROUND);
   table.add(0x4b, ParserState.ESCAPE, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
   table.add(0x1b, ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.GROUND);
-  table.addMany(PRINTABLES, ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
+  table.addMany([...PRINTABLES, 0x0A, 0x0D, 0x09], ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
   // dcs entry
   table.add(0x50, ParserState.ESCAPE, ParserAction.CLEAR, ParserState.DCS_ENTRY);
   table.addMany(EXECUTABLES, ParserState.DCS_ENTRY, ParserAction.IGNORE, ParserState.DCS_ENTRY);
