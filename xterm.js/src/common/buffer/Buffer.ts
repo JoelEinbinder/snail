@@ -133,6 +133,10 @@ export class Buffer implements IBuffer {
    * Clears the buffer to it's initial state, discarding all previous data.
    */
   public clear(): void {
+    for (const html of this.htmls) {
+      html.dispose();
+    }
+    this.htmls.length = 0;
     this.ydisp = 0;
     this.ybase = 0;
     this.y = 0;

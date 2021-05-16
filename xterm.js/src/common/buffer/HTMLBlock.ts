@@ -68,6 +68,10 @@ export class HTMLBlock implements IHTMLBlock {
   }
 
   public dispose(): void {
+    this.hide();
+  }
+
+  public hide(): void {
     this._div.remove();
   }
 }
