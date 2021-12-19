@@ -411,6 +411,7 @@ declare module 'xterm' {
     height: number;
     html: string;
     render(top: number, bottom: number, cellWidth: number, cellHeight: number, font: string, colors: any, container: HTMLElement): void;
+    hide(): void;
     dispose(): void;
   }
 
