@@ -56,4 +56,7 @@ export class HTMLRenderLayer implements IRenderLayer {
 
     return `${fontStyle} ${fontWeight} ${this._getOptions().fontSize}px ${this._getOptions().fontFamily}`;
   }
+
+  public clearTextureAtlas(): void {
+  }
 }
