@@ -44,19 +44,20 @@ export class Buffer implements IBuffer {
   private _nullCell: ICellData = CellData.fromCharData([0, NULL_CELL_CHAR, NULL_CELL_WIDTH, NULL_CELL_CODE]);
   private _whitespaceCell: ICellData = CellData.fromCharData([0, WHITESPACE_CELL_CHAR, WHITESPACE_CELL_WIDTH, WHITESPACE_CELL_CODE]);
   private _cols: number;
-  private _rows: number;
+  public rows: number;
+  public delegatesScrolling: boolean;
 
   constructor(
     private _hasScrollback: boolean,
     private _optionsService: IOptionsService,
-    private _bufferService: IBufferService,
-    rows: number
+    private _bufferService: IBufferService
   ) {
     this._cols = this._bufferService.cols;
-    this._rows = rows;
-    this.lines = new CircularList<IBufferLine>(this._getCorrectBufferLength(this._rows));
+    this.delegatesScrolling = this._optionsService.options.delegatesScrolling && this._hasScrollback;
+    this.rows = this.delegatesScrolling ? 1 : this._bufferService.altRows();
+    this.lines = new CircularList<IBufferLine>(this._getCorrectBufferLength(this.rows));
     this.scrollTop = 0;
-    this.scrollBottom = this._rows - 1;
+    this.scrollBottom = this.rows - 1;
     this.setupTabStops();
   }
 
@@ -91,13 +92,13 @@ export class Buffer implements IBuffer {
   }
 
   public get hasScrollback(): boolean {
-    return this._hasScrollback && this.lines.maxLength > this._rows;
+    return this._hasScrollback && this.lines.maxLength > this.rows;
   }
 
   public get isCursorInViewport(): boolean {
     const absoluteY = this.ybase + this.y;
     const relativeY = absoluteY - this.ydisp;
-    return (relativeY >= 0 && relativeY < this._rows);
+    return (relativeY >= 0 && relativeY < this.rows);
   }
 
   /**
@@ -123,7 +124,7 @@ export class Buffer implements IBuffer {
       if (fillAttr === undefined) {
         fillAttr = DEFAULT_ATTR_DATA;
       }
-      let i = this._rows;
+      let i = this.rows;
       while (i--) {
         this.lines.push(this.getBlankLine(fillAttr));
       }
@@ -142,9 +143,9 @@ export class Buffer implements IBuffer {
     this.ybase = 0;
     this.y = 0;
     this.x = 0;
-    this.lines = new CircularList<IBufferLine>(this._getCorrectBufferLength(this._rows));
+    this.lines = new CircularList<IBufferLine>(this._getCorrectBufferLength(this.rows));
     this.scrollTop = 0;
-    this.scrollBottom = this._rows - 1;
+    this.scrollBottom = this.rows - 1;
     this.setupTabStops();
   }
 
@@ -176,8 +177,8 @@ export class Buffer implements IBuffer {
 
       // Resize rows in both directions as needed
       let addToY = 0;
-      if (this._rows < newRows) {
-        for (let y = this._rows; y < newRows; y++) {
+      if (this.rows < newRows) {
+        for (let y = this.rows; y < newRows; y++) {
           if (this.lines.length < newRows + this.ybase) {
             if (this._optionsService.options.windowsMode) {
               // Just add the new missing rows on Windows as conpty reprints the screen with it's
@@ -202,7 +203,7 @@ export class Buffer implements IBuffer {
           }
         }
       } else { // (this._rows >= newRows)
-        for (let y = this._rows; y > newRows; y--) {
+        for (let y = this.rows; y > newRows; y--) {
           if (this.lines.length > newRows + this.ybase) {
             if (this.lines.length > this.ybase + this.y + 1) {
               // The line is a blank line below the cursor, remove it
@@ -255,7 +256,14 @@ export class Buffer implements IBuffer {
     }
 
     this._cols = newCols;
-    this._rows = newRows;
+    if (this.delegatesScrolling) {
+      this.rows = this.lines.length;
+      this.scrollBottom = this.rows - 1;
+      this.ybase = 0;
+      this.ydisp = 0;
+    } else {
+      this.rows = newRows;
+    }
   }
 
   private get _isReflowEnabled(): boolean {
@@ -266,7 +274,6 @@ export class Buffer implements IBuffer {
     if (this._cols === newCols) {
       return;
     }
-
     // Iterate through rows, ignore the last one as it cannot be wrapped
     if (newCols > this._cols) {
       this._reflowLarger(newCols, newRows);

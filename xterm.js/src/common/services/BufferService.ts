@@ -18,7 +18,6 @@ export class BufferService extends Disposable implements IBufferService {
 
   public cols: number;
   private _rows: number;
-  private _normalRows: number;
   public buffers: IBufferSet;
   /** Whether the user is scrolling (locks the scroll position) */
   public isUserScrolling: boolean = false;
@@ -39,7 +38,6 @@ export class BufferService extends Disposable implements IBufferService {
     super();
     this.cols = Math.max(_optionsService.options.cols || 0, MINIMUM_COLS);
     this._rows = Math.max(_optionsService.options.rows || 0, MINIMUM_ROWS);
-    this._normalRows = 1;
     this.buffers = new BufferSet(_optionsService, this);
     if (this._optionsService.options.delegatesScrolling) {
       this.buffers.onBufferActivate(() => {
@@ -58,7 +56,7 @@ export class BufferService extends Disposable implements IBufferService {
   }
 
   public normalRows(): number {
-    return this._optionsService.options.delegatesScrolling ? this._normalRows : this._rows;
+    return this.buffers.normal.rows;
   }
 
   public altRows(): number {
@@ -104,11 +102,11 @@ export class BufferService extends Disposable implements IBufferService {
     const topRow = buffer.ybase + buffer.scrollTop;
     const bottomRow = buffer.ybase + buffer.scrollBottom;
 
-    if (this._delegatesScrolling() && !buffer.lines.isFull && bottomRow === buffer.lines.length - 1) {
+    if (this.buffer.delegatesScrolling && !buffer.lines.isFull && bottomRow === buffer.lines.length - 1) {
       buffer.lines.push(newLine.clone());
-      this._normalRows ++;
       buffer.ybase++;
-      this._updateSize();
+      buffer.resize(this.cols, buffer.rows + 1);
+      this._onResize.fire({ cols: this.cols, rows: this.rows });
       return;
     }
 

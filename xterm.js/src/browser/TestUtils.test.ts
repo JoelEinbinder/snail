@@ -211,6 +211,8 @@ export class MockBuffer implements IBuffer {
   public addMarker(y: number): IMarker {
     throw new Error('Method not implemented.');
   }
+  public delegatesScrolling = false;
+  public rows!: number;
   public isCursorInViewport!: boolean;
   public lines!: ICircularList<IBufferLine>;
   public ydisp!: number;
