@@ -84,7 +84,7 @@ export class Terminal implements ITerminalApi {
     return new UnicodeApi(this._core);
   }
   public get textarea(): HTMLTextAreaElement | undefined { return this._core.textarea; }
-  public get rows(): number { return this._core.rows; }
+  public get rows(): number { return this._core.altRows(); }
   public get cols(): number { return this._core.cols; }
   public get buffer(): IBufferNamespaceApi {
     this._checkProposedApi();

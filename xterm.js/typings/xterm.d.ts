@@ -266,6 +266,11 @@ declare module 'xterm' {
      * All features are disabled by default for security reasons.
      */
     windowOptions?: IWindowOptions;
+
+    /**
+     * Instead of scrolling, the terminal just gets bigger.
+     */
+    delegatesScrolling?: boolean;
   }
 
   /**

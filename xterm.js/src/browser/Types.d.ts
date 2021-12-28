@@ -32,6 +32,7 @@ export interface ITerminal extends IPublicTerminal, ICoreTerminal {
 export interface IPublicTerminal extends IDisposable {
   textarea: HTMLTextAreaElement | undefined;
   rows: number;
+  altRows(): number;
   cols: number;
   buffer: IBuffer;
   markers: IMarker[];

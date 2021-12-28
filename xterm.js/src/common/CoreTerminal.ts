@@ -85,6 +85,7 @@ export abstract class CoreTerminal extends Disposable implements ICoreTerminal {
 
   public get cols(): number { return this._bufferService.cols; }
   public get rows(): number { return this._bufferService.rows; }
+  public altRows(): number { return this._bufferService.altRows(); }
   public get buffers(): IBufferSet { return this._bufferService.buffers; }
   public get options(): ITerminalOptions { return this.optionsService.options; }
   public set options(options: ITerminalOptions) {
@@ -123,7 +124,11 @@ export abstract class CoreTerminal extends Disposable implements ICoreTerminal {
     this.register(this._inputHandler);
 
     // Setup listeners
-    this.register(forwardEvent(this._bufferService.onResize, this._onResize));
+    // this.register(forwardEvent(this._bufferService.onResize, this.s_onResize));
+    this.register(this._bufferService.onResize(() => this._onResize.fire({
+      cols: this._bufferService.cols,
+      rows: this._bufferService.altRows()
+    })));
     this.register(forwardEvent(this.coreService.onData, this._onData));
     this.register(forwardEvent(this.coreService.onBinary, this._onBinary));
     this.register(this.optionsService.onOptionChange(key => this._updateOptions(key)));
@@ -265,7 +270,8 @@ export abstract class CoreTerminal extends Disposable implements ICoreTerminal {
     // TODO: These listeners should be owned by individual components
     switch (key) {
       case 'scrollback':
-        this.buffers.resize(this.cols, this.rows);
+        console.error('wtf is this?!');
+        this.buffers.resize();
         break;
       case 'windowsMode':
         if (this.optionsService.options.windowsMode) {

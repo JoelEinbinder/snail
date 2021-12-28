@@ -160,7 +160,8 @@ function createTerminal(): void {
   const isWindows = ['Windows', 'Win16', 'Win32', 'WinCE'].indexOf(navigator.platform) >= 0;
   term = new Terminal({
     windowsMode: isWindows,
-    fontFamily: 'Fira Code, courier-new, courier, monospace'
+    fontFamily: 'Fira Code, courier-new, courier, monospace',
+    delegatesScrolling: true,
   } as ITerminalOptions);
 
   // Load addons
@@ -178,12 +179,18 @@ function createTerminal(): void {
   typedTerm.loadAddon(addons['web-links'].instance);
 
   window.term = term;  // Expose `term` to window for debugging purposes
+  let lastRows = -1;
+  let lastCols = -1;
   term.onResize((size: { cols: number, rows: number }) => {
     if (!pid) {
       return;
     }
     const cols = size.cols;
     const rows = size.rows;
+    if (lastCols === cols && lastRows === rows)
+      return;
+    lastCols = cols;
+    lastRows = rows;
     const url = '/terminals/' + pid + '/size?cols=' + cols + '&rows=' + rows;
 
     fetch(url, {method: 'POST'});

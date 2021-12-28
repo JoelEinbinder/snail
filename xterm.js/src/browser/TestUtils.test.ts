@@ -154,6 +154,7 @@ export class MockTerminal implements ITerminal {
   public selectionService!: ISelectionService;
   public textarea!: HTMLTextAreaElement;
   public rows!: number;
+  public altRows(): number { return this.rows; }
   public cols!: number;
   public browser: IBrowser = Browser as any;
   public writeBuffer!: string[];

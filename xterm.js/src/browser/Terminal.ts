@@ -511,7 +511,7 @@ export class Terminal extends CoreTerminal implements ITerminal {
     this._renderService = this.register(this._instantiationService.createInstance(RenderService, renderer, this.rows, this.screenElement));
     this._instantiationService.setService(IRenderService, this._renderService);
     this.register(this._renderService.onRenderedBufferChange(e => this._onRender.fire(e)));
-    this.onResize(e => this._renderService!.resize(e.cols, e.rows));
+    this.onResize(e => this._renderService!.resize(this._bufferService.cols, this._bufferService.rows));
 
     this._compositionView = document.createElement('div');
     this._compositionView.classList.add('composition-view');
@@ -540,7 +540,7 @@ export class Terminal extends CoreTerminal implements ITerminal {
       this._renderService!.onCursorMove();
       this._syncTextArea();
     }));
-    this.register(this.onResize(() => this._renderService!.onResize(this.cols, this.rows)));
+    this.register(this.onResize(() => this._renderService!.onResize(this.cols, this._bufferService.rows)));
     this.register(this.onBlur(() => this._renderService!.onBlur()));
     this.register(this.onFocus(() => this._renderService!.onFocus()));
     this.register(this._renderService.onDimensionsChange(() => this.viewport!.syncScrollArea()));

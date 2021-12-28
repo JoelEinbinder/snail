@@ -49,10 +49,11 @@ export class Buffer implements IBuffer {
   constructor(
     private _hasScrollback: boolean,
     private _optionsService: IOptionsService,
-    private _bufferService: IBufferService
+    private _bufferService: IBufferService,
+    rows: number
   ) {
     this._cols = this._bufferService.cols;
-    this._rows = this._bufferService.rows;
+    this._rows = rows;
     this.lines = new CircularList<IBufferLine>(this._getCorrectBufferLength(this._rows));
     this.scrollTop = 0;
     this.scrollBottom = this._rows - 1;

@@ -16,6 +16,8 @@ export interface IBufferService {
   readonly rows: number;
   readonly buffer: IBuffer;
   readonly buffers: IBufferSet;
+  altRows(): number;
+  normalRows(): number;
   isUserScrolling: boolean;
   onResize: IEvent<{ cols: number, rows: number }>;
   onScroll: IEvent<number>;
@@ -239,6 +241,7 @@ export interface ITerminalOptions {
   windowsMode: boolean;
   windowOptions: IWindowOptions;
   wordSeparator: string;
+  delegatesScrolling: boolean;
 
   [key: string]: any;
   cancelEvents: boolean;

@@ -48,6 +48,12 @@ export class MockBufferService implements IBufferService {
     this.cols = cols;
     this.rows = rows;
   }
+  public altRows(): number {
+    return this.rows;
+  }
+  public normalRows(): number {
+    return this.rows;
+  }
   public reset(): void { }
 }
 
