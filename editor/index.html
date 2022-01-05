@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="css/editor.css" rel="stylesheet" type="text/css"></link>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+        <meta charset="utf8">
+    </head>
+    <body role="application">
+        <script src="modes/javascript.js"></script>
+        <script src="modes/css.js"></script>
+        <script src="js/emitter.js"></script>
+        <script src="js/model.js"></script>
+        <script src="js/highlighter.js"></script>
+        <script src="js/input.js"></script>
+        <script src="js/selections.js"></script>
+        <script src="js/commands.js"></script>
+        <script src="js/renderer.js"></script>
+        <script src="js/editor.js"></script>
+        <script>
+            var editor;
+            async function go() {
+                var url = 'out/kangaroo.js';
+                var content = await (await fetch(url)).text();
+
+                editor = new Editor(content, {
+                    padBottom: true,
+                    lineNumbers: true,
+                    language: url.substring(url.lastIndexOf('.') + 1),
+                    readOnly: false,
+                    // underlay: (lineNumber, text) => {
+                    //     return lineNumber % 2 ? [{text}] : [{text, background: '#eee'}]
+                    // }
+                });
+                window.addEventListener('resize', event => editor.layout(), false);
+                document.body.appendChild(editor.element);
+                editor.layout();
+            }
+            if (document.location.search !== "?test")
+                go();
+        </script>
+    </body>
+</html>
