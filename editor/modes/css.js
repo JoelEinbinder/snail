@@ -1,3 +1,5 @@
+import { registerMode } from '../js/modeRegistry.js';
+registerMode('css', cssMode);
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 

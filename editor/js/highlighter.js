@@ -1,7 +1,7 @@
 import { Emitter } from './emitter.js';
-import { cssMode } from '../modes/css.js';
-import { javascriptMode } from '../modes/javascript.js';
-import { isSelectionCollapsed } from './model';
+import { isSelectionCollapsed } from './model.js';
+import { getMode } from './modeRegistry.js';
+
 /**
  * @typedef {Object} Token
  * @property {number} length
@@ -46,16 +46,7 @@ export class Highlighter extends Emitter {
         : {
             background: '#b3d8fd'
           };
-    switch (language) {
-      case 'js':
-        this._mode = javascriptMode({ indentUnit: 2 }, {});
-        break;
-      case 'css':
-        this._mode = cssMode({ indentUnit: 2 }, {});
-        break;
-      default:
-        this._mode = null;
-    }
+    this._mode = getMode(language)?.({ indentUnit: 2 }, {});
     this._underlay = underlay;
     /** @type {WeakMap<Line, {state: Object, tokens: Array<Token>}>} */
     this._lineInfo = new WeakMap();

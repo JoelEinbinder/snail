@@ -1,6 +1,8 @@
+import { registerMode } from '../js/modeRegistry.js';
+registerMode('js', javascriptMode);
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
-export function javascriptMode(config, parserConfig) {
+function javascriptMode(config, parserConfig) {
   var indentUnit = config.indentUnit;
   var statementIndent = parserConfig.statementIndent;
   var jsonldMode = parserConfig.jsonld;

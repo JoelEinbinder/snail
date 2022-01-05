@@ -1,5 +1,6 @@
 import { Editor } from '../editor';
 import '../editor/css/editor.css';
+import '../editor/modes/javascript';
 const content = '// text editor!';
 
 const editor = new Editor(content, {
