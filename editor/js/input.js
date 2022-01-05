@@ -28,6 +28,7 @@ export class Input extends Emitter {
     this._textarea.style.position = 'absolute';
     this._textarea.style.left = '-999em';
     this._textarea.style.opacity = '0';
+    this._overrideBigSurDoubleSpacePeriod();
     this._textarea.addEventListener('input', this.update.bind(this), false);
     this._textarea.readOnly = !this._editable;
     this._textarea.spellcheck = false;
@@ -47,6 +48,32 @@ export class Input extends Emitter {
     this._commandManager.addCommand(this._deleteChar.bind(this, false), 'delete', 'Delete');
     this._commandManager.addCommand(this._indent.bind(this), 'indent', 'Tab');
     this._commandManager.addCommand(this._dedent.bind(this), 'dedent', 'Shift+Tab');
+  }
+
+  _overrideBigSurDoubleSpacePeriod() {
+    // On big sur, an annoying default creates a period after two spaces are pressed.
+    // This cannot be easily defeated by prevent default, so we have to catch it.
+    if (navigator.platform !== 'MacIntel') return;
+    let readyToCaptureSpace = 0;
+    this._textarea.addEventListener('keydown', event => {
+      if (event.key === ' ') {
+        readyToCaptureSpace = 1;
+      } else {
+        readyToCaptureSpace = 0;
+      }
+    });
+    this._textarea.addEventListener('beforeinput', event => {
+      if (readyToCaptureSpace === 1 && event.data === ' ') {
+        readyToCaptureSpace = 2;
+      } else if (readyToCaptureSpace === 2 && event.data === '. '){
+        event.preventDefault();
+        // two spaces here because one is selected
+        document.execCommand('insertText', false, '  ');
+        readyToCaptureSpace = 0;
+      } else {
+        readyToCaptureSpace = 0;
+      }
+    });
   }
 
   /**

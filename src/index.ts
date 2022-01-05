@@ -1,12 +1,12 @@
 import { Editor } from '../editor';
 import '../editor/css/editor.css';
-import '../editor/modes/javascript';
+import '../editor/modes/shell';
 const content = '// text editor!';
 
 const editor = new Editor(content, {
   padBottom: true,
   lineNumbers: true,
-  language: 'js',
+  language: 'sh',
   readOnly: false,
   // underlay: (lineNumber, text) => {
   //     return lineNumber % 2 ? [{text}] : [{text, background: '#eee'}]
@@ -15,3 +15,4 @@ const editor = new Editor(content, {
 window.addEventListener('resize', () => editor.layout(), false);
 document.body.appendChild(editor.element);
 editor.layout();
+editor.focus();
