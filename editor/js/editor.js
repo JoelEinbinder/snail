@@ -40,5 +40,6 @@ export class Editor extends Emitter {
  * @property {string=} language
  * @property {boolean=} inline
  * @property {boolean=} readOnly
+ * @property {boolean=} highlightWordOccurrences
  * @property {function(number,string):Array<Token>} [underlay]
  */

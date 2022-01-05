@@ -4,8 +4,9 @@ import '../editor/modes/shell';
 const content = '// text editor!';
 
 const editor = new Editor(content, {
-  padBottom: true,
-  lineNumbers: true,
+  padBottom: false,
+  lineNumbers: false,
+  highlightWordOccurrences: false,
   language: 'sh',
   readOnly: false,
   // underlay: (lineNumber, text) => {

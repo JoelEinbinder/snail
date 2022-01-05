@@ -113,6 +113,8 @@ export class Renderer extends Emitter {
   }
 
   highlightWordOccurrences() {
+    if (!this._options.highlightWordOccurrences)
+      return;
     this._highlightWordOccurrences = true;
     this._overlayLayer.invalidate();
     this._overlayLayer.refresh();
