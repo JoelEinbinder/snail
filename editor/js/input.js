@@ -1,4 +1,7 @@
-class Input extends Emitter {
+import { Emitter } from "./emitter.js";
+import { compareLocation, compareRange, copyLocation, isSelectionCollapsed } from "./model.js";
+
+export class Input extends Emitter {
   /**
    * @param {HTMLElement} parent
    * @param {Model} model

@@ -1,7 +1,14 @@
-class Editor extends Emitter {
+import {Emitter} from './emitter.js';
+import { Model } from './model.js';
+import { Highlighter } from './highlighter.js';
+import { Renderer } from './renderer.js';
+import { CommandManager } from './commands.js';
+import { Input } from './input.js';
+import { SelectionManger } from './selections.js';
+export class Editor extends Emitter {
   /**
    * @param {string} data
-   * @param {Editor.Options=} options
+   * @param {EditorOptions=} options
    */
   constructor(data, options = {}) {
     super();
@@ -27,7 +34,7 @@ class Editor extends Emitter {
 }
 
 /**
- * @typedef {Object} Editor.Options
+ * @typedef {Object} EditorOptions
  * @property {boolean=} padBottom
  * @property {boolean=} lineNumbers
  * @property {string=} language

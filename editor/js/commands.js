@@ -1,7 +1,7 @@
 /**
  * @typedef {function():boolean} CommandFunction
  */
-class CommandManager {
+export class CommandManager {
   /**
    * @param {HTMLElement} parent
    */

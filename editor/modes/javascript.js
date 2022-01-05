@@ -1,6 +1,6 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
-function javascriptMode(config, parserConfig) {
+export function javascriptMode(config, parserConfig) {
   var indentUnit = config.indentUnit;
   var statementIndent = parserConfig.statementIndent;
   var jsonldMode = parserConfig.jsonld;

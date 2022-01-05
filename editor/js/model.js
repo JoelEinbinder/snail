@@ -1,4 +1,6 @@
-class Model extends Emitter {
+import { Emitter } from "./emitter.js";
+
+export class Model extends Emitter {
   /**
    * @param {string} data
    */
@@ -295,7 +297,7 @@ class Line {
  * @param {TextRange} selection
  * @return {boolean}
  */
-function isSelectionCollapsed(selection) {
+export function isSelectionCollapsed(selection) {
   return selection.start.line === selection.end.line && selection.start.column === selection.end.column;
 }
 
@@ -303,7 +305,7 @@ function isSelectionCollapsed(selection) {
  * @param {Loc} location
  * @return {Loc}
  */
-function copyLocation(location) {
+export function copyLocation(location) {
   return {
     line: location.line,
     column: location.column
@@ -315,7 +317,7 @@ function copyLocation(location) {
  * @param {TextRange} b
  * @return {-1|0|1}
  */
-function compareRange(a, b) {
+export function compareRange(a, b) {
   return compareLocation(a.start, b.start) || compareLocation(a.end, b.end);
 }
 
@@ -324,7 +326,7 @@ function compareRange(a, b) {
  * @param {Loc} b
  * @return {-1|0|1}
  */
-function compareLocation(a, b) {
+export function compareLocation(a, b) {
   if (a.line !== b.line) return a.line > b.line ? 1 : -1;
   if (a.column !== b.column) return a.column > b.column ? 1 : -1;
   return 0;

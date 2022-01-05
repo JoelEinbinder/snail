@@ -1,4 +1,7 @@
-class SelectionManger extends Emitter {
+import { Emitter } from "./emitter.js";
+import { compareLocation, compareRange, copyLocation, isSelectionCollapsed } from "./model.js";
+
+export class SelectionManger extends Emitter {
   /**
    * @param {Renderer} renderer
    * @param {Model} model

@@ -1,7 +1,7 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
-function cssMode(config, parserConfig) {
+export function cssMode(config, parserConfig) {
 
   function keySet(array) {
     var keys = {};

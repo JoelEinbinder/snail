@@ -1,3 +1,7 @@
+import { Emitter } from './emitter.js';
+import { cssMode } from '../modes/css.js';
+import { javascriptMode } from '../modes/javascript.js';
+import { isSelectionCollapsed } from './model';
 /**
  * @typedef {Object} Token
  * @property {number} length
@@ -5,9 +9,9 @@
  * @property {string=} background
  */
 
-class Highlighter extends Emitter {
+export class Highlighter extends Emitter {
   /**
-   * @param {Model} model
+   * @param {import('./model').Model} model
    * @param {string} language
    * @param {function(number,  string):Array<Token>} underlay
    */

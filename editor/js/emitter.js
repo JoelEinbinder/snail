@@ -1,4 +1,4 @@
-class Emitter {
+export class Emitter {
   constructor() {
     /**
      * @private
@@ -8,7 +8,7 @@ class Emitter {
 
   /**
    * @param {string} eventName
-   * @param {function(Object=)} listener
+   * @param {function(Object=):void} listener
    */
   on(eventName, listener) {
     var set = this._listeners.get(eventName);
@@ -18,7 +18,7 @@ class Emitter {
 
   /**
    * @param {string} eventName
-   * @param {function(Object=)} listener
+   * @param {function(Object=):void} listener
    * @return {boolean}
    */
   off(eventName, listener) {

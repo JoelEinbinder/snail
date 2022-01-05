@@ -1,9 +1,12 @@
-class Renderer extends Emitter {
+import { Emitter } from "./emitter.js";
+import { isSelectionCollapsed } from "./model.js";
+
+export class Renderer extends Emitter {
   /**
-   * @param {Model} model
+   * @param {import('./model').Model} model
    * @param {HTMLElement} element
-   * @param {Highlighter} highlighter
-   * @param {Editor.Options=} options
+   * @param {import('./highlighter').Highlighter} highlighter
+   * @param {import('./editor').EditorOptions=} options
    */
   constructor(model, element, highlighter, options = {}) {
     super();
