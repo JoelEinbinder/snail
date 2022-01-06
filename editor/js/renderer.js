@@ -19,19 +19,27 @@ export class Renderer extends Emitter {
     this._highlighter = highlighter;
     this.element = element;
 
-    /** @type {WeakMap<Token, string>} */
+    /** @type {WeakMap<import("./highlighter").Token, string>} */
     this._rasterizedTokens = new WeakMap();
     this._padding = 4;
     this._scrollTop = 0;
     this._scrollLeft = 0;
     this._refreshScheduled = false;
 
+    this._hasFocus = false;
+    this.element.addEventListener('focusin', () => {
+      this._computeHasFocus();
+    });
+    this.element.addEventListener('focusout', () => {
+      this._computeHasFocus();
+    });
+
     this._textLayer = new Layer(this._drawText.bind(this));
     this._overlayLayer = new Layer(this._drawOverlay.bind(this));
 
     this._textLayer.canvas.style.backgroundColor = '#FFF';
 
-    /** @type {WeakMap<Line, Array<{column: number, offset: number}>>} */
+    /** @type {WeakMap<import('./model').Line, Array<{column: number, offset: number}>>} */
     this._lineMetrics = new WeakMap();
     this._charWidths = {};
 
@@ -140,7 +148,7 @@ export class Renderer extends Emitter {
   /**
    * @param {number} offsetX
    * @param {number} offsetY
-   * @return {Loc}
+   * @return {import('./model.js').Loc}
    */
   locationFromPoint(offsetX, offsetY) {
     var rect = this._scrollingElement.getBoundingClientRect();
@@ -182,7 +190,7 @@ export class Renderer extends Emitter {
   }
 
   /**
-   * @param {Loc} location
+   * @param {import('./model.js').Loc} location
    */
   scrollLocationIntoView(location) {
     this._updateMetrics();
@@ -205,7 +213,7 @@ export class Renderer extends Emitter {
   }
 
   /**
-   * @param {Loc} location
+   * @param {import('./model.js').Loc} location
    * @return {{x: number, y: number}}
    */
   pointFromLocation(location) {
@@ -416,17 +424,28 @@ export class Renderer extends Emitter {
     }
 
     ctx.fillStyle = 'rgba(0,0,0,0.8)';
-    for (var selection of this._model.selections) {
-      if (this._options.readOnly || !isSelectionCollapsed(selection)) continue;
-      var point = this.pointFromLocation(selection.start);
-      var rect = {
-        x: lineNumbersWidth + this._padding - this.scrollLeft + point.x,
-        y: point.y - this.scrollTop + (this._lineHeight - this._charHeight) / 4 - 1,
-        width: 1.5,
-        height: this._charHeight + 2
-      };
-      ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+    if (!this._options.readOnly && this._hasFocus) {
+      for (var selection of this._model.selections) {
+        if (!isSelectionCollapsed(selection)) continue;
+        var point = this.pointFromLocation(selection.start);
+        var rect = {
+          x: lineNumbersWidth + this._padding - this.scrollLeft + point.x,
+          y: point.y - this.scrollTop + (this._lineHeight - this._charHeight) / 4 - 1,
+          width: 1.5,
+          height: this._charHeight + 2
+        };
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      }
     }
+  }
+
+  _computeHasFocus() {
+    const newFocus = hasFocus(this.element) && this.element.ownerDocument.hasFocus();
+    if (newFocus === this._hasFocus)
+      return;
+    this._hasFocus = newFocus;
+    this._overlayLayer.invalidate();
+    this._overlayLayer.refresh();
   }
 
   _lineNumbersWidth() {
@@ -480,7 +499,7 @@ export class Renderer extends Emitter {
 
 class Layer {
   /**
-   * @param {function(CanvasRenderingContext2D, Array<Rect>)} draw
+   * @param {function(CanvasRenderingContext2D, Array<Rect>):void} draw
    */
   constructor(draw) {
     this.canvas = document.createElement('canvas');
@@ -598,7 +617,7 @@ class TextMeasuring {
   }
 
   /**
-   * @param {?Line} line
+   * @param {?import('./model').Line} line
    * @param {number} column
    * @return {number}
    */
@@ -633,7 +652,7 @@ class TextMeasuring {
   }
 
   /**
-   * @param {Line} line
+   * @param {import('./model').Line} line
    * @return {Array<{column: number, offset: number}>}
    */
   _computeLineMetrics(line) {
@@ -692,4 +711,14 @@ function combineRects(...rects) {
   var width = Math.max(...rects.map(rect => rect.x + rect.width)) - x;
   var height = Math.max(...rects.map(rect => rect.y + rect.height)) - y;
   return { x, y, width, height };
+}
+
+function hasFocus(element) {
+  let active = document.activeElement;
+  while (active) {
+    if (active === element)
+      return true;
+      active = active.parentElement;
+  }
+  return false;
 }

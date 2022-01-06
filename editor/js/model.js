@@ -239,7 +239,7 @@ export class Model extends Emitter {
   }
 }
 
-class Line {
+export class Line {
   /**
    * @param {string} sourceString
    * @param {number} start
