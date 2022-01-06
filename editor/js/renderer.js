@@ -286,7 +286,8 @@ export class Renderer extends Emitter {
       // Now that there is a y-scrll, we can correctly set the y value
       height += this._scrollingElement.clientHeight - this._lineHeight;
     }
-    this._fillerElement.style.height = height + 'px';
+    this._fillerElement.style.minHeight = height + 'px';
+    this._fillerElement.style.height = this._scrollingElement.offsetHeight + 'px';
   }
 
   viewport() {
