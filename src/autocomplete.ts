@@ -2,22 +2,26 @@ import { Editor } from "../editor/js/editor";
 
 export class Autocomplete {
     private _suggestBox = new SuggestBox(window);
+    private _abortController?: AbortController;
+    private _wantsSuggestBoxShown = false;
     constructor(private _editor: Editor) {
         this._editor.on('selectionChanged', event => {
+            this._abortController?.abort();
+            delete this._abortController;
             if (this._editor.selections.length !== 1 || this._editor.somethingSelected())
-                this._suggestBox.hide();
+                this.hideSuggestBox();
             else
                 this.updateSuggestBox();
         });
         this._editor.element.addEventListener('focusout', () => {
-            this._suggestBox.hide();
+            this.hideSuggestBox();
         });
         this._editor.element.addEventListener('keydown', event => {
             const activationChars = ' ';
             const legalChars = /[A-Za-z0-9_\$]/;
             if (this._suggestBox.showing) {
                 if (event.key === 'Escape') {
-                    this._suggestBox.hide();
+                    this.hideSuggestBox();
                 } else {
                     return;
                 }
@@ -51,14 +55,29 @@ export class Autocomplete {
     }
 
     updateSuggestBox() {
-        if (!this._suggestBox.showing)
+        if (!this._wantsSuggestBoxShown)
             return;
         this.showSuggestBox();
     }
 
-    showSuggestBox() {
+    hideSuggestBox() {
+        this._wantsSuggestBoxShown = false;
+        this._suggestBox.hide();
+        this._abortController?.abort();
+        delete this._abortController;
+    }
+
+    async showSuggestBox() {
+        this._wantsSuggestBoxShown = true;
         const location = this._editor.selections[0].start;
-        const {anchor, prefix, suggestions} = simpleCompleter(this._editor.text({ start: { line: location.line, column: 0 }, end: location }));
+        if (this._abortController)
+            this._abortController.abort();
+        const abortController = new AbortController();
+        this._abortController = abortController;
+        const textBeforeCursor = this._editor.text({ start: { line: location.line, column: 0 }, end: location });
+        const {anchor, prefix, suggestions} = await simpleCompleter(textBeforeCursor, abortController.signal);
+        if (abortController.signal.aborted)
+            return;
 
         const filtered = filterAndSortSuggestions(suggestions, prefix);
         if (!filtered.length) {
@@ -121,7 +140,16 @@ class SuggestBox {
 }
 
 
-function simpleCompleter(line: string) {
+async function simpleCompleter(line: string, abortSignal: AbortSignal) {
+    if (abortSignal.aborted)
+        return;
+    // slow things down just for testing
+    await new Promise(x => {
+        const timeout = setTimeout(x, 100);
+        abortSignal.addEventListener('abort', () => {
+            clearTimeout(timeout);
+        });
+    });
     const anchor = line.lastIndexOf(' ') + 1;
     const prefix = line.substring(anchor);
 
@@ -156,7 +184,6 @@ function simpleCompleter(line: string) {
 }
 
 function filterAndSortSuggestions(suggestions: string[], prefix: string) {
-    console.log(prefix);
     const filtered = suggestions.filter(s => s.includes(prefix));
     filtered.sort((a, b) => {
         const aStart = a.startsWith(prefix);
