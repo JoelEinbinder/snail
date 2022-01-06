@@ -348,11 +348,11 @@ export class Renderer extends Emitter {
           if (clipRects.some(clipRect => intersects(rect, clipRect))) {
             if (token.background) {
               ctx.fillStyle = token.background;
-              ctx.fillRect(rect.x, rect.y, 1 + rect.width, 1 + rect.height);
+              ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
             }
             ctx.fillStyle = token.color || '#222';
             count += chunk.length;
-            ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
+            ctx.fillText(chunk, rect.x, rect.y + this._charHeight + 1);
           }
           rect.x += rect.width;
           lastX += rect.width;
