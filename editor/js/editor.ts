@@ -5,13 +5,15 @@ import { Renderer } from './renderer.js';
 import { CommandManager } from './commands.js';
 import { Input } from './input.js';
 import { SelectionManger } from './selections.js';
-export class Editor extends Emitter {
-  /**
-   * @param {string} data
-   * @param {EditorOptions=} options
-   */
-  constructor(data, options = {}) {
-    super();
+export class Editor {
+  private _model: Model;
+  readonly element: HTMLDivElement;
+  private _highlighter: Highlighter;
+  private _renderer: Renderer;
+  private _commandManager: CommandManager;
+  private _input: Input;
+  private _selectionManager: SelectionManger;
+  constructor(data: string, options: EditorOptions | undefined = {}) {
     this._model = new Model(data);
     this.element = document.createElement('div');
     this.element.className = 'editor';
@@ -33,13 +35,13 @@ export class Editor extends Emitter {
   }
 }
 
-/**
- * @typedef {Object} EditorOptions
- * @property {boolean=} padBottom
- * @property {boolean=} lineNumbers
- * @property {string=} language
- * @property {boolean=} inline
- * @property {boolean=} readOnly
- * @property {boolean=} highlightWordOccurrences
- * @property {function(number,string):Array<Token>} [underlay]
- */
+export type EditorOptions = {
+  padBottom?: boolean;
+  lineNumbers?: boolean;
+  language?: string;
+  inline?: boolean;
+  readOnly?: boolean;
+  highlightWordOccurrences?: boolean;
+  underlay?: (lineNumber: number, text: string) => Array<import('./highlighter').Token>;
+}
+

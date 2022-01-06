@@ -1,4 +1,4 @@
 {
   "name": "editor",
-  "main": "js/editor.js"
+  "main": "js/editor.ts"
 }
