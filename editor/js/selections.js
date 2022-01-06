@@ -3,20 +3,20 @@ import { compareLocation, compareRange, copyLocation, isSelectionCollapsed } fro
 
 export class SelectionManger extends Emitter {
   /**
-   * @param {Renderer} renderer
-   * @param {Model} model
-   * @param {CommandManager} commandManager
+   * @param {import('./renderer').Renderer} renderer
+   * @param {import('./model').Model} model
+   * @param {import('./commands').CommandManager} commandManager
    */
   constructor(renderer, model, commandManager) {
     super();
     this._renderer = renderer;
     this._commandManager = commandManager;
     this._model = model;
-    /** @type {Loc} */
+    /** @type {import("./model.js").Loc} */
     this._anchor = this._model.selections[0].start;
     /** @type {{x: number, y: number}} */
     this._cursor = null;
-    /** @type {Loc} */
+    /** @type {import("./model.js").Loc} */
     this._desiredLocation = null;
     this._renderer.on('contentMouseDown', this._contentMouseDown.bind(this));
     this._model.on('selectionChanged', () => {
@@ -168,7 +168,7 @@ export class SelectionManger extends Emitter {
   _trackDrag() {
     // We have to listen on the window so that you can select outside the bounds
     var window = this._renderer.element.ownerDocument.defaultView;
-    /** @type {function(MouseEvent)} */
+    /** @type {function(MouseEvent):void} */
     var mousemove = event => {
       this._cursor = {
         x: event.clientX,
@@ -176,7 +176,7 @@ export class SelectionManger extends Emitter {
       };
       this._updateMouseSelection();
     };
-    /** @type {function(MouseEvent)} */
+    /** @type {function(MouseEvent):void} */
     var mouseup = event => {
       window.removeEventListener('mousemove', mousemove, true);
       window.removeEventListener('mouseup', mouseup, true);
@@ -228,7 +228,7 @@ export class SelectionManger extends Emitter {
       var { text } = this._model.line(end.line);
       if (endColumn < text.length) {
         var type = this._charType(text[endColumn]);
-        for (var i = endColumn + 1; i <= text.length && type === this._charType(text[i - 1]); i++) endColumn = i;
+        for (let i = endColumn + 1; i <= text.length && type === this._charType(text[i - 1]); i++) endColumn = i;
       }
 
       this._model.setSelections([
@@ -366,7 +366,7 @@ export class SelectionManger extends Emitter {
   }
 
   /**
-   * @param {Loc} point
+   * @param {import("./model.js").Loc} point
    * @param {boolean=} extend
    * @return {boolean}
    */

@@ -164,11 +164,11 @@ export class Renderer extends Emitter {
     var alpha = 0;
     var beta = line.length;
     var column;
-    while (beta > alpha) {
+    while (Math.abs(alpha - beta) > 1) {
       column = Math.floor((alpha + beta) / 2);
       var value = this._textMeasuring.xOffsetFromLocation(line, column);
-      if (x > value) alpha = Math.min(column + 1, line.length);
-      else beta = Math.max(column - 1, 0);
+      if (x > value) alpha = Math.min(column, line.length);
+      else beta = Math.max(column, 0);
     }
     column =
       Math.abs(this._textMeasuring.xOffsetFromLocation(line, alpha) - x) >
