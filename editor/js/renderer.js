@@ -1,4 +1,4 @@
-import { Emitter } from "./emitter.js";
+import { Emitter } from "./emitter";
 import { isSelectionCollapsed } from "./model.js";
 
 export class Renderer extends Emitter {

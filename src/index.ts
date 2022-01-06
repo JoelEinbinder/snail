@@ -17,3 +17,4 @@ window.addEventListener('resize', () => editor.layout(), false);
 document.body.appendChild(editor.element);
 editor.layout();
 editor.focus();
+editor.value = 'echo $FOO';

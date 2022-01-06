@@ -1,12 +1,12 @@
-import { Emitter } from "./emitter.js";
+import { Emitter } from "./emitter";
 import { compareLocation, compareRange, copyLocation, isSelectionCollapsed } from "./model.js";
 
 export class Input extends Emitter {
   /**
    * @param {HTMLElement} parent
-   * @param {Model} model
-   * @param {CommandManager} commandManager
-   * @param {Renderer} renderer
+   * @param {import('./model').Model} model
+   * @param {import('./commands').CommandManager} commandManager
+   * @param {import('./renderer').Renderer} renderer
    * @param {boolean=} readOnly
    */
   constructor(parent, model, commandManager, renderer, readOnly) {
@@ -82,7 +82,9 @@ export class Input extends Emitter {
   _setupContextMenuListeners(parent) {
     parent.addEventListener('mouseup', event => {
       if (event.which !== 3) return;
+      // @ts-ignore layerX is a thing shut up
       this._textarea.style.left = event.layerX - 1 + 'px';
+      // @ts-ignore layerY is a thing shut up
       this._textarea.style.top = event.layerY - 1 + 'px';
       this._textarea.style.zIndex = '1000';
       var valueNeedsReset = false;
@@ -128,7 +130,7 @@ export class Input extends Emitter {
   }
 
   /**
-   * @param {{selections: Array<TextRange>, previousSelections: Array<TextRange>}} event
+   * @param {{selections: Array<import("./model.js").TextRange>, previousSelections: Array<import("./model.js").TextRange>}} event
    */
   _selectionChanged(event) {
     var mainSelection = event.selections[0];
@@ -236,7 +238,7 @@ export class Input extends Emitter {
   }
 
   _replaceRanges(text, ranges) {
-    /** @type {Array<TextRange>} */
+    /** @type {Array<import("./model.js").TextRange>} */
     let cursors = [];
     for (let i = 0; i < ranges.length; i++) {
       const loc = this._model.replaceRange(text, ranges[i]);
@@ -317,10 +319,10 @@ export class Input extends Emitter {
 }
 
 /**
- * @param {TextRange} target
- * @param {TextRange} from
- * @param {Loc} to
- * @return {TextRange}
+ * @param {import('./model').TextRange} target
+ * @param {import('./model').TextRange} from
+ * @param {import('./model').Loc} to
+ * @return {import('./model').TextRange}
  */
 function rebaseRange(target, from, to) {
   const start = rebaseLoc(target.start, from, to);
@@ -329,10 +331,10 @@ function rebaseRange(target, from, to) {
 }
 
 /**
- * @param {Loc} target
- * @param {TextRange} from
- * @param {Loc} to
- * @return {Loc}
+ * @param {import('./model').Loc} target
+ * @param {import('./model').TextRange} from
+ * @param {import('./model').Loc} to
+ * @return {import('./model').Loc}
  */
 function rebaseLoc(target, from, to) {
   if (compareLocation(target, from.start) <= 0) return target;

@@ -1,4 +1,4 @@
-import { Emitter } from "./emitter.js";
+import { Emitter } from "./emitter";
 
 export class Model extends Emitter {
   /**
