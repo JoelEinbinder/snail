@@ -58,7 +58,15 @@ export class Autocomplete {
 
     showSuggestBox() {
         const location = this._editor.selections[0].start;
-        const point = this._editor.pointFromLocation(location);
+        const {anchor, prefix, suggestions} = simpleCompleter(this._editor.text({ start: { line: location.line, column: 0 }, end: location }));
+
+        const filtered = filterAndSortSuggestions(suggestions, prefix);
+        if (!filtered.length) {
+            this._suggestBox.hide();
+            return;
+        }
+        this._suggestBox.setSuggestions(filtered);
+        const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
         
         const top = point.y;
         const bottom = point.y + this._editor.lineHeight() * .75;
@@ -80,12 +88,18 @@ class SuggestBox {
         this.element.style.position = 'absolute';
         this.element.style.top = '0';
         this.element.style.left = '0';
-        this.element.style.width = '50px';
-        this.element.style.height = '50px';
         this.element.style.backgroundColor = 'rgba(0,0,0,0.5)';
     }
     get showing() {
         return !!this.element.parentElement;
+    }
+    setSuggestions(suggestions: string[]) {
+        this.element.textContent = '';
+        for (const suggestion of suggestions) {
+            const div = document.createElement('div');
+            div.textContent = suggestion;
+            this.element.appendChild(div);
+        }
     }
     hide() {
         this.element.remove();
@@ -104,4 +118,52 @@ class SuggestBox {
         this.element.style.top = y + 'px';
         this.element.style.left = x + 'px';
     }
+}
+
+
+function simpleCompleter(line: string) {
+    const anchor = line.lastIndexOf(' ') + 1;
+    const prefix = line.substring(anchor);
+
+    const suggestions = makeSuggestions();
+
+    return {
+        anchor,
+        prefix,
+        suggestions,
+    }
+    function makeSuggestions() {
+        if (anchor === 0)
+            return [
+                'echo',
+                'ls',
+                'pwd',
+                'cd',
+                'cat',
+                'cp',
+                'mv',
+                'rm',
+                'mkdir',
+                'rmdir',
+                'touch',
+                'grep',
+                'sed',
+                'head',
+                'tail',
+            ];
+        return ['foo', 'bar', 'baz'];
+    }
+}
+
+function filterAndSortSuggestions(suggestions: string[], prefix: string) {
+    console.log(prefix);
+    const filtered = suggestions.filter(s => s.includes(prefix));
+    filtered.sort((a, b) => {
+        const aStart = a.startsWith(prefix);
+        const bStart = b.startsWith(prefix);
+        if (aStart === bStart)
+            return a.localeCompare(b);        
+        return aStart ? -1 : 1;
+    });
+    return filtered;
 }
