@@ -1,6 +1,7 @@
 import { Editor } from '../editor';
 import '../editor/css/editor.css';
 import '../editor/modes/shell';
+import { Autocomplete } from './autocomplete';
 const content = '// text editor!';
 
 const editor = new Editor(content, {
@@ -18,3 +19,4 @@ document.body.appendChild(editor.element);
 editor.layout();
 editor.focus();
 editor.value = 'echo $FOO';
+new Autocomplete(editor);
