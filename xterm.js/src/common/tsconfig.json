@@ -6,9 +6,6 @@
       "es2016.Array.Include"
     ],
     "outDir": "../../out",
-    "types": [
-      "../../node_modules/@types/mocha"
-    ],
     "baseUrl": ".."
   },
   "include": [

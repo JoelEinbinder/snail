@@ -17,9 +17,6 @@
       ]
     },
     "strict": true,
-    "types": [
-      "../../../node_modules/@types/mocha"
-    ]
   },
   "include": [
     "./**/*",

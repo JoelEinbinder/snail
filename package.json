@@ -2,6 +2,9 @@
   "name": "gap-year",
   "private": true,
   "scripts": {},
+  "workspaces": [
+    "xterm.js"
+  ],
   "author": "Joel Einbinder",
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.14.5",

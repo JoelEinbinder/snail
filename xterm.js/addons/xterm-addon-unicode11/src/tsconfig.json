@@ -17,9 +17,6 @@
         "../../../src/common/*"
       ]
     },
-    "types": [
-      "../../../node_modules/@types/mocha"
-    ]
   },
   "include": [
     "./**/*",
