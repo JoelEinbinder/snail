@@ -195,8 +195,8 @@ export class Renderer extends Emitter {
   scrollLocationIntoView(location) {
     this._updateMetrics();
     var point = this.pointFromLocation(location);
-    var top = point.y - this._padding;
-    var left = point.x;
+    var top = point.y - this._padding + this._scrollTop;
+    var left = point.x - this._leftOffset();
     var bottom = top + this._lineHeight + this._padding * 2;
     var textSize = this._model
       .line(location.line)
@@ -220,9 +220,13 @@ export class Renderer extends Emitter {
     if (location.line >= this._model.lineCount()) location = this._model.fullRange().end;
     var line = this._model.line(location.line);
     return {
-      x: this._textMeasuring.xOffsetFromLocation(line, location.column),
-      y: location.line * this._lineHeight
+      x: this._textMeasuring.xOffsetFromLocation(line, location.column) + this._leftOffset(),
+      y: location.line * this._lineHeight - this._scrollTop
     };
+  }
+
+  _leftOffset() {
+    return this._lineNumbersWidth() + this._padding - this.scrollLeft;
   }
 
   /**
@@ -286,7 +290,8 @@ export class Renderer extends Emitter {
       // Now that there is a y-scrll, we can correctly set the y value
       height += this._scrollingElement.clientHeight - this._lineHeight;
     }
-    this._fillerElement.style.height = height + 'px';
+    this._fillerElement.style.minHeight = height + 'px';
+    this._fillerElement.style.height = this._scrollingElement.offsetHeight + 'px';
   }
 
   viewport() {
@@ -414,8 +419,8 @@ export class Renderer extends Emitter {
           var start = this.pointFromLocation({ line: i, column: index });
           var end = this.pointFromLocation({ line: i, column: index + word.length });
           ctx.fillRect(
-            start.x + lineNumbersWidth + this._padding - this._scrollLeft,
-            start.y - this.scrollTop,
+            start.x,
+            start.y,
             end.x - start.x,
             this._lineHeight
           );
@@ -429,8 +434,8 @@ export class Renderer extends Emitter {
         if (!isSelectionCollapsed(selection)) continue;
         var point = this.pointFromLocation(selection.start);
         var rect = {
-          x: lineNumbersWidth + this._padding - this.scrollLeft + point.x,
-          y: point.y - this.scrollTop + (this._lineHeight - this._charHeight) / 4 - 1,
+          x: point.x,
+          y: point.y + (this._lineHeight - this._charHeight) / 4 - 1,
           width: 1.5,
           height: this._charHeight + 2
         };
@@ -494,6 +499,10 @@ export class Renderer extends Emitter {
         char => this._textLayer._ctx.measureText(char === '\t' ? this.TAB : char).width
       );
     this.refresh();
+  }
+
+  get lineHeight() {
+    return this._lineHeight;
   }
 }
 

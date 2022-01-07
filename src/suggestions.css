@@ -1,0 +1,25 @@
+.suggestions {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    border-radius: 3px;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    font-size: 14px;
+    font-family: sans-serif;
+    color: #333;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    max-height: 120px;
+    max-width: 120px;
+    text-overflow: ellipsis;
+}
+.suggestion {
+    font-family: Menlo, Monaco, "Courier New", monospace;
+}
+.suggestion.selected {
+    background: rgb(0, 122, 255);
+    color: #fff;
+}

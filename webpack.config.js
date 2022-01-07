@@ -128,10 +128,10 @@ module.exports = {
           }
         },
       },
-      {
-        test: /\.(cpp|mm)$/,
-        loader: require.resolve('../joel-cpp-magic/src/loader', {paths: [__dirname]})
-      },
+      // {
+      //   test: /\.(cpp|mm)$/,
+      //   loader: require.resolve('../joel-cpp-magic/src/loader', {paths: [__dirname]})
+      // },
       {
         loader: require.resolve('file-loader'),
         // Exclude `js` files to keep "css" loader working as it injects
