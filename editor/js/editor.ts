@@ -57,6 +57,10 @@ export class Editor extends Emitter<EditorEvents> {
     return this._model.text(range);
   }
 
+  replaceRange(text: string, range: TextRange): Loc {
+    return this._model.replaceRange(text, range);
+  }
+
   pointFromLocation(location: Loc) {
     return this._renderer.pointFromLocation(location);
   }
@@ -92,4 +96,4 @@ export type EditorOptions = {
   underlay?: (lineNumber: number, text: string) => Array<import('./highlighter').Token>;
 }
 
-export { TextRange } from './model';
+export type { TextRange } from './model';

@@ -1,10 +1,12 @@
 import { Editor } from "../editor/js/editor";
+import { SuggestBox } from "./SuggestBox";
 
 export class Autocomplete {
-    private _suggestBox = new SuggestBox(window);
+    private _suggestBox = new SuggestBox(window, this._onPick.bind(this));
     private _abortController?: AbortController;
     private _wantsSuggestBoxShown = false;
-    constructor(private _editor: Editor) {
+    private _anchor = 0;
+    constructor(private _editor: Editor, private _completer: Completer) {
         this._editor.on('selectionChanged', event => {
             this._abortController?.abort();
             delete this._abortController;
@@ -22,7 +24,7 @@ export class Autocomplete {
             if (this._suggestBox.showing) {
                 if (event.key === 'Escape') {
                     this.hideSuggestBox();
-                } else {
+                } else if (!this._suggestBox.onKeyDown(event)) {
                     return;
                 }
             } else {
@@ -54,6 +56,15 @@ export class Autocomplete {
         }, true);
     }
 
+    _onPick(suggestion: string) {
+        const loc = this._editor.replaceRange(suggestion, {
+            start: { line: this._editor.selections[0].start.line, column: this._anchor },
+            end: { line: this._editor.selections[0].start.line, column: this._editor.selections[0].start.column + suggestion.length },
+        });
+        this.hideSuggestBox();
+        this._editor.selections = [{ start: loc, end: loc }];
+    }
+
     updateSuggestBox() {
         if (!this._wantsSuggestBoxShown)
             return;
@@ -75,7 +86,7 @@ export class Autocomplete {
         const abortController = new AbortController();
         this._abortController = abortController;
         const textBeforeCursor = this._editor.text({ start: { line: location.line, column: 0 }, end: location });
-        const {anchor, prefix, suggestions} = await simpleCompleter(textBeforeCursor, abortController.signal);
+        const {anchor, prefix, suggestions} = await this._completer(textBeforeCursor, abortController.signal);
         if (abortController.signal.aborted)
             return;
 
@@ -84,7 +95,8 @@ export class Autocomplete {
             this._suggestBox.hide();
             return;
         }
-        this._suggestBox.setSuggestions(filtered);
+        this._anchor = anchor;
+        this._suggestBox.setSuggestions(prefix, filtered);
         const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
         
         const top = point.y;
@@ -100,88 +112,7 @@ export class Autocomplete {
     }
 }
 
-class SuggestBox {
-    element: HTMLElement;
-    constructor(window: Window) {
-        this.element = window.document.createElement('div');
-        this.element.style.position = 'absolute';
-        this.element.style.top = '0';
-        this.element.style.left = '0';
-        this.element.style.backgroundColor = 'rgba(0,0,0,0.5)';
-    }
-    get showing() {
-        return !!this.element.parentElement;
-    }
-    setSuggestions(suggestions: string[]) {
-        this.element.textContent = '';
-        for (const suggestion of suggestions) {
-            const div = document.createElement('div');
-            div.textContent = suggestion;
-            this.element.appendChild(div);
-        }
-    }
-    hide() {
-        this.element.remove();
-    }
-    fit(x: number, top: number, bottom: number, availableRect: { top: number, left: number, bottom: number, right: number }) {
-        window.document.body.appendChild(this.element);
-        const rect = this.element.getBoundingClientRect();
-        const overflowTop = availableRect.top - (top - rect.height);
-        const overflowBottom = (bottom + rect.height) - availableRect.bottom;
-        if (overflowBottom <= 0 || (overflowBottom < overflowTop))
-            this.position(x, bottom);
-        else
-            this.position(x, top - rect.height);
-    }
-    position(x: number, y: number) {        
-        this.element.style.top = y + 'px';
-        this.element.style.left = x + 'px';
-    }
-}
-
-
-async function simpleCompleter(line: string, abortSignal: AbortSignal) {
-    if (abortSignal.aborted)
-        return;
-    // slow things down just for testing
-    await new Promise(x => {
-        const timeout = setTimeout(x, 100);
-        abortSignal.addEventListener('abort', () => {
-            clearTimeout(timeout);
-        });
-    });
-    const anchor = line.lastIndexOf(' ') + 1;
-    const prefix = line.substring(anchor);
-
-    const suggestions = makeSuggestions();
-
-    return {
-        anchor,
-        prefix,
-        suggestions,
-    }
-    function makeSuggestions() {
-        if (anchor === 0)
-            return [
-                'echo',
-                'ls',
-                'pwd',
-                'cd',
-                'cat',
-                'cp',
-                'mv',
-                'rm',
-                'mkdir',
-                'rmdir',
-                'touch',
-                'grep',
-                'sed',
-                'head',
-                'tail',
-            ];
-        return ['foo', 'bar', 'baz'];
-    }
-}
+type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, prefix: string, suggestions: string[]}>;
 
 function filterAndSortSuggestions(suggestions: string[], prefix: string) {
     const filtered = suggestions.filter(s => s.includes(prefix));
