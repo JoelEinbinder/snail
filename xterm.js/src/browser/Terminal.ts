@@ -20,6 +20,7 @@
  *   http://linux.die.net/man/4/console_codes
  *   http://linux.die.net/man/7/urxvt
  */
+import 'reflect-metadata';
 
 import { ICompositionHelper, ITerminal, IBrowser, CustomKeyEventHandler, ILinkifier, IMouseZoneManager, LinkMatcherHandler, ILinkMatcherOptions, IViewport, ILinkifier2, CharacterJoinerHandler } from 'browser/Types';
 import { IRenderer } from 'browser/renderer/Types';

@@ -8,7 +8,11 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 const babelPlugins = [
+  [require.resolve('@babel/plugin-proposal-decorators'), {
+    legacy: true,
+  }],
   [require.resolve('@babel/plugin-proposal-class-properties'), {loose: true}],
+  require.resolve('babel-plugin-transform-typescript-metadata'),
   require.resolve('@babel/plugin-proposal-optional-chaining'),
 ];
 const babelPresets = [
@@ -22,7 +26,7 @@ const babelReactPresets = [
   ...babelPresets,
   require.resolve('@babel/preset-react')
 ];
-const typescriptPreset = [require.resolve('@babel/preset-typescript'), { onlyRemoveTypeImports: true }];
+const typescriptPreset = [require.resolve('@babel/preset-typescript'), { onlyRemoveTypeImports: false }];
 
 /** @type {import('webpack').Configuration} */
 module.exports = {
@@ -59,7 +63,11 @@ module.exports = {
     topLevelAwait: true
   },
   resolve: {
-    extensions: [ '.tsx', '.ts', '.js', '.jsx' ]
+    extensions: [ '.tsx', '.ts', '.js', '.jsx', '.d.ts' ],
+    alias: {
+      common: path.join(__dirname, './xterm.js/src/common'),
+      browser: path.join(__dirname, './xterm.js/src/browser')
+    }
   },
   module: {
     rules: [
