@@ -277,4 +277,7 @@ export class Terminal implements ITerminalApi {
       }
     }
   }
+  public deleteLastLine(): void {
+    this._core.deleteLastLine();
+  }
 }

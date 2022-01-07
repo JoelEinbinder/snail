@@ -35,12 +35,14 @@ export class Shell {
         command,
       },
     });
-    entry.close();
+    await entry.close();
   }
 }
 export class Entry {
   element: HTMLElement;
   private _terminal: Terminal;
+  private _trailingNewline = false;
+  private _lastWritePromise = Promise.resolve();
   constructor(
     public command: string,
   ) {
@@ -79,9 +81,17 @@ export class Entry {
   }
 
   addData(data: string|Uint8Array) {
-    this._terminal.write(data);
+    if (data.length !== 0)
+      this._trailingNewline = typeof data === 'string' ? data.endsWith('\n') : data[data.length - 1] === '\n'.charCodeAt(0);
+    this._lastWritePromise = new Promise(x => this._terminal.write(data, x));
   }
-  close() {
-    // this._terminal.disable();
+  async close() {
+    await this._lastWritePromise;
+    if (this._trailingNewline)
+      this._terminal.deleteLastLine();
+    else {
+      // TODO write some extra '%' character to show there was no trailing newline?
+      console.log('do not delete last line');
+    }
   }
 }

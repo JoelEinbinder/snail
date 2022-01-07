@@ -314,6 +314,14 @@ export class Buffer implements IBuffer {
     this.savedY = Math.max(this.savedY - countRemoved, 0);
   }
 
+  public deleteLastLine() {
+    if (!this.delegatesScrolling)
+      return;
+    this.lines.pop();
+    this.rows = this.lines.length;
+    this.scrollBottom = this.rows - 1;
+  }
+
   private _reflowSmaller(newCols: number, newRows: number): void {
     const nullCell = this.getNullCell(DEFAULT_ATTR_DATA);
     // Gather all BufferLines that need to be inserted into the Buffer here so that they can be

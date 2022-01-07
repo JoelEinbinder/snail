@@ -51,10 +51,6 @@ export class BufferService extends Disposable implements IBufferService {
     this.buffers.dispose();
   }
 
-  private _delegatesScrolling(): boolean {
-    return this._optionsService.options.delegatesScrolling && this.buffers.active === this.buffers.normal;
-  }
-
   public normalRows(): number {
     return this.buffers.normal.rows;
   }

@@ -1388,6 +1388,15 @@ export class Terminal extends CoreTerminal implements ITerminal {
     // return this.options.bellStyle === 'sound' ||
     //     this.options.bellStyle === 'both';
   }
+
+  public deleteLastLine(): void {
+    // this._bufferService.buffers.normal.lines.pop();
+    if (this.options.delegatesScrolling) {
+      this._bufferService.buffers.normal.rows--;
+      this._bufferService.buffers.normal.lines.pop();
+    }
+    this.resize(this.cols, this.rows - 1);
+  }
 }
 
 /**

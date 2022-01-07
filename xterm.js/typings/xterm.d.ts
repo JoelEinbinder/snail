@@ -1127,6 +1127,11 @@ declare module 'xterm' {
      * @param addon The addon to load.
      */
     loadAddon(addon: ITerminalAddon): void;
+
+    /**
+     * Removes the last line from the terminal and shrinks the viewport.
+     */
+    deleteLastLine(): void;
   }
 
   /**
