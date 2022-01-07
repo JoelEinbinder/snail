@@ -93,6 +93,7 @@ export type EditorOptions = {
   inline?: boolean;
   readOnly?: boolean;
   highlightWordOccurrences?: boolean;
+  backgroundColor?: string;
   underlay?: (lineNumber: number, text: string) => Array<import('./highlighter').Token>;
 }
 

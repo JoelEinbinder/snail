@@ -37,7 +37,8 @@ export class Renderer extends Emitter {
     this._textLayer = new Layer(this._drawText.bind(this));
     this._overlayLayer = new Layer(this._drawOverlay.bind(this));
 
-    this._textLayer.canvas.style.backgroundColor = '#FFF';
+    if (this._options.backgroundColor)
+      this._textLayer.canvas.style.backgroundColor = this._options.backgroundColor;
 
     /** @type {WeakMap<import('./model').Line, Array<{column: number, offset: number}>>} */
     this._lineMetrics = new WeakMap();
@@ -256,8 +257,11 @@ export class Renderer extends Emitter {
     if (deltaY > 0) rects.push({ x: 0, y: this._height - deltaY - 1, width: this._width, height: deltaY + 1 });
     if (deltaY < 0) rects.push({ x: 0, y: 0, width: this._width, height: -deltaY + 1 });
     this._textLayer.translate(deltaX, deltaY);
-    for (var rect of rects) this._textLayer.invalidate(rect);
-    this._overlayLayer.invalidate(); // we dont optimize the overlay layer because its transparent/not worth it.
+    this._overlayLayer.translate(deltaX, deltaY);
+    for (var rect of rects) {
+      this._textLayer.invalidate(rect);
+      this._overlayLayer.invalidate(rect);
+    }
     this.scheduleRefresh();
     this._lastScrollOffset = {
       top: this.scrollTop,
@@ -332,8 +336,12 @@ export class Renderer extends Emitter {
     for (var clipRect of clipRects) ctx.rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
     ctx.clip();
     var extendedRect = combineRects(...clipRects);
-    ctx.fillStyle = this._backgroundColor;
-    ctx.fillRect(extendedRect.x, extendedRect.y, extendedRect.width, extendedRect.height);
+    if (this._options.backgroundColor) {
+      ctx.fillStyle = this._options.backgroundColor;
+      ctx.fillRect(extendedRect.x, extendedRect.y, extendedRect.width, extendedRect.height);
+    } else {
+      ctx.clearRect(extendedRect.x, extendedRect.y, extendedRect.width, extendedRect.height);
+    }
     var viewport = this.viewport();
     var farRight = Math.max(...clipRects.map(clipRect => clipRect.x + clipRect.width));
     var lineNumbersWidth = this._lineNumbersWidth();
@@ -480,7 +488,6 @@ export class Renderer extends Emitter {
   }
 
   layout() {
-    this._backgroundColor = window.getComputedStyle(this._textLayer.canvas).backgroundColor;
     this._charHeight = parseInt(window.getComputedStyle(this._textLayer.canvas).fontSize);
     this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._textLayer.canvas).lineHeight), this._charHeight);
     if (this._options.inline) {
@@ -525,8 +532,10 @@ class Layer {
 
   refresh() {
     if (this._translation.x || this._translation.y) {
+      this._ctx.globalCompositeOperation = 'copy';
       this._ctx.drawImage(this.canvas, -this._translation.x, -this._translation.y);
       this._translation = { x: 0, y: 0 };
+      this._ctx.globalCompositeOperation = 'source-over';
     }
     if (this._rects.length) {
       this._ctx.save();
