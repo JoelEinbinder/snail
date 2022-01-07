@@ -5,7 +5,7 @@
     "name": "The xterm.js authors",
     "url": "https://xtermjs.org/"
   },
-  "main": "lib/xterm-addon-webgl.js",
+  "main": "src/WebglAddon.ts",
   "types": "typings/xterm-addon-webgl.d.ts",
   "repository": "https://github.com/xtermjs/xterm.js",
   "license": "MIT",

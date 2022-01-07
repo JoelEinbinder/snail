@@ -174,3 +174,7 @@
 .xterm-strikethrough {
     text-decoration: line-through;
 }
+
+.xterm.terminal:not([tabindex]) .xterm-cursor-layer {
+    display: none;
+}

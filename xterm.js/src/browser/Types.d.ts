@@ -19,6 +19,7 @@ export interface ITerminal extends IPublicTerminal, ICoreTerminal {
   options: ITerminalOptions;
   linkifier: ILinkifier;
   linkifier2: ILinkifier2;
+  enabled: boolean;
 
   onBlur: IEvent<void>;
   onFocus: IEvent<void>;
@@ -26,6 +27,7 @@ export interface ITerminal extends IPublicTerminal, ICoreTerminal {
   onA11yTab: IEvent<number>;
 
   cancel(ev: Event, force?: boolean): boolean | void;
+  disable(): void;
 }
 
 // Portions of the public API that are required by the internal Terminal

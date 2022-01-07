@@ -1,4 +1,5 @@
 import {Terminal} from 'xterm';
+import { WebglAddon } from '../xterm.js/addons/xterm-addon-webgl/';
 import 'xterm/css/xterm.css';
 import { JoelEvent } from './JoelEvent';
 
@@ -75,7 +76,7 @@ export class Entry {
         selection: '#525252',
         cursor: '#606060',
       },
-      rendererType: 'dom',
+      rendererType: 'canvas',
     });
     this._terminal.open(this.element);
   }
@@ -91,7 +92,8 @@ export class Entry {
       this._terminal.deleteLastLine();
     else {
       // TODO write some extra '%' character to show there was no trailing newline?
-      console.log('do not delete last line');
     }
+    this._terminal.blur();
+    this._terminal.disable();
   }
 }

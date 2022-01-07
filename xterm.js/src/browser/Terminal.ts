@@ -70,6 +70,8 @@ export class Terminal extends CoreTerminal implements ITerminal {
   private _viewportElement: HTMLElement | undefined;
   private _helperContainer: HTMLElement | undefined;
   private _compositionView: HTMLElement | undefined;
+  
+  public enabled = true
 
   // private _visualBellTimer: number;
 
@@ -623,6 +625,12 @@ export class Terminal extends CoreTerminal implements ITerminal {
     this._colorManager?.setTheme(theme);
     this._renderService?.setColors(this._colorManager!.colors);
     this.viewport?.onThemeChange(this._colorManager!.colors);
+  }
+
+  public disable() {
+    this.textarea?.remove();
+    this.element?.removeAttribute('tabindex');
+    this.enabled = false;
   }
 
   /**

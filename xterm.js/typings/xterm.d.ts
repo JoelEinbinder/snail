@@ -1128,6 +1128,9 @@ declare module 'xterm' {
      */
     loadAddon(addon: ITerminalAddon): void;
 
+    readonly enabled: boolean;
+    disable(): void;
+
     /**
      * Removes the last line from the terminal and shrinks the viewport.
      */

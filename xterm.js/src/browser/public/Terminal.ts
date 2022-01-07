@@ -280,4 +280,13 @@ export class Terminal implements ITerminalApi {
   public deleteLastLine(): void {
     this._core.deleteLastLine();
   }
+
+  disable(): void {
+    this._core.disable();
+  }
+
+  get enabled(): boolean {
+    return this._core.enabled;
+  }
+
 }
