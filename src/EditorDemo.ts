@@ -1,4 +1,4 @@
-import { Editor } from '../editor';
+import { Editor } from '../editor/js/editor';
 import '../editor/css/editor.css';
 import '../editor/modes/shell';
 import { Autocomplete } from './autocomplete';

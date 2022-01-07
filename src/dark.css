@@ -1,0 +1,42 @@
+body {
+  --color-0: #3E3E3E;
+  --color-1: #990000;
+  --color-2: #00A600;
+  --color-3: #999900;
+  --color-4: #0000B2;
+  --color-5: #B200B2;
+  --color-6: #00A6B2;
+  --color-7: #BFBFBF;
+  --color-8: #666666;
+  --color-9: #E50000;
+  --color-10: #00D900;
+  --color-11: #E5E500;
+  --color-12: #0000FF;
+  --color-13: #E500E5;
+  --color-14: #00E5E5;
+  --color-15: #E5E5E5;
+  --color-text: #F4F4F4;
+  --color-bold: #FFFFFF;
+  --color-selection: #525252;
+  --color-background: #000000;
+  --color-cursor: #606060;
+}
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: Monaco;
+  font-size: 10px;
+  margin: 4px;
+}
+
+input {
+  background: var(--color-background);
+  border: 0;
+  outline: 0;
+  color: var(--color-text);
+  font-size: 10px;
+  font-family: Monaco;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
