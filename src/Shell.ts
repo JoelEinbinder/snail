@@ -21,8 +21,9 @@ const size = {
 const PADDING = 4;
 function updateSize() {
   const {width, height} = measureChar();
-  size.cols = Math.floor((window.innerWidth - PADDING * 2) / width);
-  size.rows = Math.floor((window.innerHeight -PADDING * 2) / height);
+  const padding = PADDING / window.devicePixelRatio;
+  size.cols = Math.floor((window.innerWidth - padding * 2) / width);
+  size.rows = Math.floor((window.innerHeight - padding * 2) / height);
   for (const shell of shells.values())
     shell.updateSize();
 }

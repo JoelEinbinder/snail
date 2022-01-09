@@ -30,7 +30,7 @@ function EntryView({entry}: {entry: Entry}) {
   if (isFullscreen)
     return <div><div ref={ref} /></div>;
   return <div>
-    <div>{entry.command}</div>
+    <div>$ {entry.command}</div>
     <div ref={ref}></div>
   </div>
 }
