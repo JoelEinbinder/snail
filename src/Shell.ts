@@ -18,10 +18,11 @@ const size = {
   rows: 0,
   cols: 0,
 }
+const PADDING = 4;
 function updateSize() {
   const {width, height} = measureChar();
-  size.cols = Math.floor(window.innerWidth / width);
-  size.rows = Math.floor(window.innerHeight / height);
+  size.cols = Math.floor((window.innerWidth - PADDING * 2) / width);
+  size.rows = Math.floor((window.innerHeight -PADDING * 2) / height);
   for (const shell of shells.values())
     shell.updateSize();
 }
@@ -31,6 +32,7 @@ updateSize();
 export class Shell {
   log: Entry[] = [];
   updated = new JoelEvent(0);
+  public fullscreenEntry: JoelEvent<Entry> = new JoelEvent<Entry>(null);
   private constructor(private _shellId: number) { }
   static async create(): Promise<Shell> {
     const shellId = await window.electronAPI.sendMessage({
@@ -44,6 +46,10 @@ export class Shell {
   async runCommand(command: string) {
     const entry = new Entry(command, this._shellId);
     this.log.push(entry);
+    const onFullScreen = (value: boolean) => {
+      this.fullscreenEntry.dispatch(value ? entry : null);
+    }
+    entry.fullscreenEvent.on(onFullScreen);
     this.updated.dispatch(this.updated.current + 1);
     await window.electronAPI.sendMessage({
       method: 'runCommand',
@@ -52,6 +58,8 @@ export class Shell {
         command,
       },
     });
+    entry.fullscreenEvent.off(onFullScreen);
+    this.fullscreenEntry.dispatch(null);
     await entry.close();
   }
   async updateSize() {
@@ -74,6 +82,7 @@ export class Entry {
   private _trailingNewline = false;
   private _lastWritePromise = Promise.resolve();
   private _listeners: IDisposable[] = [];
+  public fullscreenEvent: JoelEvent<boolean> = new JoelEvent<boolean>(false);
   constructor(
     public command: string,
     private _shellId: number,
@@ -119,6 +128,9 @@ export class Entry {
           input: data,
         },
       });
+    }));
+    this._listeners.push(this._terminal.buffer.onBufferChange(() => {
+      this.fullscreenEvent.dispatch(this._terminal.buffer.active === this._terminal.buffer.alternate);
     }));
   }
 

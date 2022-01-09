@@ -3,6 +3,9 @@ import { useEvent } from './hooks';
 import type { Shell, Entry } from './Shell';
 
 export function ShellView({shell}: {shell: Shell}) {
+  const fullScreenEntry = useEvent(shell.fullscreenEntry);
+  if (fullScreenEntry)
+    return <EntryView entry={fullScreenEntry}/>;
   return <>
     <Log shell={shell} />
     <Prompt onCommmand={command => {
@@ -18,11 +21,14 @@ function Log({shell}: {shell: Shell}) {
 
 function EntryView({entry}: {entry: Entry}) {
   const ref = useRef<HTMLDivElement>(null);
+  const isFullscreen = useEvent(entry.fullscreenEvent);
   useLayoutEffect(() => {
     if (!ref.current || !ref.current.parentNode)
       return;
     ref.current.replaceWith(entry.element);
   });
+  if (isFullscreen)
+    return <div><div ref={ref} /></div>;
   return <div>
     <div>{entry.command}</div>
     <div ref={ref}></div>
