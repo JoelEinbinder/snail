@@ -150,9 +150,15 @@ export class Entry {
     for (const listeners of this._listeners)
       listeners.dispose();
     await this._lastWritePromise;
-    if (this._trailingNewline)
+    if (this._trailingNewline) {
       this._terminal.deleteLastLine();
-    else {
+      
+    } else {
+      if (this._terminal.buffer.active === this._terminal.buffer.normal &&
+        this._terminal.buffer.active.length === 1 &&
+        this._terminal.buffer.active.getLine(0).translateToString(true) === '') {
+        this.element.style.display = 'none';
+      }
       // TODO write some extra '%' character to show there was no trailing newline?
     }
     this._terminal.blur();
