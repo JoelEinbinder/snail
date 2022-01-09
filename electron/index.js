@@ -122,6 +122,9 @@ const handler = {
   async runCommand({shellId, command}) {
     await shells.get(shellId).runCommand(command);
   },
+  async evaluate({shellId, code}) {
+    return shells.get(shellId).evaluate(code);
+  },
   async resize({cols, rows, shellId}) {
     shells.get(shellId).shell.resize(cols, rows);
   },

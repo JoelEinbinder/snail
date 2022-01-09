@@ -11,6 +11,9 @@ class Shell extends EventEmitter {
     super();
     this.inCommand = false;
     this.ignoreText = '';
+    this.evaluating = false;
+    this.evaluateResult = '';
+    this.commandQueue = Promise.resolve();
     this.shell = pty.spawn('bash', [path.join(__dirname, 'proxy.sh'), magicToken], {
       rows: 80,
       cols: 24,
@@ -37,18 +40,45 @@ class Shell extends EventEmitter {
         magicCallback();
         magicCallback = null;
       }
-      this.emit('data', data);
+      if (this.evaluating)
+        this.evaluateResult += data;
+      else
+        this.emit('data', data);
     });
     this.shell.onExit(event => this.emit('close', event.exitCode, event.signal));
   }
+
+  /**
+   * @param {string} command
+   */
   async runCommand(command) {
-    if (this.inCommand) {
-      console.error('already in command!');
-      return;
-    }
+    return this.commandQueue = this.commandQueue.then(() => this._innerRunCommand(command));
+  }
+
+  /**
+   * @param {string} command
+   */
+  async _innerRunCommand(command) {
     this.ignoreText = command + '\r\n';
     this.shell.write(command + '\n');
     await new Promise(x => magicCallback = x);
+  }
+
+  /**
+   * @param {string} code
+   * @return {Promise<string>}
+   */
+  async evaluate(code) {
+    let result;
+    this.commandQueue = this.commandQueue.then(async () => {
+      this.evaluating = true;
+      await this._innerRunCommand(code);
+      this.evaluating = false;
+      result = this.evaluateResult;
+      this.evaluateResult = '';
+    });
+    await this.commandQueue;
+    return result;
   }
 
   sendRawInput(input) {

@@ -75,6 +75,18 @@ export class Shell {
       this._update();
     }
   }
+
+  async evaluate(code: string): Promise<string> {
+    const result = await window.electronAPI.sendMessage({
+      method: 'evaluate',
+      params: {
+        shellId: this._shellId,
+        code,
+      },
+    });
+    return result;
+  }
+
   _update() {
     this.updated.dispatch(this.updated.current + 1);
   }
