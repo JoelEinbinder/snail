@@ -34,6 +34,7 @@ export class Shell {
   log: Entry[] = [];
   updated = new JoelEvent(0);
   public fullscreenEntry: JoelEvent<Entry> = new JoelEvent<Entry>(null);
+  public activeEntry = new JoelEvent<Entry>(null);
   private constructor(private _shellId: number) { }
   static async create(): Promise<Shell> {
     const shellId = await window.electronAPI.sendMessage({
@@ -51,6 +52,8 @@ export class Shell {
       this.fullscreenEntry.dispatch(value ? entry : null);
     }
     entry.fullscreenEvent.on(onFullScreen);
+    entry.activeEvent.dispatch(true);
+    this.activeEntry.dispatch(entry);
     this.updated.dispatch(this.updated.current + 1);
     await window.electronAPI.sendMessage({
       method: 'runCommand',
@@ -61,6 +64,8 @@ export class Shell {
     });
     entry.fullscreenEvent.off(onFullScreen);
     this.fullscreenEntry.dispatch(null);
+    this.activeEntry.dispatch(null);
+    entry.activeEvent.dispatch(false);
     await entry.close();
   }
   async updateSize() {
@@ -84,6 +89,7 @@ export class Entry {
   private _lastWritePromise = Promise.resolve();
   private _listeners: IDisposable[] = [];
   public fullscreenEvent: JoelEvent<boolean> = new JoelEvent<boolean>(false);
+  public activeEvent: JoelEvent<boolean> = new JoelEvent<boolean>(false);
   constructor(
     public command: string,
     private _shellId: number,
@@ -154,6 +160,9 @@ export class Entry {
   }
   updateSize() {
     this._terminal.resize(size.cols, size.rows);
+  }
+  focus() {
+    this._terminal.focus();
   }
 }
 

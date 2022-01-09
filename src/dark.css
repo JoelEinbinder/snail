@@ -41,3 +41,6 @@ input {
   margin: 0;
   width: 100%;
 }
+body.fullscreen-entry {
+  overflow: hidden;
+}
