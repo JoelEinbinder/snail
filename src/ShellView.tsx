@@ -4,11 +4,12 @@ import type { Shell, Entry } from './Shell';
 
 export function ShellView({shell}: {shell: Shell}) {
   const fullScreenEntry = useEvent(shell.fullscreenEntry);
+  const activeEntry = useEvent(shell.activeEntry);
   if (fullScreenEntry)
     return <EntryView entry={fullScreenEntry}/>;
   return <>
     <Log shell={shell} />
-    <Prompt shell={shell}/>
+    {activeEntry ? null : <Prompt shell={shell}/>}
   </>
 }
 
@@ -38,9 +39,9 @@ function EntryView({entry}: {entry: Entry}) {
   }, [entry, isActive]);
 
   if (isFullscreen)
-    return <div><div ref={ref} /></div>;
-  return <div>
-    <div>$ {entry.command}</div>
+    return <div className='entry'><div ref={ref} /></div>;
+  return <div className='entry'>
+    <div className='command'>$ {entry.command}</div>
     <div ref={ref}></div>
   </div>
 }
@@ -52,12 +53,15 @@ function Prompt({shell}: {shell: Shell}) {
     if (input.current && !activeEntry)
       input.current.focus();
   }, [activeEntry, input]);
-  return <input ref={input} onKeyDown={event => {
+  return <div className='prompt'>
+    <div className="prefix">$ </div>
+    <input ref={input} onKeyDown={event => {
     if (event.key !== 'Enter')
       return;
     const self = event.target as HTMLInputElement;
     const command = self.value;
     self.value = '';
     shell.runCommand(command);
-  }} />;
+    }} />
+  </div>;
 }
