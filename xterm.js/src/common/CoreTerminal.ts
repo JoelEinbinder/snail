@@ -68,6 +68,7 @@ export abstract class CoreTerminal extends Disposable implements ICoreTerminal {
   private _onResize = new EventEmitter<{ cols: number, rows: number }>();
   public get onResize(): IEvent<{ cols: number, rows: number }> { return this._onResize.event; }
   protected _onScroll = new EventEmitter<IScrollEvent, void>();
+  public get onClear(): IEvent<void> { return this._inputHandler.onClear; }
   /**
    * Internally we track the source of the scroll but this is meaningless outside the library so
    * it's filtered out.

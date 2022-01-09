@@ -243,6 +243,8 @@ export class InputHandler extends Disposable implements IInputHandler {
   public get onRequestBell(): IEvent<void> { return this._onRequestBell.event; }
   private _onRequestRefreshRows = new EventEmitter<number, number>();
   public get onRequestRefreshRows(): IEvent<number, number> { return this._onRequestRefreshRows.event; }
+  private _onClear = new EventEmitter<void>();
+  public get onClear(): IEvent<void> { return this._onClear.event; }
   private _onRequestReset = new EventEmitter<void>();
   public get onRequestReset(): IEvent<void> { return this._onRequestReset.event; }
   private _onRequestSendFocus = new EventEmitter<void>();
@@ -1321,6 +1323,7 @@ export class InputHandler extends Disposable implements IInputHandler {
         this._bufferService.buffer.htmls.length = 0;
 
         this._dirtyRowService.markDirty(0);
+        this._onClear.fire();
         break;
       case 3:
         // Clear scrollback (everything not in viewport)
@@ -2245,6 +2248,7 @@ export class InputHandler extends Disposable implements IInputHandler {
         case 47: // normal screen buffer
         case 1047: // normal screen buffer - clearing it first
           // Ensure the selection manager has the correct buffer
+          console.log('_onClear');
           this._bufferService.buffers.activateNormalBuffer();
           if (params.params[i] === 1049) {
             this.restoreCursor();
@@ -2252,6 +2256,7 @@ export class InputHandler extends Disposable implements IInputHandler {
           this._coreService.isCursorInitialized = true;
           this._onRequestRefreshRows.fire(0, this._bufferService.rows - 1);
           this._onRequestSyncScrollBar.fire();
+          this._onClear.fire();
           break;
         case 2004: // bracketed paste mode (https://cirw.in/blog/bracketed-paste)
           this._coreService.decPrivateModes.bracketedPasteMode = false;

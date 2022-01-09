@@ -47,14 +47,21 @@ export class Shell {
   }
   async runCommand(command: string) {
     const entry = new Entry(command, this._shellId);
+    let didClear = false;
     this.log.push(entry);
     const onFullScreen = (value: boolean) => {
       this.fullscreenEntry.dispatch(value ? entry : null);
     }
+    const onClear = () => {
+      this.log = [entry];
+      didClear = true;
+      this._update();
+    }
     entry.fullscreenEvent.on(onFullScreen);
+    entry.clearEvent.on(onClear);
     entry.activeEvent.dispatch(true);
     this.activeEntry.dispatch(entry);
-    this.updated.dispatch(this.updated.current + 1);
+    this._update();
     await window.electronAPI.sendMessage({
       method: 'runCommand',
       params: {
@@ -67,6 +74,14 @@ export class Shell {
     this.activeEntry.dispatch(null);
     entry.activeEvent.dispatch(false);
     await entry.close();
+    entry.clearEvent.off(onClear);
+    if (didClear && entry.empty) {
+      this.log = [];
+      this._update();
+    }
+  }
+  _update() {
+    this.updated.dispatch(this.updated.current + 1);
   }
   async updateSize() {
     for (const log of this.log) {
@@ -82,6 +97,7 @@ export class Shell {
     });
   }
 }
+let lastEntryId = 0;
 export class Entry {
   element: HTMLElement;
   private _terminal: Terminal;
@@ -90,10 +106,14 @@ export class Entry {
   private _listeners: IDisposable[] = [];
   public fullscreenEvent: JoelEvent<boolean> = new JoelEvent<boolean>(false);
   public activeEvent: JoelEvent<boolean> = new JoelEvent<boolean>(false);
+  public clearEvent: JoelEvent<void> = new JoelEvent(undefined);
+  public id: number;
+  public empty = false;
   constructor(
     public command: string,
     private _shellId: number,
   ) {
+    this.id = ++lastEntryId;
     this.element = document.createElement('div');
     this._terminal = new Terminal({
       fontFamily: 'monaco',
@@ -139,6 +159,10 @@ export class Entry {
     this._listeners.push(this._terminal.buffer.onBufferChange(() => {
       this.fullscreenEvent.dispatch(this._terminal.buffer.active === this._terminal.buffer.alternate);
     }));
+    this._listeners.push(this._terminal.onClear(() => {
+      this.clearEvent.dispatch();
+    }));
+
   }
 
   addData(data: string|Uint8Array) {
@@ -147,9 +171,9 @@ export class Entry {
     this._lastWritePromise = new Promise(x => this._terminal.write(data, x));
   }
   async close() {
+    await this._lastWritePromise;
     for (const listeners of this._listeners)
       listeners.dispose();
-    await this._lastWritePromise;
     if (this._trailingNewline) {
       this._terminal.deleteLastLine();
       
@@ -158,6 +182,7 @@ export class Entry {
         this._terminal.buffer.active.length === 1 &&
         this._terminal.buffer.active.getLine(0).translateToString(true) === '') {
         this.element.style.display = 'none';
+        this.empty = true;
       }
       // TODO write some extra '%' character to show there was no trailing newline?
     }

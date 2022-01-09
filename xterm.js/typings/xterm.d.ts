@@ -766,6 +766,8 @@ declare module 'xterm' {
      */
     onTitleChange: IEvent<string>;
 
+    onClear: IEvent<void>;
+
     /**
      * Unfocus the terminal.
      */

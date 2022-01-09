@@ -4,7 +4,6 @@ import type { Shell, Entry } from './Shell';
 
 export function ShellView({shell}: {shell: Shell}) {
   const fullScreenEntry = useEvent(shell.fullscreenEntry);
-  const activeEntry = useEvent(shell.activeEntry);
   if (fullScreenEntry)
     return <EntryView entry={fullScreenEntry}/>;
   return <>
@@ -15,7 +14,7 @@ export function ShellView({shell}: {shell: Shell}) {
 
 function Log({shell}: {shell: Shell}) {
   useEvent(shell.updated);
-  return <div>{shell.log.map((e, i) => <EntryView key={i} entry={e} />)}</div>;
+  return <div>{shell.log.map(e => <EntryView key={e.id} entry={e} />)}</div>;
 }
 
 function EntryView({entry}: {entry: Entry}) {
