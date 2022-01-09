@@ -2,14 +2,9 @@ import {Terminal, IDisposable} from 'xterm';
 import 'xterm/css/xterm.css';
 import { JoelEvent } from './JoelEvent';
 
-window.electronAPI.onEvent(event => {
-  const {method, params} = event;
-  switch (method) {
-    case 'data':
-      const shell = shells.get(params.shellId);
-      shell.log[shell.log.length - 1].addData(params.data);
-      break;
-  }
+window.electronAPI.onEvent('data', ({shellId, data}) => {
+  const shell = shells.get(shellId);
+  shell.log[shell.log.length - 1].addData(data);
 });
 
 const shells = new Map<number, Shell>();

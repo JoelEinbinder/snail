@@ -1,6 +1,6 @@
 export interface IElectronAPI {
   sendMessage: (message: {method: string, params?: any}) => Promise<any>;
-  onEvent: (listener: (event: any) => void) => void;
+  onEvent: (eventName: string, listener: (event: any) => void) => void;
 }
 
 declare global {

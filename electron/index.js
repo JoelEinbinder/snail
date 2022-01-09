@@ -133,7 +133,7 @@ const handler = {
     const shell = new (require('../shell/shell').Shell)();
     shells.set(shellId, shell);
     shell.on('data', data => {
-      sender.send('event', {method: 'data', params: {shellId, data}});
+      sender.send('message', {method: 'data', params: {shellId, data}});
     });
     sender.on('destroyed', () => {
       shell.close();
@@ -143,9 +143,10 @@ const handler = {
   },
 }
 
-ipcMain.handle('message', (event, ...args) => {
-  const {method, params} = args[0];
+ipcMain.handle('message', async (event, ...args) => {
+  const {method, params, id} = args[0];
   if (!handler.hasOwnProperty(method))
     throw new Error('command not found');
-  return handler[method](params, event.sender);
+  const result = await handler[method](params, event.sender);
+  event.sender.send('message', {result, id});
 });
