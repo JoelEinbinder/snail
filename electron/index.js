@@ -40,6 +40,12 @@ menu.append(new MenuItem({
   role: 'viewMenu',
   submenu: [{
     role: 'toggleTabBar'
+  }, {
+    role: 'zoomIn'
+  }, {
+    role: 'zoomOut'
+  }, {
+    role: 'resetZoom'
   }]
 }));
 
@@ -115,6 +121,9 @@ const shells = new Map();
 const handler = {
   async runCommand({shellId, command}) {
     await shells.get(shellId).runCommand(command);
+  },
+  async resize({cols, rows, shellId}) {
+    shells.get(shellId).shell.resize(cols, rows);
   },
   async createShell(_, sender) {
     const shellId = ++lastShellId;

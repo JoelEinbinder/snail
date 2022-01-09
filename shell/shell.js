@@ -12,8 +12,8 @@ class Shell extends EventEmitter {
     this.inCommand = false;
     this.ignoreText = '';
     this.shell = pty.spawn('bash', [path.join(__dirname, 'proxy.sh'), magicToken], {
-      rows: process.stdout.rows,
-      cols: process.stdout.columns,
+      rows: 80,
+      cols: 24,
       cwd: process.cwd(),
       name: 'xterm-256color',
       handleFlowControl: true,

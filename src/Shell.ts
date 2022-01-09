@@ -1,5 +1,4 @@
 import {Terminal} from 'xterm';
-import { WebglAddon } from '../xterm.js/addons/xterm-addon-webgl/';
 import 'xterm/css/xterm.css';
 import { JoelEvent } from './JoelEvent';
 
@@ -12,7 +11,23 @@ window.electronAPI.onEvent(event => {
       break;
   }
 });
+
 const shells = new Map<number, Shell>();
+
+const size = {
+  rows: 0,
+  cols: 0,
+}
+function updateSize() {
+  const {width, height} = measureChar();
+  size.cols = Math.floor(window.innerWidth / width);
+  size.rows = Math.floor(window.innerHeight / height);
+  for (const shell of shells.values())
+    shell.updateSize();
+}
+window.addEventListener('resize', updateSize);
+updateSize();
+
 export class Shell {
   log: Entry[] = [];
   updated = new JoelEvent(0);
@@ -23,6 +38,7 @@ export class Shell {
     });
     const shell = new Shell(shellId);
     shells.set(shellId, shell);
+    await shell.updateSize();
     return shell;
   }
   async runCommand(command: string) {
@@ -38,6 +54,19 @@ export class Shell {
     });
     await entry.close();
   }
+  async updateSize() {
+    for (const log of this.log) {
+      log.updateSize();
+    }
+    await window.electronAPI.sendMessage({
+      method: 'resize',
+      params: {
+        cols: size.cols,
+        rows: size.rows,
+        shellId: this._shellId,
+      },
+    });
+  }
 }
 export class Entry {
   element: HTMLElement;
@@ -48,10 +77,10 @@ export class Entry {
     public command: string,
   ) {
     this.element = document.createElement('div');
-    let rows = 0;
     this._terminal = new Terminal({
-      rows: 0,
       fontFamily: 'monaco',
+      cols: size.cols,
+      rows: size.rows,
       fontSize: 10,
       delegatesScrolling: true,
       theme: {
@@ -96,4 +125,22 @@ export class Entry {
     this._terminal.blur();
     this._terminal.disable();
   }
+  updateSize() {
+    this._terminal.resize(size.cols, size.rows);
+  }
+}
+
+function measureChar() {
+  const div = document.createElement('div');
+  div.style.font = '10px monaco';
+  div.style.position = 'absolute';
+  div.style.top = '-1000px';
+  div.style.left = '-1000px';
+  div.style.lineHeight = 'normal';
+  div.style.visibility = 'hidden';
+  div.textContent = 'W'.repeat(10);
+  document.body.appendChild(div);
+  const {width, height} = div.getBoundingClientRect();
+  div.remove();
+  return {width: width/10, height: height};
 }

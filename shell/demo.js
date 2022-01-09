@@ -32,6 +32,7 @@ function closeRL() {
 }
 
 const shell = new Shell();
+shell.shell.resize(process.stdout.columns, process.stdout.rows);
 shell.on('data', data => {
   process.stdout.write(data);
 });
