@@ -1,4 +1,4 @@
-import {Terminal} from 'xterm';
+import {Terminal, IDisposable} from 'xterm';
 import 'xterm/css/xterm.css';
 import { JoelEvent } from './JoelEvent';
 
@@ -42,7 +42,7 @@ export class Shell {
     return shell;
   }
   async runCommand(command: string) {
-    const entry = new Entry(command);
+    const entry = new Entry(command, this._shellId);
     this.log.push(entry);
     this.updated.dispatch(this.updated.current + 1);
     await window.electronAPI.sendMessage({
@@ -73,8 +73,10 @@ export class Entry {
   private _terminal: Terminal;
   private _trailingNewline = false;
   private _lastWritePromise = Promise.resolve();
+  private _listeners: IDisposable[] = [];
   constructor(
     public command: string,
+    private _shellId: number,
   ) {
     this.element = document.createElement('div');
     this._terminal = new Terminal({
@@ -108,6 +110,16 @@ export class Entry {
       rendererType: 'canvas',
     });
     this._terminal.open(this.element);
+    
+    this._listeners.push(this._terminal.onData(data => {
+      window.electronAPI.sendMessage({
+        method: 'sendRawInput',
+        params: {
+          shellId: this._shellId,
+          input: data,
+        },
+      });
+    }));
   }
 
   addData(data: string|Uint8Array) {
@@ -116,6 +128,8 @@ export class Entry {
     this._lastWritePromise = new Promise(x => this._terminal.write(data, x));
   }
   async close() {
+    for (const listeners of this._listeners)
+      listeners.dispose();
     await this._lastWritePromise;
     if (this._trailingNewline)
       this._terminal.deleteLastLine();

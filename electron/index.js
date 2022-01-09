@@ -125,6 +125,9 @@ const handler = {
   async resize({cols, rows, shellId}) {
     shells.get(shellId).shell.resize(cols, rows);
   },
+  async sendRawInput({shellId, input}) {
+    shells.get(shellId).sendRawInput(input);
+  },
   async createShell(_, sender) {
     const shellId = ++lastShellId;
     const shell = new (require('../shell/shell').Shell)();
