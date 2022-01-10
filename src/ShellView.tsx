@@ -77,8 +77,17 @@ function Prompt({shell}: {shell: Shell}) {
 function CommandPrefix({shellOrEntry}: {shellOrEntry: Shell|Entry}) {
   const pwd = usePromise(shellOrEntry.cachedEvaluation('pwd'));
   const home = usePromise(shellOrEntry.cachedEvaluation('echo $HOME'));
+  const revName = usePromise(shellOrEntry.cachedEvaluation('__git_ref_name'))
+  const dirtyState = usePromise(shellOrEntry.cachedEvaluation('__is_git_dirty'))
   if (pwd === null || home === null)
     return <></>;
+  if (revName === null || dirtyState === null)
+    return <></>;
   const prettyName = pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
-  return  <div className="prefix"><span style={{color: 'var(--ansi-32)'}}>{prettyName}</span> <span style={{color: 'var(--ansi-105)'}}>»</span> </div>;
+  const GitStatus = <><Ansi color={75}>(<Ansi color={78}>{revName}</Ansi><Ansi color={214}>{dirtyState ? '*' : ''}</Ansi>)</Ansi></>;
+  return  <div className="prefix"><Ansi color={32}>{prettyName}</Ansi>{GitStatus} <Ansi color={105}>»</Ansi> </div>;
+}
+
+function Ansi({children, color}) {
+  return <span style={{color: 'var(--ansi-' + color + ')'}}>{children}</span>;
 }
