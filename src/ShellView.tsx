@@ -2,6 +2,8 @@ import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { useEvent, usePromise } from './hooks';
 import type { Shell, Entry } from './Shell';
 import './shell.css';
+import { Editor } from '../editor/'
+import '../editor/modes/shell'
 
 export function ShellView({shell}: {shell: Shell}) {
   const fullScreenEntry = useEvent(shell.fullscreenEntry);
@@ -53,20 +55,43 @@ function EntryView({entry}: {entry: Entry}) {
 }
 
 function Prompt({shell}: {shell: Shell}) {
-  const input = useRef<HTMLInputElement>(null);
+  const editorWrapper = useRef<HTMLDivElement>(null);
   const activeEntry = useEvent(shell.activeEntry);
+  const editorRef = useRef<Editor>(null);
   useLayoutEffect(() => {
-    if (input.current && !activeEntry)
-      input.current.focus();
-  }, [activeEntry, input]);
+    if (!editorWrapper.current)
+      return;
+    if (!editorRef.current) {
+      editorRef.current = new Editor('', {
+        inline: true,
+        lineNumbers: false,
+        language: 'sh',
+        padding: 0,
+        colors: {
+          cursorColor: '#fff',
+          foreground: '#fff',
+          selectionBackground: '#fff',
+        }
+      });
+    }
+    editorWrapper.current.appendChild(editorRef.current.element);
+    editorRef.current.layout();
+    if (!activeEntry) {
+      editorRef.current.focus();
+    }
+    return () => {
+      editorRef.current.element.remove();
+      editorRef.current = null;
+    }
+  }, [editorWrapper, editorRef, activeEntry])
+
   return <div className='prompt'>
     <CommandPrefix shellOrEntry={shell} />
-    <input ref={input} onKeyDown={event => {
+    <div ref={editorWrapper} style={{position: 'relative', flex: 1}} onKeyDown={event => {
     if (event.key !== 'Enter')
       return;
-    const self = event.target as HTMLInputElement;
-    const command = self.value;
-    self.value = '';
+    const command = editorRef.current.value;
+    editorRef.current.value = '';
     shell.runCommand(command);
     event.stopPropagation();
     event.preventDefault();

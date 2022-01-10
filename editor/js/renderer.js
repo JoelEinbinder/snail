@@ -21,7 +21,7 @@ export class Renderer extends Emitter {
 
     /** @type {WeakMap<import("./highlighter").Token, string>} */
     this._rasterizedTokens = new WeakMap();
-    this._padding = 4;
+    this._padding = typeof this._options.padding === 'number' ? this._options.padding : 4;
     this._scrollTop = 0;
     this._scrollLeft = 0;
     this._refreshScheduled = false;
@@ -118,6 +118,11 @@ export class Renderer extends Emitter {
     this._lastScrollOffset = {
       top: 0,
       left: 0
+    };
+    this.colors = this._options.colors || {
+      foreground: '#222',
+      selectionBackground: 'rgba(0,128,255,0.1)',
+      cursorColor: 'rgba(0,0,0,0.8)',
     };
   }
 
@@ -371,9 +376,9 @@ export class Renderer extends Emitter {
               ctx.fillStyle = token.background;
               ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
             }
-            ctx.fillStyle = token.color || '#222';
+            ctx.fillStyle = token.color || this.colors.foreground;
             count += chunk.length;
-            ctx.fillText(chunk, rect.x, rect.y + this._charHeight + 1);
+            ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
           }
           rect.x += rect.width;
           lastX += rect.width;
@@ -411,7 +416,7 @@ export class Renderer extends Emitter {
     }
     if (word.match(/^\s+$/)) word = '';
     var lineNumbersWidth = this._lineNumbersWidth();
-    ctx.fillStyle = 'rgba(0,128,255,0.1)';
+    ctx.fillStyle = this.colors.selectionBackground;
     if (word) {
       var viewport = this.viewport();
       for (var i = viewport.from; i <= viewport.to; i++) {
@@ -436,7 +441,7 @@ export class Renderer extends Emitter {
       }
     }
 
-    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillStyle = this.colors.cursorColor;
     if (!this._options.readOnly && this._hasFocus) {
       for (var selection of this._model.selections) {
         if (!isSelectionCollapsed(selection)) continue;

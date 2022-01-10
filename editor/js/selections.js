@@ -244,7 +244,7 @@ export class SelectionManger extends Emitter {
         }
       ]);
     } else if (this._increment === 3) {
-      if (end.line === this._model.lineCount()) {
+      if (end.line === this._model.lineCount() - 1) {
         this._model.setSelections([
           {
             start: {

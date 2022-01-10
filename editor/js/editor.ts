@@ -94,7 +94,13 @@ export type EditorOptions = {
   readOnly?: boolean;
   highlightWordOccurrences?: boolean;
   backgroundColor?: string;
+  padding?: number;
   underlay?: (lineNumber: number, text: string) => Array<import('./highlighter').Token>;
+  colors?: {
+    foreground: string;
+    selectionBackground: string;
+    cursorColor: string;
+  }
 }
 
 export type { TextRange } from './model';
