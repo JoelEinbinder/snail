@@ -29,10 +29,15 @@ body.fullscreen-entry {
   display: flex;
 }
 
-.entry:not(.active)::after {
+.entry:not(.fullscreen)::after {
+  /* always have this so that things don't bounce as much for stick to bottom */
   border-bottom: 1px solid var(--ansi-237);
   height: 4px;
   margin-bottom: 3px;
   display: block;
   content: '';
+}
+
+.entry:not(.fullscreen).active::after {
+  border-bottom: none;
 }
