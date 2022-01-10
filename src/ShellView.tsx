@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { useEvent } from './hooks';
+import { useEvent, usePromise } from './hooks';
 import type { Shell, Entry } from './Shell';
+import './shell.css';
 
 export function ShellView({shell}: {shell: Shell}) {
   const fullScreenEntry = useEvent(shell.fullscreenEntry);
@@ -8,8 +9,8 @@ export function ShellView({shell}: {shell: Shell}) {
   if (fullScreenEntry)
     return <EntryView entry={fullScreenEntry}/>;
   return <>
-    <Log shell={shell} />
-    {activeEntry ? null : <Prompt shell={shell}/>}
+      <Log shell={shell} />
+      {activeEntry ? null : <Prompt shell={shell}/>}
   </>
 }
 
@@ -25,7 +26,10 @@ function EntryView({entry}: {entry: Entry}) {
   useLayoutEffect(() => {
     if (!ref.current || !ref.current.parentNode)
       return;
-    ref.current.replaceWith(entry.element);
+    ref.current.appendChild(entry.element);
+    return () => {
+      entry.element.remove();
+    }
   });
   useLayoutEffect(() => {
     if (!isFullscreen)
@@ -37,24 +41,26 @@ function EntryView({entry}: {entry: Entry}) {
     if (isActive)
       entry.focus();
   }, [entry, isActive]);
-
-  if (isFullscreen)
-    return <div className='entry'><div ref={ref} /></div>;
-  return <div className='entry'>
-    <div className='command'>$ {entry.command}</div>
-    <div ref={ref}></div>
+  if (isFullscreen && isActive)
+    return <div className='entry active fullscreen'><div ref={ref} /></div>;
+  return <div className={'entry' + (isActive ? ' active' : '')}>
+    <div className='command'>
+      <CommandPrefix shellOrEntry={entry} />
+      <div className="user-text">{entry.command}</div>
+    </div>
+    <div ref={ref} className="placeholder"></div>
   </div>
 }
 
 function Prompt({shell}: {shell: Shell}) {
   const input = useRef<HTMLInputElement>(null);
   const activeEntry = useEvent(shell.activeEntry);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (input.current && !activeEntry)
       input.current.focus();
   }, [activeEntry, input]);
   return <div className='prompt'>
-    <div className="prefix">$ </div>
+    <CommandPrefix shellOrEntry={shell} />
     <input ref={input} onKeyDown={event => {
     if (event.key !== 'Enter')
       return;
@@ -62,6 +68,17 @@ function Prompt({shell}: {shell: Shell}) {
     const command = self.value;
     self.value = '';
     shell.runCommand(command);
+    event.stopPropagation();
+    event.preventDefault();
     }} />
   </div>;
+}
+
+function CommandPrefix({shellOrEntry}: {shellOrEntry: Shell|Entry}) {
+  const pwd = usePromise(shellOrEntry.cachedEvaluation('pwd'));
+  const home = usePromise(shellOrEntry.cachedEvaluation('echo $HOME'));
+  if (pwd === null || home === null)
+    return <></>;
+  const prettyName = pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
+  return  <div className="prefix"><span style={{color: 'var(--ansi-32)'}}>{prettyName}</span> <span style={{color: 'var(--ansi-105)'}}>»</span> </div>;
 }

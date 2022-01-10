@@ -30,6 +30,7 @@ export class Shell {
   updated = new JoelEvent(0);
   public fullscreenEntry: JoelEvent<Entry> = new JoelEvent<Entry>(null);
   public activeEntry = new JoelEvent<Entry>(null);
+  private _cachedEvaluationResult = new Map<string, Promise<string>>();
   private constructor(private _shellId: number) { }
   static async create(): Promise<Shell> {
     const shellId = await window.electronAPI.sendMessage({
@@ -52,6 +53,7 @@ export class Shell {
       didClear = true;
       this._update();
     }
+    entry.cachedEvaluationResult = this._cachedEvaluationResult;
     entry.fullscreenEvent.on(onFullScreen);
     entry.clearEvent.on(onClear);
     entry.activeEvent.dispatch(true);
@@ -66,6 +68,7 @@ export class Shell {
     });
     entry.fullscreenEvent.off(onFullScreen);
     this.fullscreenEntry.dispatch(null);
+    this._cachedEvaluationResult = new Map();
     this.activeEntry.dispatch(null);
     entry.activeEvent.dispatch(false);
     await entry.close();
@@ -84,7 +87,7 @@ export class Shell {
         code,
       },
     });
-    return result;
+    return result.trim();
   }
 
   _update() {
@@ -103,6 +106,12 @@ export class Shell {
       },
     });
   }
+
+  async cachedEvaluation(code: string): Promise<string> {
+    if (!this._cachedEvaluationResult.has(code))
+      this._cachedEvaluationResult.set(code, this.evaluate(code));;
+    return this._cachedEvaluationResult.get(code);
+  }
 }
 let lastEntryId = 0;
 export class Entry {
@@ -116,6 +125,7 @@ export class Entry {
   public clearEvent: JoelEvent<void> = new JoelEvent(undefined);
   public id: number;
   public empty = false;
+  public cachedEvaluationResult = new Map<string, Promise<string>>();
   constructor(
     public command: string,
     private _shellId: number,
@@ -201,6 +211,13 @@ export class Entry {
   }
   focus() {
     this._terminal.focus();
+  }
+  cachedEvaluation(code: string): Promise<string> {
+    if (!this.cachedEvaluationResult)
+      return Promise.resolve(null);
+    if (!this.cachedEvaluationResult.has(code))
+      return Promise.resolve(null);
+    return this.cachedEvaluationResult.get(code);
   }
 }
 

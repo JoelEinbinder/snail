@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { JoelEvent } from './JoelEvent';
 
 export function useEvent<T>(event: JoelEvent<T>): T;
@@ -19,3 +19,14 @@ export function useEvent<T>(event?: JoelEvent<T>) {
   }, [event]);
   return state;
 }
+
+export function usePromise<T>(promise: Promise<T>) {
+  const [state, setState] = useState<T|null>(null);
+  useLayoutEffect(() => {
+    promise.then(t => {
+      setState(t);
+    });
+  }, [promise]);
+  return state;
+}
+
