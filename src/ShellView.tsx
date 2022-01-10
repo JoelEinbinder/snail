@@ -4,6 +4,7 @@ import type { Shell, Entry } from './Shell';
 import './shell.css';
 import { Editor } from '../editor/'
 import '../editor/modes/shell'
+import { Autocomplete } from './autocomplete';
 
 export function ShellView({shell}: {shell: Shell}) {
   const fullScreenEntry = useEvent(shell.fullscreenEntry);
@@ -73,6 +74,17 @@ function Prompt({shell}: {shell: Shell}) {
           selectionBackground: '#fff',
         }
       });
+      new Autocomplete(editorRef.current, async (line, abortSignal) => {
+        if (line.includes(' '))
+          return {anchor: 0, prefix: '', suggestions: []};
+          const suggestions = (await shell.cachedEvaluation('compgen -c')).split('\n').filter(x => /^[A-Za-z]/.test(x));
+
+        return {
+          anchor: 0,
+          prefix: line,
+          suggestions: [...new Set(suggestions)]
+        }
+      });
     }
     editorWrapper.current.appendChild(editorRef.current.element);
     editorRef.current.layout();
@@ -83,7 +95,7 @@ function Prompt({shell}: {shell: Shell}) {
       editorRef.current.element.remove();
       editorRef.current = null;
     }
-  }, [editorWrapper, editorRef, activeEntry])
+  }, [editorWrapper, editorRef, activeEntry, shell])
 
   return <div className='prompt'>
     <CommandPrefix shellOrEntry={shell} />
@@ -109,7 +121,7 @@ function CommandPrefix({shellOrEntry}: {shellOrEntry: Shell|Entry}) {
   if (revName === null || dirtyState === null)
     return <></>;
   const prettyName = pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
-  const GitStatus = <><Ansi color={75}>(<Ansi color={78}>{revName}</Ansi><Ansi color={214}>{dirtyState ? '*' : ''}</Ansi>)</Ansi></>;
+  const GitStatus = revName ? <><Ansi color={75}>(<Ansi color={78}>{revName}</Ansi><Ansi color={214}>{dirtyState ? '*' : ''}</Ansi>)</Ansi></> : null;
   return  <div className="prefix"><Ansi color={32}>{prettyName}</Ansi>{GitStatus} <Ansi color={105}>»</Ansi> </div>;
 }
 

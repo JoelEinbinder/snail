@@ -98,16 +98,16 @@ export class Autocomplete {
         this._anchor = anchor;
         this._suggestBox.setSuggestions(prefix, filtered);
         const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
-        
-        const top = point.y;
-        const bottom = point.y + this._editor.lineHeight() * .75;
+        const rect = this._editor.element.getBoundingClientRect();
+        const top = point.y + rect.top;
+        const bottom = top + this._editor.lineHeight() * .75;
         const availableRect = {
             top: 0,
             left: 0,
             right: window.innerWidth,
             bottom: window.innerHeight
         };
-        this._suggestBox.fit(point.x, top, bottom, availableRect);
+        this._suggestBox.fit(point.x + rect.left, top, bottom, availableRect);
 
     }
 }
