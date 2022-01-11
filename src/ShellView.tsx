@@ -7,6 +7,7 @@ import '../editor/modes/shell'
 import { Autocomplete } from './autocomplete';
 import { makeShellCompleter } from './shellCompleter';
 import './completions/git';
+import './completions/npx';
 
 export function ShellView({shell}: {shell: Shell}) {
   const fullScreenEntry = useEvent(shell.fullscreenEntry);

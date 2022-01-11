@@ -47,6 +47,21 @@ function __is_git_dirty() {
   fi
 }
 
+__npx_completions() {
+  local dir=$(pwd -P)
+  while [[ -n "$dir" ]]; do
+    if [[ ! -d $dir/node_modules/.bin ]]; then
+      dir=${dir%/*}
+      continue
+    fi
+    local execs=( `cd $dir/node_modules/.bin; find -L . -type f -perm +111` )
+    execs=( ${execs[@]/#.\//} )
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    compgen -W "${execs[*]}" -- "$cur"
+    break
+  done
+}
+
 while IFS= read -u 1 -r line
 do
     eval "$line"
