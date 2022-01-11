@@ -8,7 +8,7 @@ export class SuggestBox {
     private _prefix: string = '';
     constructor(window: Window, private _onPick: (suggestion: string) => void) {
         this.element = window.document.createElement('div');
-        this.element.style.position = 'absolute';
+        this.element.style.position = 'fixed';
         this.element.style.top = '0';
         this.element.style.left = '0';
     }
@@ -39,6 +39,11 @@ export class SuggestBox {
                 this._moveSelection(1);
                 return true;
             case 'Enter':
+                const suggestion = this._selectedSuggestion || this._suggestions[0];
+                const prefix = this._prefix;
+                this._onPick(suggestion);
+                return prefix !== suggestion;
+            case 'Tab':
                 this._onPick(this._selectedSuggestion || this._suggestions[0]);
                 return true;
         }

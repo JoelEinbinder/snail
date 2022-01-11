@@ -1,25 +1,30 @@
 .suggestions {
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
     border-radius: 3px;
     border-radius: 3px;
-    box-shadow: 0 1px 2px;
+    border: 1px solid var(--ansi-237);
     padding: 0;
     margin: 0;
     list-style: none;
     font-size: 14px;
     font-family: sans-serif;
-    color: #333;
+    color: var(--text-color);
     overflow-y: scroll;
     overflow-x: hidden;
     max-height: 120px;
-    max-width: 120px;
+    width: 160px;
     text-overflow: ellipsis;
 }
 .suggestion {
-    font-family: Menlo, Monaco, "Courier New", monospace;
+    padding: 0 2px;
+    font-family: monaco;
+    font-size: 10px;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
 }
 .suggestion.selected {
-    background: rgb(0, 122, 255);
-    color: #fff;
+    background: var(--ansi-0);
 }

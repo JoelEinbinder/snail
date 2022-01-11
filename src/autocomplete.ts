@@ -10,7 +10,7 @@ export class Autocomplete {
         this._editor.on('selectionChanged', event => {
             this._abortController?.abort();
             delete this._abortController;
-            if (this._editor.selections.length !== 1 || this._editor.somethingSelected())
+            if (this._editor.selections.length !== 1 || this._editor.somethingSelected() || this._editor.selections[0].start.column === 0)
                 this.hideSuggestBox();
             else
                 this.updateSuggestBox();
@@ -38,7 +38,7 @@ export class Autocomplete {
                 } else if (event.code === 'Tab') {
                     if (selections[0].start.column === 0)
                         return;
-                    this.showSuggestBox();
+                    this.showSuggestBox(true);
                 } else if (activationChars.includes(event.key) && !event.ctrlKey && !event.altKey && !event.metaKey) {
                     this.showSuggestBox();
                     return;
@@ -78,7 +78,7 @@ export class Autocomplete {
         delete this._abortController;
     }
 
-    async showSuggestBox() {
+    async showSuggestBox(autoaccept = false) {
         this._wantsSuggestBoxShown = true;
         const location = this._editor.selections[0].start;
         if (this._abortController)
@@ -95,19 +95,25 @@ export class Autocomplete {
             this._suggestBox.hide();
             return;
         }
+        if (autoaccept && filtered.length === 1) {
+            this._onPick(filtered[0]);
+            return;
+        }
         this._anchor = anchor;
         this._suggestBox.setSuggestions(prefix, filtered);
         const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
         const rect = this._editor.element.getBoundingClientRect();
+        console.log(point, rect);
         const top = point.y + rect.top;
-        const bottom = top + this._editor.lineHeight() * .75;
+        const left = point.x + rect.left - 3;
+        const bottom = top + this._editor.lineHeight() * .75 + 4;
         const availableRect = {
             top: 0,
             left: 0,
             right: window.innerWidth,
             bottom: window.innerHeight
         };
-        this._suggestBox.fit(point.x + rect.left, top, bottom, availableRect);
+        this._suggestBox.fit(left, top, bottom, availableRect);
 
     }
 }
@@ -115,6 +121,12 @@ export class Autocomplete {
 type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, prefix: string, suggestions: string[]}>;
 
 function filterAndSortSuggestions(suggestions: string[], prefix: string) {
+    const filtered = suggestions.filter(s => s.startsWith(prefix));
+    filtered.sort();
+    return filtered;
+}
+
+function filterAndSortSuggestionsSubstringMode(suggestions: string[], prefix: string) {
     const filtered = suggestions.filter(s => s.includes(prefix));
     filtered.sort((a, b) => {
         const aStart = a.startsWith(prefix);

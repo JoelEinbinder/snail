@@ -77,7 +77,7 @@ function Prompt({shell}: {shell: Shell}) {
       new Autocomplete(editorRef.current, async (line, abortSignal) => {
         if (line.includes(' '))
           return {anchor: 0, prefix: '', suggestions: []};
-          const suggestions = (await shell.cachedEvaluation('compgen -c')).split('\n').filter(x => /^[A-Za-z]/.test(x));
+          const suggestions = (await shell.cachedEvaluation('compgen -c')).split('\n').map(t => t.trim()).filter(x => /^[A-Za-z]/.test(x));
 
         return {
           anchor: 0,
