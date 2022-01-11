@@ -7,12 +7,10 @@ registerCompleter('git', async (shell, line, abortSignal) => {
   if (prefix.includes(' ')) {
     const command = line.slice(4).split(' ')[0];
     const anchor = line.lastIndexOf(' ') + 1;
-    const prefix = line.slice(anchor);
     if (command === 'checkout' || command === 'branch' || command === 'rebase') {
       const branches = await branchNames(shell);
       return {
         anchor,
-        prefix,
         suggestions: branches,
       };
     }
@@ -20,7 +18,6 @@ registerCompleter('git', async (shell, line, abortSignal) => {
   
   return {
     anchor,
-    prefix,
     suggestions: Object.keys(commands)
   };
 });

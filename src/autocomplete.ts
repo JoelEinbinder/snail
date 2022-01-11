@@ -85,10 +85,11 @@ export class Autocomplete {
         const abortController = new AbortController();
         this._abortController = abortController;
         const textBeforeCursor = this._editor.text({ start: { line: location.line, column: 0 }, end: location });
-        const {anchor, prefix, suggestions} = await this._completer(textBeforeCursor, abortController.signal);
+        const {anchor, suggestions} = await this._completer(textBeforeCursor, abortController.signal);
         if (abortController.signal.aborted)
             return;
 
+        const prefix = textBeforeCursor.slice(anchor);
         const filtered = filterAndSortSuggestions(suggestions, prefix);
         if (!filtered.length) {
             this._suggestBox.hide();
@@ -116,7 +117,7 @@ export class Autocomplete {
     }
 }
 
-export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, prefix: string, suggestions: string[]}>;
+export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, suggestions: string[]}>;
 
 function filterAndSortSuggestions(suggestions: string[], prefix: string) {
     const filtered = suggestions.filter(s => s.startsWith(prefix));

@@ -9,7 +9,6 @@ registerCompleter('npx', async (shell, line, abortSignal) => {
   const suggestions = (await shell.cachedEvaluation('__npx_completions')).split('\n').map(x => x.trim());
   return {
     anchor,
-    prefix,
     suggestions
   };
 });
