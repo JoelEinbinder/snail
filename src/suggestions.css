@@ -12,7 +12,7 @@
     color: var(--text-color);
     overflow-y: scroll;
     overflow-x: hidden;
-    max-height: 120px;
+    max-height: 136px;
     width: 160px;
     text-overflow: ellipsis;
 }
@@ -20,6 +20,9 @@
     padding: 0 2px;
     font-family: monaco;
     font-size: 10px;
+    height: 14px;
+    line-height: 14px;
+    contain: strict;
     white-space: pre;
     overflow: hidden;
     text-overflow: ellipsis;
