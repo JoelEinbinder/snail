@@ -1,10 +1,22 @@
+import type { Shell } from "../Shell";
 import { registerCompleter } from "../shellCompleter";
 
 registerCompleter('git', async (shell, line, abortSignal) => {
   const anchor = 4;
   const prefix = line.slice(anchor);
-  if (prefix.includes(' '))
-    return null;
+  if (prefix.includes(' ')) {
+    const command = line.slice(4).split(' ')[0];
+    const anchor = line.lastIndexOf(' ') + 1;
+    const prefix = line.slice(anchor);
+    if (command === 'checkout' || command === 'branch' || command === 'rebase') {
+      const branches = await branchNames(shell);
+      return {
+        anchor,
+        prefix,
+        suggestions: branches,
+      };
+    }
+  }
   
   return {
     anchor,
@@ -170,3 +182,8 @@ const commands = {
   'patch-id':'compute unique ID for a patch',
   'stripspace':'filter out empty lines',
 };
+
+async function branchNames(shell: Shell) {
+  const branches = (await shell.cachedEvaluation(`git branch -a --format='%(refname:short)' | cat`)).split('\n').map(x => x.trim());
+  return branches;
+}

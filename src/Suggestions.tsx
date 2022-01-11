@@ -25,7 +25,7 @@ function Suggestion({prefix, suggestion, isSelected, onPick} : {prefix: string, 
         }
     }, [isSelected]);
     return <div ref={ref} title={suggestion} onClick={onPick} className={`suggestion ${isSelected ? 'selected' : ''}`}>
-        <span style={{fontFamily: 'menlo', fontWeight: 'bold', color: '#FFF', lineHeight: '14px'}}>{prefix}</span>{suggestion.substring(prefix.length)}
+        <span style={{textShadow: '0.5px 0 0 currentColor', color: '#FFF', lineHeight: '14px'}}>{prefix}</span>{suggestion.substring(prefix.length)}
     </div>
 }
 
