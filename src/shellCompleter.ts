@@ -41,14 +41,33 @@ async function commandCompleter(shell: Shell, line: string) {
 }
 
 async function fileCompleter(shell: Shell, line: string) {
-  const pathStart = line.lastIndexOf(' ') + 1;
+  const pathStart = lastIndexIgnoringEscapes(line, ' ') + 1;
   const path = line.substring(pathStart);
   const anchor = path.lastIndexOf('/') + 1 + pathStart;
   const prefix = path.substring(anchor);
-  const suggestions = (await shell.cachedEvaluation(`compgen -f ${path}`)).split('\n').map(t => t.trim().substring(anchor - pathStart));
+  const suggestions = (await shell.cachedEvaluation(`compgen -f ${path}`)).split('\n').map(complete => {
+    // we only want the last path segment
+    const lastSlash = lastIndexIgnoringEscapes(complete, '/');
+    return escapeString(complete.substring(lastSlash + 1));
+  }).filter(x => x);
   return {
     anchor,
     prefix,
     suggestions,
   }
+}
+
+function lastIndexIgnoringEscapes(str: string, char: string) {
+  let lastIndex = -1;
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === char)
+      lastIndex = i;
+    if (str[i] === '\\')
+      i++;
+  }
+  return lastIndex;
+}
+
+function escapeString(str: string) {
+  return str.replace(/([\\"'$` ])/g, '\\$1');
 }
