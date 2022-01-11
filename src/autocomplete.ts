@@ -103,7 +103,6 @@ export class Autocomplete {
         this._suggestBox.setSuggestions(prefix, filtered);
         const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
         const rect = this._editor.element.getBoundingClientRect();
-        console.log(point, rect);
         const top = point.y + rect.top;
         const left = point.x + rect.left - 3;
         const bottom = top + this._editor.lineHeight() * .75 + 4;
@@ -118,7 +117,7 @@ export class Autocomplete {
     }
 }
 
-type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, prefix: string, suggestions: string[]}>;
+export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, prefix: string, suggestions: string[]}>;
 
 function filterAndSortSuggestions(suggestions: string[], prefix: string) {
     const filtered = suggestions.filter(s => s.startsWith(prefix));

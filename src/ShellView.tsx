@@ -5,6 +5,8 @@ import './shell.css';
 import { Editor } from '../editor/'
 import '../editor/modes/shell'
 import { Autocomplete } from './autocomplete';
+import { makeShellCompleter } from './shellCompleter';
+import './completions/git';
 
 export function ShellView({shell}: {shell: Shell}) {
   const fullScreenEntry = useEvent(shell.fullscreenEntry);
@@ -74,17 +76,7 @@ function Prompt({shell}: {shell: Shell}) {
           selectionBackground: '#fff',
         }
       });
-      new Autocomplete(editorRef.current, async (line, abortSignal) => {
-        if (line.includes(' '))
-          return {anchor: 0, prefix: '', suggestions: []};
-          const suggestions = (await shell.cachedEvaluation('compgen -c')).split('\n').map(t => t.trim()).filter(x => /^[A-Za-z]/.test(x));
-
-        return {
-          anchor: 0,
-          prefix: line,
-          suggestions: [...new Set(suggestions)]
-        }
-      });
+      new Autocomplete(editorRef.current, makeShellCompleter(shell));
     }
     editorWrapper.current.appendChild(editorRef.current.element);
     editorRef.current.layout();
