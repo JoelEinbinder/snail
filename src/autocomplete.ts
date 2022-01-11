@@ -6,7 +6,7 @@ export class Autocomplete {
     private _abortController?: AbortController;
     private _wantsSuggestBoxShown = false;
     private _anchor = 0;
-    constructor(private _editor: Editor, private _completer: Completer) {
+    constructor(private _editor: Editor, private _completer: Completer, private _activationChars: string) {
         this._editor.on('selectionChanged', event => {
             this._abortController?.abort();
             delete this._abortController;
@@ -19,7 +19,6 @@ export class Autocomplete {
             this.hideSuggestBox();
         });
         this._editor.element.addEventListener('keydown', event => {
-            const activationChars = ' ';
             const legalChars = /[A-Za-z0-9_\$]/;
             if (this._suggestBox.showing) {
                 if (event.key === 'Escape') {
@@ -39,7 +38,7 @@ export class Autocomplete {
                     if (selections[0].start.column === 0)
                         return;
                     this.showSuggestBox(true);
-                } else if (activationChars.includes(event.key) && !event.ctrlKey && !event.altKey && !event.metaKey) {
+                } else if (this._activationChars.includes(event.key) && !event.ctrlKey && !event.altKey && !event.metaKey) {
                     this.showSuggestBox();
                     return;
                 } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && legalChars.test(event.key)) {

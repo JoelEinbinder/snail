@@ -76,7 +76,7 @@ function Prompt({shell}: {shell: Shell}) {
           selectionBackground: '#fff',
         }
       });
-      new Autocomplete(editorRef.current, makeShellCompleter(shell));
+      new Autocomplete(editorRef.current, makeShellCompleter(shell), ' /');
     }
     editorWrapper.current.appendChild(editorRef.current.element);
     editorRef.current.layout();

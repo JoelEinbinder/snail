@@ -23,8 +23,10 @@ export function makeShellCompleter(shell: Shell): Completer {
       const result = await registry.get(command)(shell, line, abortSignal);
       if (result)
         return result;
+      else
+        return NoCompletions;
     }
-    return NoCompletions;
+    return fileCompleter(shell, line);
   };
 }
 
@@ -35,5 +37,18 @@ async function commandCompleter(shell: Shell, line: string) {
     anchor: 0,
     prefix: line,
     suggestions: [...new Set(suggestions)]
+  }
+}
+
+async function fileCompleter(shell: Shell, line: string) {
+  const pathStart = line.lastIndexOf(' ') + 1;
+  const path = line.substring(pathStart);
+  const anchor = path.lastIndexOf('/') + 1 + pathStart;
+  const prefix = path.substring(anchor);
+  const suggestions = (await shell.cachedEvaluation(`compgen -f ${path}`)).split('\n').map(t => t.trim().substring(anchor - pathStart));
+  return {
+    anchor,
+    prefix,
+    suggestions,
   }
 }
