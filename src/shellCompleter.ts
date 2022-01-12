@@ -8,11 +8,6 @@ export function registerCompleter(prefix: string, completer: ShellCompleter) {
   registry.set(prefix, completer);
 }
 
-const NoCompletions = {
-  anchor: 0,
-  suggestions: [],
-}
-
 export function makeShellCompleter(shell: Shell): Completer {
   return async (line: string, abortSignal: AbortSignal) => {
     if (!line.includes(' '))
@@ -22,8 +17,6 @@ export function makeShellCompleter(shell: Shell): Completer {
       const result = await registry.get(command)(shell, line, abortSignal);
       if (result)
         return result;
-      else
-        return NoCompletions;
     }
     return fileCompleter(shell, line);
   };
