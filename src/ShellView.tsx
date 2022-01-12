@@ -2,12 +2,8 @@ import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { useEvent, usePromise } from './hooks';
 import type { Shell, Entry } from './Shell';
 import './shell.css';
-import { Editor } from '../editor/'
-import '../editor/modes/shell'
-import { Autocomplete } from './autocomplete';
-import { makeShellCompleter } from './shellCompleter';
-import './completions/git';
-import './completions/npx';
+import type { Editor } from '../editor/'
+import { makePromptEditor } from './PromptEditor';
 
 export function ShellView({shell}: {shell: Shell}) {
   const fullScreenEntry = useEvent(shell.fullscreenEntry);
@@ -65,20 +61,8 @@ function Prompt({shell}: {shell: Shell}) {
   useLayoutEffect(() => {
     if (!editorWrapper.current)
       return;
-    if (!editorRef.current) {
-      editorRef.current = new Editor('', {
-        inline: true,
-        lineNumbers: false,
-        language: 'sh',
-        padding: 0,
-        colors: {
-          cursorColor: '#fff',
-          foreground: '#fff',
-          selectionBackground: '#fff',
-        }
-      });
-      new Autocomplete(editorRef.current, makeShellCompleter(shell), ' /');
-    }
+    if (!editorRef.current)
+      editorRef.current = makePromptEditor(shell);      
     editorWrapper.current.appendChild(editorRef.current.element);
     editorRef.current.layout();
     if (!activeEntry) {

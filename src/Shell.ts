@@ -1,5 +1,6 @@
 import {Terminal, IDisposable} from 'xterm';
 import 'xterm/css/xterm.css';
+import { addHistory } from './history';
 import { JoelEvent } from './JoelEvent';
 
 window.electronAPI.onEvent('data', ({shellId, data}) => {
@@ -58,6 +59,7 @@ export class Shell {
     entry.clearEvent.on(onClear);
     entry.activeEvent.dispatch(true);
     this.activeEntry.dispatch(entry);
+    addHistory(command);
     this._update();
     await window.electronAPI.sendMessage({
       method: 'runCommand',

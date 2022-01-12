@@ -26,7 +26,7 @@ for (const line of lines) {
   if (!line)
     continue;
   const match = line.match(/^: (\d+):(\d+);(.*)$/m);
-  const [, start, elapsed, cmd] = match;
-  out.push({start: parseInt(start) * 1000, cmd});
+  const [, start, elapsed, command] = match;
+  out.push({start: parseInt(start) * 1000, command});
 }
 console.log(out.map(l => JSON.stringify(l)).join('\n'));

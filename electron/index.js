@@ -144,6 +144,24 @@ const handler = {
     })
     return shellId;
   },
+  async getHistory() {
+    const fs = require('fs');
+    const path = require('path');
+    try {
+      const content = await fs.promises.readFile(path.join(__dirname, '..', '.history'), 'utf8');
+      return content.split('\n').filter(x => x).map(x => JSON.parse(x));
+    } catch {
+      return [];
+    }
+  },
+  async addHistory(item) {
+    const fs = require('fs');
+    const path = require('path');
+    await fs.promises.writeFile(path.join(__dirname, '..', '.history'), JSON.stringify(item) + '\n', {flag: 'a'}); 
+  },
+  async beep() {
+    require('electron').shell.beep();
+  }
 }
 
 ipcMain.handle('message', async (event, ...args) => {
