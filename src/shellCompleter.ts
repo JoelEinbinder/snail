@@ -10,15 +10,18 @@ export function registerCompleter(prefix: string, completer: ShellCompleter) {
 
 export function makeShellCompleter(shell: Shell): Completer {
   return async (line: string, abortSignal: AbortSignal) => {
-    if (!line.includes(' ') && !line.includes('/'))
+    if (!line.includes(' ')) {
+      if (line.includes('/'))
+        return fileCompleter(shell, line, true);
       return commandCompleter(shell, line);
+    }
     const command = line.split(' ')[0];
     if (registry.has(command)) {
       const result = await registry.get(command)(shell, line, abortSignal);
       if (result)
         return result;
     }
-    return fileCompleter(shell, line);
+    return fileCompleter(shell, line, false);
   };
 }
 
@@ -31,11 +34,11 @@ async function commandCompleter(shell: Shell, line: string) {
   }
 }
 
-async function fileCompleter(shell: Shell, line: string) {
+async function fileCompleter(shell: Shell, line: string, executablesOnly: boolean) {
   const pathStart = lastIndexIgnoringEscapes(line, ' ') + 1;
   const path = line.substring(pathStart);
   const anchor = path.lastIndexOf('/') + 1 + pathStart;
-  const files = await parseCompletions(`compgen -f ${path}`);
+  const files = await parseCompletions(!executablesOnly ? `compgen -f ${path}` : `eval 'for f in \`compgen -f ${path}\`; do [ -x $f ] && echo $f; done'`);
   const directories = new Set(await parseCompletions(`compgen -d ${path}`));
   const suggestions = [];
   for (const file of files) {

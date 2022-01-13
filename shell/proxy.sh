@@ -61,6 +61,36 @@ __npx_completions() {
     break
   done
 }
+d () {
+	if [[ -n $1 ]]
+	then
+		dirs "$@"
+	else
+		dirs -v | head -n 10
+	fi
+}
+
+alias -='cd -'
+alias ..=cd ..
+alias ...=cd ../..
+alias ....=cd ../../..
+alias .....=cd ../../../..
+alias ......=cd ../../../../..
+alias 1='cd -1'
+alias 2='cd -2'
+alias 3='cd -3'
+alias 4='cd -4'
+alias 5='cd -5'
+alias 6='cd -6'
+alias 7='cd -7'
+alias 8='cd -8'
+alias 9='cd -9'
+alias egrep='egrep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
+alias fgrep='fgrep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
+alias grep='grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
+alias ls='ls -G'
+alias gbc='git for-each-ref --sort=committerdate refs/heads/ --format='\''%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'\'
+shopt -s expand_aliases
 
 while IFS= read -u 1 -r line
 do
