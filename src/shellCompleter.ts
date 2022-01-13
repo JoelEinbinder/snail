@@ -10,7 +10,7 @@ export function registerCompleter(prefix: string, completer: ShellCompleter) {
 
 export function makeShellCompleter(shell: Shell): Completer {
   return async (line: string, abortSignal: AbortSignal) => {
-    if (!line.includes(' '))
+    if (!line.includes(' ') && !line.includes('/'))
       return commandCompleter(shell, line);
     const command = line.split(' ')[0];
     if (registry.has(command)) {
@@ -35,14 +35,27 @@ async function fileCompleter(shell: Shell, line: string) {
   const pathStart = lastIndexIgnoringEscapes(line, ' ') + 1;
   const path = line.substring(pathStart);
   const anchor = path.lastIndexOf('/') + 1 + pathStart;
-  const suggestions = (await shell.cachedEvaluation(`compgen -f ${path}`)).split('\r\n').map(complete => {
-    // we only want the last path segment
-    const lastSlash = lastIndexIgnoringEscapes(complete, '/');
-    return escapeString(complete.substring(lastSlash + 1));
-  }).filter(x => x);
+  const files = await parseCompletions(`compgen -f ${path}`);
+  const directories = new Set(await parseCompletions(`compgen -d ${path}`));
+  const suggestions = [];
+  for (const file of files) {
+      if (directories.has(file))
+        suggestions.push(file + '/');
+      else
+        suggestions.push(file);
+  }
   return {
     anchor,
     suggestions,
+  }
+
+  async function parseCompletions(command: string) {
+    const raw = await shell.cachedEvaluation(command);
+    return raw.split('\r\n').map(complete => {
+      // we only want the last path segment
+      const lastSlash = lastIndexIgnoringEscapes(complete, '/');
+      return escapeString(complete.substring(lastSlash + 1));
+    }).filter(x => x);
   }
 }
 

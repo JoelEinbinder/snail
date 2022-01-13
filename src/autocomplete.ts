@@ -62,6 +62,8 @@ export class Autocomplete {
         });
         this.hideSuggestBox();
         this._editor.selections = [{ start: loc, end: loc }];
+        if (this._activationChars.includes(suggestion[suggestion.length - 1]))
+            this.showSuggestBox();
     }
 
     updateSuggestBox() {
