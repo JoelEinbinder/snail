@@ -1,16 +1,20 @@
-import {render} from 'react-dom';
 import React from 'react';
-import {Suggestions} from './Suggestions';
+import {Viewport} from './Viewport';
+import './suggestions.css';
+
 export class SuggestBox {
     element: HTMLElement;
     private _selectedSuggestion: string|undefined;
     private _suggestions: string[] = [];
     private _prefix: string = '';
+    private _viewport = new Viewport<string>(14, 14 * 9, this._renderItem.bind(this));
     constructor(window: Window, private _onPick: (suggestion: string) => void) {
         this.element = window.document.createElement('div');
         this.element.style.position = 'fixed';
         this.element.style.top = '0';
         this.element.style.left = '0';
+        this.element.appendChild(this._viewport.element);
+        this._viewport.element.classList.add('suggestions');
     }
     get showing() {
         return !!this.element.parentElement;
@@ -20,15 +24,19 @@ export class SuggestBox {
             delete this._selectedSuggestion;
         this._suggestions = suggestions;
         this._prefix = prefix;
-        this._render();
+        this._viewport.setItems(suggestions);
+        if (!this._viewport.isItemFullyVisible(this._selectedSuggestion || this._suggestions[0]))
+            this._viewport.showItem(this._selectedSuggestion || this._suggestions[0], 'up');
     }
     _render() {
-        render(<Suggestions
-            prefix={this._prefix}
-            suggestions={this._suggestions}
-            selected={this._selectedSuggestion || this._suggestions[0]}
-            onPick={this._onPick}
-        />, this.element);
+        this._viewport._refresh();
+    }
+    _renderItem(suggestion: string) {
+        const isSelected = this._selectedSuggestion ? this._selectedSuggestion === suggestion : this._suggestions[0] === suggestion;
+        const prefix = this._prefix;
+        return <div title={suggestion} onMouseDown={() => this._onPick(suggestion)} className={`suggestion ${isSelected ? 'selected' : ''}`}>
+            <span style={{textShadow: '0.5px 0 0 currentColor', color: '#FFF', lineHeight: '14px'}}>{prefix}</span>{suggestion.substring(prefix.length)}
+        </div>
     }
     onKeyDown(event: KeyboardEvent): boolean {
         switch(event.key) {
@@ -54,12 +62,14 @@ export class SuggestBox {
         const newIndex = (this._suggestions.length + index + amount) % this._suggestions.length;
         this._selectedSuggestion = this._suggestions[newIndex];
         this._render();
+        this._viewport.showItem(this._suggestions[newIndex], amount > 0 ? 'down' : 'up');
     }
     hide() {
         this.element.remove();
     }
     fit(x: number, top: number, bottom: number, availableRect: { top: number, left: number, bottom: number, right: number }) {
-        window.document.body.appendChild(this.element);
+        if (!this.element.parentElement)
+            window.document.body.appendChild(this.element);
         const rect = this.element.getBoundingClientRect();
         const overflowTop = availableRect.top - (top - rect.height);
         const overflowBottom = (bottom + rect.height) - availableRect.bottom;

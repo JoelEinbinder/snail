@@ -31,3 +31,6 @@
 .suggestion.selected {
     background: var(--ansi-0);
 }
+.suggestion:hover {
+    background: rgba(128, 128, 128, 0.1);
+}
