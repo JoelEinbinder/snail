@@ -164,19 +164,33 @@ const handler = {
     return shellId;
   },
   async getHistory() {
-    const fs = require('fs');
-    const path = require('path');
-    try {
-      const content = await fs.promises.readFile(path.join(__dirname, '..', '.history'), 'utf8');
-      return content.split('\n').filter(x => x).map(x => JSON.parse(x));
-    } catch {
-      return [];
-    }
+    const util = require('util');
+    const database = getDatabase();
+    return await util.promisify(database.all.bind(database))('SELECT command FROM history ORDER BY command_id ASC');
   },
   async addHistory(item) {
-    const fs = require('fs');
-    const path = require('path');
-    await fs.promises.writeFile(path.join(__dirname, '..', '.history'), JSON.stringify(item) + '\n', {flag: 'a'}); 
+    const database = getDatabase();
+    const runResult = await new Promise((res, rej) => {
+      database.run(`INSERT INTO history (command, start) VALUES (?, ?)`, [item.command, item.start], function (err) {
+        if (err)
+          rej(err)
+        else
+          res(this);
+      });
+    });
+    return runResult.lastID;;
+  },
+  async updateHistory({id, col, value}) {
+    const database = getDatabase();
+    const runResult = await new Promise((res, rej) => {
+      database.run(`UPDATE history SET '${col}' = ? WHERE command_id = ?`, [value, id], function (err) {
+        if (err)
+          rej(err)
+        else
+          res(this);
+      });
+    });
+    return runResult.changes;
   },
   async beep() {
     require('electron').shell.beep();
@@ -186,6 +200,17 @@ const handler = {
       popup.destroy();
     popups.clear();
   }
+}
+
+let database;
+/** @return {import('sqlite3').Database} */
+function getDatabase() {
+  if (database)
+    return database;
+  const path = require('path');
+  const sqlite3 = require('sqlite3');
+  database = new sqlite3.Database(path.join(__dirname, '..', 'history.sqlite3'));
+  return database;
 }
 
 ipcMain.handle('message', async (event, ...args) => {
