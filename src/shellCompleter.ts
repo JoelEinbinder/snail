@@ -1,4 +1,4 @@
-import type { Completer } from "./autocomplete";
+import type { Completer, Suggestion } from "./autocomplete";
 import type { Shell } from "./Shell";
 
 export type ShellCompleter = (shell: Shell, line: string, abortSignal: AbortSignal) => ReturnType<Completer>|null;
@@ -30,7 +30,7 @@ async function commandCompleter(shell: Shell, line: string) {
 
   return {
     anchor: 0,
-    suggestions: [...new Set(suggestions)]
+    suggestions: [...new Set(suggestions)].map(text => ({text})),
   }
 }
 
@@ -40,12 +40,12 @@ async function fileCompleter(shell: Shell, line: string, executablesOnly: boolea
   const anchor = path.lastIndexOf('/') + 1 + pathStart;
   const files = await parseCompletions(!executablesOnly ? `compgen -f ${path}` : `eval 'for f in \`compgen -f ${path}\`; do [ -x $f ] && echo $f; done'`);
   const directories = new Set(await parseCompletions(`compgen -d ${path}`));
-  const suggestions = [];
+  const suggestions: Suggestion[] = [];
   for (const file of files) {
       if (directories.has(file) && file !== '.' && file !== '..')
-        suggestions.push(file + '/');
+        suggestions.push({ text: file + '/' });
       else
-        suggestions.push(file);
+        suggestions.push({text: file});
   }
   return {
     anchor,

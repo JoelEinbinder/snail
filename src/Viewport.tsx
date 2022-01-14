@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-export class Viewport<Item extends string|number> {
+export class Viewport<Item> {
   element: HTMLElement;
   private _wrapper: HTMLElement;
   private _items: Item[] = [];
@@ -30,7 +30,8 @@ export class Viewport<Item extends string|number> {
     this._wrapper.style.height = this._itemHeight * this._items.length + 'px';
     render(<>
       {this._items.map((item, index) => {
-        return this._isInView(index) && <div style={{position: 'absolute', height: this._itemHeight, top: index * this._itemHeight, left:0, right: 0}} key={item}>{this._renderItem(item)}</div>;
+        // TODO maybe put keys on suggestions for effeciency?
+        return this._isInView(index) && <div style={{position: 'absolute', height: this._itemHeight, top: index * this._itemHeight, left:0, right: 0}} key={index}>{this._renderItem(item)}</div>;
       })}
     </>, this._wrapper);
   }

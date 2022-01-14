@@ -1,14 +1,15 @@
 import React from 'react';
 import {Viewport} from './Viewport';
 import './suggestions.css';
+import { Suggestion } from './autocomplete';
 
 export class SuggestBox {
     element: HTMLElement;
-    private _selectedSuggestion: string|undefined;
-    private _suggestions: string[] = [];
+    private _selectedSuggestion: Suggestion|undefined;
+    private _suggestions: Suggestion[] = [];
     private _prefix: string = '';
-    private _viewport = new Viewport<string>(14, 14 * 9, this._renderItem.bind(this));
-    constructor(window: Window, private _onPick: (suggestion: string) => void) {
+    private _viewport = new Viewport<Suggestion>(14, 14 * 9, this._renderItem.bind(this));
+    constructor(window: Window, private _onPick: (suggestion: Suggestion) => void) {
         this.element = window.document.createElement('div');
         this.element.style.position = 'fixed';
         this.element.style.top = '0';
@@ -19,7 +20,7 @@ export class SuggestBox {
     get showing() {
         return !!this.element.parentElement;
     }
-    setSuggestions(prefix: string, suggestions: string[]) {
+    setSuggestions(prefix: string, suggestions: Suggestion[]) {
         if (!suggestions.includes(this._selectedSuggestion))
             delete this._selectedSuggestion;
         this._suggestions = suggestions;
@@ -31,11 +32,11 @@ export class SuggestBox {
     _render() {
         this._viewport._refresh();
     }
-    _renderItem(suggestion: string) {
+    _renderItem(suggestion: Suggestion) {
         const isSelected = this._selectedSuggestion ? this._selectedSuggestion === suggestion : this._suggestions[0] === suggestion;
         const prefix = this._prefix;
-        return <div title={suggestion} onMouseDown={() => this._onPick(suggestion)} className={`suggestion ${isSelected ? 'selected' : ''}`}>
-            <span style={{textShadow: '0.5px 0 0 currentColor', color: '#FFF', lineHeight: '14px'}}>{prefix}</span>{suggestion.substring(prefix.length)}
+        return <div title={suggestion.text} onMouseDown={() => this._onPick(suggestion)} className={`suggestion ${isSelected ? 'selected' : ''}`}>
+            <span style={{textShadow: '0.5px 0 0 currentColor', color: '#FFF', lineHeight: '14px'}}>{prefix}</span>{suggestion.text.substring(prefix.length)}
         </div>
     }
     onKeyDown(event: KeyboardEvent): boolean {
@@ -50,7 +51,7 @@ export class SuggestBox {
                 const suggestion = this._selectedSuggestion || this._suggestions[0];
                 const prefix = this._prefix;
                 this._onPick(suggestion);
-                return prefix !== suggestion;
+                return prefix !== suggestion.text;
             case 'Tab':
                 this._onPick(this._selectedSuggestion || this._suggestions[0]);
                 return true;

@@ -1,4 +1,3 @@
-import type { Shell } from "../Shell";
 import { registerCompleter } from "../shellCompleter";
 
 registerCompleter('npx', async (shell, line, abortSignal) => {
@@ -6,7 +5,7 @@ registerCompleter('npx', async (shell, line, abortSignal) => {
   const prefix = line.slice(anchor);
   if (prefix.includes(' '))
     return;
-  const suggestions = (await shell.cachedEvaluation('__npx_completions')).split('\n').map(x => x.trim());
+  const suggestions = (await shell.cachedEvaluation('__npx_completions')).split('\n').map(x => x.trim()).map(text => ({text}));
   return {
     anchor,
     suggestions

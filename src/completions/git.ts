@@ -11,14 +11,14 @@ registerCompleter('git', async (shell, line, abortSignal) => {
       const branches = await branchNames(shell);
       return {
         anchor,
-        suggestions: branches,
+        suggestions: branches.map(text => ({text})),
       };
     }
   }
   
   return {
     anchor,
-    suggestions: Object.keys(commands)
+    suggestions: Object.keys(commands).map(text => ({text}))
   };
 });
 

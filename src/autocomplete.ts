@@ -55,14 +55,14 @@ export class Autocomplete {
         }, true);
     }
 
-    _onPick(suggestion: string) {
-        const loc = this._editor.replaceRange(suggestion, {
+    _onPick(suggestion: Suggestion) {
+        const loc = this._editor.replaceRange(suggestion.text, {
             start: { line: this._editor.selections[0].start.line, column: this._anchor },
-            end: { line: this._editor.selections[0].start.line, column: this._editor.selections[0].start.column + suggestion.length },
+            end: { line: this._editor.selections[0].start.line, column: this._editor.selections[0].start.column + suggestion.text.length },
         });
         this.hideSuggestBox();
         this._editor.selections = [{ start: loc, end: loc }];
-        if (this._activationChars.includes(suggestion[suggestion.length - 1]))
+        if (this._activationChars.includes(suggestion[suggestion.text.length - 1]))
             this.showSuggestBox();
     }
 
@@ -119,11 +119,15 @@ export class Autocomplete {
     }
 }
 
-export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, suggestions: string[]}>;
-
-function filterAndSortSuggestions(suggestions: string[], prefix: string) {
-    const filtered = suggestions.filter(s => s.startsWith(prefix));
-    filtered.sort();
+export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, suggestions: Suggestion[]}>;
+export type Suggestion = {
+    text: string,
+}
+function filterAndSortSuggestions(suggestions: Suggestion[], prefix: string) {
+    const filtered = suggestions.filter(s => s.text.startsWith(prefix));
+    filtered.sort((a, b) => {
+        return a.text.localeCompare(b.text);
+    });
     return filtered;
 }
 
