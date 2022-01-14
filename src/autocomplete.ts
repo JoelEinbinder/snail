@@ -2,7 +2,7 @@ import { Editor } from "../editor/js/editor";
 import { SuggestBox } from "./SuggestBox";
 
 export class Autocomplete {
-    private _suggestBox = new SuggestBox(window, this._onPick.bind(this));
+    private _suggestBox: SuggestBox|null = null;
     private _abortController?: AbortController;
     private _wantsSuggestBoxShown = false;
     private _anchor = 0;
@@ -20,7 +20,7 @@ export class Autocomplete {
         });
         this._editor.element.addEventListener('keydown', event => {
             const legalChars = /[A-Za-z0-9_\$]/;
-            if (this._suggestBox.showing) {
+            if (this._suggestBox?.showing) {
                 if (event.key === 'Escape') {
                     this.hideSuggestBox();
                 } else if (!this._suggestBox.onKeyDown(event)) {
@@ -74,7 +74,8 @@ export class Autocomplete {
 
     hideSuggestBox() {
         this._wantsSuggestBoxShown = false;
-        this._suggestBox.hide();
+        this._suggestBox?.hide();
+        this._suggestBox = null;
         this._abortController?.abort();
         delete this._abortController;
     }
@@ -94,7 +95,8 @@ export class Autocomplete {
         const prefix = textBeforeCursor.slice(anchor);
         const filtered = filterAndSortSuggestions(suggestions, prefix);
         if (!filtered.length) {
-            this._suggestBox.hide();
+            this._suggestBox?.hide();
+            this._suggestBox = null;
             return;
         }
         if (autoaccept && filtered.length === 1) {
@@ -102,19 +104,15 @@ export class Autocomplete {
             return;
         }
         this._anchor = anchor;
+        if (!this._suggestBox)
+            this._suggestBox = new SuggestBox(this._onPick.bind(this));
         this._suggestBox.setSuggestions(prefix, filtered);
         const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
         const rect = this._editor.element.getBoundingClientRect();
         const top = point.y + rect.top;
         const left = point.x + rect.left - 3;
         const bottom = top + this._editor.lineHeight() * .75 + 4;
-        const availableRect = {
-            top: 0,
-            left: 0,
-            right: window.innerWidth,
-            bottom: window.innerHeight
-        };
-        this._suggestBox.fit(left, top, bottom, availableRect);
+        this._suggestBox.fit(left, top, bottom);
 
     }
 }

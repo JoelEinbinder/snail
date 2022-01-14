@@ -2,7 +2,6 @@
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
     border-radius: 3px;
-    border-radius: 3px;
     border: 1px solid var(--ansi-237);
     padding: 0;
     margin: 0;
@@ -12,9 +11,12 @@
     color: var(--color-text);
     overflow-y: scroll;
     overflow-x: hidden;
-    max-height: 126px;
     width: 160px;
     text-overflow: ellipsis;
+}
+body.glass-pane .suggestions {
+    background: rgba(0, 0, 0);
+    backdrop-filter: none;
 }
 .suggestion {
     padding: 0 2px;

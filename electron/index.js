@@ -75,7 +75,8 @@ app.whenReady().then(() => {
   makeWindow();
 
 });
-
+/** @type {Set<BrowserWindow>} */
+const popups = new Set();
 function makeWindow() {
   const focusedWindow = [...windows].find(x => x.isFocused());
   const win = new BrowserWindow({
@@ -88,22 +89,39 @@ function makeWindow() {
     },
     backgroundColor: '#000',
   });
-  win.webContents.setWindowOpenHandler(() => {
+  win.webContents.setWindowOpenHandler((details) => {
     return {
       action: 'allow', 
       overrideBrowserWindowOptions: {
-        vibrancy: 'tooltip',
         transparent: true,
+        roundedCorners: false,
         frame: false,
         focusable: false,
         alwaysOnTop: true,
-        resizable: false,
-        movable: false,
+        hasShadow: false,
         height: 200,
         width: 150,
       }
     };
   });
+  let lastBounds = win.getBounds();
+  win.on('move', () => {
+    const newBounds = win.getBounds();
+    for (const popup of popups) {
+      const bounds = popup.getBounds();
+      popup.setBounds({
+        x: bounds.x + (newBounds.x - lastBounds.x),
+        y: bounds.y + (newBounds.y - lastBounds.y),
+        width: bounds.width,
+        height: bounds.height,
+      });
+    }
+    lastBounds = newBounds;
+  })
+  win.webContents.on('did-create-window', (window, details) => {
+    window.excludedFromShownWindowsMenu = true;
+    popups.add(window);
+  })
   win.loadURL('http://localhost/gap-year/');
   win.on('closed', () => windows.delete(win));
   windows.add(win);
@@ -161,6 +179,11 @@ const handler = {
   },
   async beep() {
     require('electron').shell.beep();
+  },
+  async closeAllPopups() {
+    for (const popup of popups)
+      popup.destroy();
+    popups.clear();
   }
 }
 

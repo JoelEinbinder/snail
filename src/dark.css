@@ -286,6 +286,10 @@ body {
   padding: 4px;
   margin: 0;
 }
+body.glass-pane {
+  padding: 0;
+  background: none;
+}
 
 ::selection {
   background: var(--color-selection);
