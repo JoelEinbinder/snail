@@ -28,9 +28,9 @@
     text-overflow: ellipsis;
     user-select: none;
 }
-.suggestion.selected {
-    background: var(--ansi-0);
-}
 .suggestion:hover {
     background: rgba(128, 128, 128, 0.1);
+}
+.suggestion.selected {
+    background: var(--ansi-0);
 }
