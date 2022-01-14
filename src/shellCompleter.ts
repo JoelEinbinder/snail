@@ -42,7 +42,7 @@ async function fileCompleter(shell: Shell, line: string, executablesOnly: boolea
   const directories = new Set(await parseCompletions(`compgen -d ${path}`));
   const suggestions = [];
   for (const file of files) {
-      if (directories.has(file))
+      if (directories.has(file) && file !== '.' && file !== '..')
         suggestions.push(file + '/');
       else
         suggestions.push(file);
