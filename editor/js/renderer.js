@@ -416,19 +416,20 @@ export class Renderer extends Emitter {
     }
     if (word.match(/^\s+$/)) word = '';
     var lineNumbersWidth = this._lineNumbersWidth();
+    ctx.save();
     ctx.fillStyle = this.colors.selectionBackground;
+    ctx.globalAlpha = 0.4;
     if (word) {
       var viewport = this.viewport();
       for (var i = viewport.from; i <= viewport.to; i++) {
         var text = this._model.line(i).text.toLowerCase();
         var index = -1;
         while ((index = text.indexOf(word, index + 1)) !== -1) {
-          if (
-            i === selection.start.line &&
+          if (this._model.selections.some(selection => {
+            return i === selection.start.line &&
             index === selection.start.column &&
             index + word.length === selection.end.column
-          )
-            continue;
+          })) continue;            
           var start = this.pointFromLocation({ line: i, column: index });
           var end = this.pointFromLocation({ line: i, column: index + word.length });
           ctx.fillRect(
@@ -440,6 +441,7 @@ export class Renderer extends Emitter {
         }
       }
     }
+    ctx.restore();
 
     ctx.fillStyle = this.colors.cursorColor;
     if (!this._options.readOnly && this._hasFocus) {

@@ -14,8 +14,9 @@ export class Highlighter extends Emitter {
    * @param {import('./model').Model} model
    * @param {string} language
    * @param {function(number,  string):Array<Token>} underlay
+   * @param {{selectionBackground?: string}=} colors
    */
-  constructor(model, language = 'js', underlay = null) {
+  constructor(model, language = 'js', underlay = null, colors = {}) {
     super();
     this._model = model;
     this._model.on('selectionChanged', ({ selections, previousSelections }) => {
@@ -37,15 +38,21 @@ export class Highlighter extends Emitter {
         to: model.lineCount() - 1
       });
     });
-    this._selectionColors =
-      navigator.platform.indexOf('Mac') === -1
-        ? {
-            color: '#ffffff',
-            background: '#308efe'
-          }
-        : {
-            background: '#b3d8fd'
-          };
+    if (colors.selectionBackground) {
+      this._selectionColors = {
+        background: colors.selectionBackground
+      }
+    } else {
+      this._selectionColors = navigator.platform.indexOf('Mac') === -1
+      ? {
+          color: '#ffffff',
+          background: '#308efe'
+        }
+      : {
+          background: '#b3d8fd'
+        };
+    }
+      
     this._mode = getMode(language)?.({ indentUnit: 2 }, {});
     this._underlay = underlay;
     /** @type {WeakMap<Line, {state: Object, tokens: Array<Token>}>} */

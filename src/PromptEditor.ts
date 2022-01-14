@@ -14,9 +14,9 @@ export function makePromptEditor(shell: Shell) {
     language: 'sh',
     padding: 0,
     colors: {
-      cursorColor: '#fff',
-      foreground: '#fff',
-      selectionBackground: '#fff',
+      cursorColor: '#f4f4f4',
+      foreground: '#f4f4f4',
+      selectionBackground: '#525252',
     }
   });
   new Autocomplete(editor, makeShellCompleter(shell), ' /');

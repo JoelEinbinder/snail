@@ -286,3 +286,7 @@ body {
   padding: 4px;
   margin: 0;
 }
+
+::selection {
+  background: var(--color-selection);
+}
