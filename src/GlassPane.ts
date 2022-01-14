@@ -12,7 +12,7 @@ class ExternalGlassPane {
     if (!this.showing())
       return;
     const rect = this.element.getBoundingClientRect();
-    this.window.resizeTo(rect.width, rect.height);
+    this.window.resizeTo(rect.width * window.devicePixelRatio / nativeDPI, rect.height * window.devicePixelRatio / nativeDPI);
   }
   show() {
     if (this.window)
@@ -23,6 +23,8 @@ class ExternalGlassPane {
         this.window.document.head.appendChild(sheet.ownerNode.cloneNode(true));
     this.window.document.body.appendChild(this.element);
     this.window.document.body.classList.add('glass-pane');
+    // @ts-ignore
+    this.window.document.body.style.zoom = window.devicePixelRatio / nativeDPI;
     this.window.onclose = () => {
       delete this.window;
     }
@@ -48,12 +50,12 @@ class ExternalGlassPane {
   }
   position(x: number, y: number) {
     const origin = this.origin();
-    this.window.moveTo(x + origin.x, y + origin.y);
+    this.window.moveTo((x + origin.x ) * window.devicePixelRatio / nativeDPI, (y + origin.y) * window.devicePixelRatio / nativeDPI);
   }
   origin() {
     return {
-      x: screenLeft,
-      y: screenTop - window.innerHeight + window.outerHeight
+      x: screenLeft * nativeDPI / window.devicePixelRatio,
+      y: screenTop * nativeDPI / window.devicePixelRatio - window.innerHeight + window.outerHeight * nativeDPI / window.devicePixelRatio
     }
   }
   availableRect() {
@@ -61,8 +63,8 @@ class ExternalGlassPane {
     return {
       top: -origin.y,
       left: -origin.x,
-      right: screen.width - origin.x,
-      bottom: screen.height - origin.y
+      right: screen.width * nativeDPI / window.devicePixelRatio - origin.x,
+      bottom: screen.height * nativeDPI / window.devicePixelRatio - origin.y
     };
   }
 }
