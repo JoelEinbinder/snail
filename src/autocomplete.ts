@@ -62,7 +62,7 @@ export class Autocomplete {
         });
         this.hideSuggestBox();
         this._editor.selections = [{ start: loc, end: loc }];
-        if (this._activationChars.includes(suggestion[suggestion.text.length - 1]))
+        if (this._activationChars.includes(suggestion.text[suggestion.text.length - 1]))
             this.showSuggestBox();
     }
 
@@ -122,6 +122,8 @@ export class Autocomplete {
 export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, suggestions: Suggestion[]}>;
 export type Suggestion = {
     text: string,
+    suffix?: string,
+    activations?: {[key: string]: string},
 }
 function filterAndSortSuggestions(suggestions: Suggestion[], prefix: string) {
     const filtered = suggestions.filter(s => s.text.startsWith(prefix));

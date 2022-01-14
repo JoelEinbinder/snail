@@ -36,10 +36,17 @@ export class SuggestBox {
         const isSelected = this._selectedSuggestion ? this._selectedSuggestion === suggestion : this._suggestions[0] === suggestion;
         const prefix = this._prefix;
         return <div title={suggestion.text} onMouseDown={() => this._onPick(suggestion)} className={`suggestion ${isSelected ? 'selected' : ''}`}>
-            <span style={{textShadow: '0.5px 0 0 currentColor', color: '#FFF', lineHeight: '14px'}}>{prefix}</span>{suggestion.text.substring(prefix.length)}
+            <span style={{textShadow: '0.5px 0 0 currentColor', color: '#FFF', lineHeight: '14px'}}>{prefix}</span>
+            {suggestion.text.substring(prefix.length)}
+            <span style={{ color: 'var(--ansi-246 )'}}>{suggestion.suffix}</span>
         </div>
     }
     onKeyDown(event: KeyboardEvent): boolean {
+        const suggestion = this._selectedSuggestion || this._suggestions[0];
+        if (suggestion.activations && event.key in suggestion.activations) {
+            this._onPick({text: suggestion.activations[event.key]});
+            return true;
+        }
         switch(event.key) {
             case 'ArrowUp':
                 this._moveSelection(-1);
@@ -48,12 +55,11 @@ export class SuggestBox {
                 this._moveSelection(1);
                 return true;
             case 'Enter':
-                const suggestion = this._selectedSuggestion || this._suggestions[0];
                 const prefix = this._prefix;
                 this._onPick(suggestion);
                 return prefix !== suggestion.text;
             case 'Tab':
-                this._onPick(this._selectedSuggestion || this._suggestions[0]);
+                this._onPick(suggestion);
                 return true;
         }
         return false;
