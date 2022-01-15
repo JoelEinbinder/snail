@@ -3,6 +3,11 @@ const nativeDPI = 2;
 class ExternalGlassPane {
   window?: Window;
   constructor(public element: HTMLElement) {
+    // MacOS will crash if try to make a new window while maximized.
+    if (screenY === 0) {
+      // @ts-ignore
+      return new InPageGlassPane(element);
+    }
     const observer = new ResizeObserver(() => {
       this._resize();
     });

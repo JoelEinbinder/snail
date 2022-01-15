@@ -496,7 +496,7 @@ export class Renderer extends Emitter {
 
   layout() {
     this._charHeight = parseInt(window.getComputedStyle(this._textLayer.canvas).fontSize);
-    this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._textLayer.canvas).lineHeight), this._charHeight);
+    this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._textLayer.canvas).lineHeight || '0'), this._charHeight);
     if (this._options.inline) {
       this.element.style.height = this._innerHeight() + 'px';
     }

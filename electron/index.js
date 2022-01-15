@@ -99,6 +99,7 @@ function makeWindow() {
         focusable: false,
         alwaysOnTop: true,
         hasShadow: false,
+        resizable: false,
         height: 200,
         width: 150,
       }
