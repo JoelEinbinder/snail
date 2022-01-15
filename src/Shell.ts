@@ -1,6 +1,6 @@
 import {Terminal, IDisposable} from 'xterm';
 import 'xterm/css/xterm.css';
-import { addHistory } from './history';
+import { addHistory, updateHistory } from './history';
 import { JoelEvent } from './JoelEvent';
 
 window.electronAPI.onEvent('data', ({shellId, data}) => {
@@ -59,7 +59,7 @@ export class Shell {
     entry.clearEvent.on(onClear);
     entry.activeEvent.dispatch(true);
     this.activeEntry.dispatch(entry);
-    addHistory(command);
+    await entry.addToHistory();
     await window.electronAPI.sendMessage({
       method: 'runCommand',
       params: {
@@ -123,6 +123,7 @@ export class Entry {
   public clearEvent: JoelEvent<void> = new JoelEvent(undefined);
   public willResizeEvent = new JoelEvent<void>(undefined);
   public id: number;
+  private _historyId: number;
   public empty = false;
   public cachedEvaluationResult = new Map<string, Promise<string>>();
   constructor(
@@ -206,6 +207,21 @@ export class Entry {
     }
   }
 
+  async addToHistory() {
+    if (!this.command)
+      return;
+    this._historyId = await addHistory(this.command);
+    const pwd = await this.cachedEvaluation('pwd');
+    const home = await this.cachedEvaluation('echo $HOME');
+    const revName = await this.cachedEvaluation('__git_ref_name')
+    const dirtyState = await this.cachedEvaluation('__is_git_dirty')
+  
+    await updateHistory(this._historyId, 'home', home);
+    await updateHistory(this._historyId, 'pwd', pwd);
+    await updateHistory(this._historyId, 'git_branch', revName);
+    await updateHistory(this._historyId, 'git_dirty', dirtyState);
+  }
+
   addData(data: string|Uint8Array) {
     if (data.length !== 0)
       this._trailingNewline = typeof data === 'string' ? data.endsWith('\n') : data[data.length - 1] === '\n'.charCodeAt(0);
@@ -229,6 +245,15 @@ export class Entry {
     }
     this._terminal.blur();
     this._terminal.disable();
+    if (this._historyId) {
+      await updateHistory(this._historyId, 'end', Date.now());
+      const buffer = this._terminal.buffer.normal;
+      const lines = [];
+      for (let i = 0; i < buffer.length; i++)
+        lines.push(buffer.getLine(i).translateToString(true));
+      await updateHistory(this._historyId, 'output', lines.join('\n'));
+    }
+
   }
   updateSize() {
     this._terminal.resize(size.cols, size.rows);
