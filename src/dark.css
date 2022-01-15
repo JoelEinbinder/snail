@@ -283,7 +283,6 @@ body {
   color: var(--color-text);
   font-family: Monaco;
   font-size: 10px;
-  padding: 4px;
   margin: 0;
 }
 body.glass-pane {

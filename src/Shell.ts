@@ -121,6 +121,7 @@ export class Entry {
   public fullscreenEvent: JoelEvent<boolean> = new JoelEvent<boolean>(false);
   public activeEvent: JoelEvent<boolean> = new JoelEvent<boolean>(false);
   public clearEvent: JoelEvent<void> = new JoelEvent(undefined);
+  public willResizeEvent = new JoelEvent<void>(undefined);
   public id: number;
   public empty = false;
   public cachedEvaluationResult = new Map<string, Promise<string>>();
@@ -130,6 +131,8 @@ export class Entry {
   ) {
     this.id = ++lastEntryId;
     this.element = document.createElement('div');
+    this.element.style.height = '0px';
+    this.element.style.overflow = 'hidden';
     this._terminal = new Terminal({
       fontFamily: 'monaco',
       cols: size.cols,
@@ -172,12 +175,30 @@ export class Entry {
       });
     }));
     this._listeners.push(this._terminal.buffer.onBufferChange(() => {
+      this._willResize();
       this.fullscreenEvent.dispatch(this._terminal.buffer.active === this._terminal.buffer.alternate);
     }));
     this._listeners.push(this._terminal.onClear(() => {
       this.clearEvent.dispatch();
     }));
+    this._terminal.onResize(() => {
+      this._willResize();
+    });
+    this._terminal.onRender(() => {
+      this._willResize();
+    });
+    this._willResize();
+  }
 
+  _willResize() {
+    this.willResizeEvent.dispatch();
+    if (this._terminal.buffer.active === this._terminal.buffer.alternate) {
+      this.element.style.removeProperty('height');
+      this.element.style.padding = '4px';
+    } else {
+      this.element.style.height = this._terminal.element.getBoundingClientRect().height + 'px';
+      this.element.style.removeProperty('padding');
+    }
   }
 
   addData(data: string|Uint8Array) {

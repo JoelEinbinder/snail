@@ -9,11 +9,16 @@ export class ShellView {
   private _element = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
   private _promptElement: HTMLElement;
+  private _lockingScroll = false;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._updateFullscreen();
     this._fullscreenElement.classList.add('fullscreen', 'entry');
     this._shell.fullscreenEntry.on(() => this._updateFullscreen());
     this._container.appendChild(this._element);
+    this._element.style.overflowY = 'auto';
+    this._element.style.position = 'absolute';
+    this._element.style.inset = '0';
+    this._element.style.padding = '4px';
     this._repopulate();
     this._shell.activeEntry.on(entry => {
       if (this._promptElement) {
@@ -65,9 +70,24 @@ export class ShellView {
     element.classList.add('entry');
     element.appendChild(command);
     element.appendChild(entry.element);
+    entry.willResizeEvent.on(async () => {
+      this._lockScroll();
+    });
+    this._lockScroll();
     this._element.appendChild(element);
     if (entry === this._shell.activeEntry.current)
       entry.focus();
+  }
+
+  async _lockScroll() {
+    if (this._lockingScroll)
+      return;
+    const scrollBottom = this._element.scrollHeight - this._element.scrollTop - this._element.offsetHeight;
+    
+    this._lockingScroll = true;
+    await Promise.resolve();
+    this._lockingScroll = false;
+    this._element.scrollTop = this._element.scrollHeight - this._element.offsetHeight - scrollBottom;
   }
 
   _addPrompt() {
@@ -76,7 +96,7 @@ export class ShellView {
     const editorWrapper = React.createRef<HTMLDivElement>();
     render(<>
       <CommandPrefix shellOrEntry={this._shell} />
-      <div ref={editorWrapper} style={{position: 'relative', flex: 1}}
+      <div ref={editorWrapper} style={{position: 'relative', flex: 1, minHeight: '14px'}}
       onKeyDown={event => {
         if (event.key !== 'Enter')
           return;
@@ -89,6 +109,7 @@ export class ShellView {
     </>, element);
     const editor = makePromptEditor(this._shell);
     editorWrapper.current.appendChild(editor.element);
+    this._lockScroll();
     this._element.appendChild(element);
     editor.layout();
     editor.focus();
@@ -99,8 +120,8 @@ export class ShellView {
 function CommandPrefix({shellOrEntry}: {shellOrEntry: Shell|Entry}) {
   const pwd = usePromise(shellOrEntry.cachedEvaluation('pwd'));
   const home = usePromise(shellOrEntry.cachedEvaluation('echo $HOME'));
-  const revName = usePromise(shellOrEntry.cachedEvaluation('__git_ref_name'))
-  const dirtyState = usePromise(shellOrEntry.cachedEvaluation('__is_git_dirty'))
+  const revName = usePromise(shellOrEntry.cachedEvaluation('__git_ref_name'));
+  const dirtyState = usePromise(shellOrEntry.cachedEvaluation('__is_git_dirty'));
   if (pwd === null || home === null)
     return <></>;
   if (revName === null || dirtyState === null)
