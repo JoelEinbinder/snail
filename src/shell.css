@@ -38,7 +38,7 @@ body.fullscreen-entry {
   content: '';
 }
 
-.entry:not(.fullscreen).active::after {
+.entry:not(.fullscreen):last-child::after {
   border-bottom: none;
 }
 

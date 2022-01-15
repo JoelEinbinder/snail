@@ -28,9 +28,9 @@ updateSize();
 
 export class Shell {
   log: Entry[] = [];
-  updated = new JoelEvent(0);
   public fullscreenEntry: JoelEvent<Entry> = new JoelEvent<Entry>(null);
   public activeEntry = new JoelEvent<Entry>(null);
+  public clearEvent = new JoelEvent<void>(undefined);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
   private constructor(private _shellId: number) { }
   static async create(): Promise<Shell> {
@@ -52,7 +52,7 @@ export class Shell {
     const onClear = () => {
       this.log = [entry];
       didClear = true;
-      this._update();
+      this.clearEvent.dispatch();
     }
     entry.cachedEvaluationResult = this._cachedEvaluationResult;
     entry.fullscreenEvent.on(onFullScreen);
@@ -60,7 +60,6 @@ export class Shell {
     entry.activeEvent.dispatch(true);
     this.activeEntry.dispatch(entry);
     addHistory(command);
-    this._update();
     await window.electronAPI.sendMessage({
       method: 'runCommand',
       params: {
@@ -77,7 +76,7 @@ export class Shell {
     entry.clearEvent.off(onClear);
     if (didClear && entry.empty) {
       this.log = [];
-      this._update();
+      this.clearEvent.dispatch();
     }
   }
 
@@ -92,9 +91,6 @@ export class Shell {
     return result.trim();
   }
 
-  _update() {
-    this.updated.dispatch(this.updated.current + 1);
-  }
   async updateSize() {
     for (const log of this.log) {
       log.updateSize();

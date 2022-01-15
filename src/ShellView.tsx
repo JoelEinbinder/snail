@@ -1,91 +1,99 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { useEvent, usePromise } from './hooks';
+import React from 'react';
+import { usePromise } from './hooks';
 import type { Shell, Entry } from './Shell';
 import './shell.css';
-import type { Editor } from '../editor/'
 import { makePromptEditor } from './PromptEditor';
+import { render } from 'react-dom';
 
-export function ShellView({shell}: {shell: Shell}) {
-  const fullScreenEntry = useEvent(shell.fullscreenEntry);
-  const activeEntry = useEvent(shell.activeEntry);
-  if (fullScreenEntry)
-    return <EntryView entry={fullScreenEntry}/>;
-  return <>
-      <Log shell={shell} />
-      {activeEntry ? null : <Prompt shell={shell}/>}
-  </>
-}
+export class ShellView {
+  private _element = document.createElement('div');
+  private _fullscreenElement = document.createElement('div');
+  private _promptElement: HTMLElement;
+  constructor(private _shell: Shell, private _container: HTMLElement) {
+    this._updateFullscreen();
+    this._fullscreenElement.classList.add('fullscreen', 'entry');
+    this._shell.fullscreenEntry.on(() => this._updateFullscreen());
+    this._container.appendChild(this._element);
+    this._repopulate();
+    this._shell.activeEntry.on(entry => {
+      if (this._promptElement) {
+        this._promptElement.remove();
+        this._promptElement = null;
+      }
+      if (entry)
+        this._addEntry(entry);
+      else
+        this._addPrompt();
+    });
+    this._shell.clearEvent.on(() => {
+      this._repopulate();
+    });
+  }
 
-function Log({shell}: {shell: Shell}) {
-  useEvent(shell.updated);
-  return <div>{shell.log.map(e => <EntryView key={e.id} entry={e} />)}</div>;
-}
+  _repopulate() {
+    this._element.textContent = '';
+    for (const entry of this._shell.log)
+      this._addEntry(entry);
+    if (!this._shell.activeEntry.current)
+      this._addPrompt();
+  }
 
-function EntryView({entry}: {entry: Entry}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const isFullscreen = useEvent(entry.fullscreenEvent);
-  const isActive = useEvent(entry.activeEvent);
-  useLayoutEffect(() => {
-    if (!ref.current || !ref.current.parentNode)
-      return;
-    ref.current.appendChild(entry.element);
-    return () => {
-      entry.element.remove();
+  _updateFullscreen() {
+    const fullScreenEntry = this._shell.fullscreenEntry.current;
+    if (fullScreenEntry) {
+      this._element.style.display = 'none';
+      this._container.appendChild(this._fullscreenElement);
+      this._fullscreenElement.appendChild(fullScreenEntry.element);
+      document.body.classList.add('fullscreen-entry');
+      fullScreenEntry.focus();
+    } else {
+      this._fullscreenElement.remove();
+      this._fullscreenElement.textContent = '';
+      this._element.style.display = 'block';
+      document.body.classList.remove('fullscreen-entry');
     }
-  });
-  useLayoutEffect(() => {
-    if (!isFullscreen)
-      return;
-    document.body.classList.add('fullscreen-entry');
-    return () => document.body.classList.remove('fullscreen-entry');
-  }, [isFullscreen]);
-  useEffect(() => {
-    if (isActive)
-      entry.focus();
-  }, [entry, isActive]);
-  if (isFullscreen && isActive)
-    return <div className='entry active fullscreen'><div ref={ref} /></div>;
-  return <div className={'entry' + (isActive ? ' active' : '')}>
-    <div className='command'>
+  }
+
+  _addEntry(entry: Entry) {
+    const command = document.createElement('div');
+    command.classList.add('command');
+    render(<>
       <CommandPrefix shellOrEntry={entry} />
       <div className="user-text">{entry.command}</div>
-    </div>
-    <div ref={ref} className="placeholder"></div>
-  </div>
-}
+    </>, command);
+    const element = document.createElement('div');
+    element.classList.add('entry');
+    element.appendChild(command);
+    element.appendChild(entry.element);
+    this._element.appendChild(element);
+    if (entry === this._shell.activeEntry.current)
+      entry.focus();
+  }
 
-function Prompt({shell}: {shell: Shell}) {
-  const editorWrapper = useRef<HTMLDivElement>(null);
-  const activeEntry = useEvent(shell.activeEntry);
-  const editorRef = useRef<Editor>(null);
-  useLayoutEffect(() => {
-    if (!editorWrapper.current)
-      return;
-    if (!editorRef.current)
-      editorRef.current = makePromptEditor(shell);      
-    editorWrapper.current.appendChild(editorRef.current.element);
-    editorRef.current.layout();
-    if (!activeEntry) {
-      editorRef.current.focus();
-    }
-    return () => {
-      editorRef.current.element.remove();
-      editorRef.current = null;
-    }
-  }, [editorWrapper, editorRef, activeEntry, shell])
-
-  return <div className='prompt'>
-    <CommandPrefix shellOrEntry={shell} />
-    <div ref={editorWrapper} style={{position: 'relative', flex: 1}} onKeyDown={event => {
-    if (event.key !== 'Enter')
-      return;
-    const command = editorRef.current.value;
-    editorRef.current.value = '';
-    shell.runCommand(command);
-    event.stopPropagation();
-    event.preventDefault();
-    }} />
-  </div>;
+  _addPrompt() {
+    const element = document.createElement('div');
+    element.classList.add('prompt');
+    const editorWrapper = React.createRef<HTMLDivElement>();
+    render(<>
+      <CommandPrefix shellOrEntry={this._shell} />
+      <div ref={editorWrapper} style={{position: 'relative', flex: 1}}
+      onKeyDown={event => {
+        if (event.key !== 'Enter')
+          return;
+        const command = editor.value;
+        editor.value = '';
+        this._shell.runCommand(command);
+        event.stopPropagation();
+        event.preventDefault();
+      }} />
+    </>, element);
+    const editor = makePromptEditor(this._shell);
+    editorWrapper.current.appendChild(editor.element);
+    this._element.appendChild(element);
+    editor.layout();
+    editor.focus();
+    this._promptElement = element;
+  }
 }
 
 function CommandPrefix({shellOrEntry}: {shellOrEntry: Shell|Entry}) {

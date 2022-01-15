@@ -75,6 +75,8 @@ export class TextRenderLayer extends BaseRenderLayer {
     for (let y = firstRow; y <= lastRow; y++) {
       const row = y + this._bufferService.buffer.ydisp;
       const line = this._bufferService.buffer.lines.get(row);
+      if (!line)
+        continue;
       const joinedRanges = this._characterJoinerService.getJoinedCharacters(row);
       for (let x = 0; x < this._bufferService.cols; x++) {
         line!.loadCell(x, this._workCell);
