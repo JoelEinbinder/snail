@@ -5,6 +5,7 @@ import '../editor/modes/shell'
 import { makeShellCompleter } from "./shellCompleter";
 import './completions/git';
 import './completions/npx';
+import './completions/npm';
 import { historyPromise } from "./history";
 
 export function makePromptEditor(shell: Shell) {

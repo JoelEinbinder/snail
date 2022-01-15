@@ -69,7 +69,6 @@ export class Autocomplete {
     }
 
     updateSuggestBox() {
-        console.log(this._wantsSuggestBoxShown);
         if (!this._wantsSuggestBoxShown)
             return;
         this.showSuggestBox();
@@ -84,8 +83,6 @@ export class Autocomplete {
     }
 
     async showSuggestBox(autoaccept = false) {
-        if (!this._wantsSuggestBoxShown)
-            console.trace();
         this._wantsSuggestBoxShown = true;
         const location = this._editor.selections[0].start;
         if (this._abortController)
