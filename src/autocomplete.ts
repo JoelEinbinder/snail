@@ -39,10 +39,12 @@ export class Autocomplete {
                         return;
                     this.showSuggestBox(true);
                 } else if (this._activationChars.includes(event.key) && !event.ctrlKey && !event.altKey && !event.metaKey) {
+                    if (this._editor.line(selections[0].start.line).length !== selections[0].start.column)
+                        return;
                     this.showSuggestBox();
                     return;
                 } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && legalChars.test(event.key)) {
-                    if (selections[0].start.column !== 0)
+                    if (this._editor.line(selections[0].start.line).length !== selections[0].start.column)
                         return;
                     this.showSuggestBox();
                     return;
@@ -67,6 +69,7 @@ export class Autocomplete {
     }
 
     updateSuggestBox() {
+        console.log(this._wantsSuggestBoxShown);
         if (!this._wantsSuggestBoxShown)
             return;
         this.showSuggestBox();
@@ -81,6 +84,8 @@ export class Autocomplete {
     }
 
     async showSuggestBox(autoaccept = false) {
+        if (!this._wantsSuggestBoxShown)
+            console.trace();
         this._wantsSuggestBoxShown = true;
         const location = this._editor.selections[0].start;
         if (this._abortController)

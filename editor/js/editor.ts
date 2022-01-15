@@ -69,6 +69,10 @@ export class Editor extends Emitter<EditorEvents> {
     return this._renderer.lineHeight;
   }
 
+  line(index: number) {
+    return this._model.line(index);  
+  }
+
   somethingSelected() {
     const selections = this._model.selections;
     if (!selections.length)
