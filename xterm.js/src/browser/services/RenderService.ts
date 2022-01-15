@@ -78,11 +78,11 @@ export class RenderService extends Disposable implements IRenderService {
 
     // Detect whether IntersectionObserver is detected and enable renderer pause
     // and resume based on terminal visibility if so
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(e => this._onIntersectionChange(e[e.length - 1]), { threshold: 0 });
-      observer.observe(screenElement);
-      this.register({ dispose: () => observer.disconnect() });
-    }
+    // if ('IntersectionObserver' in window) {
+    //   const observer = new IntersectionObserver(e => this._onIntersectionChange(e[e.length - 1]), { threshold: 0 });
+    //   observer.observe(screenElement);
+    //   this.register({ dispose: () => observer.disconnect() });
+    // }
   }
 
   private _onIntersectionChange(entry: IntersectionObserverEntry): void {

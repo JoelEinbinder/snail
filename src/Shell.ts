@@ -184,7 +184,12 @@ export class Entry {
     this._terminal.onResize(() => {
       this._willResize();
     });
+    let firstRender = true;
     this._terminal.onRender(() => {
+      if (firstRender) {
+        firstRender = false;
+        this.updateSize();
+      }
       this._willResize();
     });
     this._willResize();
