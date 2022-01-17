@@ -59,7 +59,7 @@ export class Shell {
     entry.clearEvent.on(onClear);
     entry.activeEvent.dispatch(true);
     this.activeEntry.dispatch(entry);
-    await entry.addToHistory();
+    await entry.addToHistory(this);
     await window.electronAPI.sendMessage({
       method: 'runCommand',
       params: {
@@ -126,6 +126,7 @@ export class Entry {
   private _historyId: number;
   public empty = false;
   public cachedEvaluationResult = new Map<string, Promise<string>>();
+  private _data: (string|Uint8Array)[] = [];
   constructor(
     public command: string,
     private _shellId: number,
@@ -207,22 +208,25 @@ export class Entry {
     }
   }
 
-  async addToHistory() {
+  async addToHistory(shell: Shell) {
     if (!this.command)
       return;
     this._historyId = await addHistory(this.command);
-    const pwd = await this.cachedEvaluation('pwd');
-    const home = await this.cachedEvaluation('echo $HOME');
-    const revName = await this.cachedEvaluation('__git_ref_name')
-    const dirtyState = await this.cachedEvaluation('__is_git_dirty')
+    const pwd = await shell.cachedEvaluation('pwd');
+    const home = await shell.cachedEvaluation('echo $HOME');
+    const revName = await shell.cachedEvaluation('__git_ref_name');
+    const dirtyState = await shell.cachedEvaluation('__is_git_dirty');
+    const hash = await shell.cachedEvaluation('GIT_OPTIONAL_LOCKS=0 git rev-parse HEAD');
   
     await updateHistory(this._historyId, 'home', home);
     await updateHistory(this._historyId, 'pwd', pwd);
     await updateHistory(this._historyId, 'git_branch', revName);
     await updateHistory(this._historyId, 'git_dirty', dirtyState);
+    await updateHistory(this._historyId, 'git_hash', hash);
   }
 
   addData(data: string|Uint8Array) {
+    this._data.push(data);
     if (data.length !== 0)
       this._trailingNewline = typeof data === 'string' ? data.endsWith('\n') : data[data.length - 1] === '\n'.charCodeAt(0);
     this._lastWritePromise = new Promise(x => this._terminal.write(data, x));
@@ -247,11 +251,14 @@ export class Entry {
     this._terminal.disable();
     if (this._historyId) {
       await updateHistory(this._historyId, 'end', Date.now());
-      const buffer = this._terminal.buffer.normal;
-      const lines = [];
-      for (let i = 0; i < buffer.length; i++)
-        lines.push(buffer.getLine(i).translateToString(true));
-      await updateHistory(this._historyId, 'output', lines.join('\n'));
+      let output = '';
+      for (const data of this._data) {
+        if (typeof data === 'string')
+          output += data;
+        else
+          output += new TextDecoder().decode(data);
+      }
+      await updateHistory(this._historyId, 'output', output);
     }
 
   }
