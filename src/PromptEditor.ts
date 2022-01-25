@@ -7,6 +7,7 @@ import './completions/git';
 import './completions/npx';
 import './completions/npm';
 import { historyPromise } from "./history";
+import { setSelection } from "./selection";
 
 export function makePromptEditor(shell: Shell) {
   const editor = new Editor('', {
@@ -26,7 +27,11 @@ export function makePromptEditor(shell: Shell) {
   editor.on('selectionChanged', () => {
     historyIndex = 0;
     currentValue = '';
+    setSelection(() => editor.selections.map(s => editor.text(s)).join('\n'));
   })
+  editor.element.addEventListener('focusin', () => {
+    setSelection(() => editor.selections.map(s => editor.text(s)).join('\n'));
+  }, true);
   editor.element.addEventListener('keydown', event => {
     if (event.key === 'ArrowDown') {
       moveHistory(-1);

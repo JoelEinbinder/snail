@@ -2,6 +2,7 @@ import {Terminal, IDisposable} from 'xterm';
 import 'xterm/css/xterm.css';
 import { addHistory, updateHistory } from './history';
 import { JoelEvent } from './JoelEvent';
+import { setSelection } from './selection';
 
 window.electronAPI.onEvent('data', ({shellId, data}) => {
   const shell = shells.get(shellId);
@@ -183,6 +184,9 @@ export class Entry {
     this._listeners.push(this._terminal.onClear(() => {
       this.clearEvent.dispatch();
     }));
+    this._terminal.onSelectionChange(() => {
+      setSelection(() => this._terminal.getSelection());
+    });
     this._terminal.onResize(() => {
       this._willResize();
     });

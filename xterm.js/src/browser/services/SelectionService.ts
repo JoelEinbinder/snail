@@ -640,6 +640,7 @@ export class SelectionService extends Disposable implements ISelectionService {
       previousSelectionEnd[1] !== this._model.selectionEnd[1]) {
       this.refresh(true);
     }
+    this._fireEventIfSelectionChanged();
   }
 
   /**
