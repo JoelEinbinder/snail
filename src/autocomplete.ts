@@ -23,6 +23,11 @@ export class Autocomplete {
             if (this._suggestBox?.showing) {
                 if (event.key === 'Escape') {
                     this.hideSuggestBox();
+                } else if (event.key === 'ArrowUp' && this._suggestBox.selectedIndex <= 0) {
+                    // hide suggest box but dont cancel event
+                    this.hideSuggestBox();
+                    // we want the history completions to kick in
+                    return;
                 } else if (!this._suggestBox.onKeyDown(event)) {
                     return;
                 }

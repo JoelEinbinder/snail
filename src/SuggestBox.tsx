@@ -18,6 +18,10 @@ export class SuggestBox {
     get showing() {
         return this._glassPane.showing();
     }
+    get selectedIndex() {
+        return this._selectedSuggestion ? this._suggestions.indexOf(this._selectedSuggestion) : -1;
+    }
+
     setSuggestions(prefix: string, suggestions: Suggestion[]) {
         if (!suggestions.includes(this._selectedSuggestion))
             delete this._selectedSuggestion;
@@ -27,10 +31,10 @@ export class SuggestBox {
         if (!this._viewport.isItemFullyVisible(this._selectedSuggestion || this._suggestions[0]))
             this._viewport.showItem(this._selectedSuggestion || this._suggestions[0], 'up');
     }
-    _render() {
+    private _render() {
         this._viewport._refresh();
     }
-    _renderItem(suggestion: Suggestion) {
+    private _renderItem(suggestion: Suggestion) {
         const isSelected = this._selectedSuggestion ? this._selectedSuggestion === suggestion : this._suggestions[0] === suggestion;
         const prefix = this._prefix;
         return <div title={suggestion.text} onMouseDown={() => this._onPick(suggestion)} className={`suggestion ${isSelected ? 'selected' : ''}`}>
@@ -62,7 +66,7 @@ export class SuggestBox {
         }
         return false;
     }
-    _moveSelection(amount: number) {
+    private _moveSelection(amount: number) {
         const index = this._selectedSuggestion ? this._suggestions.indexOf(this._selectedSuggestion) : 0;
         const newIndex = (this._suggestions.length + index + amount) % this._suggestions.length;
         this._selectedSuggestion = this._suggestions[newIndex];
