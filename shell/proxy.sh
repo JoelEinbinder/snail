@@ -89,7 +89,13 @@ alias fgrep='fgrep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox
 alias grep='grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'
 alias ls='ls -G'
 alias gbc='git for-each-ref --sort=committerdate refs/heads/ --format='\''%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'\'
+alias fen='~/chess/drawFen.js'
+
 shopt -s expand_aliases
+
+export LSCOLORS=Gxfxcxdxbxegedabagacad
+export PATH=/Users/joeleinbinder/.nvm/versions/node/v16.13.1/bin:/Users/joeleinbinder/emsdk:/Users/joeleinbinder/emsdk/upstream/emscripten:/Users/joeleinbinder/emsdk/node/14.15.5_64bit/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/TeX/texbin:/usr/local/share/dotnet:/opt/X11/bin:~/.dotnet/tools:/Library/Apple/usr/bin
+export EDITOR=nano
 
 while IFS= read -u 1 -r line
 do

@@ -28,7 +28,7 @@ export class HTMLBlock implements IHTMLBlock {
     this._div.style.border = '0';
     // make text line up exactly with the canvas
     // This is a hack. we should really have lineheight
-    this._div.style.transform = 'translateY(0.5px)';
+    this._div.style.transform = 'translateY(2px)';
     // this._div.sandbox.value = '';
   }
 
