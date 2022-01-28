@@ -79,6 +79,7 @@ class InPageGlassPane {
       this.element.style.position = 'fixed';
       this.element.style.top = '0';
       this.element.style.left = '0';
+      this.element.style.zIndex = '9999';
   }
   showing() {
       return !!this.element.parentElement;
