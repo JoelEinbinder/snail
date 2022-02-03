@@ -1,124 +1,168 @@
-const {it} = require('mocha');
+const {it, describe} = require('mocha');
 const expect = require('expect');
-const {getResult} = require('./runner');
-it('should pipe', async () => {
-    const result = await getResult({
-        main: {
-            args: ['foo\nbar\nbaz'],
-            executable: 'echo',
-        },
-        pipe: {
-            executable: 'grep',
-            args: ['bar']
-        }
-    });
-    expect(result).toEqual({
-        output: 'bar\n',
-        stderr: '',
-        code: 0
-    })
-});
-
-it('should pipe twice', async () => {
-    const result = await getResult({
-        main: {
-            args: ['foo\nbar\nbaz'],
-            executable: 'echo',
-        },
-        pipe: {
+describe('runner', () => {
+    const {getResult} = require('./runner');
+    it('should pipe', async () => {
+        const result = await getResult({
             main: {
-                executable: 'grep',
-                args: ['b'],
+                args: ['foo\nbar\nbaz'],
+                executable: 'echo',
             },
             pipe: {
                 executable: 'grep',
-                args: ['z']
+                args: ['bar']
             }
-        }
+        });
+        expect(result).toEqual({
+            output: 'bar\n',
+            stderr: '',
+            code: 0
+        })
     });
-    expect(result).toEqual({
-        output: 'baz\n',
-        stderr: '',
-        code: 0
-    })
-});
 
-it('should return the pipes exit code', async () => {
-    const result = await getResult({
-        main: {
-            args: ['foo\nbar\nbaz'],
-            executable: 'echo',
-        },
-        pipe: {
-            executable: 'grep',
-            args: ['q'],
-        }
+    it('should pipe twice', async () => {
+        const result = await getResult({
+            main: {
+                args: ['foo\nbar\nbaz'],
+                executable: 'echo',
+            },
+            pipe: {
+                main: {
+                    executable: 'grep',
+                    args: ['b'],
+                },
+                pipe: {
+                    executable: 'grep',
+                    args: ['z']
+                }
+            }
+        });
+        expect(result).toEqual({
+            output: 'baz\n',
+            stderr: '',
+            code: 0
+        })
     });
-    expect(result).toEqual({
-        output: '',
-        stderr: '',
-        code: 1
-    })
-});
 
-it('should return exit code 1', async () => {
-    const result = await getResult({
-        args: ['not_a_real_directory'],
-        executable: 'ls'
+    it('should return the pipes exit code', async () => {
+        const result = await getResult({
+            main: {
+                args: ['foo\nbar\nbaz'],
+                executable: 'echo',
+            },
+            pipe: {
+                executable: 'grep',
+                args: ['q'],
+            }
+        });
+        expect(result).toEqual({
+            output: '',
+            stderr: '',
+            code: 1
+        })
     });
-    expect(result).toEqual({
-        output: '',
-        stderr: 'ls: not_a_real_directory: No such file or directory\n',
-        code: 1
-    })
-});
 
-it('should grep and not wait', async () => {
-    const result = await getResult({
-        args: ['foo'],
-        executable: 'grep'
-    });
-    expect(result).toEqual({
-        output: '',
-        stderr: '',
-        code: 1
-    })
-});
-
-it('should do and', async () => {
-    const result = await getResult({
-        type: 'and',
-        left: {
-            args: ['foo'],
-            executable: 'echo'
-        },
-        right: {
-            args: ['bar'],
-            executable: 'echo'
-        }
-    });
-    expect(result).toEqual({
-        output: 'foo\nbar\n',
-        stderr: '',
-        code: 0
-    })
-});
-
-it('should do or', async () => {
-    const result = await getResult({
-        type: 'or',
-        left: {
+    it('should return exit code 1', async () => {
+        const result = await getResult({
             args: ['not_a_real_directory'],
             executable: 'ls'
-        },
-        right: {
-            args: ['foo'],
-            executable: 'echo'
-        }
+        });
+        expect(result).toEqual({
+            output: '',
+            stderr: 'ls: not_a_real_directory: No such file or directory\n',
+            code: 1
+        })
     });
-    expect(result).toEqual({
-        output: 'foo\n',
-        stderr: 'ls: not_a_real_directory: No such file or directory\n',
-        code: 0
-    })
+
+    it('should grep and not wait', async () => {
+        const result = await getResult({
+            args: ['foo'],
+            executable: 'grep'
+        });
+        expect(result).toEqual({
+            output: '',
+            stderr: '',
+            code: 1
+        })
+    });
+
+    it('should do and', async () => {
+        const result = await getResult({
+            type: 'and',
+            left: {
+                args: ['foo'],
+                executable: 'echo'
+            },
+            right: {
+                args: ['bar'],
+                executable: 'echo'
+            }
+        });
+        expect(result).toEqual({
+            output: 'foo\nbar\n',
+            stderr: '',
+            code: 0
+        })
+    });
+
+    it('should do or', async () => {
+        const result = await getResult({
+            type: 'or',
+            left: {
+                args: ['not_a_real_directory'],
+                executable: 'ls'
+            },
+            right: {
+                args: ['foo'],
+                executable: 'echo'
+            }
+        });
+        expect(result).toEqual({
+            output: 'foo\n',
+            stderr: 'ls: not_a_real_directory: No such file or directory\n',
+            code: 0
+        })
+    });
+});
+
+describe('tokenizer', () => {
+    const {tokenize} = require('./tokenizer');
+    it('should split arguments', () => {
+        expect(tokenize('foo bar  baz')).toEqual([
+            {type: 'word', value: 'foo'},
+            {type: 'word', value: 'bar'},
+            {type: 'word', value: 'baz'},
+        ]);
+    });
+    it('should detect a pipe', () => {
+        expect(tokenize('foo | bar')).toEqual([
+            {type: 'word', value: 'foo'},
+            {type: 'operator', value: '|'},
+            {type: 'word', value: 'bar'},
+        ]);
+    });
+    it('should handle double qoutes', () => {
+        expect(tokenize('foo "bar baz"')).toEqual([
+            {type: 'word', value: 'foo'},
+            {type: 'word', value: 'bar baz'},
+        ]);
+    });
+    it('should handle single qoutes', () => {
+        expect(tokenize('foo \'bar baz\'')).toEqual([
+            {type: 'word', value: 'foo'},
+            {type: 'word', value: 'bar baz'},
+        ]);
+    });
+    it('should handle escaped qoutes', () => {
+        expect(tokenize(`foo "bar \\'baz\\'"`)).toEqual([
+            {type: 'word', value: 'foo'},
+            {type: 'word', value: `bar 'baz'`},
+        ]);
+    });
+    it('should handle escaped qoutes 2', () => {
+        expect(tokenize(`foo 'bar \\"baz\\"'"`)).toEqual([
+            {type: 'word', value: 'foo'},
+            {type: 'word', value: `bar \\"baz\\"`},
+        ]);
+    });
 });
