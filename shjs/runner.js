@@ -4,7 +4,7 @@ const {Writable} = require('stream')
  * @param {import('./ast').Expression} expression
  * @param {Writable} stdout
  * @param {Writable} stderr
- * @return {{stdin: Writable, closePromise: Promise<number>}}
+ * @return {{stdin: Writable, kill: (signal: number) => boolean, closePromise: Promise<number>}}
  */
 function execute(expression, stdout, stderr) {
     if ('executable' in expression) {
@@ -14,7 +14,7 @@ function execute(expression, stdout, stderr) {
         const closePromise = new Promise(resolve => child.on('close', resolve));
         child.stderr.pipe(stderr, { end: false });            
         child.stdout.pipe(stdout, { end: false });
-        return {stdin: child.stdin, closePromise};
+        return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
     } else if ('pipe' in expression) {
         const pipe = execute(expression.pipe, stdout, stderr);
         const main = execute(expression.main, pipe.stdin, stderr);
@@ -22,7 +22,7 @@ function execute(expression, stdout, stderr) {
             pipe.stdin.end();
             return pipe.closePromise;
         });
-        return {stdin: main.stdin, closePromise};
+        return {stdin: main.stdin, kill: main.kill, closePromise};
     } else if ('left' in expression) {
         const left = execute(expression.left, stdout, stderr);
         let active = left;
@@ -39,7 +39,7 @@ function execute(expression, stdout, stderr) {
             }
             return code;   
         });
-        return {stdin, closePromise};
+        return {stdin, kill: left.kill, closePromise};
     }
 }
 

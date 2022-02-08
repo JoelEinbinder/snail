@@ -4,6 +4,7 @@
         "allowJs": true,
         "checkJs": true,
         "target": "ESNext",
+        "strictBindCallApply": true,
         "moduleResolution": "node",
         "lib": [
             "esnext"
