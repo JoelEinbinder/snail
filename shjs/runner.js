@@ -1,6 +1,5 @@
-//@ts-check
 const {spawn} = require('child_process');
-const {Duplex, Writable} = require('stream')
+const {Writable} = require('stream')
 /**
  * @param {import('./ast').Expression} expression
  * @param {Writable} stdout

@@ -166,3 +166,75 @@ describe('tokenizer', () => {
         ]);
     });
 });
+
+describe('parser', () => {
+    const {parse} = require('./parser');
+    const {tokenize} = require('./tokenizer');
+    it('should do a simple command', () => {
+        const tokens = tokenize('foo bar baz');
+        expect(parse(tokens)).toEqual({
+            executable: 'foo',
+            args: ['bar', 'baz']
+        });
+    });
+    it('should do a pipe command', () => {
+        const tokens = tokenize('foo bar baz | grep "woo"');
+        expect(parse(tokens)).toEqual({
+            main: {
+                executable: 'foo',
+                args: ['bar', 'baz']
+            },
+            pipe: {
+                executable: 'grep',
+                args: ['woo']
+            }
+        });
+    });
+    it('should do a pipe command with a pipe', () => {
+        const tokens = tokenize('foo bar baz | grep "woo" | grep "zoo"');
+        expect(parse(tokens)).toEqual({
+            main: {
+                executable: 'foo',
+                args: ['bar', 'baz']
+            },
+            pipe: {
+                main: {
+                    executable: 'grep',
+                    args: ['woo']
+                },
+                pipe: {
+                    executable: 'grep',
+                    args: ['zoo']
+                }
+            }
+        });
+    });
+    it('should do an and', () => {
+        const tokens = tokenize('foo bar baz && man "woo"');
+        expect(parse(tokens)).toEqual({
+            type: 'and',
+            left: {
+                executable: 'foo',
+                args: ['bar', 'baz']
+            },
+            right: {
+                executable: 'man',
+                args: ['woo']
+            }
+        });
+    });
+    it('should do an or', () => {
+        const tokens = tokenize('foo bar baz || man "woo"');
+        expect(parse(tokens)).toEqual({
+            type: 'or',
+            left: {
+                executable: 'foo',
+                args: ['bar', 'baz']
+            },
+            right: {
+                executable: 'man',
+                args: ['woo']
+            }
+        });
+    });
+});
