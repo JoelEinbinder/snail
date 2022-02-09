@@ -1,45 +1,50 @@
 const {spawn} = require('child_process');
-const {Writable} = require('stream')
+const {Writable, Readable} = require('stream')
 /**
  * @param {import('./ast').Expression} expression
  * @param {Writable} stdout
  * @param {Writable} stderr
+ * @param {Readable=} stdin
  * @return {{stdin: Writable, kill: (signal: number) => boolean, closePromise: Promise<number>}}
  */
-function execute(expression, stdout, stderr) {
+function execute(expression, stdout, stderr, stdin) {
     if ('executable' in expression) {
         const child = spawn(expression.executable, expression.args, {
-            stdio: 'pipe',
+            stdio: [stdin === process.stdin ? 'inherit' : 'pipe', stdout === process.stdout ? 'inherit' : 'pipe', stderr === process.stderr ? 'inherit' : 'pipe'],
         });
         const closePromise = new Promise(resolve => child.on('close', resolve));
-        child.stderr.pipe(stderr, { end: false });            
-        child.stdout.pipe(stdout, { end: false });
+        if (stdin !== process.stdin && stdin)
+            stdin.pipe(child.stdin, { end: false });
+        if (stderr !== process.stderr)
+            child.stderr.pipe(stderr, { end: false });
+        if (stdout !== process.stdout)
+            child.stdout.pipe(stdout, { end: false });
         return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
     } else if ('pipe' in expression) {
         const pipe = execute(expression.pipe, stdout, stderr);
-        const main = execute(expression.main, pipe.stdin, stderr);
+        const main = execute(expression.main, pipe.stdin, stderr, stdin);
         const closePromise = main.closePromise.then(() => {
             pipe.stdin.end();
             return pipe.closePromise;
         });
         return {stdin: main.stdin, kill: main.kill, closePromise};
     } else if ('left' in expression) {
-        const left = execute(expression.left, stdout, stderr);
-        let active = left;
-        const stdin = new Writable({
+        const writableStdin = new Writable({
             write(chunk, encoding, callback) {
                 active.stdin.write(chunk, encoding, callback);
             }
         });
+        const left = execute(expression.left, stdout, stderr, stdin);
+        let active = left;
         const closePromise = left.closePromise.then(async code => {
             if (!!code === (expression.type === 'or')) {
-                const right = execute(expression.right, stdout, stderr);
+                const right = execute(expression.right, stdout, stderr, stdin);
                 active = right;
                 return right.closePromise;
             }
             return code;   
         });
-        return {stdin, kill: left.kill, closePromise};
+        return {stdin: writableStdin, kill: (...args) => active.kill(...args), closePromise};
     }
 }
 
