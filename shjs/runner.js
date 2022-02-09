@@ -12,6 +12,19 @@ const builtins = {
         }
         return 0;
     },
+    export: async (args, stdout, stderr) => {
+        for (const arg of args) {
+            const index = arg.indexOf('=');
+            if (index === -1) {
+                stderr.write('export must contain a value\n');
+                return 1;
+            }
+            const key = arg.substring(0, index);
+            const value = arg.substring(index + 1);
+            process.env[key] = value;
+        }
+        return 0;
+    },
 }
 /**
  * @param {import('./ast').Expression} expression
