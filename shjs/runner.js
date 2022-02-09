@@ -25,6 +25,13 @@ const builtins = {
         }
         return 0;
     },
+    declare: async (args, stdout, stderr) => {
+        if (args[0] !== '-x') {
+            stderr.write('declare is only supported with -x\n');
+            return 1;
+        }
+        return builtins.export(args.slice(1), stdout, stderr);
+    },
 }
 /**
  * @param {import('./ast').Expression} expression
