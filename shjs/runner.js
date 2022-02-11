@@ -1,11 +1,18 @@
 const {spawn} = require('child_process');
-const {Writable, Readable} = require('stream')
+const {Writable, Readable} = require('stream');
+/**
+ * @type {{env?: {[key: string]: string}, cwd?: string}}
+ */
+let changes = null;
 
 /** @type {Object<string, (args: string[], stdout: Writable, stderr: Writable) => Promise<number>>} */
 const builtins = {
     cd: async (args, stdout, stderr) => {
         try {
             process.chdir(args[0]);
+            if (!changes)
+                changes = {};
+            changes.cwd = args[0];
         } catch (e) {
             stderr.write(e.message + '\n');
             return 1;
@@ -21,7 +28,12 @@ const builtins = {
             }
             const key = arg.substring(0, index);
             const value = arg.substring(index + 1);
+            if (!changes)
+                changes = {};
+            if (!changes.env)
+                changes.env = {};
             process.env[key] = value;
+            changes.env[key] = value;
         }
         return 0;
     },
@@ -121,4 +133,8 @@ async function getResult(expression) {
     return {output, stderr, code};
 }
 
-module.exports = {execute, getResult};
+function getChanges() {
+    return changes;
+}
+
+module.exports = {execute, getResult, getChanges};
