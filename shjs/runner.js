@@ -12,7 +12,7 @@ const builtins = {
             process.chdir(args[0]);
             if (!changes)
                 changes = {};
-            changes.cwd = args[0];
+            changes.cwd = process.cwd();
         } catch (e) {
             stderr.write(e.message + '\n');
             return 1;

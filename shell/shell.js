@@ -1,76 +1,37 @@
 //@ts-check
 const path = require('path');
-const pty = require('node-pty');
 const EventEmitter = require('events');
 const child_process = require('child_process');
-const magicToken = `\x33[JOELMAGIC${Math.random()}]`;
-const magicString = magicToken + '\r\n';
-let magicCallback = null;
+const { PipeTransport } = require('../protocol/pipeTransport');
+const { RPC } = require('../protocol/rpc');
 
 class Shell extends EventEmitter {
   constructor() {
     super();
-    this.rows = 80;
-    this.cols = 24;
-    this.env = {...process.env};
-    this.cwd = process.cwd();
-    this.inCommand = false;
-    this.ignoreText = '';
-    this.evaluating = false;
-    this.evaluateResult = '';
-    this.commandQueue = Promise.resolve();
+    this.process = child_process.spawn('node', [path.join(__dirname, 'worker.js')], {
+      stdio: ['pipe', 'pipe', 'inherit'],
+    });
+    const transport = new PipeTransport(this.process.stdin, this.process.stdout);
+    this.rpc = RPC(transport, {
+      cwd: cwd => {},
+      env: env => {},
+      data: data => {
+        this.emit('data', data);
+      },
+    });
   }
 
   /**
    * @param {string} command
    */
   async runCommand(command) {
-    return this.commandQueue = this.commandQueue.then(() => this._innerRunCommand(command));
+    if (!command)
+      return {exitCode: 0};
+    return this.rpc.send('runCommand', command);
   }
 
   resize(cols, rows) {
-    this.rows = rows;
-    this.cols = cols;
-    if (this.shell)
-      this.shell.resize(cols, rows);
-  }
-
-  /**
-   * @param {string} command
-   */
-  async _innerRunCommand(command) {
-    this.shell = pty.spawn('node', [path.join(__dirname, '..', 'shjs', 'wrapper.js'), command, magicToken], {
-      env: this.env,
-      rows: this.rows,
-      cols: this.cols,
-      cwd: this.cwd,
-      name: 'xterm-256color',
-      handleFlowControl: true,
-      encoding: null,
-    });
-    let extraData = '';
-    let inExtraData = false;
-    this.shell.onData(data => {
-      if (!inExtraData && data.slice(data.length - magicString.length).toString() === magicString) {
-        data = data.slice(0, -magicString.length);
-        inExtraData = true;
-      }
-      if (inExtraData)
-        extraData += data;
-      else
-        this.emit('data', data);
-    });
-    await new Promise(x => this.shell.onExit(x));
-    this.shell = null;
-    if (extraData.length) {
-      const changes = JSON.parse(extraData);
-      if (changes.cwd)
-        this.cwd = changes.cwd;
-      if (changes.env) {
-        for (const key in changes.env)
-          this.env[key] = changes.env[key];
-      }
-    }
+    return this.rpc.send('resize', {cols, rows});
   }
 
   /**
@@ -78,28 +39,16 @@ class Shell extends EventEmitter {
    * @return {Promise<string>}
    */
   async evaluate(code) {
-    // return '';
-    const child = child_process.spawn('node', [path.join(__dirname, '..', 'shjs', 'wrapper.js'), code], {
-      env: this.env,
-      cwd: this.cwd,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    const data = [];
-    child.stdin.end();
-    child.stderr.on('data', d => data.push(d));
-    child.stdout.on('data', d => data.push(d));
-    await new Promise(x => child.on('exit', x));
-    return data.join('');
+    return this.rpc.send('evaluate', code);
+
   }
 
   sendRawInput(input) {
-    if (this.shell)
-      this.shell.write(input);
+    return this.rpc.send('sendRawInput', input);
   }
 
   close() {
-    if (this.shell)
-      this.shell.kill();
+    this.process.kill();
   }
 }
 
