@@ -2,16 +2,16 @@
 const nativeDPI = 2;
 class ExternalGlassPane {
   window?: Window;
+  observer: ResizeObserver;
   constructor(public element: HTMLElement) {
     // MacOS will crash if try to make a new window while maximized.
     if (screenY === 0) {
       // @ts-ignore
       return new InPageGlassPane(element);
     }
-    const observer = new ResizeObserver(() => {
+    this.observer = new ResizeObserver(() => {
       this._resize();
     });
-    observer.observe(this.element);
   }
   _resize() {
     if (!this.showing())
@@ -23,6 +23,7 @@ class ExternalGlassPane {
     if (this.window)
       return;
     this.window = window.open('', '', 'width=10,height=10');
+    this.observer.observe(this.element);
     for (const sheet of window.document.styleSheets)
       if (sheet.ownerNode instanceof Element)
         this.window.document.head.appendChild(sheet.ownerNode.cloneNode(true));
@@ -48,6 +49,7 @@ class ExternalGlassPane {
     if (!this.showing())
       return;
     delete this.window;
+    this.observer.unobserve(this.element);
     window.electronAPI.sendMessage({
       method: 'closeAllPopups',
       params: {}
