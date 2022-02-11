@@ -79,8 +79,13 @@ function tokenize(code) {
             clean = true;
             return;
         }
+        const type = (clean && operators.has(value)) ? 'operator' : 'word';
+        if (type === 'word' && value.startsWith('~')) {
+            if (value.length === 1 || value[1] === '/')
+                value = process.env.HOME + value.slice(1);
+        }
         tokens.push({
-            type: (clean && operators.has(value)) ? 'operator' : 'word',
+            type,
             value,
         });
         clean = true;
