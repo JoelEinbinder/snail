@@ -120,8 +120,8 @@ export class ShellView {
 function CommandPrefix({shellOrEntry}: {shellOrEntry: Shell|Entry}) {
   const pwd = usePromise(shellOrEntry.cachedEvaluation('pwd'));
   const home = usePromise(shellOrEntry.cachedEvaluation('echo $HOME'));
-  const revName = usePromise(shellOrEntry.cachedEvaluation('__git_ref_name'));
-  const dirtyState = usePromise(shellOrEntry.cachedEvaluation('__is_git_dirty'));
+  const revName = ''; //usePromise(shellOrEntry.cachedEvaluation('__git_ref_name'));
+  const dirtyState = ''; //usePromise(shellOrEntry.cachedEvaluation('__is_git_dirty'));
   if (pwd === null || home === null)
     return <></>;
   if (revName === null || dirtyState === null)

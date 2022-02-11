@@ -160,7 +160,7 @@ const handler = {
     return shells.get(shellId).evaluate(code);
   },
   async resize({cols, rows, shellId}) {
-    shells.get(shellId).shell.resize(cols, rows);
+    shells.get(shellId).resize(cols, rows);
   },
   async sendRawInput({shellId, input}) {
     shells.get(shellId).sendRawInput(input);
