@@ -5,7 +5,7 @@ const {tokenize} = require('./tokenizer');
  * @return {import('./ast').Expression}
  */
 function parse(tokens) {
-    if (!tokens.length)
+    if (!eatSpaces(tokens))
         return null;
     const token = tokens.shift();
     if (token.type === 'operator') {
@@ -53,13 +53,46 @@ function parse(tokens) {
 
 /**
  * @param {import('./tokenizer').Token[]} tokens
- * @return {string[]}
+ * @return {import('./ast').Word[]}
  */
- function parseArgs(tokens) {
+function parseArgs(tokens) {
     const args = [];
-    while (tokens.length && tokens[0].type === 'word')
-        args.push(tokens.shift().value);
+    while (eatSpaces(tokens) && tokens[0].type !== 'operator') {
+        args.push(parseWord(tokens));
+    }
     return args;
+}
+
+/**
+ * @param {import('./tokenizer').Token[]} tokens
+ */
+ function eatSpaces(tokens) {
+    while (tokens.length && tokens[0].type === 'space')
+        tokens.shift();
+    return !!tokens.length;
  }
- 
- module.exports = {parse};
+
+/**
+ * @param {import('./tokenizer').Token[]} tokens
+ * @return {import('./ast').Word}
+ */
+function parseWord(tokens) {
+    /** @type {import('./ast').Word} */
+    const word = [];
+    while (tokens.length && (tokens[0].type === 'word' || tokens[0].type === 'replacement')) {
+        const token = tokens.shift();
+        switch(token.type) {
+            case 'word':
+                word.push(token.value);
+                break;
+            case 'replacement':
+                word.push({replacement: token.value});
+                break;
+            default:
+                throw new Error(`Unexpected token: ${token.type}`);
+        }
+    }
+    return word.some(x => typeof x !== 'string') ? word : word.join('');
+}
+
+module.exports = {parse};

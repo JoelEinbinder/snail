@@ -117,6 +117,36 @@ function processAlias(executable, args) {
 }
 
 /**
+ * @param {import('./ast').Word} word
+ * @return {string}
+ */
+function processWord(word) {
+    if (typeof word === 'string')
+        return word;
+    const parts = [];
+    for (const part of word) {
+        if (typeof part === 'string')
+            parts.push(part);
+        else
+            parts.push(computeReplacement(part.replacement));
+    }
+    return parts.join('');
+}
+
+/**
+ * @param {string} replacement
+ */
+function computeReplacement(replacement) {
+    if (replacement === '~')
+        return process.env.HOME;
+    if (replacement.startsWith('$')) {
+        const key = replacement.substring(1);
+        return key in process.env ? process.env[key] : '';
+    }
+    throw new Error(`Unknown replacement: ${replacement}`);
+}
+
+/**
  * @param {import('./ast').Expression} expression
  * @param {Writable} stdout
  * @param {Writable} stderr
@@ -125,7 +155,7 @@ function processAlias(executable, args) {
  */
 function execute(expression, stdout, stderr, stdin) {
     if ('executable' in expression) {
-        const {executable, args} = processAlias(expression.executable, [...expression.args]);
+        const {executable, args} = processAlias(processWord(expression.executable), [...expression.args.map(processWord)]);
         if (executable in builtins) {
             const closePromise = builtins[executable](args, stdout, stderr);
             return {

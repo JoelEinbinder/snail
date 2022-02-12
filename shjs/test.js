@@ -130,38 +130,46 @@ describe('tokenizer', () => {
     it('should split arguments', () => {
         expect(tokenize('foo bar  baz')).toEqual([
             {type: 'word', value: 'foo'},
+            {type: 'space', value: ' '},
             {type: 'word', value: 'bar'},
+            {type: 'space', value: '  '},
             {type: 'word', value: 'baz'},
         ]);
     });
     it('should detect a pipe', () => {
         expect(tokenize('foo | bar')).toEqual([
             {type: 'word', value: 'foo'},
+            {type: 'space', value: ' '},
             {type: 'operator', value: '|'},
+            {type: 'space', value: ' '},
             {type: 'word', value: 'bar'},
         ]);
     });
     it('should handle double qoutes', () => {
         expect(tokenize('foo "bar baz"')).toEqual([
             {type: 'word', value: 'foo'},
+            {type: 'space', value: ' '},
             {type: 'word', value: 'bar baz'},
         ]);
     });
     it('should handle single qoutes', () => {
         expect(tokenize('foo \'bar baz\'')).toEqual([
             {type: 'word', value: 'foo'},
+            {type: 'space', value: ' '},
             {type: 'word', value: 'bar baz'},
         ]);
     });
     it('should handle escaped qoutes', () => {
         expect(tokenize(`foo "bar \\'baz\\'"`)).toEqual([
             {type: 'word', value: 'foo'},
+            {type: 'space', value: ' '},
             {type: 'word', value: `bar 'baz'`},
         ]);
     });
     it('should handle escaped qoutes 2', () => {
         expect(tokenize(`foo 'bar \\"baz\\"'"`)).toEqual([
             {type: 'word', value: 'foo'},
+            {type: 'space', value: ' '},
             {type: 'word', value: `bar \\"baz\\"`},
         ]);
     });
