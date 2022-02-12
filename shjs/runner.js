@@ -178,6 +178,9 @@ function computeReplacement(replacement) {
 function execute(expression, stdout, stderr, stdin) {
     if ('executable' in expression) {
         const {executable, args} = processAlias(processWord(expression.executable), [...expression.args.map(processWord)]);
+        const env = {...process.env};
+        for (const {name, value} of expression.assignments || [])
+            env[name] = processWord(value);
         if (executable in builtins) {
             const closePromise = builtins[executable](args, stdout, stderr);
             return {
@@ -185,11 +188,12 @@ function execute(expression, stdout, stderr, stdin) {
                 stdin: new Writable({write(){}}),
                 kill: () => void 0,
             }
-        } else if (args.length === 0 && treatAsDirectory(executable)) {
+        } else if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
             return execute({executable: 'cd', args: [executable]}, stdout, stderr, stdin);
         } else {
             const child = spawn(executable, args, {
                 stdio: [stdin === process.stdin ? 'inherit' : 'pipe', stdout === process.stdout ? 'inherit' : 'pipe', stderr === process.stderr ? 'inherit' : 'pipe'],
+                env,
             });
             const closePromise = new Promise(resolve => {
                 child.on('close', resolve);

@@ -7,8 +7,8 @@ const {tokenize} = require('./tokenizer');
 function parse(tokens) {
     if (!eatSpaces(tokens))
         return null;
-    const token = tokens.shift();
-    if (token.type === 'operator') {
+    if (tokens[0].type === 'operator') {
+        const token = tokens.shift();
         switch(token.value) {
             case ';':
                 return parse(tokens);
@@ -17,9 +17,9 @@ function parse(tokens) {
         }
     }
 
-    const executable = token.value;
+    const {executable, assignments} = parseExecutableAndAssignments(tokens);
     const args = parseArgs(tokens);
-    const main = {executable, args};
+    const main = {executable, args, assignments};
     if (!tokens.length) {
         return main
     }
@@ -49,6 +49,59 @@ function parse(tokens) {
             throw new Error(`Unexpected operator: ${nextToken.value}`);
     }
 
+}
+
+function parseExecutableAndAssignments(tokens) {
+    /** @type {import('./ast').Assignment[]} */
+    const assignments = [];
+    while (tokens.length) {
+        const word = parseWord(tokens);
+        const assignment = getAssignment(word);
+        if (!assignment) {
+            if (!assignments.length)
+                return {executable: word};
+            return {
+                executable: word,
+                assignments,
+            };
+        }
+        assignments.push(assignment);
+        eatSpaces(tokens);
+    }
+    throw new Error('Expected an executable');
+}
+
+/**
+ * @param {import('./ast').Word} word
+ * @return {import('./ast').Assignment}
+ */
+function getAssignment(word) {
+    let prefix = '';
+    let hasEqual = false;
+    /** @type {import('./ast').Word} */
+    const value = [];
+    for (const part of word) {
+        if (hasEqual) {
+            value.push(part);
+            continue;
+        }
+        if (typeof part !== 'string')
+            return null;
+        if (part.includes('=')) {
+            hasEqual = true;
+            const index = part.indexOf('=');
+            prefix += part.substring(0, index); 
+            value.push(part.substring(index + 1));
+        } else {
+            prefix += part;
+        }
+    }
+    if (!hasEqual)
+        return null;
+    return {
+        name: prefix,
+        value,
+    }
 }
 
 /**
