@@ -1,5 +1,6 @@
 const {spawn, spawnSync} = require('child_process');
 const {Writable, Readable} = require('stream');
+const fs = require('fs');
 /**
  * @type {{env?: {[key: string]: string}, cwd?: string}}
  */
@@ -79,7 +80,42 @@ const builtins = {
             stdout.write("dirty\n");
         return 0;
     }
+};
+
+/** @type {Object<string, string[]>} */
+const aliases = {
+    ls: ['ls', '-G'],
+    gbc: ['git', 'for-each-ref', '--sort=committerdate', 'refs/heads/', `--format=%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))`],
 }
+
+/**
+ * @param {string} executable
+ */
+function treatAsDirectory(executable) {
+    const result = spawnSync('which', ['-s', executable]);
+    if (result.status === 0)
+        return false;
+    return fs.statSync(executable).isDirectory();
+}
+
+/**
+ * @param {string} executable
+ * @param {string[]} args
+ */
+function processAlias(executable, args) {
+    const seen = new Set();
+    while (executable in aliases && !seen.has(executable)) {
+        seen.add(executable);
+        const [newExecutable, ...newArgs] = aliases[executable];
+        executable = newExecutable;
+        args.unshift(...newArgs);
+    }
+    return {
+        executable,
+        args,
+    }
+}
+
 /**
  * @param {import('./ast').Expression} expression
  * @param {Writable} stdout
@@ -89,15 +125,18 @@ const builtins = {
  */
 function execute(expression, stdout, stderr, stdin) {
     if ('executable' in expression) {
-        if (expression.executable in builtins) {
-            const closePromise = builtins[expression.executable](expression.args, stdout, stderr);
+        const {executable, args} = processAlias(expression.executable, [...expression.args]);
+        if (executable in builtins) {
+            const closePromise = builtins[executable](args, stdout, stderr);
             return {
                 closePromise,
                 stdin: new Writable({write(){}}),
                 kill: () => void 0,
             }
+        } else if (args.length === 0 && treatAsDirectory(executable)) {
+            return execute({executable: 'cd', args: [executable]}, stdout, stderr, stdin);
         } else {
-            const child = spawn(expression.executable, expression.args, {
+            const child = spawn(executable, args, {
                 stdio: [stdin === process.stdin ? 'inherit' : 'pipe', stdout === process.stdout ? 'inherit' : 'pipe', stderr === process.stderr ? 'inherit' : 'pipe'],
             });
             const closePromise = new Promise(resolve => {
