@@ -3,8 +3,8 @@ const {PipeTransport} = require('../protocol/pipeTransport');
 const {RPC} = require('../protocol/rpc');
 const path = require('path');
 const transport = new PipeTransport(process.stdout, process.stdin);
-const magicToken = `\x33[JOELMAGIC${Math.random()}]`;
-const magicString = magicToken + '\r\n';
+const magicToken = String(Math.random());
+const magicString = `\x33[JOELMAGIC${Math.random()}]\r\n`;
 /** @type {Promise<{exitCode: number, signal?: number}>} */
 let commandQueue = Promise.resolve({exitCode: 0});
 /** @type {import('node-pty').IPty} */

@@ -218,8 +218,8 @@ export class Entry {
     this._historyId = await addHistory(this.command);
     const pwd = await shell.cachedEvaluation('pwd');
     const home = await shell.cachedEvaluation('echo $HOME');
-    const revName = ''; //await shell.cachedEvaluation('__git_ref_name');
-    const dirtyState = '';// await shell.cachedEvaluation('__is_git_dirty');
+    const revName = await shell.cachedEvaluation('__git_ref_name');
+    const dirtyState = await shell.cachedEvaluation('__is_git_dirty');
     const hash = await shell.cachedEvaluation('GIT_OPTIONAL_LOCKS=0 git rev-parse HEAD');
   
     await updateHistory(this._historyId, 'home', home);

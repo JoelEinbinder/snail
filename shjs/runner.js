@@ -1,4 +1,4 @@
-const {spawn} = require('child_process');
+const {spawn, spawnSync} = require('child_process');
 const {Writable, Readable} = require('stream');
 /**
  * @type {{env?: {[key: string]: string}, cwd?: string}}
@@ -44,6 +44,41 @@ const builtins = {
         }
         return builtins.export(args.slice(1), stdout, stderr);
     },
+    __git_ref_name: async (args, stdout, stderr) => {
+        const env = {
+            ...process.env,
+            GIT_OPTIONAL_LOCKS: '0',
+        };
+        const isGit = spawnSync('git', ['rev-parse', '--git-dir'], { env });
+        if (isGit.status)
+            return 0;
+        const symbolicRef = spawnSync('git', ['symbolic-ref', '--short', 'HEAD'], { env });
+        if (symbolicRef.status === 0) {
+            stdout.write(symbolicRef.stdout);
+            return 0;
+        }
+        const commit = spawnSync('git', ['rev-parse', 'HEAD'], { env });
+        if (commit.status === 0) {
+            stdout.write(commit.stdout);
+            return 0;
+        }
+        return 0;
+    },
+    __is_git_dirty: async (args, stdout, stderr) => {
+        const env = {
+            ...process.env,
+            GIT_OPTIONAL_LOCKS: '0',
+        };
+        const isGit = spawnSync('git', ['rev-parse', '--git-dir'], { env });
+        if (isGit.status)
+            return 0;
+        const status = spawnSync('git', ['status', '--porcelain'], { env });
+        if (status.status)
+            return 0;
+        if (stdout.toString().trim())
+            stdout.write("dirty\n");
+        return 0;
+    }
 }
 /**
  * @param {import('./ast').Expression} expression
