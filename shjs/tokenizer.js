@@ -69,7 +69,7 @@ function tokenize(code) {
             inSingleQuotes = true;
         } else if (char === '"') {
             inDoubleQuotes = true;
-        } else if (char === '~' && value === '' && (!code[i + 1] || '&|;()<> \t\n$'.includes(code[i + 1]))) {
+        } else if (char === '~' && value === '' && (!code[i + 1] || '&|;()<> \t\n$/'.includes(code[i + 1]))) {
             value = '~';
             inReplacement = true;
             pushToken();
