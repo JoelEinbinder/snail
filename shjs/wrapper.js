@@ -8,6 +8,6 @@ closePromise.then(c => {
   const changes = getChanges();
   if (!changes)
     return;
-  process.stdout.write(magicString + '\n');
+  process.stdout.write(magicString);
   process.stdout.write(JSON.stringify(changes) + '\n');
 });
