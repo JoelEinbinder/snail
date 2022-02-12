@@ -117,7 +117,11 @@ function treatAsDirectory(executable) {
     const result = spawnSync('which', ['-s', executable]);
     if (result.status === 0)
         return false;
-    return fs.statSync(executable).isDirectory();
+    try {
+        return fs.statSync(executable).isDirectory();
+    } catch {
+        return false;
+    }
 }
 
 /**
