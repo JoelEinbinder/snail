@@ -76,7 +76,7 @@ const builtins = {
         const status = spawnSync('git', ['status', '--porcelain'], { env });
         if (status.status)
             return 0;
-        if (stdout.toString().trim())
+        if (status.stdout.toString().trim())
             stdout.write("dirty\n");
         return 0;
     }
