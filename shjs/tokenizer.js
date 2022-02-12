@@ -16,6 +16,7 @@ function tokenize(code) {
     let inOperator = false;
     let inSpace = false;
     let inReplacement = false;
+    let tokenStart = 0;
     let i = 0;
     const metaChars = new Set('&|;()<>');
     const operators = new Set([
@@ -89,8 +90,9 @@ function tokenize(code) {
     pushToken();
     return tokens;
     function pushToken() {
-        if (!value) {
+        if (!value && tokenStart >= i) {
             inSpace = false;
+            tokenStart = i;
             return;
         }
         const type = currentTokenType();
@@ -101,6 +103,7 @@ function tokenize(code) {
         value = '';
         inSpace = false;
         inReplacement = false;
+        tokenStart = i + 1;
     }
 
     function currentTokenType() {

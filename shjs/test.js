@@ -173,6 +173,17 @@ describe('tokenizer', () => {
             {type: 'word', value: `bar \\"baz\\"`},
         ]);
     });
+    it('should handle empty qoutes', () => {
+        expect(tokenize(`foo '' "" 'a'`)).toEqual([
+            {type: 'word', value: 'foo'},
+            {type: 'space', value: ' '},
+            {type: 'word', value: ''},
+            {type: 'space', value: ' '},
+            {type: 'word', value: ''},
+            {type: 'space', value: ' '},
+            {type: 'word', value: 'a'},
+        ]);
+    });
 });
 
 describe('parser', () => {
