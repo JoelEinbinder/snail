@@ -1,6 +1,8 @@
 const {spawn, spawnSync} = require('child_process');
 const {Writable, Readable} = require('stream');
 const fs = require('fs');
+const path = require('path');
+
 /**
  * @type {{env?: {[key: string]: string}, cwd?: string}}
  */
@@ -79,7 +81,27 @@ const builtins = {
         if (status.stdout.toString().trim())
             stdout.write("dirty\n");
         return 0;
-    }
+    },
+    __npx_completions: async (args, stdout, stderr) => {
+        let dir = process.cwd();
+        while (true) {
+            const status = spawnSync('find', ['-L', '.', '-type', 'f', '-perm', '+111'], {
+                cwd: path.join(dir, 'node_modules', '.bin'),
+            });
+            if (status.status === 0) {
+                const data = status.stdout.toString().split('\n').map(x => {
+                    if (x.startsWith('./'))
+                        return x.substring('./'.length);
+                    return x;
+                }).join('\n');
+                stdout.write(data);
+            }
+            if (dir === '/')
+                break;
+            dir = path.join(dir, '..');
+        }
+        return 0;
+    },
 };
 
 /** @type {Object<string, string[]>} */
