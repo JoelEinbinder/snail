@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * @type {{env?: {[key: string]: string}, cwd?: string}}
+ * @type {{env?: {[key: string]: string}, aliases?: {[key: string]: string[]}, cwd?: string}}
  */
 let changes = null;
 
@@ -46,6 +46,19 @@ const builtins = {
             return 1;
         }
         return builtins.export(args.slice(1), stdout, stderr);
+    },
+    alias: async (args, stdout, stderr) => {
+        if (!args[0]) {
+            stdout.write(JSON.stringify(aliases, undefined, 2) + '\n');
+            return 0;
+        }
+        aliases[args[0]] = args.slice(1);
+        if (!changes)
+            changes = {};
+        if (!changes.aliases)
+            changes.aliases = {};
+        changes.aliases[args[0]] = args.slice(1);
+        return 0;
     },
     __git_ref_name: async (args, stdout, stderr) => {
         const env = {
@@ -147,6 +160,10 @@ const builtins = {
 const aliases = {
     ls: ['ls', '-G'],
     gbc: ['git', 'for-each-ref', '--sort=committerdate', 'refs/heads/', `--format=%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))`],
+}
+
+function setAlias(name, value) {
+    aliases[name] = value;
 }
 
 /**
@@ -310,4 +327,4 @@ function getChanges() {
     return changes;
 }
 
-module.exports = {execute, getResult, getChanges};
+module.exports = {execute, getResult, getChanges, setAlias};

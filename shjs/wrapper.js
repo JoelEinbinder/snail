@@ -1,4 +1,9 @@
-const {execute, getChanges} = require('./index');
+const {execute, getChanges, setAlias} = require('./index');
+if (process.argv[4]) {
+  const aliases = JSON.parse(process.argv[4]);
+  for (const alias of Object.keys(aliases))
+    setAlias(alias, aliases[alias]);
+}
 const {stdin, closePromise, kill} = execute(process.argv[2]);
 closePromise.then(c => {
   process.exitCode = c;

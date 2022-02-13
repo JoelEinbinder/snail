@@ -12,6 +12,7 @@ let shell;
 let rows = 24;
 let cols = 80;
 let env = {...process.env};
+const aliases = {};
 let cwd = process.cwd();
 
 const rpc = RPC(transport, {
@@ -46,7 +47,7 @@ const rpc = RPC(transport, {
  * @param {string} command
  */
 async function runCommand(command) {
-  shell = require('node-pty').spawn('node', [path.join(__dirname, '..', 'shjs', 'wrapper.js'), command, magicToken], {
+  shell = require('node-pty').spawn('node', [path.join(__dirname, '..', 'shjs', 'wrapper.js'), command, magicToken, JSON.stringify(aliases)], {
     env,
     rows,
     cols,
@@ -84,6 +85,13 @@ async function runCommand(command) {
         process.env[key] = changes.env[key];
       }
       rpc.notify('env', changes.env);
+    }
+    if (changes.aliases) {
+      const {setAlias} = require('../shjs/index');
+      for (const key of Object.keys(changes.aliases)) {
+        setAlias(key, changes.aliases[key]);
+        aliases[key] = changes.aliases[key];
+      }
     }
   }
   return returnValue;
