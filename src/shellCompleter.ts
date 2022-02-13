@@ -26,7 +26,7 @@ export function makeShellCompleter(shell: Shell): Completer {
 }
 
 async function commandCompleter(shell: Shell, line: string) {
-  const suggestions = (await shell.cachedEvaluation('compgen -c')).split('\n').map(t => t.trim()).filter(x => /^[A-Za-z]/.test(x));
+  const suggestions = (await shell.cachedEvaluation('__command_completions')).split('\n').map(t => t.trim()).filter(x => /^[A-Za-z]/.test(x));
 
   return {
     anchor: 0,
@@ -38,8 +38,9 @@ async function fileCompleter(shell: Shell, line: string, executablesOnly: boolea
   const pathStart = lastIndexIgnoringEscapes(line, ' ') + 1;
   const path = line.substring(pathStart);
   const anchor = path.lastIndexOf('/') + 1 + pathStart;
-  const files = await parseCompletions(!executablesOnly ? `compgen -f ${path}` : `eval 'for f in \`compgen -f ${path}\`; do [ -x $f ] && echo $f; done'`);
-  const directories = new Set(await parseCompletions(`compgen -d ${path}`));
+  const prefix = path.substring(0, anchor - pathStart);
+  const files = await parseCompletions(!executablesOnly ? `__file_completions all ${prefix}` : `__file_completions executable ${prefix}`);
+  const directories = new Set(await parseCompletions(`__file_completions directory ${prefix}`));
   const suggestions: Suggestion[] = [];
   for (const file of files) {
       if (directories.has(file) && file !== '.' && file !== '..')
@@ -56,11 +57,7 @@ async function fileCompleter(shell: Shell, line: string, executablesOnly: boolea
 
   async function parseCompletions(command: string) {
     const raw = await shell.cachedEvaluation(command);
-    return raw.split('\r\n').map(complete => {
-      // we only want the last path segment
-      const lastSlash = lastIndexIgnoringEscapes(complete, '/');
-      return escapeString(complete.substring(lastSlash + 1));
-    }).filter(x => x);
+    return raw.split('\n').filter(x => x);
   }
 }
 

@@ -102,6 +102,45 @@ const builtins = {
         }
         return 0;
     },
+    __command_completions: async (args, stdout, stderr) => {
+        for (const key of Object.keys(builtins)) {
+            if (key.startsWith('__'))
+                continue;
+            stdout.write(key + '\n');
+        }
+        for (const key of Object.keys(aliases))
+            stdout.write(key + '\n');
+        await Promise.all(process.env.PATH.split(':').map(async dir => {
+            const names = await fs.promises.readdir(dir).catch(e => []);
+            for (const name of names) {
+                try {
+                    const stat = fs.statSync(path.join(dir, name));
+                    if (stat.mode & 0o111)
+                        stdout.write(name + '\n');
+                } catch { }
+            }
+        }));
+        return 0;
+    },
+    __file_completions: async (args, stdout, stderr) => {
+        const type = args[0];
+        const dir = path.resolve(process.cwd(), args[1] || '');
+        const names = await fs.promises.readdir(dir).catch(e => []);
+        for (const name of names) {
+            if (type === 'all') {
+                stdout.write(name + '\n');
+            } else {
+                try {
+                    const stat = fs.statSync(path.join(dir, name));
+                    if (type === 'directory' && stat.isDirectory())
+                        stdout.write(name + '\n');
+                    else if (type === 'executable' && stat.mode & 0o111)
+                        stdout.write(name + '\n');
+                } catch {}
+            }
+        }
+        return 0;
+    },
 };
 
 /** @type {Object<string, string[]>} */
