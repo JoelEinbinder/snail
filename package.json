@@ -44,6 +44,7 @@
   "dependencies": {
     "electron": "^16.0.6",
     "node-pty": "^0.10.1",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.2",
+    "ws": "^8.5.0"
   }
 }
