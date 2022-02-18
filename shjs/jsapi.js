@@ -7,8 +7,30 @@ const { Writable } = require('stream');
  * @param {...any} values
  */
 function sh(strings, ...values) {
+  return executeAndGetLines(parseTemplate(strings, values));
+}
+
+/**
+ * @param {TemplateStringsArray} strings
+ * @param {...any} values
+ */
+sh.passThrough = function(strings, values) {
+  const expression = parseTemplate(strings, values);
+  const {closePromise} = execute(expression, process.stdout, process.stderr, process.stdin);
+  return closePromise;
+}
+
+/**
+ * @param {TemplateStringsArray} strings
+ * @param {...any} values
+ */
+function parseTemplate(strings, values) {
   if (strings.length !== 1)
     throw new Error('replacements unimplemented');
+  return parse(tokenize(strings[0]));
+}
+
+function executeAndGetLines(expression) {
 
   const datas = [];
   let currentLine = '';
@@ -39,7 +61,7 @@ function sh(strings, ...values) {
     if (line)
       lines.push(line);
   }
-  const {closePromise, stdin} = execute(parse(tokenize(strings[0])), outStream, process.stderr);
+  const {closePromise, stdin} = execute(expression, outStream, process.stderr);
   stdin.end();
   closePromise.then(async () => {
     addLine(currentLine);
