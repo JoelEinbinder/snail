@@ -257,3 +257,25 @@ describe('parser', () => {
         });
     });
 });
+
+describe('jsapi', () => {
+    const {sh} = require('./jsapi');
+    it('should get the text', async () => {
+        const output = await sh`echo "foo bar baz"`;
+        expect(output).toEqual(['foo bar baz']);
+    });
+    it('should async iterate the text', async () => {
+        const lines = [];
+        for await (const line of sh`ls test-assets`) {
+            lines.push(line);
+        }
+        expect(lines).toEqual(['bar.txt', 'baz.txt', 'foo.txt']);
+    });
+    it('should wait for sleep', async () => {
+        const lines = [];
+        for await (const line of sh`bash -c "echo 1; sleep .02; echo 2"`) {
+            lines.push(line);
+        }
+        expect(lines).toEqual(['1', '2']);
+    });
+});
