@@ -1,14 +1,10 @@
-import React from 'react';
-import { usePromise } from './hooks';
-import type { Shell, Entry } from './Shell';
+import type { Shell, LogItem } from './Shell';
 import './shell.css';
-import { makePromptEditor } from './PromptEditor';
-import { render } from 'react-dom';
 
 export class ShellView {
   private _element = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
-  private _promptElement: HTMLElement;
+  private _removePrompt: () => void = null;
   private _lockingScroll = false;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._updateFullscreen();
@@ -21,9 +17,9 @@ export class ShellView {
     this._element.style.padding = '4px';
     this._repopulate();
     this._shell.activeEntry.on(entry => {
-      if (this._promptElement) {
-        this._promptElement.remove();
-        this._promptElement = null;
+      if (this._removePrompt) {
+        this._removePrompt();
+        this._removePrompt = null;
       }
       if (entry)
         this._addEntry(entry);
@@ -59,24 +55,15 @@ export class ShellView {
     }
   }
 
-  _addEntry(entry: Entry) {
-    const command = document.createElement('div');
-    command.classList.add('command');
-    render(<>
-      <CommandPrefix shellOrEntry={entry} />
-      <div className="user-text">{entry.command}</div>
-    </>, command);
-    const element = document.createElement('div');
-    element.classList.add('entry');
-    element.appendChild(command);
-    element.appendChild(entry.element);
-    entry.willResizeEvent.on(async () => {
+  _addEntry(logItem: LogItem) {
+    const element = logItem.render();
+    logItem.willResizeEvent.on(async () => {
       this._lockScroll();
     });
     this._lockScroll();
     this._element.appendChild(element);
-    if (entry === this._shell.activeEntry.current)
-      entry.focus();
+    if (logItem === this._shell.activeEntry.current)
+      logItem.focus();
   }
 
   async _lockScroll() {
@@ -91,46 +78,7 @@ export class ShellView {
   }
 
   _addPrompt() {
-    const element = document.createElement('div');
-    element.classList.add('prompt');
-    const editorWrapper = React.createRef<HTMLDivElement>();
-    render(<>
-      <CommandPrefix shellOrEntry={this._shell} />
-      <div ref={editorWrapper} style={{position: 'relative', flex: 1, minHeight: '14px'}}
-      onKeyDown={event => {
-        if (event.key !== 'Enter')
-          return;
-        const command = editor.value;
-        editor.value = '';
-        this._shell.runCommand(command);
-        event.stopPropagation();
-        event.preventDefault();
-      }} />
-    </>, element);
-    const editor = makePromptEditor(this._shell);
-    editorWrapper.current.appendChild(editor.element);
     this._lockScroll();
-    this._element.appendChild(element);
-    editor.layout();
-    editor.focus();
-    this._promptElement = element;
+    this._removePrompt = this._shell.addPrompt(this._element);
   }
-}
-
-function CommandPrefix({shellOrEntry}: {shellOrEntry: Shell|Entry}) {
-  const pwd = usePromise(shellOrEntry.cachedEvaluation('pwd'));
-  const home = usePromise(shellOrEntry.cachedEvaluation('echo $HOME'));
-  const revName = usePromise(shellOrEntry.cachedEvaluation('__git_ref_name'));
-  const dirtyState = usePromise(shellOrEntry.cachedEvaluation('__is_git_dirty'));
-  if (pwd === null || home === null)
-    return <></>;
-  if (revName === null || dirtyState === null)
-    return <></>;
-  const prettyName = pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
-  const GitStatus = revName ? <><Ansi color={75}>(<Ansi color={78}>{revName}</Ansi><Ansi color={214}>{dirtyState ? '*' : ''}</Ansi>)</Ansi></> : null;
-  return  <div className="prefix"><Ansi color={32}>{prettyName}</Ansi>{GitStatus} <Ansi color={105}>»</Ansi> </div>;
-}
-
-function Ansi({children, color}) {
-  return <span style={{color: 'var(--ansi-' + color + ')'}}>{children}</span>;
 }

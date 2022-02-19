@@ -1,12 +1,16 @@
 import {Terminal, IDisposable} from 'xterm';
 import 'xterm/css/xterm.css';
 import { addHistory, updateHistory } from './history';
+import React from 'react';
+import { usePromise } from './hooks';
+import { makePromptEditor } from './PromptEditor';
+import { render } from 'react-dom';
 import { JoelEvent } from './JoelEvent';
 import { setSelection } from './selection';
 
 window.electronAPI.onEvent('data', ({shellId, data}) => {
   const shell = shells.get(shellId);
-  shell.log[shell.log.length - 1].addData(data);
+  shell.lastTerminalEntry.addData(data);
 });
 
 const shells = new Map<number, Shell>();
@@ -28,9 +32,10 @@ window.addEventListener('resize', updateSize);
 updateSize();
 
 export class Shell {
-  log: Entry[] = [];
+  log: LogItem[] = [];
   public fullscreenEntry: JoelEvent<Entry> = new JoelEvent<Entry>(null);
   public activeEntry = new JoelEvent<Entry>(null);
+  public lastTerminalEntry: Entry = null;
   public clearEvent = new JoelEvent<void>(undefined);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
   private constructor(private _shellId: number) { }
@@ -47,6 +52,7 @@ export class Shell {
     const entry = new Entry(command, this._shellId);
     let didClear = false;
     this.log.push(entry);
+    this.lastTerminalEntry = entry;
     const onFullScreen = (value: boolean) => {
       this.fullscreenEntry.dispatch(value ? entry : null);
     }
@@ -111,9 +117,44 @@ export class Shell {
       this._cachedEvaluationResult.set(code, this.evaluate(code));;
     return this._cachedEvaluationResult.get(code);
   }
+
+  addPrompt(container: Element) {
+    const element = document.createElement('div');
+    element.classList.add('prompt');
+    const editorWrapper = React.createRef<HTMLDivElement>();
+    render(<>
+      <CommandPrefix shellOrEntry={this} />
+      <div ref={editorWrapper} style={{position: 'relative', flex: 1, minHeight: '14px'}}
+      onKeyDown={event => {
+        if (event.key !== 'Enter')
+          return;
+        const command = editor.value;
+        editor.value = '';
+        this.runCommand(command);
+        event.stopPropagation();
+        event.preventDefault();
+      }} />
+    </>, element);
+    const editor = makePromptEditor(this);
+    editorWrapper.current.appendChild(editor.element);
+    container.appendChild(element);
+    editor.layout();
+    editor.focus();
+    return () => {
+      element.remove();
+    };
+  }
 }
+
+export interface LogItem {
+  willResizeEvent: JoelEvent<void>;
+  updateSize(): void;
+  render(): Element;
+  focus(): void;
+}
+
 let lastEntryId = 0;
-export class Entry {
+export class Entry implements LogItem {
   element: HTMLElement;
   private _terminal: Terminal;
   private _trailingNewline = false;
@@ -279,6 +320,19 @@ export class Entry {
       return Promise.resolve(null);
     return this.cachedEvaluationResult.get(code);
   }
+  render() {
+    const command = document.createElement('div');
+    command.classList.add('command');
+    render(<>
+      <CommandPrefix shellOrEntry={this} />
+      <div className="user-text">{this.command}</div>
+    </>, command);
+    const element = document.createElement('div');
+    element.classList.add('entry');
+    element.appendChild(command);
+    element.appendChild(this.element);
+    return element;
+  }
 }
 
 function measureChar() {
@@ -294,4 +348,22 @@ function measureChar() {
   const {width, height} = div.getBoundingClientRect();
   div.remove();
   return {width: width/10, height: height};
+}
+
+function CommandPrefix({shellOrEntry}: {shellOrEntry: Shell|Entry}) {
+  const pwd = usePromise(shellOrEntry.cachedEvaluation('pwd'));
+  const home = usePromise(shellOrEntry.cachedEvaluation('echo $HOME'));
+  const revName = usePromise(shellOrEntry.cachedEvaluation('__git_ref_name'));
+  const dirtyState = usePromise(shellOrEntry.cachedEvaluation('__is_git_dirty'));
+  if (pwd === null || home === null)
+    return <></>;
+  if (revName === null || dirtyState === null)
+    return <></>;
+  const prettyName = pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
+  const GitStatus = revName ? <><Ansi color={75}>(<Ansi color={78}>{revName}</Ansi><Ansi color={214}>{dirtyState ? '*' : ''}</Ansi>)</Ansi></> : null;
+  return  <div className="prefix"><Ansi color={32}>{prettyName}</Ansi>{GitStatus} <Ansi color={105}>»</Ansi> </div>;
+}
+
+function Ansi({children, color}) {
+  return <span style={{color: 'var(--ansi-' + color + ')'}}>{children}</span>;
 }
