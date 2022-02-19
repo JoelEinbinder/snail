@@ -1,7 +1,7 @@
 import type { Shell, LogItem } from './Shell';
 import './shell.css';
 
-export class ShellView {
+export class LogView {
   private _element = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
   private _removePrompt: () => void = null;
@@ -32,6 +32,10 @@ export class ShellView {
   }
 
   _repopulate() {
+    if (this._removePrompt) {
+      this._removePrompt();
+      this._removePrompt = null;
+    }
     this._element.textContent = '';
     for (const entry of this._shell.log)
       this._addEntry(entry);
