@@ -279,3 +279,22 @@ describe('jsapi', () => {
         expect(lines).toEqual(['1', '2']);
     });
 });
+
+describe('transform', () => {
+    const {transformCode} = require('./transform');
+    it('should be left alone', () => {
+        const code = `const foo = 'bar';`;
+        expect(transformCode(code)).toEqual(`const foo = 'bar';`);
+    });
+    it('should transform simple commands', () => {
+        const code = `echo 'foo' bar' 'baz'`;
+        expect(transformCode(code)).toEqual(`await sh("echo 'foo' bar' 'baz'")`);
+    });
+    it('should transform multiple statements', () => {
+        const code = `cd foo; cd bar;
+            nano`;
+        expect(transformCode(code)).toEqual(`await sh("cd foo"); await sh("cd bar");
+            await sh("nano")`);
+    });
+
+})

@@ -42,6 +42,7 @@
     "webpack-bundle-analyzer": "^4.4.2"
   },
   "dependencies": {
+    "acorn": "^8.7.0",
     "electron": "^16.0.6",
     "node-pty": "^0.10.1",
     "sqlite3": "^5.0.2",
