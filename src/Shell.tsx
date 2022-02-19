@@ -361,7 +361,7 @@ function CommandPrefix({shellOrEntry}: {shellOrEntry: Shell|Entry}) {
     return <></>;
   const prettyName = pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
   const GitStatus = revName ? <><Ansi color={75}>(<Ansi color={78}>{revName}</Ansi><Ansi color={214}>{dirtyState ? '*' : ''}</Ansi>)</Ansi></> : null;
-  return  <div className="prefix"><Ansi color={32}>{prettyName}</Ansi>{GitStatus} <Ansi color={105}>»</Ansi> </div>;
+  return <div className="prefix"><Ansi color={32}>{prettyName}</Ansi>{GitStatus} <Ansi color={105}>»</Ansi> </div>;
 }
 
 function Ansi({children, color}) {
