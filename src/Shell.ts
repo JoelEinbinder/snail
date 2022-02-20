@@ -164,7 +164,7 @@ export class Shell {
     editorWrapper.style.flex = '1';
     editorWrapper.style.minHeight = '14px';
     editorWrapper.addEventListener('keydown', event => {
-      if (event.key !== 'Enter')
+      if (event.key !== 'Enter' || event.shiftKey)
         return;
       const command = editor.value;
       editor.value = '';

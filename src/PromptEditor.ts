@@ -1,7 +1,7 @@
 import { Editor } from "../editor/js/editor";
 import { Autocomplete } from "./autocomplete";
 import type { Shell } from "./Shell";
-import '../editor/modes/shell'
+import '../editor/modes/javascript'
 import { makeShellCompleter } from "./shellCompleter";
 import './completions/git';
 import './completions/npx';
@@ -13,7 +13,7 @@ export function makePromptEditor(shell: Shell) {
   const editor = new Editor('', {
     inline: true,
     lineNumbers: false,
-    language: 'sh',
+    language: 'js',
     padding: 0,
     colors: {
       cursorColor: '#f4f4f4',
@@ -33,9 +33,9 @@ export function makePromptEditor(shell: Shell) {
     setSelection(() => editor.selections.map(s => editor.text(s)).join('\n'));
   }, true);
   editor.element.addEventListener('keydown', event => {
-    if (event.key === 'ArrowDown') {
+    if (event.key === 'ArrowDown' && editor.selections[0].end.line === editor.lastLine) {
       moveHistory(-1);
-    } else if (event.key === 'ArrowUp') {
+    } else if (event.key === 'ArrowUp' && editor.selections[0].start.line === 0) {
       moveHistory(1);      
     } else {
       return;
