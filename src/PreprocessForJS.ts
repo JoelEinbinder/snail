@@ -1,6 +1,7 @@
 export function preprocessForJS(command: string) {
   return wrapObjectLiterals(command);
 }
+const parse = (async() => void 0).constructor;
 
 function wrapObjectLiterals(code: string) {
   // Copyright 2018 The Chromium Authors. All rights reserved.
@@ -12,7 +13,6 @@ function wrapObjectLiterals(code: string) {
     return code;
   }
 
-  const parse = (async(): Promise<number> => 0).constructor;
   try {
     // Check if the code can be interpreted as an expression.
     parse('return ' + code + ';');
@@ -24,5 +24,22 @@ function wrapObjectLiterals(code: string) {
     return wrappedCode;
   } catch (e) {
     return code;
+  }
+}
+
+export function isUnexpectedEndOfInput(code: string) {
+  try {
+    parse(code);
+    return false;
+  } catch(e) {
+    if (e.message.startsWith('SyntaxError: Unexpected end of input') || e.message.startsWith('SyntaxError: Unterminated template literal'))
+      return true;
+    try {
+      // TODO: UH OH DONT DO THIS!
+      eval(code);
+      console.error('THIS WENT BAD WE EXECUTED SOME SHIT');
+    } catch (e) {
+      return e.toString().startsWith('SyntaxError: Unexpected end of input') || e.toString().startsWith('SyntaxError: Unterminated template literal');
+    }
   }
 }

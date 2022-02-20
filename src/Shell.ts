@@ -7,7 +7,7 @@ import { CommandBlock, CommandPrefix } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { JSConnection } from './JSConnection';
 import { JSBlock } from './JSBlock';
-import { preprocessForJS } from './PreprocessForJS';
+import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 
 const shells = new Map<number, Shell>();
 
@@ -166,6 +166,16 @@ export class Shell {
     editorWrapper.addEventListener('keydown', event => {
       if (event.key !== 'Enter' || event.shiftKey)
         return;
+      if (!event.ctrlKey && !editor.somethingSelected()) {
+        const start = editor.selections[0].start;
+        if (start.line !== editor.lastLine) {
+          if (start.column === editor.line(start.line).length)
+            return;
+        } else {
+          if (start.column === editor.line(start.line).length && isUnexpectedEndOfInput(editor.text()))
+            return;
+        }
+      }
       const command = editor.value;
       editor.value = '';
       editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
