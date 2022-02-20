@@ -10,7 +10,6 @@ export class CommandBlock implements LogItem {
   render(): Element {
     const command = document.createElement('div');
     command.classList.add('command');
-    console.log(this.cachedEvaluationResult);
     command.append(CommandPrefix(this));
     const userText = document.createElement('div');
     userText.className = 'user-text';
