@@ -64,16 +64,16 @@ export class Highlighter extends Emitter {
     this._colors =
       language === 'js'
         ? [
-            ['keyword', 'hsl(310, 86%, 36%)'],
-            ['number', 'hsl(248, 100%, 41%)'],
-            ['comment', 'hsl(120, 100%, 23%)'],
-            ['string', 'hsl(1, 80%, 43%)'],
-            ['string', 'hsl(1, 99%, 39%)'],
-            ['atom', 'hsl(310, 86%, 36%)'],
-            ['def', 'hsl(240, 73%, 38%)'],
-            ['operator', 'hsl(27, 100%, 30%)'],
-            ['meta', 'hsl(27, 100%, 30%)'],
-            ['variable', 'hsl(240, 73%, 38%)']
+            ['keyword', '#af5fff'],
+            ['number', '#999900'],
+            ['comment', '#666666'],
+            ['string', '#00A600'],
+            ['string', '#00A600'],
+            // ['atom', '#F4F4F4'],
+            // ['def', '#F4F4F4'],
+            // ['operator', '#F4F4F4'],
+            // ['meta', '#F4F4F4'],
+            // ['variable', '#F4F4F4'],
           ]
         : [
             ['keyword ', 'rgb(7, 144, 154)'],
