@@ -7,6 +7,7 @@ import { CommandBlock, CommandPrefix } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { JSConnection } from './JSConnection';
 import { JSBlock } from './JSBlock';
+import { preprocessForJS } from './PreprocessForJS';
 
 const shells = new Map<number, Shell>();
 
@@ -52,7 +53,7 @@ export class Shell {
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     const result = await this._connection.send('Runtime.evaluate', {
-      expression: command,
+      expression: preprocessForJS(command),
       returnByValue: false,
       generatePreview: true,
       userGesture: true,
