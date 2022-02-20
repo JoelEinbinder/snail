@@ -40,8 +40,8 @@ export class CommandManager {
   /**
    * @param {CommandFunction} commandFunction
    * @param {string} command
-   * @param {string=} shortcut
-   * @param {string=} macShortcut
+   * @param {(string|string[])=} shortcut
+   * @param {(string|string[])=} macShortcut
    */
   addCommand(commandFunction, command, shortcut, macShortcut) {
     this._commands.set(command, commandFunction);
@@ -50,15 +50,16 @@ export class CommandManager {
 
   /**
    * @param {string} command
-   * @param {string} shortcut
-   * @param {string=} macShortcut
+   * @param {(string|string[])} shortcuts
+   * @param {(string|string[])=} macShortcuts
    */
-  registerShortcut(command, shortcut, macShortcut) {
+  registerShortcut(command, shortcuts, macShortcuts) {
     console.assert(this._commands.has(command), `Command not found "${command}"`);
-    if (macShortcut && navigator.platform.indexOf('Mac') > -1) shortcut = macShortcut;
-    if (!shortcut) return;
-    shortcut = shortcut.toLowerCase();
-    this._shortcuts.push({ shortcut, command });
+    if (macShortcuts && navigator.platform.indexOf('Mac') > -1) shortcuts = macShortcuts;
+    if (!shortcuts) return;
+    if (typeof shortcuts === 'string') shortcuts = [shortcuts];
+    for (const shortcut of shortcuts)
+      this._shortcuts.push({ shortcut: shortcut.toLowerCase(), command });
   }
 
   /**

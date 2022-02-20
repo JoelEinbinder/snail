@@ -49,7 +49,8 @@ export class SelectionManger extends Emitter {
     this._commandManager.addCommand(
       () => this.moveCursor({ column: 0, line: this._model.selections[0].start.line }),
       'moveLineStart',
-      'Home'
+      'Home',
+      ['Home', 'Ctrl+A'],
     );
     this._commandManager.addCommand(
       () => {
@@ -57,7 +58,8 @@ export class SelectionManger extends Emitter {
         return this.moveCursor({ column: this._model.line(selection.end.line).text.length, line: selection.end.line });
       },
       'moveLineEnd',
-      'End'
+      'End',
+      ['End', 'Ctrl+E'],
     );
     this._commandManager.addCommand(
       () => this.moveCursor({ column: 0, line: this._model.selections[0].start.line }, true),
