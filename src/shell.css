@@ -31,7 +31,6 @@ body.fullscreen-entry {
 
 .command:not(:first-child),
 .prompt:not(:first-child) {
-  /* always have this so that things don't bounce as much for stick to bottom */
   border-top: 1px solid var(--ansi-237);
   margin-top: 4px;
   padding-top: 4px;
