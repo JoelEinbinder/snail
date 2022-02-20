@@ -32,7 +32,7 @@ export class CommandBlock implements LogItem {
   }
 }
 
-export function CommandPrefix(shellOrCommand: Shell|CommandBlock) {
+export function CommandPrefix(shellOrCommand: Shell|CommandBlock, onReady = () => {}) {
   const div = document.createElement('div');
   div.className = 'prefix';
   go();
@@ -47,6 +47,7 @@ export function CommandPrefix(shellOrCommand: Shell|CommandBlock) {
     const prettyName = pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
     const GitStatus = revName ? Ansi(75,"(", Ansi(78, revName), Ansi(214, dirtyState ? '*' : ''), ")") : null;
     div.append(Ansi(32, prettyName), GitStatus, ' ', Ansi(105, '»'), ' ');
+    onReady();
   }
 }
 

@@ -131,8 +131,14 @@ export class Shell {
 
   addPrompt(container: Element) {
     const element = document.createElement('div');
+    element.style.opacity = '0';
     element.classList.add('prompt');
-    element.append(CommandPrefix(this))
+    const isReady = new Promise<void>(resolve => {
+      element.append(CommandPrefix(this, resolve));
+    });
+    Promise.race([isReady, new Promise(x => setTimeout(x, 100))]).then(() => {
+      element.style.removeProperty('opacity');
+    });
     const editorWrapper = document.createElement('div');
     editorWrapper.style.position = 'relative';
     editorWrapper.style.flex = '1';
