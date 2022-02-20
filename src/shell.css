@@ -18,28 +18,23 @@
 .prompt > .prefix {
   white-space: pre;
 }
-.entry > div > .terminal {
+.terminal {
   position: relative;
   top: -2px;
 }
 body.fullscreen-entry {
   overflow: hidden;
 }
-.entry > .command {
+.command {
   display: flex;
 }
 
-.entry:not(.fullscreen)::after {
+.command:not(:first-child),
+.prompt:not(:first-child) {
   /* always have this so that things don't bounce as much for stick to bottom */
-  border-bottom: 1px solid var(--ansi-237);
-  height: 4px;
-  margin-bottom: 3px;
-  display: block;
-  content: '';
-}
-
-.entry:not(.fullscreen):last-child::after {
-  border-bottom: none;
+  border-top: 1px solid var(--ansi-237);
+  margin-top: 2px;
+  padding-top: 2px;
 }
 
 .editor {

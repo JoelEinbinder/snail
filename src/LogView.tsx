@@ -1,4 +1,5 @@
-import type { Shell, LogItem } from './Shell';
+import type { JoelEvent } from './JoelEvent';
+import type { Shell } from './Shell';
 import './shell.css';
 
 export class LogView {
@@ -9,22 +10,25 @@ export class LogView {
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._updateFullscreen();
     this._fullscreenElement.classList.add('fullscreen', 'entry');
-    this._shell.fullscreenEntry.on(() => this._updateFullscreen());
+    this._shell.fullscreenItem.on(() => this._updateFullscreen());
     this._container.appendChild(this._element);
     this._element.style.overflowY = 'auto';
     this._element.style.position = 'absolute';
     this._element.style.inset = '0';
     this._element.style.padding = '4px';
     this._repopulate();
-    this._shell.activeEntry.on(entry => {
+    this._shell.activeItem.on(item => {
       if (this._removePrompt) {
         this._removePrompt();
         this._removePrompt = null;
       }
-      if (entry)
-        this._addEntry(entry);
+      if (item)
+        item.focus();
       else
         this._addPrompt();
+    });
+    this._shell.addItemEvent.on(item => {
+      this._addEntry(item);
     });
     this._shell.clearEvent.on(() => {
       this._repopulate();
@@ -39,16 +43,16 @@ export class LogView {
     this._element.textContent = '';
     for (const entry of this._shell.log)
       this._addEntry(entry);
-    if (!this._shell.activeEntry.current)
+    if (!this._shell.activeItem.current)
       this._addPrompt();
   }
 
   _updateFullscreen() {
-    const fullScreenEntry = this._shell.fullscreenEntry.current;
+    const fullScreenEntry = this._shell.fullscreenItem.current;
     if (fullScreenEntry) {
       this._element.style.display = 'none';
       this._container.appendChild(this._fullscreenElement);
-      this._fullscreenElement.appendChild(fullScreenEntry.element);
+      this._fullscreenElement.appendChild(fullScreenEntry.render());
       document.body.classList.add('fullscreen-entry');
       fullScreenEntry.focus();
     } else {
@@ -66,7 +70,7 @@ export class LogView {
     });
     this._lockScroll();
     this._element.appendChild(element);
-    if (logItem === this._shell.activeEntry.current)
+    if (logItem === this._shell.activeItem.current)
       logItem.focus();
   }
 
@@ -85,4 +89,11 @@ export class LogView {
     this._lockScroll();
     this._removePrompt = this._shell.addPrompt(this._element);
   }
+}
+
+export interface LogItem {
+  willResizeEvent: JoelEvent<void>;
+  render(): Element;
+  focus(): void;
+  dispose(): void;
 }
