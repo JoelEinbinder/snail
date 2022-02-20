@@ -9,7 +9,7 @@ export const historyPromise : Promise<HistoryItem[]> = (async() => {
   return history;
 })();
 
-export async function addHistory(command: string): number {
+export async function addHistory(command: string): Promise<number> {
   const item: HistoryItem = {
     command,
     start: Date.now(),

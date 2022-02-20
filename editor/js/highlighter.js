@@ -55,7 +55,7 @@ export class Highlighter extends Emitter {
       
     this._mode = getMode(language)?.({ indentUnit: 2 }, {});
     this._underlay = underlay;
-    /** @type {WeakMap<Line, {state: Object, tokens: Array<Token>}>} */
+    /** @type {WeakMap<import('./model').Line, {state: Object, tokens: Array<Token>}>} */
     this._lineInfo = new WeakMap();
     this._currentLineNumber = 0;
     this._requestLineNumber = 0;
@@ -177,11 +177,11 @@ export class Highlighter extends Emitter {
   _copyState(state, depth = 1) {
     if (Array.isArray(state)) return /** @type {T & any[]} */ (state.slice(0));
     if (depth && typeof state === 'object' && state !== null) {
-      var copy = {};
+      var copy = /** @type {T} */({});
       for (var i in state) {
         copy[i] = this._copyState(state[i], depth - 1);
       }
-      return /** @type {T} */ (copy);
+      return copy;
     }
 
     return state;

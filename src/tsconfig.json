@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+      "noEmit": true,
+      "allowJs": true,
+      "checkJs": true,
+      "target": "ESNext",
+      "jsx": "react",
+      "strictBindCallApply": true,
+      "allowSyntheticDefaultImports": true,
+      "module": "ESNext",
+      "moduleResolution": "node",
+      "lib": [
+          "esnext",
+          "DOM",
+          "DOM.Iterable"
+      ],
+      "types": []
+  }
+}
