@@ -5,7 +5,7 @@ import './shell.css';
 export class LogView {
   private _element = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
-  private _removePrompt: () => void = null;
+  private _promptElement: Element;
   private _lockingScroll = false;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._updateFullscreen();
@@ -18,9 +18,9 @@ export class LogView {
     this._element.style.padding = '4px';
     this._repopulate();
     this._shell.activeItem.on(item => {
-      if (this._removePrompt) {
-        this._removePrompt();
-        this._removePrompt = null;
+      if (this._promptElement) {
+        this._promptElement.remove();
+        this._promptElement = null;
       }
       if (item)
         item.focus();
@@ -36,9 +36,9 @@ export class LogView {
   }
 
   _repopulate() {
-    if (this._removePrompt) {
-      this._removePrompt();
-      this._removePrompt = null;
+    if (this._promptElement) {
+      this._promptElement.remove();
+      this._promptElement = null;
     }
     this._element.textContent = '';
     for (const entry of this._shell.log)
@@ -69,7 +69,10 @@ export class LogView {
       this._lockScroll();
     });
     this._lockScroll();
-    this._element.appendChild(element);
+    if (this._promptElement)
+      this._element.insertBefore(element, this._promptElement);
+    else
+      this._element.appendChild(element);
     if (logItem === this._shell.activeItem.current)
       logItem.focus();
   }
@@ -87,7 +90,7 @@ export class LogView {
 
   _addPrompt() {
     this._lockScroll();
-    this._removePrompt = this._shell.addPrompt(this._element);
+    this._promptElement = this._shell.addPrompt(this._element);
   }
 }
 

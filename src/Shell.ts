@@ -47,10 +47,8 @@ export class Shell {
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     const terminalBlock = new TerminalBlock(this._size, this._shellId);
     let didClear = false;
-    this.log.push(commandBlock);
-    this.addItemEvent.dispatch(commandBlock);
-    this.log.push(terminalBlock);
-    this.addItemEvent.dispatch(terminalBlock);
+    this.addItem(commandBlock);
+    this.addItem(terminalBlock);
     const onFullScreen = (value: boolean) => {
       this.fullscreenItem.dispatch(value ? terminalBlock : null);
     }
@@ -158,9 +156,7 @@ export class Shell {
     container.appendChild(element);
     editor.layout();
     editor.focus();
-    return () => {
-      element.remove();
-    };
+    return element;
   }
 
   async _addToHistory(command: string) {
@@ -179,7 +175,12 @@ export class Shell {
     await updateHistory(historyId, 'git_dirty', dirtyState);
     await updateHistory(historyId, 'git_hash', hash);
     return historyId;
-  } 
+  }
+
+  addItem(item: LogItem) {
+    this.log.push(item);
+    this.addItemEvent.dispatch(item);
+  }
 }
 
 function measureChar() {
