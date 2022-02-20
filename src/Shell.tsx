@@ -1,9 +1,6 @@
-import {Terminal, IDisposable} from 'xterm';
 import 'xterm/css/xterm.css';
 import { addHistory, updateHistory } from './history';
-import React from 'react';
 import { makePromptEditor } from './PromptEditor';
-import { render } from 'react-dom';
 import { JoelEvent } from './JoelEvent';
 import type { LogItem } from './LogView';
 import { CommandBlock, CommandPrefix } from './CommandBlock';
@@ -135,22 +132,23 @@ export class Shell {
   addPrompt(container: Element) {
     const element = document.createElement('div');
     element.classList.add('prompt');
-    const editorWrapper = React.createRef<HTMLDivElement>();
-    render(<>
-      <CommandPrefix shellOrCommand={this} />
-      <div ref={editorWrapper} style={{position: 'relative', flex: 1, minHeight: '14px'}}
-      onKeyDown={event => {
-        if (event.key !== 'Enter')
-          return;
-        const command = editor.value;
-        editor.value = '';
-        this.runCommand(command);
-        event.stopPropagation();
-        event.preventDefault();
-      }} />
-    </>, element);
+    element.append(CommandPrefix(this))
+    const editorWrapper = document.createElement('div');
+    editorWrapper.style.position = 'relative';
+    editorWrapper.style.flex = '1';
+    editorWrapper.style.minHeight = '14px';
+    editorWrapper.addEventListener('keydown', event => {
+      if (event.key !== 'Enter')
+        return;
+      const command = editor.value;
+      editor.value = '';
+      this.runCommand(command);
+      event.stopPropagation();
+      event.preventDefault();
+    }, false);
+    element.appendChild(editorWrapper);
     const editor = makePromptEditor(this);
-    editorWrapper.current.appendChild(editor.element);
+    editorWrapper.appendChild(editor.element);
     container.appendChild(element);
     editor.layout();
     editor.focus();

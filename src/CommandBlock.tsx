@@ -1,9 +1,6 @@
 import { JoelEvent } from "./JoelEvent";
 import { LogItem } from "./LogView";
-import { render } from 'react-dom';
-import { usePromise } from './hooks';
 import type { Shell } from './Shell';
-import React from 'react';
 
 export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
@@ -14,10 +11,11 @@ export class CommandBlock implements LogItem {
     const command = document.createElement('div');
     command.classList.add('command');
     console.log(this.cachedEvaluationResult);
-    render(<>
-      <CommandPrefix shellOrCommand={this} />
-      <div className="user-text">{this.command}</div>
-    </>, command);
+    command.append(CommandPrefix(this));
+    const userText = document.createElement('div');
+    userText.className = 'user-text';
+    userText.textContent = this.command;
+    command.append(userText);
     return command;
   }
   focus(): void {
@@ -34,20 +32,32 @@ export class CommandBlock implements LogItem {
   }
 }
 
-export function CommandPrefix({shellOrCommand}: {shellOrCommand: Shell|CommandBlock}) {
-  const pwd = usePromise(shellOrCommand.cachedEvaluation('pwd'));
-  const home = usePromise(shellOrCommand.cachedEvaluation('echo $HOME'));
-  const revName = usePromise(shellOrCommand.cachedEvaluation('__git_ref_name'));
-  const dirtyState = usePromise(shellOrCommand.cachedEvaluation('__is_git_dirty'));
-  if (pwd === null || home === null)
-    return <></>;
-  if (revName === null || dirtyState === null)
-    return <></>;
-  const prettyName = pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
-  const GitStatus = revName ? <><Ansi color={75}>(<Ansi color={78}>{revName}</Ansi><Ansi color={214}>{dirtyState ? '*' : ''}</Ansi>)</Ansi></> : null;
-  return <div className="prefix"><Ansi color={32}>{prettyName}</Ansi>{GitStatus} <Ansi color={105}>»</Ansi> </div>;
+export function CommandPrefix(shellOrCommand: Shell|CommandBlock) {
+  const div = document.createElement('div');
+  div.className = 'prefix';
+  go();
+  return div;
+  async function go() {
+    const [pwd, home, revName, dirtyState] = await Promise.all([
+      shellOrCommand.cachedEvaluation('pwd'),
+      shellOrCommand.cachedEvaluation('echo $HOME'),
+      shellOrCommand.cachedEvaluation('__git_ref_name'),
+      shellOrCommand.cachedEvaluation('__is_git_dirty'),
+    ]);
+    const prettyName = pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
+    const GitStatus = revName ? Ansi(75,"(", Ansi(78, revName), Ansi(214, dirtyState ? '*' : ''), ")") : null;
+    div.append(Ansi(32, prettyName), GitStatus, ' ', Ansi(105, '»'), ' ');
+  }
 }
 
-function Ansi({children, color}) {
-  return <span style={{color: 'var(--ansi-' + color + ')'}}>{children}</span>;
+/**
+ * @param {number} color
+ * @param {...Node|string|null} children
+ */
+function Ansi(color, ...children) {
+  const span = document.createElement('span');
+  span.style.color = `var(--ansi-${color})`;
+  span.append(...children.filter(x => x));
+  return span;
 }
+
