@@ -1,32 +1,11 @@
-const {spawn} = require('child_process');
 const EventEmitter = require('events');
-async function waitForURL(child) {
-  let buffer = '';
-  let resolve;
-  const promise = new Promise(r => resolve = r);
-  child.stderr.on('data', onData);
-  const url = await promise;
-  child.stderr.off('data', onData);
-  return url;
-  function onData(data) {
-    buffer += data.toString();
-    const regex = /Debugger listening on (.*)/
-    const result = regex.exec(buffer);
-    if (!result)
-      return;
-    resolve(result[1]);
-  }
-}
+const {spawnJSProcess} = require('./spawnJSProcess');
 
 async function connect() {
-  const child = spawn(process.execPath, ['-e', `process.stdin.on('data', () => void 0); require('inspector').open(undefined, undefined, true);  `], {
-    stdio: 'pipe',
-    detached: false
-  });
-  const url = await waitForURL(child);
+  const {child, url} = await spawnJSProcess();
   const ws = require('ws');
   const socket = new ws.WebSocket(url);
-  /** @type {import('./protocol').Connection} */
+  /** @type {import('../src/protocol').Connection} */
   const connection = new Connection(socket);
   connection.kill = () => child.kill();
   await new Promise((x, r) => {

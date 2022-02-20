@@ -5,6 +5,8 @@ import { JoelEvent } from './JoelEvent';
 import type { LogItem } from './LogView';
 import { CommandBlock, CommandPrefix } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
+import { JSConnection } from './JSConnection';
+import { JSBlock } from './JSBlock';
 
 const shells = new Map<number, Shell>();
 
@@ -31,18 +33,37 @@ export class Shell {
   public addItemEvent = new JoelEvent<LogItem>(null);
   public clearEvent = new JoelEvent<void>(undefined);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
-  private constructor(private _shellId: number) { }
+  private _connection: JSConnection;
+  private constructor(private _shellId: number, url: string) {
+    this._connection = new JSConnection(new WebSocket(url));
+  }
   private _size = new JoelEvent(size);
   static async create(): Promise<Shell> {
-    const shellId = await window.electronAPI.sendMessage({
+    const {shellId, url} = await window.electronAPI.sendMessage({
       method: 'createShell',
     });
-    const shell = new Shell(shellId);
+    const shell = new Shell(shellId, url);
     shells.set(shellId, shell);
     await shell.updateSize();
     return shell;
   }
   async runCommand(command: string) {
+    const commandBlock = new CommandBlock(command);
+    commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
+    this.addItem(commandBlock);
+    const result = await this._connection.send('Runtime.evaluate', {
+      expression: command,
+      returnByValue: false,
+      generatePreview: true,
+      userGesture: true,
+      replMode: true,
+      allowUnsafeEvalBlockedByCSP: true,
+    });
+    const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection);
+    this.addItem(jsBlock);
+  }
+
+  async runCommandSH(command: string) {
     const commandBlock = new CommandBlock(command);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     const terminalBlock = new TerminalBlock(this._size, this._shellId);
@@ -146,6 +167,7 @@ export class Shell {
         return;
       const command = editor.value;
       editor.value = '';
+      editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
       this.runCommand(command);
       event.stopPropagation();
       event.preventDefault();

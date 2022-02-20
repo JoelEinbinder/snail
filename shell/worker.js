@@ -2,6 +2,7 @@
 const {PipeTransport} = require('../protocol/pipeTransport');
 const {RPC} = require('../protocol/rpc');
 const path = require('path');
+const { spawnJSProcess } = require('./spawnJSProcess');
 const transport = new PipeTransport(process.stdout, process.stdin);
 const magicToken = String(Math.random());
 const magicString = `\x33[JOELMAGIC${magicToken}]\r\n`;
@@ -42,6 +43,9 @@ const rpc = RPC(transport, {
   }
 });
 
+spawnJSProcess().then(({url, child}) => {
+  rpc.notify('url', url);
+});
 
 /**
  * @param {string} command

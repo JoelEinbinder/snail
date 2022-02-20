@@ -12,11 +12,18 @@ class Shell extends EventEmitter {
       stdio: ['pipe', 'pipe', 'inherit'],
     });
     const transport = new PipeTransport(this.process.stdin, this.process.stdout);
+    let urlCallback;
+    this.urlPromise = new Promise(resolve => {
+      urlCallback = resolve;
+    });
     this.rpc = RPC(transport, {
       cwd: cwd => {},
       env: env => {},
       data: data => {
         this.emit('data', data);
+      },
+      url: url => {
+        urlCallback(url);
       },
     });
   }

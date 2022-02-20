@@ -172,11 +172,17 @@ const handler = {
     shell.on('data', data => {
       sender.send('message', {method: 'data', params: {shellId, data}});
     });
-    sender.on('destroyed', () => {
+    sender.on('destroyed', destroy);
+    sender.on('did-navigate', destroy);
+
+    function destroy() {
+      sender.off('destroyed', destroy);
+      sender.off('did-navigate', destroy);
       shell.close();
-      shells.delete(shellId);
-    })
-    return shellId;
+      shells.delete(shellId);    
+    }
+    const url = await shell.urlPromise;
+    return {shellId, url};
   },
   async getHistory() {
     const util = require('util');
