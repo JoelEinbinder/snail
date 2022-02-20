@@ -166,15 +166,21 @@ export class Shell {
     editorWrapper.addEventListener('keydown', event => {
       if (event.key !== 'Enter' || event.shiftKey)
         return;
+      event.preventDefault();
+      event.stopPropagation();
       if (!event.ctrlKey && !editor.somethingSelected()) {
         const start = editor.selections[0].start;
         if (start.line !== editor.lastLine) {
-          if (start.column === editor.line(start.line).length)
+          if (start.column === editor.line(start.line).length) {
+            editor.smartEnter();
             return;
+          }
         } else {
-          if (start.column === editor.line(start.line).length && isUnexpectedEndOfInput(editor.text()))
+          if (start.column === editor.line(start.line).length && isUnexpectedEndOfInput(editor.text())) {
+            editor.smartEnter();
             return;
-        }
+          }
+      }
       }
       const command = editor.value;
       editor.value = '';

@@ -61,6 +61,11 @@ export class Editor extends Emitter<EditorEvents> {
     return this._model.replaceRange(text, range);
   }
 
+  smartEnter() {
+    const indentation = this._highlighter.indentation(this._model.selections[0].start.line);
+    this._input.insertText('\n' + '\t'.repeat(indentation / this._renderer.TAB.length));
+  }
+
   pointFromLocation(location: Loc) {
     return this._renderer.pointFromLocation(location);
   }

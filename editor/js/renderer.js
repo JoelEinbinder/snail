@@ -10,7 +10,7 @@ export class Renderer extends Emitter {
    */
   constructor(model, element, highlighter, options = {}) {
     super();
-    this.TAB = '    ';
+    this.TAB = '  ';
     this._model = model;
 
     this._options = options;

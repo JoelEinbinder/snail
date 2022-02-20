@@ -169,6 +169,21 @@ export class Highlighter extends Emitter {
   }
 
   /**
+   * @param {number} lineNumber
+   */
+  indentation(lineNumber) {
+    const line = this._model.line(lineNumber);
+    if (!this._lineInfo.has(line))
+      return;
+    const state = this._lineInfo.get(line).state;
+    if (!state)
+      return;
+    const copy = this._copyState(state);
+    this._mode.token(new StringStream('\n'), copy);
+    return this._mode.indent(copy, '');
+  }
+
+  /**
    * @template T
    * @param {T} state
    * @param {number=} depth
@@ -300,7 +315,7 @@ export class Highlighter extends Emitter {
 var StringStream = function(string, tabSize, lineOracle) {
   this.pos = this.start = 0;
   this.string = string;
-  this.tabSize = tabSize || 8;
+  this.tabSize = tabSize || 2;
   this.lastColumnPos = this.lastColumnValue = 0;
   this.lineStart = 0;
   this.lineOracle = lineOracle;

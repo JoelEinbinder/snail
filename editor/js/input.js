@@ -192,11 +192,6 @@ export class Input extends Emitter {
   }
 
   /**
-   * @param {!Event} event
-   */
-  _onKeyDown(event) {}
-
-  /**
    * @return {string}
    */
   _selectionsText() {
@@ -311,6 +306,13 @@ export class Input extends Emitter {
   _indent() {
     this._replaceRanges('\t', this._model.selections);
     return true;
+  }
+
+  /**
+   * @param {string} text
+   */
+  insertText(text) {
+    this._replaceRanges(text, this._model.selections);
   }
 
   _dedent() {
