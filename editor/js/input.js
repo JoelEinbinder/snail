@@ -316,6 +316,26 @@ export class Input extends Emitter {
   }
 
   _dedent() {
+    const lines = new Set();
+    for (const selection of this._model.selections) {
+      for (let i = selection.start.line; i < selection.end.line + 1; i++)
+        lines.add(i);
+      selection.start.column--;
+    }
+    const movedLines = new Set();
+    for (const lineNumber of lines) {
+      const line = this._model.line(lineNumber);
+      if (line.text.startsWith('\t')) {
+        this._model.replaceRange('', {
+          start: { line: lineNumber, column: 0 },
+          end: { line: lineNumber, column: 1 }
+        });
+        movedLines.add(lineNumber);
+      }
+    }
+    if (!movedLines.size) return false;
+    
+    this._model.setSelections(this._model.selections);
     return true;
   }
 }

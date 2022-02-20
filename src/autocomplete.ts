@@ -39,7 +39,7 @@ export class Autocomplete {
                     return;
                 if (event.key === ' ' && event.ctrlKey) {
                     this.showSuggestBox();
-                } else if (event.code === 'Tab') {
+                } else if (event.code === 'Tab' && !event.shiftKey && !event.ctrlKey) {
                     if (selections[0].start.column === 0)
                         return;
                     this.showSuggestBox(true);
