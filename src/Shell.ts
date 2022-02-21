@@ -51,7 +51,7 @@ export class Shell {
     });
     await shell._connection.send('Runtime.enable', {});
     await shell._connection.send('Runtime.addBinding', {
-      name: 'joel',
+      name: 'magic_binding',
     });
     await shell._connection.send('Runtime.evaluate', {
       expression: 'bootstrap()',
@@ -77,6 +77,7 @@ export class Shell {
       await updateHistory(historyId, 'end', Date.now());
       await updateHistory(historyId, 'output', JSON.stringify(result));
     }
+    console.log(result);
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection);
 
     this.addItem(jsBlock);
