@@ -34,7 +34,7 @@ function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: J
         return renderBasicRemoteObject(object);
       return renderObjectRemoteObject(object, connection, willResize);
     case 'function':
-      return renderOther('Function');
+      return renderObjectRemoteObject(object, connection, willResize);
     default:
       console.log('unknown', object);
       return document.createElement('div');
@@ -75,7 +75,7 @@ function renderObjectRemoteObject(object: Protocol.Runtime.RemoteObject, connect
         propertyName.classList.add('symbol');
       propertyName.append(property.name);
       propertyLabel.append(propertyName, ': ');
-      if (property.value && property.value.type === 'object' && property.value.subtype !== 'null') {
+      if (property.value && (property.value.type === 'object' || property.value.type === 'function') && property.value.subtype !== 'null') {
         content.appendChild(renderObjectRemoteObject(property.value, connection, willResize, propertyLabel));
       } else {
         const div = document.createElement('div');
@@ -153,7 +153,10 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, prefix
     }
     summary.append(object.preview.subtype === 'array' ? ' ]' : ' }');
   } else {
-    summary.append(renderOther(object.description));
+    if (object.type === 'function')
+      summary.append(renderOther('Function'));
+    else
+      summary.append(renderOther(object.description));
   }
   return summary;
 }

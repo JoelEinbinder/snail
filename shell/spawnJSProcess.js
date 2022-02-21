@@ -20,7 +20,10 @@ async function waitForURL(child) {
 }
 
 async function spawnJSProcess() {
-  const child = spawn(process.execPath, ['-e', `process.stdin.on('data', () => void 0); require('inspector').open(undefined, undefined, false);  `], {
+  const child = spawn(process.execPath, ['-e', `
+    process.stdin.on('data', () => void 0);
+    require('inspector').open(undefined, undefined, false);
+  `], {
     stdio: 'pipe',
     detached: false
   });
