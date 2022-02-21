@@ -231,7 +231,7 @@ export class Input extends Emitter {
       if (start.line === end.line && start.column === end.column && this._model.selections.length === 1) {
         const before = this._model.line(start.line).text.substring(0, start.column);
         // TODO actually do this with highlighter
-        if (/\t+/.test(before) && (text === '}' || text === ']' || text === ')')) {
+        if (/^\t+$/.test(before) && (text === '}' || text === ']' || text === ')')) {
           this._replaceRanges(text, this._model.selections.map(selection => {
             return {
               start: { line: selection.start.line, column: selection.start.column - 1 },
