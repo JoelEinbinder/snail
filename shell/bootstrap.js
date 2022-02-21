@@ -1,17 +1,19 @@
 process.stdin.on('data', () => void 0);
+process.stdin.on('end', () => {
+  process.exit();
+});
 require('inspector').open(undefined, undefined, false);
 
 global.bootstrap = () => {
   const binding = global.magic_binding;
   delete global.magic_binding;
   delete global.bootstrap;
-  console.log('doing bootstrap', {abc: 123});
   const {sh} = require('../shjs/jsapi');
   global.sh = sh;
   function notify(method, params) {
     binding(JSON.stringify({method, params}));
   }
-  const shells = new Set();
+  const shells = new Map();
   let shellId = 0;
   global.pty = async function(command) {
     const magicToken = String(Math.random());
@@ -32,7 +34,7 @@ global.bootstrap = () => {
     });
     const id = ++shellId;
     notify('startTerminal', {id});
-    shells.add(shell);
+    shells.set(id, shell);
     let extraData = '';
     let inExtraData = false;
     shell.onData(d => {
@@ -48,7 +50,7 @@ global.bootstrap = () => {
     });
     /** @type {{exitCode: number, signal?: number}} */
     const returnValue = await new Promise(x => shell.onExit(x));
-    shells.delete(shell);
+    shells.delete(id);
     if (extraData.length) {
       const changes = JSON.parse(extraData);
       if (changes.cwd) {
@@ -74,5 +76,16 @@ global.bootstrap = () => {
     }
     notify('endTerminal', {id, returnValue});
     return 'this is the secret secret string';
+  }
+  const handler = {
+    input({id, data}) {
+      if (!shells.has(id))
+        return;
+      shells.get(id).write(data);
+    }
+  }
+  return function respond(data) {
+    const {method, params} = data;
+    handler[method](params);
   }
 };

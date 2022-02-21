@@ -57,15 +57,18 @@ export class Shell {
         terminals.get(id).addData(data);
       },
       endTerminal:({id}: {id: number}) => {
-        console.log('todo terminal ended');
-        terminals.get(id).close();
+        const terminalBlock = terminals.get(id);
+        terminalBlock.activeEvent.dispatch(false);
+        shell.activeItem.dispatch(null);
+        terminalBlock.close();
       },
       startTerminal:({id}: {id: number}) => {
-        const terminalBlock = new TerminalBlock(shell._size, data => {
-          console.log('todo input');
+        const terminalBlock = new TerminalBlock(shell._size, async data => {
+          await notify('input', { data, id});
         });
         terminals.set(id, terminalBlock);
         shell.addItem(terminalBlock);
+        shell.activeItem.dispatch(terminalBlock);
       },
       cwd: () => {},
       aliases: () => {},
@@ -81,9 +84,19 @@ export class Shell {
     await shell._connection.send('Runtime.addBinding', {
       name: 'magic_binding',
     });
-    await shell._connection.send('Runtime.evaluate', {
+    const {result: {objectId: notifyObjectId}} = await shell._connection.send('Runtime.evaluate', {
       expression: 'bootstrap()',
+      returnByValue: false,
     });
+    async function notify(method: string, params: any) {
+      await shell._connection.send('Runtime.callFunctionOn', {
+        objectId: notifyObjectId,
+        functionDeclaration: `function(data) { return this(data); }`,
+        arguments: [{
+          value: {method, params}
+        }]
+      });
+    }
 
     await shell.updateSize();
     return shell;
@@ -94,6 +107,7 @@ export class Shell {
     this.addItem(commandBlock);
     if (!command)
       return;
+    this.activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
     const result = await this._connection.send('Runtime.evaluate', {
       expression: preprocessForJS(command),
@@ -134,6 +148,8 @@ export class Shell {
         }, '#E50000');
       }
     }
+    if (this.activeItem.current === commandBlock)
+      this.activeItem.dispatch(null);
     if (result.result?.type === 'string' && result.result.value === 'this is the secret secret string')
       return;
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection);
