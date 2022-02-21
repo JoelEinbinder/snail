@@ -80,7 +80,19 @@ function renderErrorRemoteObject(object: Protocol.Runtime.RemoteObject) {
   return span;
 }
 
+function renderStaleRemoteObject(object: Protocol.Runtime.RemoteObject, prefix?: Element) {
+  const span = document.createElement('span');
+  const summary = renderRemoteObjectSummary(object);
+  if (prefix)
+    span.append(prefix);
+  for (const node of summary.childNodes)
+    span.append(node);
+  return span;
+}
+
 function renderObjectRemoteObject(object: Protocol.Runtime.RemoteObject, connection: JSConnection, willResize: JoelEvent<void>, prefix?: Element) {
+  if (!object.objectId)
+    return renderStaleRemoteObject(object, prefix);
   const details = document.createElement('details');
   const summary = renderRemoteObjectSummary(object, prefix);
   details.appendChild(summary);
@@ -114,7 +126,7 @@ function renderObjectRemoteObject(object: Protocol.Runtime.RemoteObject, connect
         propertyName.classList.add('symbol');
       propertyName.append(property.name);
       propertyLabel.append(propertyName, ': ');
-      if (property.value && (property.value.type === 'object' || property.value.type === 'function') && property.value.subtype !== 'null') {
+      if (property.value && property.value.objectId) {
         content.appendChild(renderObjectRemoteObject(property.value, connection, willResize, propertyLabel));
       } else {
         const div = document.createElement('div');
