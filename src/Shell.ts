@@ -35,51 +35,63 @@ export class Shell {
   public clearEvent = new JoelEvent<void>(undefined);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
   private _connection: JSConnection;
+  private _notifyObjectId: string;
+  private _size = new JoelEvent(size);
   private constructor(private _shellId: number, url: string) {
     this._connection = new JSConnection(new WebSocket(url));
+    this._connection.on('Runtime.consoleAPICalled', message => {
+      // console.timeEnd messages are sent twice
+      if (message.stackTrace?.callFrames[0]?.functionName === 'timeLogImpl')
+        return;
+      this.addItem(new JSLogBlock(message, this._connection));
+    });
+    const terminals = new Map<number, {block: TerminalBlock, cleanup: () => void}>();
+    const handler = {
+      data: ({data, id}: {data: string, id: number}) => {
+        terminals.get(id).block.addData(data);
+      },
+      endTerminal:({id}: {id: number}) => {
+        const {block, cleanup} = terminals.get(id);
+        terminals.delete(id);
+        block.activeEvent.dispatch(false);
+        this.activeItem.dispatch(null);
+        cleanup();
+        block.close();
+      },
+      startTerminal:({id}: {id: number}) => {
+        const terminalBlock = new TerminalBlock(this._size, async data => {
+          await this._notify('input', { data, id});
+        });
+        const onFullScreen = (value: boolean) => {
+          if (value)
+            this.fullscreenItem.dispatch(terminalBlock);
+          else if (this.fullscreenItem.current === terminalBlock)
+            this.fullscreenItem.dispatch(null);
+        }    
+        terminalBlock.fullscreenEvent.on(onFullScreen);
+        terminals.set(id, {block: terminalBlock, cleanup: () => {
+          terminalBlock.fullscreenEvent.off(onFullScreen);
+        }});
+        this.addItem(terminalBlock);
+        this.activeItem.dispatch(terminalBlock);
+      },
+      cwd: () => {},
+      aliases: () => {},
+      env: () => {},
+    }
+    this._connection.on('Runtime.bindingCalled', message => {
+      if (message.name !== "magic_binding")
+        return;
+      const {method, params} = JSON.parse(message.payload);
+      handler[method](params);
+    });
   }
-  private _size = new JoelEvent(size);
   static async create(): Promise<Shell> {
     const {shellId, url} = await window.electronAPI.sendMessage({
       method: 'createShell',
     });
     const shell = new Shell(shellId, url);
     shells.set(shellId, shell);
-    shell._connection.on('Runtime.consoleAPICalled', message => {
-      if (message.stackTrace?.callFrames[0]?.functionName === 'timeLogImpl')
-        return;
-      shell.addItem(new JSLogBlock(message, shell._connection));
-      console.log(message);
-    });
-    const terminals = new Map<number, TerminalBlock>();
-    const handler = {
-      data: ({data, id}: {data: string, id: number}) => {
-        terminals.get(id).addData(data);
-      },
-      endTerminal:({id}: {id: number}) => {
-        const terminalBlock = terminals.get(id);
-        terminalBlock.activeEvent.dispatch(false);
-        shell.activeItem.dispatch(null);
-        terminalBlock.close();
-      },
-      startTerminal:({id}: {id: number}) => {
-        const terminalBlock = new TerminalBlock(shell._size, async data => {
-          await notify('input', { data, id});
-        });
-        terminals.set(id, terminalBlock);
-        shell.addItem(terminalBlock);
-        shell.activeItem.dispatch(terminalBlock);
-      },
-      cwd: () => {},
-      aliases: () => {},
-      env: () => {},
-    }
-    shell._connection.on('Runtime.bindingCalled', message => {
-      if (message.name !== "magic_binding")
-        return;
-      const {method, params} = JSON.parse(message.payload);
-      handler[method](params);
-    });
     await shell._connection.send('Runtime.enable', {});
     await shell._connection.send('Runtime.addBinding', {
       name: 'magic_binding',
@@ -88,18 +100,20 @@ export class Shell {
       expression: 'bootstrap()',
       returnByValue: false,
     });
-    async function notify(method: string, params: any) {
-      await shell._connection.send('Runtime.callFunctionOn', {
-        objectId: notifyObjectId,
-        functionDeclaration: `function(data) { return this(data); }`,
-        arguments: [{
-          value: {method, params}
-        }]
-      });
-    }
+    shell._notifyObjectId = notifyObjectId;
 
     await shell.updateSize();
     return shell;
+  }
+
+  async _notify(method: string, params: any) {
+    await this._connection.send('Runtime.callFunctionOn', {
+      objectId: this._notifyObjectId,
+      functionDeclaration: `function(data) { return this(data); }`,
+      arguments: [{
+        value: {method, params}
+      }]
+    });
   }
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command);
@@ -164,9 +178,6 @@ export class Shell {
     let didClear = false;
     this.addItem(commandBlock);
     this.addItem(terminalBlock);
-    const onFullScreen = (value: boolean) => {
-      this.fullscreenItem.dispatch(value ? terminalBlock : null);
-    }
     const onClear = () => {
       for (const item of this.log) {
         if (item !== terminalBlock && item !== commandBlock)
@@ -176,7 +187,6 @@ export class Shell {
       didClear = true;
       this.clearEvent.dispatch();
     }
-    terminalBlock.fullscreenEvent.on(onFullScreen);
     terminalBlock.clearEvent.on(onClear);
     terminalBlock.activeEvent.dispatch(true);
     this.activeItem.dispatch(terminalBlock);
@@ -188,7 +198,6 @@ export class Shell {
         command,
       },
     });
-    terminalBlock.fullscreenEvent.off(onFullScreen);
     this.fullscreenItem.dispatch(null);
     this._cachedEvaluationResult = new Map();
     this.activeItem.dispatch(null);
