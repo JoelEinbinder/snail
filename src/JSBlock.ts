@@ -61,6 +61,8 @@ function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: J
     case 'object':
       if (object.subtype === 'null')
         return renderBasicRemoteObject(object);
+      if (object.subtype === 'error')
+        return renderErrorRemoteObject(object);
       return renderObjectRemoteObject(object, connection, willResize);
     case 'function':
       return renderObjectRemoteObject(object, connection, willResize);
@@ -68,6 +70,14 @@ function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: J
       console.log('unknown', object);
       return document.createElement('div');
   }
+}
+
+function renderErrorRemoteObject(object: Protocol.Runtime.RemoteObject) {
+  const span = document.createElement('span');
+  span.classList.add('remote-object', 'error');
+  span.style.whiteSpace = 'pre';
+  span.textContent = object.description;
+  return span;
 }
 
 function renderObjectRemoteObject(object: Protocol.Runtime.RemoteObject, connection: JSConnection, willResize: JoelEvent<void>, prefix?: Element) {
