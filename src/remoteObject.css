@@ -20,3 +20,18 @@
 ::marker {
   color: var(--color-8);
 }
+
+details > .content {
+  padding-left: 13px;
+}
+
+details > .content > .property {
+  padding-left: 11px;
+}
+
+.property-name.symbol {
+  color: var(--color-2);
+}
+.property-name.dim {
+  color: var(--ansi-245);
+}
