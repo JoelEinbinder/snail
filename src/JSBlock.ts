@@ -23,6 +23,7 @@ export class JSLogBlock implements LogItem {
   willResizeEvent = new JoelEvent(undefined);
   private _element = document.createElement('div');
   constructor(log: Protocol.Runtime.consoleAPICalledPayload, connection: JSConnection) {
+    this._element.style.whiteSpace = 'pre';
     let first = true;
     for (const arg of log.args) {
       if (first)

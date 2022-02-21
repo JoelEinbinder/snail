@@ -46,7 +46,36 @@ export class Shell {
     const shell = new Shell(shellId, url);
     shells.set(shellId, shell);
     shell._connection.on('Runtime.consoleAPICalled', message => {
+      if (message.stackTrace?.callFrames[0]?.functionName === 'timeLogImpl')
+        return;
       shell.addItem(new JSLogBlock(message, shell._connection));
+      console.log(message);
+    });
+    const terminals = new Map<number, TerminalBlock>();
+    const handler = {
+      data: ({data, id}: {data: string, id: number}) => {
+        terminals.get(id).addData(data);
+      },
+      endTerminal:({id}: {id: number}) => {
+        console.log('todo terminal ended');
+        terminals.get(id).close();
+      },
+      startTerminal:({id}: {id: number}) => {
+        const terminalBlock = new TerminalBlock(shell._size, data => {
+          console.log('todo input');
+        });
+        terminals.set(id, terminalBlock);
+        shell.addItem(terminalBlock);
+      },
+      cwd: () => {},
+      aliases: () => {},
+      env: () => {},
+    }
+    shell._connection.on('Runtime.bindingCalled', message => {
+      if (message.name !== "magic_binding")
+        return;
+      const {method, params} = JSON.parse(message.payload);
+      handler[method](params);
     });
     await shell._connection.send('Runtime.enable', {});
     await shell._connection.send('Runtime.addBinding', {
@@ -105,6 +134,8 @@ export class Shell {
         }, '#E50000');
       }
     }
+    if (result.result?.type === 'string' && result.result.value === 'this is the secret secret string')
+      return;
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection);
 
     this.addItem(jsBlock);

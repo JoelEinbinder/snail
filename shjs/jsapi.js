@@ -24,7 +24,7 @@ sh.passThrough = function(strings, values) {
  * @param {TemplateStringsArray} strings
  * @param {...any} values
  */
-function parseTemplate(strings, values) {
+function parseTemplate(strings, ...values) {
   if (strings.length !== 1)
     throw new Error('replacements unimplemented');
   return parse(tokenize(strings[0]));

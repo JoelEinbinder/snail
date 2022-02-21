@@ -26,7 +26,7 @@ export class TerminalBlock implements LogItem {
   private _trailingNewline = false;
   private _lastWritePromise = Promise.resolve();
   public empty = true;
-  constructor(private _size: JoelEvent<{cols: number, rows: number}>, shellId: number) {
+  constructor(private _size: JoelEvent<{cols: number, rows: number}>, sendInput: (data: string) => void) {
 
     this.element = document.createElement('div');
     this.element.style.height = '0px';
@@ -64,13 +64,7 @@ export class TerminalBlock implements LogItem {
     this._terminal.open(this.element);
     
     this._listeners.push(this._terminal.onData(data => {
-      window.electronAPI.sendMessage({
-        method: 'sendRawInput',
-        params: {
-          shellId,
-          input: data,
-        },
-      });
+      sendInput(data);
     }));
     this._listeners.push(this._terminal.buffer.onBufferChange(() => {
       this._willResize();
