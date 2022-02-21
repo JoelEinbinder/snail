@@ -93,6 +93,10 @@ export class Renderer extends Emitter {
       this._overlayLayer.invalidate();
       this._overlayLayer.refresh();
     });
+    this._model.on('squiggliesChanged', () => {
+      this._overlayLayer.invalidate();
+      this._overlayLayer.refresh();
+    });
 
     this._scrollingElement = document.createElement('div');
     this._scrollingElement.style.overflow = 'auto';
@@ -446,6 +450,26 @@ export class Renderer extends Emitter {
       }
     }
     ctx.restore();
+
+    for (const squiggly of this._model.squigglies) {
+      ctx.strokeStyle = squiggly.color;
+      for (let line = squiggly.range.start.line; line <= squiggly.range.end.line && line < this._model.lineCount(); line++) {
+        let start = line === squiggly.range.start.line ? squiggly.range.start.column : 0;
+        let end = line === squiggly.range.end.line ? squiggly.range.end.column : this._model.line(line).text.length;
+        const point = this.pointFromLocation({ line, column: start });
+        const otherPoint = this.pointFromLocation({ line, column: end });
+        ctx.beginPath();
+        const y = point.y + this._lineHeight - 1;
+        ctx.moveTo(point.x, y);
+        const width = 2;
+        let upStroke = true
+        for (let x = point.x + width; x < otherPoint.x; x += width) {
+          ctx.lineTo(x, y + (upStroke ? -2 : 0));
+          upStroke = !upStroke;
+        }
+        ctx.stroke();
+      }
+    }
 
     ctx.fillStyle = this.colors.cursorColor;
     if (!this._options.readOnly && this._hasFocus) {

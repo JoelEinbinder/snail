@@ -1,4 +1,4 @@
-import { Editor } from "../editor/js/editor";
+import { Editor, TextRange } from "../editor/js/editor";
 import { JoelEvent } from "./JoelEvent";
 import { LogItem } from "./LogView";
 import type { Shell } from './Shell';
@@ -6,17 +6,9 @@ import type { Shell } from './Shell';
 export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
   willResizeEvent = new JoelEvent<void>(undefined);
+  private _editor: Editor;
   constructor(public command: string) {
-  }
-  render(): Element {
-    const command = document.createElement('div');
-    command.classList.add('command');
-    command.append(CommandPrefix(this));
-    const editorWrapper = document.createElement('div');
-    editorWrapper.style.position = 'relative';
-    editorWrapper.style.flex = '1';
-    editorWrapper.style.minHeight = '14px';
-    const editor = new Editor('', {
+    this._editor = new Editor('', {
       inline: true,
       lineNumbers: false,
       language: 'js',
@@ -28,12 +20,27 @@ export class CommandBlock implements LogItem {
       },
       readOnly: true,
     });
+    this._editor.value = this.command;
+
+  }
+
+  addSquiggly(range: TextRange, color: string) {
+    this._editor.addSquiggly(range, color);
+  }
+
+  render(): Element {
+    const command = document.createElement('div');
+    command.classList.add('command');
+    command.append(CommandPrefix(this));
+    const editorWrapper = document.createElement('div');
+    editorWrapper.style.position = 'relative';
+    editorWrapper.style.flex = '1';
+    editorWrapper.style.minHeight = '14px';
     command.append(editorWrapper);
-    editorWrapper.append(editor.element);
-    editor.value = this.command;
+    editorWrapper.append(this._editor.element);
     Promise.resolve().then(() => {
       this.willResizeEvent.dispatch();
-      editor.layout();
+      this._editor.layout();
     });
     return command;
   }

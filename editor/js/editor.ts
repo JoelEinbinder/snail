@@ -78,6 +78,10 @@ export class Editor extends Emitter<EditorEvents> {
     return this._model.line(index);  
   }
 
+  addSquiggly(range: TextRange, color: string) {
+    this._model.addSquiggly(range, color);
+  }
+
   get lastLine() {
     return this._model.fullRange().end.line;
   }

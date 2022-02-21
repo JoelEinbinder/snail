@@ -46,7 +46,6 @@ export class Shell {
     const shell = new Shell(shellId, url);
     shells.set(shellId, shell);
     shell._connection.on('Runtime.consoleAPICalled', message => {
-      console.log(message);
       shell.addItem(new JSLogBlock(message, shell._connection));
     });
     await shell._connection.send('Runtime.enable', {});
@@ -64,6 +63,8 @@ export class Shell {
     const commandBlock = new CommandBlock(command);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
+    if (!command)
+      return;
     const historyId = await this._addToHistory(command);
     const result = await this._connection.send('Runtime.evaluate', {
       expression: preprocessForJS(command),
@@ -77,7 +78,33 @@ export class Shell {
       await updateHistory(historyId, 'end', Date.now());
       await updateHistory(historyId, 'output', JSON.stringify(result));
     }
-    console.log(result);
+    const {exceptionDetails} = result;
+    if (exceptionDetails) {
+      if (exceptionDetails.stackTrace) {
+        const callFrame = exceptionDetails.stackTrace.callFrames[exceptionDetails.stackTrace.callFrames.length - 1];
+        commandBlock.addSquiggly({
+          start: {
+            line: callFrame.lineNumber,
+            column: callFrame.columnNumber,
+          },
+          end: {
+            line: callFrame.lineNumber,
+            column: Infinity
+          }
+        }, '#E50000');
+      } else {
+        commandBlock.addSquiggly({
+          start: {
+            line: exceptionDetails.lineNumber,
+            column: exceptionDetails.columnNumber,
+          },
+          end: {
+            line: exceptionDetails.scriptId ? exceptionDetails.lineNumber : Infinity,
+            column: Infinity
+          }
+        }, '#E50000');
+      }
+    }
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection);
 
     this.addItem(jsBlock);

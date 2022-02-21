@@ -14,6 +14,8 @@ export class Model extends Emitter {
     this._undoStack = [];
     /** @type {Array<{range: TextRange, text: string, selections:Array<TextRange>}>} */
     this._redoStack = [];
+    /** @type {Array<{range: TextRange, color: string}>} */
+    this._squigglies = [];
   }
 
   /**
@@ -53,6 +55,22 @@ export class Model extends Emitter {
 
   get selections() {
     return this._selections;
+  }
+
+  get squigglies() {
+    return this._squigglies;
+  }
+
+  /**
+   * @param {TextRange} range
+   * @param {string} color
+   */
+  addSquiggly(range, color) {
+    this._squigglies.push({
+      range,
+      color
+    });
+    this.emit('squiggliesChanged');
   }
 
   /**
