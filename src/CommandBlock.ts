@@ -1,3 +1,4 @@
+import { Editor } from "../editor/js/editor";
 import { JoelEvent } from "./JoelEvent";
 import { LogItem } from "./LogView";
 import type { Shell } from './Shell';
@@ -11,10 +12,29 @@ export class CommandBlock implements LogItem {
     const command = document.createElement('div');
     command.classList.add('command');
     command.append(CommandPrefix(this));
-    const userText = document.createElement('div');
-    userText.className = 'user-text';
-    userText.textContent = this.command;
-    command.append(userText);
+    const editorWrapper = document.createElement('div');
+    editorWrapper.style.position = 'relative';
+    editorWrapper.style.flex = '1';
+    editorWrapper.style.minHeight = '14px';
+    const editor = new Editor('', {
+      inline: true,
+      lineNumbers: false,
+      language: 'js',
+      padding: 0,
+      colors: {
+        cursorColor: '#f4f4f4',
+        foreground: '#f4f4f4',
+        selectionBackground: '#525252',
+      },
+      readOnly: true,
+    });
+    command.append(editorWrapper);
+    editorWrapper.append(editor.element);
+    editor.value = this.command;
+    this.willResizeEvent.dispatch();
+    Promise.resolve().then(() => {
+      editor.layout();
+    });
     return command;
   }
   focus(): void {

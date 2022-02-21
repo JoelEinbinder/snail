@@ -183,8 +183,8 @@ export class Shell {
       }
       }
       const command = editor.value;
-      editor.value = '';
       editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
+      editor.value = '';
       this.runCommand(command);
       event.stopPropagation();
       event.preventDefault();

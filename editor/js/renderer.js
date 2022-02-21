@@ -284,6 +284,10 @@ export class Renderer extends Emitter {
   }
 
   refresh() {
+    if (!this.element.isConnected)
+      return;
+    if (!this._lineHeight || !this._charWidth)
+      this.layout();
     this._overlayLayer.refresh();
     this._textLayer.refresh();
     this._updateMetrics();
@@ -495,6 +499,8 @@ export class Renderer extends Emitter {
   }
 
   layout() {
+    if (!this.element.isConnected)
+      return;
     this._charHeight = parseInt(window.getComputedStyle(this._textLayer.canvas).fontSize);
     this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._textLayer.canvas).lineHeight || '0'), this._charHeight);
     if (this._options.inline) {
@@ -512,7 +518,9 @@ export class Renderer extends Emitter {
       this._textMeasuring = new TextMeasuring(
         char => this._textLayer._ctx.measureText(char === '\t' ? this.TAB : char).width
       );
-    this.refresh();
+    
+    if (this._lineHeight && this._charWidth)
+      this.refresh();
   }
 
   get lineHeight() {
