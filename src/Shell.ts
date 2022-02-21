@@ -6,7 +6,7 @@ import type { LogItem } from './LogView';
 import { CommandBlock, CommandPrefix } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { JSConnection } from './JSConnection';
-import { JSBlock } from './JSBlock';
+import { JSBlock, JSLogBlock } from './JSBlock';
 import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 
 const shells = new Map<number, Shell>();
@@ -45,6 +45,18 @@ export class Shell {
     });
     const shell = new Shell(shellId, url);
     shells.set(shellId, shell);
+    shell._connection.on('Runtime.consoleAPICalled', message => {
+      console.log(message);
+      shell.addItem(new JSLogBlock(message, shell._connection));
+    });
+    await shell._connection.send('Runtime.enable', {});
+    await shell._connection.send('Runtime.addBinding', {
+      name: 'joel',
+    });
+    await shell._connection.send('Runtime.evaluate', {
+      expression: 'bootstrap()',
+    });
+
     await shell.updateSize();
     return shell;
   }

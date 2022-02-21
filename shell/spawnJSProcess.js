@@ -1,4 +1,5 @@
 const {spawn} = require('child_process');
+const path = require('path');
 
 /** @return {Promise<string>} */
 async function waitForURL(child) {
@@ -21,8 +22,7 @@ async function waitForURL(child) {
 
 async function spawnJSProcess() {
   const child = spawn(process.execPath, ['-e', `
-    process.stdin.on('data', () => void 0);
-    require('inspector').open(undefined, undefined, false);
+    require(${JSON.stringify(path.join(__dirname, 'bootstrap.js'))});
   `], {
     stdio: 'pipe',
     detached: false

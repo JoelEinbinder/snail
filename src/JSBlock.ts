@@ -16,7 +16,36 @@ export class JSBlock implements LogItem {
   focus(): void {
   }
   dispose(): void {
-  }  
+  }
+}
+
+export class JSLogBlock implements LogItem {
+  willResizeEvent = new JoelEvent(undefined);
+  private _element = document.createElement('div');
+  constructor(log: Protocol.Runtime.consoleAPICalledPayload, connection: JSConnection) {
+    let first = true;
+    for (const arg of log.args) {
+      if (first)
+        first = false;
+      else
+        this._element.append(' ');
+      if (arg.type === 'string')
+        this._element.append(arg.value);
+      else {
+        const object = renderRemoteObject(arg, connection, this.willResizeEvent);
+        if (object.tagName === 'DETAILS')
+          object.style.display = 'inline-block';
+        this._element.append(object);
+      }
+    }
+  }
+  render(): Element {
+    return this._element;
+  }
+  focus(): void {
+  }
+  dispose(): void {
+  }
 }
 
 function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: JSConnection, willResize: JoelEvent<void>): HTMLElement {
