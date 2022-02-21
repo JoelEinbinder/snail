@@ -31,8 +31,8 @@ export class CommandBlock implements LogItem {
     command.append(editorWrapper);
     editorWrapper.append(editor.element);
     editor.value = this.command;
-    this.willResizeEvent.dispatch();
     Promise.resolve().then(() => {
+      this.willResizeEvent.dispatch();
       editor.layout();
     });
     return command;

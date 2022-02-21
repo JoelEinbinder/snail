@@ -52,6 +52,7 @@ export class Shell {
     const commandBlock = new CommandBlock(command);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
+    const historyId = await this._addToHistory(command);
     const result = await this._connection.send('Runtime.evaluate', {
       expression: preprocessForJS(command),
       returnByValue: false,
@@ -60,7 +61,12 @@ export class Shell {
       replMode: true,
       allowUnsafeEvalBlockedByCSP: true,
     });
+    if (historyId) {
+      await updateHistory(historyId, 'end', Date.now());
+      await updateHistory(historyId, 'output', JSON.stringify(result));
+    }
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection);
+
     this.addItem(jsBlock);
   }
 
