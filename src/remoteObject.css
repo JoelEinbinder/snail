@@ -1,0 +1,22 @@
+.remote-object.symbol,
+.remote-object.string {
+  color: var(--color-2);
+}
+.remote-object.boolean,
+.remote-object.bigint,
+.remote-object.number {
+  color: var(--color-3);
+}
+
+.remote-object.undefined,
+.remote-object.null {
+  color: var(--color-8);
+}
+
+.remote-object.other {
+  color: var(--color-6);
+}
+
+::marker {
+  color: var(--color-8);
+}
