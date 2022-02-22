@@ -26,7 +26,12 @@ export class Input extends Emitter {
     this._textarea.style.resize = 'none';
     this._textarea.style.overflow = 'hidden';
     this._textarea.style.position = 'absolute';
-    this._textarea.style.left = '-999em';
+    this._textarea.style.left = '0';
+    this._textarea.style.pointerEvents = 'none';
+    this._textarea.style.padding = '0';
+    this._textarea.style.border = 'none';
+    this._textarea.style.margin = '0';
+    this._textarea.style.width = '100%';
     this._textarea.style.opacity = '0';
     this._overrideBigSurDoubleSpacePeriod();
     this._textarea.addEventListener('input', this.update.bind(this), false);
@@ -38,6 +43,8 @@ export class Input extends Emitter {
     this._textarea.addEventListener('copy', this._onCopy.bind(this), false);
     this._textarea.addEventListener('cut', this._onCut.bind(this), false);
     this._textarea.addEventListener('paste', this._onPaste.bind(this), false);
+
+    this._parent = parent;
 
     this._setupContextMenuListeners(parent);
 
@@ -87,6 +94,7 @@ export class Input extends Emitter {
       // @ts-ignore layerY is a thing shut up
       this._textarea.style.top = event.layerY - 1 + 'px';
       this._textarea.style.zIndex = '1000';
+      this._textarea.style.removeProperty('pointer-events');
       var valueNeedsReset = false;
       if (!this._textarea.value) {
         this._textarea.value = '<BLANK LINE>';
@@ -121,8 +129,9 @@ export class Input extends Emitter {
       parent.addEventListener('keydown', checkDone, true);
       window.addEventListener('blur', checkDone, true);
       var cleanup = () => {
-        this._textarea.style.left = '-999em';
+        this._textarea.style.left = '0';
         this._textarea.style.removeProperty('z-index');
+        this._textarea.style.pointerEvents = 'none';
         cancelAnimationFrame(raf);
       };
       var raf = requestAnimationFrame(cleanup);
@@ -260,6 +269,8 @@ export class Input extends Emitter {
 
   focus() {
     this._textarea.focus();
+    this._textarea.style.font = window.getComputedStyle(this._parent).font;
+    this._textarea.style.lineHeight = window.getComputedStyle(this._parent).lineHeight;
   }
 
   /**
