@@ -31,6 +31,7 @@ export class Shell {
   log: LogItem[] = [];
   public fullscreenItem: JoelEvent<LogItem> = new JoelEvent<LogItem>(null);
   public activeItem = new JoelEvent<LogItem>(null);
+  public promptLock = new JoelEvent<number>(0);
   public addItemEvent = new JoelEvent<LogItem>(null);
   public clearEvent = new JoelEvent<void>(undefined);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
@@ -50,13 +51,18 @@ export class Shell {
       data: ({data, id}: {data: string, id: number}) => {
         terminals.get(id).block.addData(data);
       },
-      endTerminal:({id}: {id: number}) => {
+      endTerminal:async ({id}: {id: number}) => {
         const {block, cleanup} = terminals.get(id);
         terminals.delete(id);
-        block.activeEvent.dispatch(false);
         this.activeItem.dispatch(null);
+        this._unlockPrompt();
         cleanup();
-        block.close();
+        await block.close();
+        if (block.cleared && block.empty) {
+          block.dispose();
+          this.log.splice(this.log.indexOf(block), 1);
+          this.clearEvent.dispatch();
+        }
       },
       startTerminal:({id}: {id: number}) => {
         const terminalBlock = new TerminalBlock(this._size, async data => {
@@ -67,12 +73,23 @@ export class Shell {
             this.fullscreenItem.dispatch(terminalBlock);
           else if (this.fullscreenItem.current === terminalBlock)
             this.fullscreenItem.dispatch(null);
-        }    
+        };
+        const onClear = () => {
+          for (const item of this.log) {
+            if (item !== terminalBlock)
+              item.dispose();
+          }
+          this.log = [terminalBlock];
+          this.clearEvent.dispatch();
+        };    
         terminalBlock.fullscreenEvent.on(onFullScreen);
+        terminalBlock.clearEvent.on(onClear);
         terminals.set(id, {block: terminalBlock, cleanup: () => {
           terminalBlock.fullscreenEvent.off(onFullScreen);
+          terminalBlock.clearEvent.off(onClear);
         }});
         this.addItem(terminalBlock);
+        this._lockPrompt();
         this.activeItem.dispatch(terminalBlock);
       },
       cwd: () => {},
@@ -117,10 +134,12 @@ export class Shell {
   }
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command);
+    console.log('runCommand', command, this._cachedEvaluationResult);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)
       return;
+    this._lockPrompt();
     this.activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
     const result = await this._connection.send('Runtime.evaluate', {
@@ -131,8 +150,11 @@ export class Shell {
       replMode: true,
       allowUnsafeEvalBlockedByCSP: true,
     });
+    this._cachedEvaluationResult = new Map();
+    // TODO update the prompt line here?
     if (historyId) {
       await updateHistory(historyId, 'end', Date.now());
+      // TODO need a new history output format that considers terminal and js
       await updateHistory(historyId, 'output', JSON.stringify(result));
     }
     const {exceptionDetails} = result;
@@ -164,62 +186,12 @@ export class Shell {
     }
     if (this.activeItem.current === commandBlock)
       this.activeItem.dispatch(null);
+    this._unlockPrompt();
     if (result.result?.type === 'string' && result.result.value === 'this is the secret secret string')
       return;
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection);
 
     this.addItem(jsBlock);
-  }
-
-  async runCommandSH(command: string) {
-    const commandBlock = new CommandBlock(command);
-    commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
-    const terminalBlock = new TerminalBlock(this._size, this._shellId);
-    let didClear = false;
-    this.addItem(commandBlock);
-    this.addItem(terminalBlock);
-    const onClear = () => {
-      for (const item of this.log) {
-        if (item !== terminalBlock && item !== commandBlock)
-          item.dispose();
-      }
-      this.log = [commandBlock, terminalBlock];
-      didClear = true;
-      this.clearEvent.dispatch();
-    }
-    terminalBlock.clearEvent.on(onClear);
-    terminalBlock.activeEvent.dispatch(true);
-    this.activeItem.dispatch(terminalBlock);
-    const historyId = await this._addToHistory(command);
-    await window.electronAPI.sendMessage({
-      method: 'runCommand',
-      params: {
-        shellId: this._shellId,
-        command,
-      },
-    });
-    this.fullscreenItem.dispatch(null);
-    this._cachedEvaluationResult = new Map();
-    this.activeItem.dispatch(null);
-    terminalBlock.activeEvent.dispatch(false);
-    await terminalBlock.close();
-    if (historyId) {
-      await updateHistory(historyId, 'end', Date.now());
-      let output = '';
-      for (const data of terminalBlock.allData()) {
-        if (typeof data === 'string')
-          output += data;
-        else
-          output += new TextDecoder().decode(data);
-      }
-      await updateHistory(historyId, 'output', output);
-    }
-
-    terminalBlock.clearEvent.off(onClear);
-    if (didClear && terminalBlock.empty) {
-      this.log = [];
-      this.clearEvent.dispatch();
-    }
   }
 
   async evaluate(code: string): Promise<string> {
@@ -249,6 +221,14 @@ export class Shell {
     if (!this._cachedEvaluationResult.has(code))
       this._cachedEvaluationResult.set(code, this.evaluate(code));;
     return this._cachedEvaluationResult.get(code);
+  }
+
+  _lockPrompt() {
+    this.promptLock.dispatch(this.promptLock.current + 1);
+  }
+
+  _unlockPrompt() {
+    this.promptLock.dispatch(this.promptLock.current - 1);
   }
 
   addPrompt(container: Element) {

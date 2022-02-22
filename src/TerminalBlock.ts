@@ -13,8 +13,8 @@ window.electronAPI.onEvent('data', ({shellId, data}) => {
 
 export class TerminalBlock implements LogItem {
   public willResizeEvent = new JoelEvent<void>(undefined);
-  public activeEvent = new JoelEvent<boolean>(false);
   public dispose: () => void;
+  public cleared = false;
 
   public fullscreenEvent: JoelEvent<boolean> = new JoelEvent<boolean>(false);
   public clearEvent: JoelEvent<void> = new JoelEvent(undefined);
@@ -71,6 +71,7 @@ export class TerminalBlock implements LogItem {
       this.fullscreenEvent.dispatch(this._terminal.buffer.active === this._terminal.buffer.alternate);
     }));
     this._listeners.push(this._terminal.onClear(() => {
+      this.cleared = true;
       this.clearEvent.dispatch();
     }));
     this._terminal.onSelectionChange(() => {

@@ -19,14 +19,18 @@ export class LogView {
     this._element.style.padding = '4px';
     this._repopulate();
     this._shell.activeItem.on(item => {
-      if (this._promptElement) {
-        this._promptElement.remove();
-        this._promptElement = null;
-      }
       if (item)
         item.focus();
-      else
+    });
+    this._shell.promptLock.on(count => {
+      if (count > 0) {
+        if (this._promptElement) {
+          this._promptElement.remove();
+          this._promptElement = null;
+        }
+      } else {
         this._addPrompt();
+      }
     });
     this._shell.addItemEvent.on(item => {
       this._addEntry(item);
@@ -44,7 +48,7 @@ export class LogView {
     this._element.textContent = '';
     for (const entry of this._shell.log)
       this._addEntry(entry);
-    if (!this._shell.activeItem.current)
+    if (this._shell.promptLock.current === 0)
       this._addPrompt();
   }
 
