@@ -92,7 +92,16 @@ export class Shell {
         this._lockPrompt();
         this.activeItem.dispatch(terminalBlock);
       },
-      cwd: () => {},
+      cwd: cwd => {
+        console.log(cwd);
+        window.electronAPI.sendMessage({
+          method: 'chdir',
+          params: {
+            shellId: this._shellId,
+            dir: cwd,
+          },
+        })
+      },
       aliases: () => {},
       env: () => {},
     }
@@ -134,7 +143,6 @@ export class Shell {
   }
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command);
-    console.log('runCommand', command, this._cachedEvaluationResult);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)

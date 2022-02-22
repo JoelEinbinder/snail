@@ -153,25 +153,16 @@ let lastShellId = 0;
 /** @type {Map<number, import('../shell/shell').Shell>} */
 const shells = new Map();
 const handler = {
-  async runCommand({shellId, command}) {
-    await shells.get(shellId).runCommand(command);
-  },
   async evaluate({shellId, code}) {
     return shells.get(shellId).evaluate(code);
   },
-  async resize({cols, rows, shellId}) {
-    shells.get(shellId).resize(cols, rows);
-  },
-  async sendRawInput({shellId, input}) {
-    shells.get(shellId).sendRawInput(input);
+  async chdir({shellId, dir}) {
+    return shells.get(shellId).chdir(dir);
   },
   async createShell(_, sender) {
     const shellId = ++lastShellId;
     const shell = new (require('../shell/shell').Shell)();
     shells.set(shellId, shell);
-    shell.on('data', data => {
-      sender.send('message', {method: 'data', params: {shellId, data}});
-    });
     sender.on('destroyed', destroy);
     sender.on('did-navigate', destroy);
 
