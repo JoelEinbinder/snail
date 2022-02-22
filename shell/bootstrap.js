@@ -2,7 +2,10 @@ process.stdin.on('data', () => void 0);
 process.stdin.on('end', () => {
   process.exit();
 });
-require('inspector').open(undefined, undefined, false);
+const getPort = require('get-port');
+getPort().then(port => {
+  require('inspector').open(port, undefined, false);
+});
 
 global.bootstrap = () => {
   const binding = global.magic_binding;
