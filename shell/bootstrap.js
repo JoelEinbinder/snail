@@ -13,13 +13,14 @@ global.bootstrap = () => {
   function notify(method, params) {
     binding(JSON.stringify({method, params}));
   }
+  /** @type {Map<number, import('node-pty').IPty>} */
   const shells = new Map();
   let shellId = 0;
+  let rows = 24;
+  let cols = 80;
   global.pty = async function(command) {
     const magicToken = String(Math.random());
     const magicString = `\x33[JOELMAGIC${magicToken}]\r\n`;
-    let rows = 24;
-    let cols = 80;
     let env = {...process.env};
     const aliases = {};
     let cwd = process.cwd();
@@ -82,6 +83,12 @@ global.bootstrap = () => {
       if (!shells.has(id))
         return;
       shells.get(id).write(data);
+    },
+    resize(size) {
+      rows = size.rows;
+      cols = size.cols;
+      for (const shell of shells.values())
+        shell.resize(size.cols, size.rows);
     }
   }
   return function respond(data) {

@@ -207,14 +207,7 @@ export class Shell {
 
   async updateSize() {
     this._size.dispatch(size);
-    await window.electronAPI.sendMessage({
-      method: 'resize',
-      params: {
-        cols: size.cols,
-        rows: size.rows,
-        shellId: this._shellId,
-      },
-    });
+    this._notify('resize', size);
   }
 
   async cachedEvaluation(code: string): Promise<string> {
