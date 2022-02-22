@@ -1,6 +1,7 @@
 const {Parser, tokenizer, TokenType, tokTypes} = require('acorn');
 const {tokenize} = require('./tokenizer');
 const shTokenType = new TokenType('sh', {});
+let gv = new Set();
 const MyParser = Parser.extend(
   // @ts-ignore
   Parser => {
@@ -37,6 +38,8 @@ const MyParser = Parser.extend(
           // let is special cause its not a keyword
           if (firstToken.value === 'let')
             return null;
+          if (gv.has(firstToken.value))
+            return null;
           for (const stack of this.scopeStack) {
             if (stack.var.includes(firstToken.value))
               return null;
@@ -65,10 +68,14 @@ const MyParser = Parser.extend(
 /**
  * @param {string} code
  * @param {string=} fnName
+ * @param {Set<string>} globalVars
  */
-function transformCode(code, fnName = 'sh') {
+function transformCode(code, fnName = 'sh', globalVars = new Set()) {
   const tokens = [];
+  let before = gv;
+  gv = globalVars;
   const node =  MyParser.parse(code, {ecmaVersion: 'latest', allowAwaitOutsideFunction: true, onToken: t => tokens.push(t)});
+  gv = before;
   let newCode = code;
   for (const token of tokens.reverse()) {
     if (token.type !== shTokenType)

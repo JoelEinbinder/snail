@@ -38,6 +38,7 @@ export class Shell {
   private _connection: JSConnection;
   private _notifyObjectId: string;
   private _size = new JoelEvent(size);
+  private _cachedGlobalObjectId: string;
   private constructor(private _shellId: number, url: string) {
     this._connection = new JSConnection(new WebSocket(url));
     this._connection.on('Runtime.consoleAPICalled', message => {
@@ -141,6 +142,28 @@ export class Shell {
       }]
     });
   }
+
+  async globalVars() {
+    const {names} = await this._connection.send('Runtime.globalLexicalScopeNames', {});
+    const {result} = await this._connection.send('Runtime.getProperties', {
+      objectId: await this.globalObjectId(),
+      generatePreview: false,
+      ownProperties: false,
+      accessorPropertiesOnly: false,
+    });
+    const globalNames = result.filter(x => !x.symbol).map(x => x.name);
+    return new Set(names.concat(globalNames));
+  }
+
+  async globalObjectId() {
+    if (this._cachedGlobalObjectId)
+      return this._cachedGlobalObjectId;
+    const {result: {objectId}} = await this._connection.send('Runtime.evaluate', {
+      expression: '(function() {return this})()',
+      returnByValue: false,
+    });
+    return objectId;
+  }
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
@@ -151,7 +174,7 @@ export class Shell {
     this.activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
     const { transformCode } = await import('../shjs/transform');
-    const jsCode = transformCode(command, 'global.pty');
+    const jsCode = transformCode(command, 'global.pty', await this.globalVars());
     const result = await this._connection.send('Runtime.evaluate', {
       expression: preprocessForJS(jsCode),
       returnByValue: false,
