@@ -282,7 +282,7 @@ describe('jsapi', () => {
 
 describe('transform', () => {
     const {transformCode} = require('./transform');
-    it.only('should be left alone', () => {
+    it('should be left alone', () => {
         shouldBeLeftAlone(`const foo = 'bar';`);
         shouldBeLeftAlone(`let foo = 'bar';`);
         shouldBeLeftAlone(`var foo = 'bar';`);
@@ -290,6 +290,7 @@ describe('transform', () => {
             foo;
         }`);
         shouldBeLeftAlone(`this`);
+        shouldBeLeftAlone(`await new Promise(x => setTimeout(x, 100));`);
         // shouldBeLeftAlone(`doesNotExist();`);
         // shouldBeLeftAlone(`doesNotExist = 5`);
     });

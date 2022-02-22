@@ -16,6 +16,8 @@ const MyParser = Parser.extend(
         super.readToken(code);
       }
       shExpression() {
+        if (!this.canAwait)
+          return null;
         const textBetween = this.input.slice(this.lastTokEnd, this.start);
         if (this.type.label !== ';' && this.type.label !== 'eof') {
           if (!textBetween.includes('\n'))
@@ -36,7 +38,7 @@ const MyParser = Parser.extend(
           return null;
         if (firstToken.type === tokTypes.name) {
           // let is special cause its not a keyword
-          if (firstToken.value === 'let')
+          if (firstToken.value === 'let' || firstToken.value === 'await')
             return null;
           if (gv.has(firstToken.value))
             return null;
