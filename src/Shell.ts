@@ -94,7 +94,6 @@ export class Shell {
         this.activeItem.dispatch(terminalBlock);
       },
       cwd: cwd => {
-        console.log(cwd);
         window.electronAPI.sendMessage({
           method: 'chdir',
           params: {
