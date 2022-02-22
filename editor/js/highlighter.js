@@ -68,7 +68,7 @@ export class Highlighter extends Emitter {
             ['number', '#999900'],
             ['comment', '#666666'],
             ['string', '#00A600'],
-            ['string', '#00A600'],
+            ['string-2', '#F4F4F4'],
             // ['atom', '#F4F4F4'],
             // ['def', '#F4F4F4'],
             // ['operator', '#F4F4F4'],
