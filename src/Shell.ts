@@ -150,8 +150,10 @@ export class Shell {
     this._lockPrompt();
     this.activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
+    const { transformCode } = await import('../shjs/transform');
+    const jsCode = transformCode(command, 'global.pty');
     const result = await this._connection.send('Runtime.evaluate', {
-      expression: preprocessForJS(command),
+      expression: preprocessForJS(jsCode),
       returnByValue: false,
       generatePreview: true,
       userGesture: true,

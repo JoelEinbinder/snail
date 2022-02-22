@@ -8,7 +8,6 @@ const MyParser = Parser.extend(
       readToken(code) {
         const shExpression = this.shExpression();
         if (shExpression) {
-          // console.log(shExpression);
           this.pos = this.start + shExpression.length;
           this.finishToken(shTokenType, shExpression);
           return;
@@ -62,15 +61,16 @@ const MyParser = Parser.extend(
 
 /**
  * @param {string} code
+ * @param {string=} fnName
  */
-function transformCode(code) {
+function transformCode(code, fnName = 'sh') {
   const tokens = [];
   const node =  MyParser.parse(code, {ecmaVersion: 'latest', allowAwaitOutsideFunction: true, onToken: t => tokens.push(t)});
   let newCode = code;
   for (const token of tokens.reverse()) {
     if (token.type !== shTokenType)
       continue;
-    newCode = newCode.substring(0, token.start) + `await sh(${JSON.stringify(token.value)})` + newCode.substring(token.end);
+    newCode = newCode.substring(0, token.start) + `await ${fnName}(${JSON.stringify(token.value)})` + newCode.substring(token.end);
   }
   return newCode;
 }
