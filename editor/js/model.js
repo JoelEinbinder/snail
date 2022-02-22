@@ -78,14 +78,15 @@ export class Model extends Emitter {
    * @return {string}
    */
   text(range = this.fullRange()) {
-    if (range.start.line === range.end.line)
-      return this._lines[range.start.line].text.substring(range.start.column, range.end.column);
+    const clippedRange = this.clipRange(range);
+    if (clippedRange.start.line === clippedRange.end.line)
+      return this._lines[clippedRange.start.line].text.substring(clippedRange.start.column, clippedRange.end.column);
 
     var result =
-      this._lines[range.start.line].text.substring(range.start.column) +
-      this._lines[range.start.line].lineEnding +
-      this._rasterizeLines(range.start.line + 1, range.end.line - 1) +
-      this._lines[range.end.line].text.substring(0, range.end.column);
+      this._lines[clippedRange.start.line].text.substring(clippedRange.start.column) +
+      this._lines[clippedRange.start.line].lineEnding +
+      this._rasterizeLines(clippedRange.start.line + 1, clippedRange.end.line - 1) +
+      this._lines[clippedRange.end.line].text.substring(0, clippedRange.end.column);
     return result;
   }
 
@@ -101,6 +102,8 @@ export class Model extends Emitter {
     var start = 0;
     var lastLineEnding = '';
     for (var i = from; i <= to; i++) {
+      if (!this._lines[i])
+        continue;
       if (end === this._lines[i]._start - lastLineEnding.length && this._lines[i]._sourceString === anchor) {
         end = this._lines[i]._end;
         lastLineEnding = this._lines[i].lineEnding;
@@ -218,6 +221,38 @@ export class Model extends Emitter {
     this.replaceRange(redoItem.text, redoItem.range);
     this.setSelections(redoItem.selections);
     return true;
+  }
+
+  /**
+   * @param {TextRange} range
+   * @return {TextRange}
+   */
+  clipRange(range) {
+    const copy = {start:{...range.start}, end:{...range.end}};
+    if (copy.start.line < 0) {
+      copy.start.line = 0;
+      copy.start.column = 0;
+    } else if (copy.start.line > this._lines.length - 1) {
+      copy.start.line = this._lines.length - 1;
+      copy.start.column = this._lines[this._lines.length - 1].length;
+    } else if (copy.start.column < 0) {
+      copy.start.column = 0;
+    } else if (copy.start.column > this._lines[copy.start.line].length) {
+      copy.start.column = this._lines[copy.start.line].length;
+    }
+
+    if (copy.end.line < 0) {
+      copy.end.line = 0;
+      copy.end.column = 0;
+    } else if (copy.end.line > this._lines.length - 1) {
+      copy.end.line = this._lines.length - 1;
+      copy.end.column = this._lines[this._lines.length - 1].length;
+    } else if (copy.end.column < 0) {
+      copy.end.column = 0;
+    } else if (copy.end.column > this._lines[copy.end.line].length) {
+      copy.end.column = this._lines[copy.end.line].length;
+    }
+    return copy;
   }
 
   /**
