@@ -282,9 +282,16 @@ describe('jsapi', () => {
 
 describe('transform', () => {
     const {transformCode} = require('./transform');
-    it('should be left alone', () => {
-        const code = `const foo = 'bar';`;
-        expect(transformCode(code)).toEqual(`const foo = 'bar';`);
+    it.only('should be left alone', () => {
+        shouldBeLeftAlone(`const foo = 'bar';`);
+        shouldBeLeftAlone(`let foo = 'bar';`);
+        shouldBeLeftAlone(`var foo = 'bar';`);
+        shouldBeLeftAlone(`function foo() {
+            foo;
+        }`);
+        shouldBeLeftAlone(`this`);
+        // shouldBeLeftAlone(`doesNotExist();`);
+        // shouldBeLeftAlone(`doesNotExist = 5`);
     });
     it('should transform simple commands', () => {
         const code = `echo 'foo' bar' 'baz'`;
@@ -296,5 +303,7 @@ describe('transform', () => {
         expect(transformCode(code)).toEqual(`await sh("cd foo"); await sh("cd bar");
             await sh("nano")`);
     });
-
+    function shouldBeLeftAlone(code) {
+        expect(transformCode(code)).toEqual(code);
+    }
 })

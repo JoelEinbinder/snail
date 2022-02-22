@@ -34,6 +34,9 @@ const MyParser = Parser.extend(
         if (firstToken.type.keyword || !firstToken.value)
           return null;
         if (firstToken.type === tokTypes.name) {
+          // let is special cause its not a keyword
+          if (firstToken.value === 'let')
+            return null;
           for (const stack of this.scopeStack) {
             if (stack.var.includes(firstToken.value))
               return null;
