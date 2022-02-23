@@ -6,6 +6,11 @@ document.addEventListener('copy', event => {
   console.log('copied', str);
   event.stopImmediatePropagation();
 }, true);
+document.addEventListener('selectionchange', event => {
+  if (document.activeElement !== document.body)
+    return;
+  setSelection(() => window.getSelection().toString());
+}, true);
 
 export function setSelection(sel: string | (() => string)) {
   selection = sel;
