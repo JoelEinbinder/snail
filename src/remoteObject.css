@@ -35,3 +35,9 @@ details > .content > .property {
 .property-name.dim {
   color: var(--ansi-245);
 }
+
+details > .content > .property {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

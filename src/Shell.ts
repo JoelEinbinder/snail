@@ -227,7 +227,7 @@ export class Shell {
     this._unlockPrompt();
     if (result.result?.type === 'string' && result.result.value === 'this is the secret secret string')
       return;
-    const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection);
+    const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection, this._size);
 
     this.addItem(jsBlock);
   }

@@ -7,8 +7,8 @@ import './remoteObject.css';
 export class JSBlock implements LogItem {
   willResizeEvent = new JoelEvent(undefined);
   private _element: HTMLElement;
-  constructor(object: Protocol.Runtime.RemoteObject, private _connection: JSConnection) {
-    this._element = renderRemoteObject(object, this._connection, this.willResizeEvent);
+  constructor(object: Protocol.Runtime.RemoteObject, private _connection: JSConnection, size: JoelEvent<{cols: number, rows: number}>) {
+    this._element = renderRemoteObject(object, this._connection, this.willResizeEvent, size.current.cols);
   }
   render(): Element {
     return this._element;
@@ -33,7 +33,7 @@ export class JSLogBlock implements LogItem {
       if (arg.type === 'string')
         this._element.append(arg.value);
       else {
-        const object = renderRemoteObject(arg, connection, this.willResizeEvent);
+        const object = renderRemoteObject(arg, connection, this.willResizeEvent, 50);
         if (object.tagName === 'DETAILS')
           object.style.display = 'inline-block';
         this._element.append(object);
@@ -49,7 +49,7 @@ export class JSLogBlock implements LogItem {
   }
 }
 
-function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: JSConnection, willResize: JoelEvent<void>): HTMLElement {
+function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: JSConnection, willResize: JoelEvent<void>, charBudget: number): HTMLElement {
   switch (object.type) {
     case 'number':
     case 'bigint':
@@ -64,9 +64,9 @@ function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: J
         return renderBasicRemoteObject(object);
       if (object.subtype === 'error')
         return renderErrorRemoteObject(object);
-      return renderObjectRemoteObject(object, connection, willResize);
+      return renderObjectRemoteObject(object, connection, willResize, charBudget);
     case 'function':
-      return renderObjectRemoteObject(object, connection, willResize);
+      return renderObjectRemoteObject(object, connection, willResize, charBudget);
     default:
       console.log('unknown', object);
       return document.createElement('div');
@@ -81,9 +81,9 @@ function renderErrorRemoteObject(object: Protocol.Runtime.RemoteObject) {
   return span;
 }
 
-function renderStaleRemoteObject(object: Protocol.Runtime.RemoteObject, prefix?: Element) {
+function renderStaleRemoteObject(object: Protocol.Runtime.RemoteObject, charBudget: number, prefix?: Element) {
   const span = document.createElement('span');
-  const summary = renderRemoteObjectSummary(object);
+  const summary = renderRemoteObjectSummary(object, charBudget);
   if (prefix)
     span.append(prefix);
   for (const node of summary.childNodes)
@@ -91,11 +91,17 @@ function renderStaleRemoteObject(object: Protocol.Runtime.RemoteObject, prefix?:
   return span;
 }
 
-function renderObjectRemoteObject(object: Protocol.Runtime.RemoteObject, connection: JSConnection, willResize: JoelEvent<void>, prefix?: Element) {
+function renderObjectRemoteObject(
+  object: Protocol.Runtime.RemoteObject,
+  connection: JSConnection,
+  willResize: JoelEvent<void>,
+  charBudget: number,
+  prefix?: Element) {
   if (!object.objectId)
-    return renderStaleRemoteObject(object, prefix);
+    return renderStaleRemoteObject(object, charBudget, prefix);
+  const innerCharBudget = charBudget - 4;
   const details = document.createElement('details');
-  const summary = renderRemoteObjectSummary(object, prefix);
+  const summary = renderRemoteObjectSummary(object, charBudget, prefix);
   details.appendChild(summary);
   const content = document.createElement('div');
   content.classList.add('content');
@@ -128,13 +134,13 @@ function renderObjectRemoteObject(object: Protocol.Runtime.RemoteObject, connect
       propertyName.append(property.name);
       propertyLabel.append(propertyName, ': ');
       if (property.value && property.value.objectId) {
-        content.appendChild(renderObjectRemoteObject(property.value, connection, willResize, propertyLabel));
+        content.appendChild(renderObjectRemoteObject(property.value, connection, willResize, innerCharBudget, propertyLabel));
       } else {
         const div = document.createElement('div');
         div.classList.add('property');
         div.appendChild(propertyLabel);
         if (property.value) {
-          div.appendChild(renderRemoteObject(property.value, connection, willResize));
+          div.appendChild(renderRemoteObject(property.value, connection, willResize, innerCharBudget));
         } else {
           const types = [];
           if (property.get)
@@ -159,21 +165,24 @@ function renderObjectRemoteObject(object: Protocol.Runtime.RemoteObject, connect
   return details;
 }
 
-function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, prefix?: Element) {
+function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBudget: number, prefix?: Element) {
   const summary = document.createElement('summary');
   if (prefix)
     summary.appendChild(prefix);
   if (object.preview) {
+    charBudget -= 4; // end amount
     if (object.preview.subtype !== 'array' && object.className !== 'Object')
       summary.append(object.className, ' ');
     summary.append(object.preview.subtype === 'array' ? '[ ' : '{ ');
+    charBudget -= summary.textContent.length;
     let first = true;
     let overflow = object.preview.overflow
     for (const property of object.preview.properties) {
-      if (first) first = false; else summary.append(', ');
+      const fragment = document.createDocumentFragment();
+      if (!first) fragment.append(', ');
       if (object.preview.subtype !== 'array' || String(parseInt(property.name)) !== property.name) {
-        summary.append(property.name);
-        summary.append(': ');
+        fragment.append(property.name);
+        fragment.append(': ');
       }
       switch (property.type) {
         case 'number':
@@ -181,27 +190,36 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, prefix
         case 'symbol':
         case 'undefined':
         case 'boolean':
-          summary.append(renderBasicRemoteObject(property));
+          fragment.append(renderBasicRemoteObject(property));
           break;
         case 'string':
-          summary.append(renderStringRemoteObject(property));
+          fragment.append(renderStringRemoteObject(property));
           break;
         case 'function':
-          summary.append(renderOther('Function'));
+          fragment.append(renderOther('Function'));
           break;
         case 'object':
           if (property.subtype === 'null')
-            summary.append(renderBasicRemoteObject(property));
+            fragment.append(renderBasicRemoteObject(property));
           else
-            summary.append(renderOther(property.value));
+            fragment.append(renderOther(property.value));
           break;
         case 'accessor':
-          summary.append(renderOther('Getter'));
+          fragment.append(renderOther('Getter'));
           break;
       }
+      charBudget -= fragment.textContent.length;
+      if (charBudget < 0) {
+        overflow = true;
+        break;
+      }
+      first = false;
+      summary.append(fragment);
     }
     if (overflow) {
-      summary.append(', …');
+      if (!first)
+        summary.append(', ');
+      summary.append('…');
     }
     summary.append(object.preview.subtype === 'array' ? ' ]' : ' }');
   } else {
