@@ -163,6 +163,13 @@ export class Shell {
     });
     return objectId;
   }
+
+  async _transformCode(code: string) {
+    const { transformCode } = await import('../shjs/transform');
+    const jsCode = transformCode(code, 'global.pty', await this.globalVars());
+    return jsCode;
+  }
+
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
@@ -172,8 +179,7 @@ export class Shell {
     this._lockPrompt();
     this.activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
-    const { transformCode } = await import('../shjs/transform');
-    const jsCode = transformCode(command, 'global.pty', await this.globalVars());
+    const jsCode = await this._transformCode(command);
     const result = await this._connection.send('Runtime.evaluate', {
       expression: preprocessForJS(jsCode),
       returnByValue: false,
@@ -270,7 +276,7 @@ export class Shell {
     editorWrapper.style.position = 'relative';
     editorWrapper.style.flex = '1';
     editorWrapper.style.minHeight = '14px';
-    editorWrapper.addEventListener('keydown', event => {
+    editorWrapper.addEventListener('keydown', async event => {
       if (event.key !== 'Enter' || event.shiftKey)
         return;
       event.preventDefault();
@@ -283,11 +289,14 @@ export class Shell {
             return;
           }
         } else {
-          if (start.column === editor.line(start.line).length && isUnexpectedEndOfInput(editor.text())) {
-            editor.smartEnter();
-            return;
+          if (start.column === editor.line(start.line).length) {
+            const code = await this._transformCode(editor.text());
+            if (isUnexpectedEndOfInput(code)) {
+              editor.smartEnter();
+              return;
+            }
           }
-      }
+        }
       }
       const command = editor.value;
       editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];

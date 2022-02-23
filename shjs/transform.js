@@ -76,7 +76,10 @@ function transformCode(code, fnName = 'sh', globalVars = new Set()) {
   const tokens = [];
   let before = gv;
   gv = globalVars;
-  const node =  MyParser.parse(code, {ecmaVersion: 'latest', allowAwaitOutsideFunction: true, onToken: t => tokens.push(t)});
+  try {
+    MyParser.parse(code, {ecmaVersion: 'latest', allowAwaitOutsideFunction: true, onToken: t => tokens.push(t)});
+  } catch(error) {
+  }
   gv = before;
   let newCode = code;
   for (const token of tokens.reverse()) {
