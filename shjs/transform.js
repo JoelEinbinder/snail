@@ -34,8 +34,12 @@ const MyParser = Parser.extend(
         if (candidate.startsWith('.'))
           return candidate;
         const firstToken = Parser.tokenizer(candidate, this.options).getToken();
-        if (firstToken.type.keyword || !firstToken.value)
+        if (!firstToken.value)
           return null;
+        if (firstToken.type.keyword) {
+          if (firstToken.type !== tokTypes._export)
+            return null;
+        }
         if (firstToken.type === tokTypes.name) {
           // let is special cause its not a keyword
           if (firstToken.value === 'let' || firstToken.value === 'await')

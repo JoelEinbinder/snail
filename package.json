@@ -2,7 +2,8 @@
   "name": "gap-year",
   "private": true,
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "test": "mocha shjs"
   },
   "workspaces": [
     "xterm.js"

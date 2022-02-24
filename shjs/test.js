@@ -304,6 +304,10 @@ describe('transform', () => {
         expect(transformCode(code)).toEqual(`await sh("cd foo"); await sh("cd bar");
             await sh("nano")`);
     });
+    it('should transform export', () => {
+        const code = `export FOO=123`;
+        expect(transformCode(code)).toEqual(`await sh("export FOO=123")`);
+    });
     function shouldBeLeftAlone(code) {
         expect(transformCode(code)).toEqual(code);
     }
