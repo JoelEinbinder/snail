@@ -6,6 +6,10 @@ const getPort = require('get-port');
 getPort().then(port => {
   require('inspector').open(port, undefined, false);
 });
+/** @typedef {{env?: {[key: string]: string}, aliases?: {[key: string]: string[]}, cwd?: string}} Changes */
+
+/** @type {Map<number, (s: WebSocket) => void} */
+const resolveShellConnection = new Map();
 
 global.bootstrap = () => {
   const binding = global.magic_binding;
@@ -21,13 +25,18 @@ global.bootstrap = () => {
   let shellId = 0;
   let rows = 24;
   let cols = 80;
+  /** @type {{shell: import('node-pty').IPty, connection: WebSocket}} */
+  let freeShell = null;
   global.pty = async function(command) {
     const magicToken = String(Math.random());
     const magicString = `\x33[JOELMAGIC${magicToken}]\r\n`;
     let env = {...process.env};
-    const aliases = {};
     let cwd = process.cwd();
-    const shell = require('node-pty').spawn('node', [path.join(__dirname, '..', 'shjs', 'wrapper.js'), command, magicToken, JSON.stringify(aliases)], {
+    const id = ++shellId;
+    const url = await getServerUrl();
+    /** @type {Promise<WebSocket>|WebSocket} */
+    const conncectionPromise = freeShell ? freeShell.connection : new Promise(x => resolveShellConnection.set(id, x));
+    const shell = freeShell ? freeShell.shell : require('node-pty').spawn('node', [path.join(__dirname, '..', 'shjs', 'wrapper.js'), url, id], {
       env,
       rows,
       cols,
@@ -36,27 +45,45 @@ global.bootstrap = () => {
       handleFlowControl: true,
       encoding: null,
     });
-    const id = ++shellId;
+    freeShell = null;
+    const connection = await conncectionPromise;
+    connection.send(JSON.stringify({command, magicToken}));
+    const connectionDonePromise = new Promise(x => {
+      connection.once('message', data => {
+        x(JSON.parse(data));
+      });
+    });
     notify('startTerminal', {id});
     shells.set(id, shell);
-    let extraData = '';
-    let inExtraData = false;
-    shell.onData(d => {
+    let waitForDoneCallback;
+    const waitForDonePromise = new Promise(x => waitForDoneCallback = x);
+    const disposeDataListener = shell.onData(d => {
       let data = d.toString();
-      if (!inExtraData && data.slice(data.length - magicString.length).toString() === magicString) {
+      if (data.slice(data.length - magicString.length).toString() === magicString) {
         data = data.slice(0, -magicString.length);
-        inExtraData = true;
+        waitForDoneCallback();
+        return;
       }
-      if (inExtraData)
-        extraData += data;
-      else
-        notify('data', {id, data});
+      notify('data', {id, data});
     });
-    /** @type {{exitCode: number, signal?: number}} */
-    const returnValue = await new Promise(x => shell.onExit(x));
+    /** @type {{exitCode: number, died?: boolean, signal?: number, changes?: Changes}} */
+    const returnValue = await Promise.race([
+      new Promise(x => shell.onExit(value => {x({...value, died: true}); waitForDoneCallback()})),
+      connectionDonePromise,
+    ]);
+    await waitForDonePromise;
     shells.delete(id);
-    if (extraData.length) {
-      const changes = JSON.parse(extraData);
+    if (freeShell) {
+      if (!returnValue.died)
+        shell.kill();
+      if (changes)
+        freeShell.connection.send(JSON.stringify({changes}));
+    } else if (!returnValue.died) {
+      disposeDataListener.dispose();
+      freeShell = {connection, shell}
+    }
+    if (returnValue.changes) {
+      const changes = returnValue.changes;
       if (changes.cwd) {
         cwd = changes.cwd;
         process.chdir(cwd);
@@ -74,7 +101,6 @@ global.bootstrap = () => {
         notify('aliases', changes.aliases);
         for (const key of Object.keys(changes.aliases)) {
           setAlias(key, changes.aliases[key]);
-          aliases[key] = changes.aliases[key];
         }
       }
     }
@@ -99,3 +125,27 @@ global.bootstrap = () => {
     handler[method](params);
   }
 };
+
+let serverPromise = null;
+async function getServerUrl() {
+  if (!serverPromise)
+    serverPromise = launchServer();
+  return serverPromise;
+}
+
+async function launchServer() {
+  const {Server} = require('ws');
+  const getPort = require('get-port');
+  const port = await getPort();
+  const uuid = require('crypto').randomUUID();
+  const server = new Server({port, path: '/' + uuid});
+  await new Promise(x => server.on('listening', x));
+  server.on('connection', async connection => {
+    /** @type {WebSocket.RawData} */
+    const message = await new Promise(x => connection.once('message', x));
+    const {id} = JSON.parse(message);
+    resolveShellConnection.get(id)(connection);
+    resolveShellConnection.delete(id);
+  });
+  return 'ws://localhost:' + port + '/' + uuid;
+}

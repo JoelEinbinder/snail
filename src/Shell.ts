@@ -317,18 +317,21 @@ export class Shell {
   async _addToHistory(command: string) {
     if (!command)
       return;
-    const historyId = await addHistory(command);
-    const pwd = await this.cachedEvaluation('pwd');
-    const home = await this.cachedEvaluation('echo $HOME');
-    const revName = await this.cachedEvaluation('__git_ref_name');
-    const dirtyState = await this.cachedEvaluation('__is_git_dirty');
-    const hash = await this.cachedEvaluation('GIT_OPTIONAL_LOCKS=0 git rev-parse HEAD');
-  
-    await updateHistory(historyId, 'home', home);
-    await updateHistory(historyId, 'pwd', pwd);
-    await updateHistory(historyId, 'git_branch', revName);
-    await updateHistory(historyId, 'git_dirty', dirtyState);
-    await updateHistory(historyId, 'git_hash', hash);
+    const [historyId, pwd, home, revName, dirtyState, hash] = await Promise.all([
+      addHistory(command),
+      this.cachedEvaluation('pwd'),
+      this.cachedEvaluation('echo $HOME'),
+      this.cachedEvaluation('__git_ref_name'),
+      this.cachedEvaluation('__is_git_dirty'),
+      this.cachedEvaluation('GIT_OPTIONAL_LOCKS=0 git rev-parse HEAD'),
+    ]);
+    await Promise.all([
+      updateHistory(historyId, 'home', home),
+      updateHistory(historyId, 'pwd', pwd),
+      updateHistory(historyId, 'git_branch', revName),
+      updateHistory(historyId, 'git_dirty', dirtyState),
+      updateHistory(historyId, 'git_hash', hash),
+    ]);
     return historyId;
   }
 

@@ -1,6 +1,6 @@
 const {tokenize} = require('./tokenizer');
 const {parse} = require('./parser');
-const {execute, getChanges, getResult, setAlias} = require('./runner');
+const {execute, getAndResetChanges, getResult, setAlias} = require('./runner');
 
 module.exports = {
   /**
@@ -19,6 +19,6 @@ module.exports = {
     const ast = parse(tokens);
     return getResult(ast);
   },
-  getChanges,
+  getAndResetChanges,
   setAlias,
 }

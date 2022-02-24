@@ -1,18 +1,38 @@
-const {execute, getChanges, setAlias} = require('./index');
-if (process.argv[4]) {
-  const aliases = JSON.parse(process.argv[4]);
-  for (const alias of Object.keys(aliases))
-    setAlias(alias, aliases[alias]);
+const {execute, getAndResetChanges, setAlias} = require('./index');
+const {WebSocket} = require('ws');
+listenToWebSocket()
+
+async function listenToWebSocket() {
+  const webSocket = new WebSocket(process.argv[2]);
+  await new Promise(x => webSocket.once('open', x));
+  webSocket.send(JSON.stringify({id: parseInt(process.argv[3])}));
+  while (true) {
+    const {command, magicToken, changes} = JSON.parse(await new Promise(x => webSocket.once('message', x)));
+    if (changes) {
+      if (changes.cwd)
+        process.chdir(changes.cwd);
+      if (changes.env) {
+        for (const key in changes.env)
+          process.env[key] = changes.env[key];
+      }
+      if (changes.aliases) {
+        for (const key of Object.keys(changes.aliases))
+          setAlias(key, changes.aliases[key]);
+      }
+      getAndResetChanges();
+    } else if (command) {
+      const result = await runCommand(command.toString(), magicToken);
+      webSocket.send(JSON.stringify(result));
+    }
+  }
 }
-const {stdin, closePromise, kill} = execute(process.argv[2]);
-closePromise.then(c => {
+async function runCommand(command, magicToken) {
+  const {stdin, closePromise, kill} = execute(command);
+  const c = await closePromise;
   process.exitCode = c;
-  if (!process.argv[3])
-    return;
-  const magicString = `\x33[JOELMAGIC${process.argv[3]}]\n`;
-  const changes = getChanges();
-  if (!changes)
-    return;
-  process.stdout.write(magicString);
-  process.stdout.write(JSON.stringify(changes) + '\n');
-});
+  if (magicToken) {
+    const magicString = `\x33[JOELMAGIC${magicToken}]\n`;
+    process.stdout.write(magicString);
+  }
+  return {exitCode: c, changes: getAndResetChanges()};
+}

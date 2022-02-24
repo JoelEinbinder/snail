@@ -323,8 +323,10 @@ async function getResult(expression) {
     return {output, stderr, code};
 }
 
-function getChanges() {
-    return changes;
+function getAndResetChanges() {
+    const c = changes;
+    changes = null;
+    return c;
 }
 
-module.exports = {execute, getResult, getChanges, setAlias};
+module.exports = {execute, getResult, getAndResetChanges, setAlias};
