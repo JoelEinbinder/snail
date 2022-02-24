@@ -57,8 +57,8 @@ export class Shell {
         terminals.delete(id);
         this.activeItem.dispatch(null);
         this._unlockPrompt();
-        cleanup();
         await block.close();
+        cleanup();
         if (block.cleared && block.empty) {
           block.dispose();
           this.log.splice(this.log.indexOf(block), 1);
