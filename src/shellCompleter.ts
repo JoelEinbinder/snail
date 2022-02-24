@@ -26,11 +26,30 @@ export function makeShellCompleter(shell: Shell): Completer {
 }
 
 async function commandCompleter(shell: Shell, line: string) {
-  const suggestions = (await shell.cachedEvaluation('__command_completions')).split('\n').map(t => t.trim()).filter(x => /^[A-Za-z]/.test(x));
-
+  const [commands, globalVars] = await Promise.all([
+    shell.cachedEvaluation('__command_completions'),
+    shell.globalVars(),
+  ]);
+  const suggestions = new Set<string>();
+  for (const item of globalVars)
+    suggestions.add(item);
+  for (const item of commands.split('\n').map(t => t.trim()).filter(x => /^[A-Za-z]/.test(x)))
+    suggestions.add(item);
+  const keywords = [
+    'if', 'while', 'with',
+    'do', 'try', 'new',
+    'delete', 'void', 'throw',
+    'debugger', 'var', 'const',
+    'let', 'function', 'for',
+    'switch', 'typeof', 'instanceof',
+    'true', 'false', 'null',
+    'undefined', 'NaN', 'Infinity',
+    'this', 'class', 'await'];
+  for (const item of keywords)
+    suggestions.add(item);
   return {
     anchor: 0,
-    suggestions: [...new Set(suggestions)].map(text => ({text})),
+    suggestions: [...suggestions].map(text => ({text})),
   }
 }
 
