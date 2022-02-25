@@ -72,8 +72,10 @@ async function fileCompleter(shell: Shell, line: string, executablesOnly: boolea
   const files = await parseCompletions(!executablesOnly ? `__file_completions all ${prefix}` : `__file_completions executable ${prefix}`);
   const directories = new Set(await parseCompletions(`__file_completions directory ${prefix}`));
   const suggestions: Suggestion[] = [];
+  if (!path || path === '.')
+    files.push('.');
   for (const file of files) {
-      if (directories.has(file) && file !== '.' && file !== '..')
+      if (directories.has(file) && file !== '..')
         suggestions.push({ text: file, suffix: '/', activations: {
           '/': file + '/'
         } });
