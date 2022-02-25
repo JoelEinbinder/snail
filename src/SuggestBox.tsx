@@ -10,10 +10,15 @@ export class SuggestBox {
     private _prefix: string = '';
     private _glassPane: GlassPlane;
     private _viewport = new Viewport<Suggestion>(14, 14 * 9, this._renderItem.bind(this));
+    private _description = document.createElement('div');
     constructor(private _onPick: (suggestion: Suggestion) => void) {
-        this.element = this._viewport.element;
+        this.element = document.createElement('div');
+        this.element.classList.add('suggest-popup');
+        this._description.classList.add('description');
+        this.element.append(this._viewport.element);
+        this.element.append(this._description);
         this._glassPane = new GlassPlane(this.element);
-        this.element.classList.add('suggestions');
+        this._viewport.element.classList.add('suggestions');
     }
     get showing() {
         return this._glassPane.showing();
@@ -30,6 +35,7 @@ export class SuggestBox {
         this._viewport.setItems(suggestions);
         if (!this._viewport.isItemFullyVisible(this._selectedSuggestion || this._suggestions[0]))
             this._viewport.showItem(this._selectedSuggestion || this._suggestions[0], 'up');
+        this._refreshDescription();
     }
     private _render() {
         this._viewport._refresh();
@@ -70,8 +76,19 @@ export class SuggestBox {
         const index = this._selectedSuggestion ? this._suggestions.indexOf(this._selectedSuggestion) : 0;
         const newIndex = (this._suggestions.length + index + amount) % this._suggestions.length;
         this._selectedSuggestion = this._suggestions[newIndex];
+        this._refreshDescription();
         this._render();
         this._viewport.showItem(this._suggestions[newIndex], amount > 0 ? 'down' : 'up');
+    }
+    private async _refreshDescription() {
+        const selected = this._selectedSuggestion || this._suggestions[0];
+        this._description.textContent = '';
+        if (!selected || !selected.description)
+            return;
+        const description = await selected.description();
+        if (selected !== (this._selectedSuggestion || this._suggestions[0]))
+            return;
+        this._description.textContent = description;
     }
     hide() {
         this._glassPane.hide();

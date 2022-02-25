@@ -30,11 +30,16 @@ async function commandCompleter(shell: Shell, line: string) {
     shell.cachedEvaluation('__command_completions'),
     shell.globalVars(),
   ]);
-  const suggestions = new Set<string>();
-  for (const item of globalVars)
-    suggestions.add(item);
-  for (const item of commands.split('\n').map(t => t.trim()).filter(x => /^[A-Za-z]/.test(x)))
-    suggestions.add(item);
+  const seenSuggestions = new Set<string>();
+  const suggestions: Suggestion[] = [];
+  for (const text of commands.split('\n').map(t => t.trim()).filter(x => /^[A-Za-z]/.test(x))) {
+    addItem({text, description: async () => {
+      const result = await shell.cachedEvaluation('__command_description ' + escapeString(text));
+      return result.trim();
+    }});
+  }
+  for (const text of globalVars)
+    addItem({text});
   const keywords = [
     'if', 'while', 'with',
     'do', 'try', 'new',
@@ -45,11 +50,17 @@ async function commandCompleter(shell: Shell, line: string) {
     'true', 'false', 'null',
     'undefined', 'NaN', 'Infinity',
     'this', 'class', 'await'];
-  for (const item of keywords)
-    suggestions.add(item);
+  for (const text of keywords)
+    addItem({text});
+  function addItem(item: Suggestion) {
+    if (seenSuggestions.has(item.text))
+      return;
+    seenSuggestions.add(item.text);
+    suggestions.push(item);
+  }
   return {
     anchor: 0,
-    suggestions: [...suggestions].map(text => ({text})),
+    suggestions,
   }
 }
 

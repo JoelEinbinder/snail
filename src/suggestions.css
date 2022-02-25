@@ -13,6 +13,7 @@
     overflow-x: hidden;
     width: 160px;
     text-overflow: ellipsis;
+    height: fit-content;
 }
 body.glass-pane .suggestions {
     background: rgba(0, 0, 0);
@@ -35,4 +36,24 @@ body.glass-pane .suggestions {
 }
 .suggestion.selected {
     background: var(--ansi-0);
+}
+.suggest-popup {
+    display: flex;
+    width: calc(160px + 160px + 2px + 2px + 2px);
+}
+.description {
+    width: 160px;
+    background: black;
+    flex: 1;
+    border-radius: 3px;
+    border: 1px solid var(--ansi-237);
+    margin-left: 2px;
+    height: fit-content;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 2px;
+    font-size: 11px;
+    color: var(--ansi-242);
+}
+.description:empty {
+    visibility: hidden;
 }

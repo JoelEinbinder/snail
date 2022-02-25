@@ -128,6 +128,7 @@ export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anc
 export type Suggestion = {
     text: string,
     suffix?: string,
+    description?: () => Promise<string>,
     activations?: {[key: string]: string},
 }
 function filterAndSortSuggestions(suggestions: Suggestion[], prefix: string) {

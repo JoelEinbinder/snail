@@ -154,6 +154,16 @@ const builtins = {
         }
         return 0;
     },
+    __command_description: async (args, stdout, stderr) => {
+        const name = processAlias(args[0], []).executable;
+        if (name in builtins)
+            return 0;
+        const {descriptionOfCommand} = require('../manpage_reader');
+        const description = descriptionOfCommand(name);
+        if (description)
+            stdout.write(description + '\n');
+        return 0;
+    },
 };
 
 /** @type {Object<string, string[]>} */

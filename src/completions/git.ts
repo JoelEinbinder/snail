@@ -18,7 +18,7 @@ registerCompleter('git', async (shell, line, abortSignal) => {
   
   return {
     anchor,
-    suggestions: Object.keys(commands).map(text => ({text}))
+    suggestions: Object.entries(commands).map(([text, value]) => ({text, description: async () => value}))
   };
 });
 
