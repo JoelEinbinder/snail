@@ -128,7 +128,7 @@ const builtins = {
             for (const name of names) {
                 try {
                     const stat = fs.statSync(path.join(dir, name));
-                    if (stat.mode & 0o111)
+                    if (stat.mode & 0o111 && !stat.isDirectory())
                         stdout.write(name + '\n');
                 } catch { }
             }
