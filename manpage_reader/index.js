@@ -8,10 +8,12 @@ const paths = spawnSync('manpath').stdout.toString().trim().split(':').filter(x 
  */
 function manPathForCommand(command) {
   for (const searchPath of paths) {
-    const manPath = path.join(searchPath, 'man1', `${command}.1`);
-    const exists = fs.existsSync(manPath);
-    if (exists)
-      return manPath;
+    for (const searchDir of ['1', '8']) {
+      const manPath = path.join(searchPath, 'man' + searchDir, `${command}.${searchDir}`);
+      const exists = fs.existsSync(manPath);
+      if (exists)
+        return manPath;
+    }
   }
   return null;
 }
