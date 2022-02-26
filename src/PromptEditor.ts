@@ -21,7 +21,7 @@ export function makePromptEditor(shell: Shell) {
       selectionBackground: '#525252',
     }
   });
-  const autocomplete = new Autocomplete(editor, makeShellCompleter(shell), ' /');
+  const autocomplete = new Autocomplete(editor, makeShellCompleter(shell), ' /.');
   let historyIndex = 0;
   let currentValue = '';
   editor.on('selectionChanged', () => {

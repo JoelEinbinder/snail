@@ -133,6 +133,10 @@ export class Shell {
     return shell;
   }
 
+  get connection() {
+    return this._connection;
+  }
+
   async _notify(method: string, params: any) {
     await this._connection.send('Runtime.callFunctionOn', {
       objectId: this._notifyObjectId,

@@ -10,19 +10,69 @@ export function registerCompleter(prefix: string, completer: ShellCompleter) {
 
 export function makeShellCompleter(shell: Shell): Completer {
   return async (line: string, abortSignal: AbortSignal) => {
-    if (!line.includes(' ')) {
+    const {getAutocompletePrefix} = await import('../shjs/transform');
+    const prefix = getAutocompletePrefix(line, await shell.globalVars());
+    let result: {anchor: number, suggestions: Suggestion[]};
+    if (prefix === null)
+      return {anchor: 0, suggestions: []};
+    if (prefix === '' || (typeof prefix !== 'string' && !prefix.shPrefix.includes(' '))) {
       if (line.includes('/'))
-        return fileCompleter(shell, line, true);
-      return commandCompleter(shell, line);
+        result = await fileCompleter(shell, line, true);
+      else
+        result = await commandCompleter(shell, line);
+      const offset = typeof prefix === 'string' ? prefix.length : prefix.shPrefix.length;
+      return {
+        anchor: result.anchor + line.length - offset,
+        suggestions: result.suggestions,
+      }
     }
-    const command = line.split(' ')[0];
-    if (registry.has(command)) {
-      const result = await registry.get(command)(shell, line, abortSignal);
-      if (result)
-        return result;
+    if (typeof prefix === 'string') {
+      const suggestions = await jsCompletions(prefix, shell);
+      const anchor = line.lastIndexOf(prefix) + prefix.length + 1;
+      return {
+        anchor,
+        suggestions: suggestions,
+      }
     }
-    return fileCompleter(shell, line, false);
+    const offset = line.lastIndexOf(prefix.shPrefix);
+    const command = prefix.shPrefix.split(' ')[0];
+    if (registry.has(command))
+      result = await registry.get(command)(shell, prefix.shPrefix, abortSignal);
+    else 
+      result = await fileCompleter(shell, prefix.shPrefix, false);
+    return {
+      anchor: offset + result.anchor,
+      suggestions: result.suggestions,
+    };
   };
+}
+
+async function jsCompletions(prefix: string, shell: Shell): Promise<Suggestion[]> {
+  const {exceptionDetails, result} = await shell.connection.send('Runtime.evaluate', {
+    throwOnSideEffect: true,
+    timeout: 1000,
+    expression: `Object(${prefix})`,
+    replMode: true,
+    returnByValue: false,
+    generatePreview: false
+  });
+  if (exceptionDetails || !result.objectId)
+    return [];
+  const { result: properties } = await shell.connection.send('Runtime.getProperties', {
+    objectId: result.objectId,
+    ownProperties: false,
+    generatePreview: false,
+  });
+  function isPropertyLegal(property: import('./protocol').Protocol.Runtime.PropertyDescriptor) {
+    if (property.symbol)
+      return false;
+    if (!property.name)
+      return false;
+    if (/\d/.test(property[0]))
+      return false;
+    return /^[A-Za-z\d_]*$/.test(property.name);
+  }
+  return properties.filter(isPropertyLegal).map(p => ({text: p.name}));
 }
 
 async function commandCompleter(shell: Shell, line: string) {

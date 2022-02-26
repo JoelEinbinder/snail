@@ -113,7 +113,7 @@ function getAutocompletePrefix(code, globalVars = new Set()) {
   try {
     const fullCode = code + magicString;
     onNode = node => {
-      if (node.type === 'MemberExpression' && node.property.type === 'Identifier' && node.property.name === magicString) {
+      if (node.type === 'MemberExpression' && node.property.type === 'Identifier' && node.property.name.includes(magicString)) {
         found = fullCode.slice(node.object.start, node.object.end);
       } else if (node.type === 'ShStatement') {
         const shText = fullCode.slice(node.start, node.end);
