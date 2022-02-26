@@ -281,7 +281,7 @@ describe('jsapi', () => {
 });
 
 describe('transform', () => {
-    const {transformCode} = require('./transform');
+    const {transformCode, getAutocompletePrefix} = require('./transform');
     it('should be left alone', () => {
         shouldBeLeftAlone(`const foo = 'bar';`);
         shouldBeLeftAlone(`let foo = 'bar';`);
@@ -313,7 +313,17 @@ describe('transform', () => {
         const code = `if (true) echo 123`;
         expect(transformCode(code)).toEqual(`if (true) await sh("echo 123")`);
     });
+    it('should get autocomplete prefix', () => {
+        expect(getAutocompletePrefix('this.')).toEqual(`this`);
+        expect(getAutocompletePrefix('this.bar.baz.')).toEqual(`this.bar.baz`);
+        expect(getAutocompletePrefix('this.foo(); this.bar(); this.baz().')).toEqual(`this.baz()`);
+        expect(getAutocompletePrefix('')).toEqual('');
+        expect(getAutocompletePrefix('this.foo();')).toEqual('');
+        expect(getAutocompletePrefix('const x = "')).toEqual(null);
+        expect(getAutocompletePrefix('git st')).toEqual({shPrefix: 'git st'});
+        expect(getAutocompletePrefix('if (true) echo')).toEqual({shPrefix: 'echo'});
+    })
     function shouldBeLeftAlone(code) {
         expect(transformCode(code)).toEqual(code);
     }
-})
+});

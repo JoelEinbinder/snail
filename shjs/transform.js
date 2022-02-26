@@ -2,6 +2,7 @@ const {Parser, tokenizer, TokenType, tokTypes} = require('acorn');
 const {tokenize} = require('./tokenizer');
 const shTokenType = new TokenType('sh', {});
 let gv = new Set();
+let onNode;
 const MyParser = Parser.extend(
   // @ts-ignore
   Parser => {
@@ -20,7 +21,7 @@ const MyParser = Parser.extend(
           return null;
         const textBetween = this.input.slice(this.lastTokEnd, this.start);
         if (this.type.label !== ';' && this.type.label !== 'eof') {
-          if (!textBetween.includes('\n') && this.type !== tokTypes.parenR)
+          if (!textBetween.includes('\n') && (this.type !== tokTypes.parenR || this.input[this.start] === '.'))
             return null;
           if (this.type.label.length === 1 && ',=+-:('.includes(this.type.label))
             return null;
@@ -67,6 +68,12 @@ const MyParser = Parser.extend(
         this.semicolon();
         return this.finishNode(node, "ShStatement");
       }
+      finishNode(...args) {
+        const node = super.finishNode(...args);
+        if (onNode)
+          onNode(node);
+        return node;
+      }
     }
   }
 );
@@ -77,6 +84,7 @@ const MyParser = Parser.extend(
  * @param {Set<string>} globalVars
  */
 function transformCode(code, fnName = 'sh', globalVars = new Set()) {
+  /** @type {import('acorn').Token[]} */
   const tokens = [];
   let before = gv;
   gv = globalVars;
@@ -94,4 +102,33 @@ function transformCode(code, fnName = 'sh', globalVars = new Set()) {
   return newCode;
 }
 
-module.exports = {transformCode};
+function getAutocompletePrefix(code, globalVars = new Set()) {
+  const magicString = 'JOEL_AUTOCOMPLETE_MAGIC';
+  /** @type {import('acorn').Token[]} */
+  const tokens = [];
+  let before = gv;
+  gv = globalVars;
+  /** @type {null|string|{shPrefix: string}} */
+  let found = null;
+  try {
+    const fullCode = code + magicString;
+    onNode = node => {
+      if (node.type === 'MemberExpression' && node.property.type === 'Identifier' && node.property.name === magicString) {
+        found = fullCode.slice(node.object.start, node.object.end);
+      } else if (node.type === 'ShStatement') {
+        const shText = fullCode.slice(node.start, node.end);
+        if (shText.trim() === magicString)
+          found = '';
+        else if (shText.includes(magicString))
+          found = {shPrefix: shText.split(magicString)[0]};
+      }
+    };
+    MyParser.parse(fullCode, {ecmaVersion: 'latest', allowAwaitOutsideFunction: true, onToken: t => tokens.push(t) });
+  } catch(error) {
+  }
+  gv = before;
+  return found;
+}
+
+
+module.exports = {transformCode, getAutocompletePrefix};
