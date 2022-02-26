@@ -156,6 +156,10 @@ export type Suggestion = {
 function filterAndSortSuggestions(suggestions: Suggestion[], prefix: string) {
     const filtered = suggestions.filter(s => s.text.startsWith(prefix));
     filtered.sort((a, b) => {
+        const underscoresA = /^_*/.exec(a.text)[0].length;
+        const underscoreB = /^_*/.exec(b.text)[0].length;
+        if (underscoresA !== underscoreB)
+            return underscoresA - underscoreB;
         return a.text.localeCompare(b.text);
     });
     return filtered;

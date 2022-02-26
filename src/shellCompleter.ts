@@ -27,7 +27,7 @@ export function makeShellCompleter(shell: Shell): Completer {
       }
     }
     if (typeof prefix === 'string') {
-      const suggestions = await jsCompletions(prefix, shell);
+      const suggestions = await shell.jsCompletions(prefix);
       const anchor = line.lastIndexOf(prefix) + prefix.length + 1;
       return {
         anchor,
@@ -45,34 +45,6 @@ export function makeShellCompleter(shell: Shell): Completer {
       suggestions: result.suggestions,
     };
   };
-}
-
-async function jsCompletions(prefix: string, shell: Shell): Promise<Suggestion[]> {
-  const {exceptionDetails, result} = await shell.connection.send('Runtime.evaluate', {
-    throwOnSideEffect: true,
-    timeout: 1000,
-    expression: `Object(${prefix})`,
-    replMode: true,
-    returnByValue: false,
-    generatePreview: false
-  });
-  if (exceptionDetails || !result.objectId)
-    return [];
-  const { result: properties } = await shell.connection.send('Runtime.getProperties', {
-    objectId: result.objectId,
-    ownProperties: false,
-    generatePreview: false,
-  });
-  function isPropertyLegal(property: import('./protocol').Protocol.Runtime.PropertyDescriptor) {
-    if (property.symbol)
-      return false;
-    if (!property.name)
-      return false;
-    if (/\d/.test(property[0]))
-      return false;
-    return /^[A-Za-z\d_]*$/.test(property.name);
-  }
-  return properties.filter(isPropertyLegal).map(p => ({text: p.name}));
 }
 
 async function commandCompleter(shell: Shell, line: string) {

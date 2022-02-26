@@ -8,6 +8,7 @@ import { TerminalBlock } from './TerminalBlock';
 import { JSConnection } from './JSConnection';
 import { JSBlock, JSLogBlock, renderRemoteObjectOneLine } from './JSBlock';
 import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
+import type { Suggestion } from './autocomplete';
 
 const shells = new Map<number, Shell>();
 
@@ -40,6 +41,7 @@ export class Shell {
   private _size = new JoelEvent(size);
   private _cachedGlobalObjectId: string;
   private _cachedGlobalVars: Set<string>|undefined;
+  private _cachedSuggestions = new Map<string, Promise<Suggestion[]>>();
   private constructor(private _shellId: number, url: string) {
     this._connection = new JSConnection(new WebSocket(url));
     this._connection.on('Runtime.consoleAPICalled', message => {
@@ -133,10 +135,6 @@ export class Shell {
     return shell;
   }
 
-  get connection() {
-    return this._connection;
-  }
-
   async _notify(method: string, params: any) {
     await this._connection.send('Runtime.callFunctionOn', {
       objectId: this._notifyObjectId,
@@ -202,6 +200,7 @@ export class Shell {
     });
     this._cachedEvaluationResult = new Map();
     delete this._cachedGlobalVars;
+    this._cachedSuggestions = new Map();
     // TODO update the prompt line here?
     if (historyId) {
       await updateHistory(historyId, 'end', Date.now());
@@ -397,6 +396,40 @@ export class Shell {
   addItem(item: LogItem) {
     this.log.push(item);
     this.addItemEvent.dispatch(item);
+  }
+
+  async jsCompletions(prefix: string): Promise<Suggestion[]> {
+    if (!this._cachedSuggestions.has(prefix)) {
+      const inner = async () => {
+        const {exceptionDetails, result} = await this._connection.send('Runtime.evaluate', {
+          throwOnSideEffect: true,
+          timeout: 1000,
+          expression: `Object(${prefix})`,
+          replMode: true,
+          returnByValue: false,
+          generatePreview: false
+        });
+        if (exceptionDetails || !result.objectId)
+          return [];
+        const { result: properties } = await this._connection.send('Runtime.getProperties', {
+          objectId: result.objectId,
+          ownProperties: false,
+          generatePreview: false,
+        });
+        function isPropertyLegal(property: import('./protocol').Protocol.Runtime.PropertyDescriptor) {
+          if (property.symbol)
+            return false;
+          if (!property.name)
+            return false;
+          if (/\d/.test(property.name[0]))
+            return false;
+          return /^[A-Za-z\d_]*$/.test(property.name);
+        }
+        return properties.filter(isPropertyLegal).map(p => ({text: p.name}));
+      }
+      this._cachedSuggestions.set(prefix, inner());
+    }
+    return this._cachedSuggestions.get(prefix);
   }
 }
 
