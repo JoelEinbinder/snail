@@ -320,10 +320,13 @@ export class Shell {
     const belowPrompt = document.createElement('div');
     belowPrompt.classList.add('below-prompt');
     element.appendChild(belowPrompt);
+    let lock = {};
     const onChange = async () => {
+      const mylock = {};
+      lock = mylock;
       const value = autocomplete.valueWithSuggestion();
       const code = preprocessForJS(await this._transformCode(value));
-      if (value !== autocomplete.valueWithSuggestion())
+      if (lock !== mylock)
         return;
       if (!code.trim()) {
         belowPrompt.textContent = '';
@@ -340,9 +343,9 @@ export class Shell {
         timeout: 1000,
         objectGroup: 'eager-eval',
       });
-      if (value !== autocomplete.valueWithSuggestion())
+      if (lock !== mylock)
         return;
-        belowPrompt.textContent = '';
+      belowPrompt.textContent = '';
       void this._connection.send('Runtime.releaseObjectGroup', {
         objectGroup: 'eager-eval',
       });

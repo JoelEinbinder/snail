@@ -65,7 +65,7 @@ export class Autocomplete {
     }
 
     valueWithSuggestion() {
-        if (!this._suggestBox || !this._suggestBox.showing)
+        if (!this._suggestBox)
             return this._editor.value;
         const suggestion = this._suggestBox.currentSuggestion;
         if (!suggestion)
