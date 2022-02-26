@@ -125,6 +125,7 @@ export class Autocomplete {
         if (!filtered.length) {
             this._suggestBox?.hide();
             this._suggestBox = null;
+            this.suggestionChanged.dispatch();
             return;
         }
         if (autoaccept && filtered.length === 1) {

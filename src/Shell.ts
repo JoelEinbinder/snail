@@ -335,6 +335,8 @@ export class Shell {
       lock = mylock;
       const value = autocomplete.valueWithSuggestion();
       const code = preprocessForJS(await this._transformCode(value));
+      // throttle a bit
+      await new Promise(requestAnimationFrame);
       if (lock !== mylock)
         return;
       if (!code.trim()) {
