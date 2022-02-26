@@ -11,7 +11,7 @@ export class SuggestBox {
     private _glassPane: GlassPlane;
     private _viewport = new Viewport<Suggestion>(14, 14 * 9, this._renderItem.bind(this));
     private _description = document.createElement('div');
-    constructor(private _onPick: (suggestion: Suggestion) => void) {
+    constructor(private _onPick: (suggestion: Suggestion) => void, private _onSelectionChanged: () => void) {
         this.element = document.createElement('div');
         this.element.classList.add('suggest-popup');
         this._description.classList.add('description');
@@ -27,6 +27,10 @@ export class SuggestBox {
         return this._selectedSuggestion ? this._suggestions.indexOf(this._selectedSuggestion) : -1;
     }
 
+    get currentSuggestion() {
+        return this._selectedSuggestion ? this._selectedSuggestion : this._suggestions[0];
+    }
+
     setSuggestions(prefix: string, suggestions: Suggestion[]) {
         if (!suggestions.includes(this._selectedSuggestion))
             delete this._selectedSuggestion;
@@ -36,6 +40,7 @@ export class SuggestBox {
         if (!this._viewport.isItemFullyVisible(this._selectedSuggestion || this._suggestions[0]))
             this._viewport.showItem(this._selectedSuggestion || this._suggestions[0], 'up');
         this._refreshDescription();
+        this._onSelectionChanged();
     }
     private _render() {
         this._viewport._refresh();
@@ -77,6 +82,7 @@ export class SuggestBox {
         const newIndex = (this._suggestions.length + index + amount) % this._suggestions.length;
         this._selectedSuggestion = this._suggestions[newIndex];
         this._refreshDescription();
+        this._onSelectionChanged();
         this._render();
         this._viewport.showItem(this._suggestions[newIndex], amount > 0 ? 'down' : 'up');
     }

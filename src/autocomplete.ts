@@ -1,4 +1,5 @@
 import { Editor } from "../editor/js/editor";
+import { JoelEvent } from "./JoelEvent";
 import { SuggestBox } from "./SuggestBox";
 
 export class Autocomplete {
@@ -6,6 +7,7 @@ export class Autocomplete {
     private _abortController?: AbortController;
     private _wantsSuggestBoxShown = false;
     private _anchor = 0;
+    public suggestionChanged = new JoelEvent<void>(undefined);
     constructor(private _editor: Editor, private _completer: Completer, private _activationChars: string) {
         this._editor.on('selectionChanged', event => {
             this._abortController?.abort();
@@ -62,10 +64,28 @@ export class Autocomplete {
         }, true);
     }
 
+    valueWithSuggestion() {
+        if (!this._suggestBox || !this._suggestBox.showing)
+            return this._editor.value;
+        const suggestion = this._suggestBox.currentSuggestion;
+        if (!suggestion)
+            return this._editor.value;
+        const textBefore = this._editor.text({
+            start: { line: 0, column: 0 },
+            end: { line: this._editor.selections[0].start.line, column: this._anchor },
+        });
+        const textAfter = this._editor.text({
+            start: { line: this._editor.selections[0].start.line, column: this._editor.selections[0].start.column },
+            end: { line: Infinity, column: Infinity },
+        });
+        const text = textBefore + suggestion.text + textAfter;
+        return text;
+    }
+
     _onPick(suggestion: Suggestion) {
         const loc = this._editor.replaceRange(suggestion.text, {
             start: { line: this._editor.selections[0].start.line, column: this._anchor },
-            end: { line: this._editor.selections[0].start.line, column: this._editor.selections[0].start.column + suggestion.text.length },
+            end: { line: this._editor.selections[0].start.line, column: this._editor.selections[0].start.column },
         });
         this.hideSuggestBox();
         this._editor.selections = [{ start: loc, end: loc }];
@@ -85,6 +105,7 @@ export class Autocomplete {
         this._suggestBox = null;
         this._abortController?.abort();
         delete this._abortController;
+        this.suggestionChanged.dispatch();
     }
 
     async showSuggestBox(autoaccept = false) {
@@ -112,7 +133,7 @@ export class Autocomplete {
         }
         this._anchor = anchor;
         if (!this._suggestBox)
-            this._suggestBox = new SuggestBox(this._onPick.bind(this));
+            this._suggestBox = new SuggestBox(this._onPick.bind(this), () => this.suggestionChanged.dispatch());
         this._suggestBox.setSuggestions(prefix, filtered);
         const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
         const rect = this._editor.element.getBoundingClientRect();

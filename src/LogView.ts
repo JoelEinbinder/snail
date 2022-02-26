@@ -105,7 +105,7 @@ export class LogView {
 
   _addPrompt() {
     this._lockScroll();
-    this._promptElement = this._shell.addPrompt(this._element);
+    this._promptElement = this._shell.addPrompt(this._element, () => this._lockScroll());
   }
 }
 

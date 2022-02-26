@@ -6,7 +6,7 @@ import type { LogItem } from './LogView';
 import { CommandBlock, CommandPrefix } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { JSConnection } from './JSConnection';
-import { JSBlock, JSLogBlock } from './JSBlock';
+import { JSBlock, JSLogBlock, renderRemoteObjectOneLine } from './JSBlock';
 import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 
 const shells = new Map<number, Shell>();
@@ -262,12 +262,15 @@ export class Shell {
     this.promptLock.dispatch(this.promptLock.current - 1);
   }
 
-  addPrompt(container: Element) {
+  addPrompt(container: Element, willResize: () => void) {
     const element = document.createElement('div');
     element.style.opacity = '0';
     element.classList.add('prompt');
+    const editorLine = document.createElement('div');
+    editorLine.classList.add('editor-line');
+    element.appendChild(editorLine);
     const isReady = new Promise<void>(resolve => {
-      element.append(CommandPrefix(this, resolve));
+      editorLine.append(CommandPrefix(this, resolve));
     });
     Promise.race([isReady, new Promise(x => setTimeout(x, 100))]).then(() => {
       element.style.removeProperty('opacity');
@@ -285,6 +288,7 @@ export class Shell {
         const start = editor.selections[0].start;
         if (start.line !== editor.lastLine) {
           if (start.column === editor.line(start.line).length) {
+            willResize();
             editor.smartEnter();
             return;
           }
@@ -292,6 +296,7 @@ export class Shell {
           if (start.column === editor.line(start.line).length) {
             const code = await this._transformCode(editor.text());
             if (isUnexpectedEndOfInput(code)) {
+              willResize();
               editor.smartEnter();
               return;
             }
@@ -305,12 +310,48 @@ export class Shell {
       event.stopPropagation();
       event.preventDefault();
     }, false);
-    element.appendChild(editorWrapper);
-    const editor = makePromptEditor(this);
+    editorLine.appendChild(editorWrapper);
+    const {editor, autocomplete} = makePromptEditor(this);
     editorWrapper.appendChild(editor.element);
     container.appendChild(element);
     editor.layout();
     editor.focus();
+
+    const belowPrompt = document.createElement('div');
+    belowPrompt.classList.add('below-prompt');
+    element.appendChild(belowPrompt);
+    const onChange = async () => {
+      const value = autocomplete.valueWithSuggestion();
+      const code = preprocessForJS(await this._transformCode(value));
+      if (value !== autocomplete.valueWithSuggestion())
+        return;
+      if (!code.trim()) {
+        belowPrompt.textContent = '';
+        return;
+      }
+      const result = await this._connection.send('Runtime.evaluate', {
+        expression: code,
+        replMode: true,
+        returnByValue: false,
+        generatePreview: true,
+        userGesture: true,
+        allowUnsafeEvalBlockedByCSP: true,
+        throwOnSideEffect: /^[\.A-Za-z0-9_\s]*$/.test(code) ? false : true,
+        timeout: 1000,
+        objectGroup: 'eager-eval',
+      });
+      if (value !== autocomplete.valueWithSuggestion())
+        return;
+        belowPrompt.textContent = '';
+      void this._connection.send('Runtime.releaseObjectGroup', {
+        objectGroup: 'eager-eval',
+      });
+      if (result.exceptionDetails)
+        return;
+      belowPrompt.append(renderRemoteObjectOneLine(result.result, size.cols));
+    }
+    editor.on('change', onChange);
+    autocomplete.suggestionChanged.on(onChange);
     return element;
   }
 

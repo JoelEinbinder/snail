@@ -41,3 +41,10 @@ details > .content > .property {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.add-left-padding::before {
+  content: '▶';
+  color: var(--ansi-245);
+  width: 10.59px;
+  display: inline-block;
+}

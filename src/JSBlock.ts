@@ -86,9 +86,18 @@ function renderStaleRemoteObject(object: Protocol.Runtime.RemoteObject, charBudg
   const summary = renderRemoteObjectSummary(object, charBudget);
   if (prefix)
     span.append(prefix);
-  for (const node of summary.childNodes)
+  for (const node of [...summary.childNodes])
     span.append(node);
   return span;
+}
+
+export function renderRemoteObjectOneLine(object: Protocol.Runtime.RemoteObject, charBudget: number) {
+  if (object.objectId) {
+    const objLine = renderStaleRemoteObject(object, charBudget);
+    objLine.classList.add('add-left-padding');
+    return objLine;
+  }
+  return renderRemoteObject(object, undefined, undefined, charBudget);
 }
 
 function renderObjectRemoteObject(

@@ -21,7 +21,7 @@ export function makePromptEditor(shell: Shell) {
       selectionBackground: '#525252',
     }
   });
-  new Autocomplete(editor, makeShellCompleter(shell), ' /');
+  const autocomplete = new Autocomplete(editor, makeShellCompleter(shell), ' /');
   let historyIndex = 0;
   let currentValue = '';
   editor.on('selectionChanged', () => {
@@ -65,7 +65,7 @@ export function makePromptEditor(shell: Shell) {
       editor.value = history[history.length - historyIndex].command;
     }
   }
-  return editor;
+  return {editor, autocomplete};
 }
 
 async function searchHistory(current: string, prefix: string, start: number, direction: number) {
