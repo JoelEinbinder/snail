@@ -8,7 +8,7 @@ export class JSBlock implements LogItem {
   willResizeEvent = new JoelEvent(undefined);
   private _element: HTMLElement;
   constructor(object: Protocol.Runtime.RemoteObject, private _connection: JSConnection, size: JoelEvent<{cols: number, rows: number}>) {
-    this._element = renderRemoteObject(object, this._connection, this.willResizeEvent, size.current.cols);
+    this._element = renderRemoteObject(object, this._connection, this.willResizeEvent, size.current.cols - 1);
   }
   render(): Element {
     return this._element;
@@ -111,10 +111,16 @@ function renderObjectRemoteObject(
   const innerCharBudget = charBudget - 4;
   const details = document.createElement('details');
   const summary = renderRemoteObjectSummary(object, charBudget, prefix);
+  const openSummary = makeOpenSummary();
   details.appendChild(summary);
   const content = document.createElement('div');
   content.classList.add('content');
   let populated = false;
+  function makeOpenSummary() {
+    if (object.type !== 'object')
+      return summary;
+    return renderRemoteObjectSummary(object, charBudget, prefix?.cloneNode(true), true);
+  }
   async function populate() {
     if (populated)
       return;
@@ -132,6 +138,8 @@ function renderObjectRemoteObject(
       addProperty({configurable: false, enumerable: false, ...property}, true);
     for (const property of internalProperties || [])
       addProperty({configurable: false, enumerable: false, ...property}, true);
+    if (object.type === 'object')
+      content.append(object.subtype === 'array' ? ']' : '}');
     function addProperty(property: Protocol.Runtime.PropertyDescriptor, dim = false) {
       const propertyLabel = document.createElement('span');
       const propertyName = document.createElement('span');
@@ -166,15 +174,17 @@ function renderObjectRemoteObject(
     willResize.dispatch();
     if (details.open) {
       populate();
+      details.replaceChild(openSummary, summary);
       details.appendChild(content);
     } else {
+      details.replaceChild(summary, openSummary);
       details.removeChild(content);
     }      
   }, false);
   return details;
 }
 
-function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBudget: number, prefix?: Element) {
+function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBudget: number, prefix?: Node, open = false) {
   const summary = document.createElement('summary');
   if (prefix)
     summary.appendChild(prefix);
@@ -183,6 +193,8 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBu
     if (object.preview.subtype !== 'array' && object.className !== 'Object')
       summary.append(object.className, ' ');
     summary.append(object.preview.subtype === 'array' ? '[ ' : '{ ');
+    if (open)
+      return summary;
     charBudget -= summary.textContent.length;
     let first = true;
     let overflow = object.preview.overflow
