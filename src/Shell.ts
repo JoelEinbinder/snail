@@ -39,6 +39,7 @@ export class Shell {
   private _notifyObjectId: string;
   private _size = new JoelEvent(size);
   private _cachedGlobalObjectId: string;
+  private _cachedGlobalVars: Set<string>|undefined;
   private constructor(private _shellId: number, url: string) {
     this._connection = new JSConnection(new WebSocket(url));
     this._connection.on('Runtime.consoleAPICalled', message => {
@@ -142,16 +143,23 @@ export class Shell {
     });
   }
 
-  async globalVars() {
-    const {names} = await this._connection.send('Runtime.globalLexicalScopeNames', {});
-    const {result} = await this._connection.send('Runtime.getProperties', {
-      objectId: await this.globalObjectId(),
-      generatePreview: false,
-      ownProperties: false,
-      accessorPropertiesOnly: false,
-    });
-    const globalNames = result.filter(x => !x.symbol).map(x => x.name);
-    return new Set(names.concat(globalNames));
+  async globalVars(): Promise<Set<string>> {
+    if (this._cachedGlobalVars)
+      return this._cachedGlobalVars;
+    try {
+      const {names} = await this._connection.send('Runtime.globalLexicalScopeNames', {});
+      const {result} = await this._connection.send('Runtime.getProperties', {
+        objectId: await this.globalObjectId(),
+        generatePreview: false,
+        ownProperties: false,
+        accessorPropertiesOnly: false,
+      });
+      const globalNames = result.filter(x => !x.symbol).map(x => x.name);
+      this._cachedGlobalVars = new Set(names.concat(globalNames));
+      return this._cachedGlobalVars;
+    } catch (e) {
+      return new Set();
+    }
   }
 
   async globalObjectId() {
@@ -189,6 +197,7 @@ export class Shell {
       allowUnsafeEvalBlockedByCSP: true,
     });
     this._cachedEvaluationResult = new Map();
+    delete this._cachedGlobalVars;
     // TODO update the prompt line here?
     if (historyId) {
       await updateHistory(historyId, 'end', Date.now());

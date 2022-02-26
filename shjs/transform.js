@@ -20,7 +20,7 @@ const MyParser = Parser.extend(
           return null;
         const textBetween = this.input.slice(this.lastTokEnd, this.start);
         if (this.type.label !== ';' && this.type.label !== 'eof') {
-          if (!textBetween.includes('\n'))
+          if (!textBetween.includes('\n') && this.type !== tokTypes.parenR)
             return null;
           if (this.type.label.length === 1 && ',=+-:('.includes(this.type.label))
             return null;
@@ -59,9 +59,9 @@ const MyParser = Parser.extend(
           return null;
         return candidate;
       }
-      parseStatement(...args) {
+      parseStatement(context, topLevel, exports) {
         if (this.type !== shTokenType)
-          return super.parseStatement(...args);
+          return super.parseStatement(context, topLevel, exports);
         const node = this.startNode();
         this.next();
         this.semicolon();

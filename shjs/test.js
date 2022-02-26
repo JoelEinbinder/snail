@@ -290,6 +290,7 @@ describe('transform', () => {
             foo;
         }`);
         shouldBeLeftAlone(`this`);
+        shouldBeLeftAlone(`''.split('').toString();`);
         shouldBeLeftAlone(`await new Promise(x => setTimeout(x, 100));`);
         // shouldBeLeftAlone(`doesNotExist();`);
         // shouldBeLeftAlone(`doesNotExist = 5`);
@@ -307,6 +308,10 @@ describe('transform', () => {
     it('should transform export', () => {
         const code = `export FOO=123`;
         expect(transformCode(code)).toEqual(`await sh("export FOO=123")`);
+    });
+    it('should transform one-line if', () => {
+        const code = `if (true) echo 123`;
+        expect(transformCode(code)).toEqual(`if (true) await sh("echo 123")`);
     });
     function shouldBeLeftAlone(code) {
         expect(transformCode(code)).toEqual(code);
