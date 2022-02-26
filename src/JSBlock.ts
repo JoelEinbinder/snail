@@ -247,12 +247,21 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBu
     }
     summary.append(object.preview.subtype === 'array' ? ' ]' : ' }');
   } else {
-    if (object.type === 'function')
-      summary.append(renderOther('Function'));
-    else
+    if (object.type === 'function') {
+      summary.append(renderFunctionSummary(object))
+    } else {
       summary.append(renderOther(object.description));
+    }
   }
   return summary;
+}
+
+function renderFunctionSummary(object: Protocol.Runtime.RemoteObject) {
+  const functionName = /^function\s*(.*)\(/.exec(object.description);
+  if (functionName && functionName[1])
+    return renderOther(`Function: ${functionName[1]}`);
+  return renderOther('Function');
+
 }
 
 function renderOther(value: string) {
