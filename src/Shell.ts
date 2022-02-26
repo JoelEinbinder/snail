@@ -36,19 +36,23 @@ export class Shell {
   public addItemEvent = new JoelEvent<LogItem>(null);
   public clearEvent = new JoelEvent<void>(undefined);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
-  private _connection: JSConnection;
-  private _notifyObjectId: string;
+  private _connections: JSConnection[] = [];
+  private _notifyObjectId = new WeakMap<JSConnection, string>();
   private _size = new JoelEvent(size);
   private _cachedGlobalObjectId: string;
   private _cachedGlobalVars: Set<string>|undefined;
   private _cachedSuggestions = new Map<string, Promise<Suggestion[]>>();
-  private constructor(private _shellId: number, url: string) {
-    this._connection = new JSConnection(new WebSocket(url));
-    this._connection.on('Runtime.consoleAPICalled', message => {
+  private constructor(private _shellId: number) {
+  }
+
+  async _setupConnection(url: string) {
+    this._clearCache();
+    const connection = new JSConnection(new WebSocket(url));
+    connection.on('Runtime.consoleAPICalled', message => {
       // console.timeEnd messages are sent twice
       if (message.stackTrace?.callFrames[0]?.functionName === 'timeLogImpl')
         return;
-      this.addItem(new JSLogBlock(message, this._connection));
+      this.addItem(new JSLogBlock(message, connection));
     });
     const terminals = new Map<number, {block: TerminalBlock, cleanup: () => void}>();
     const handler = {
@@ -108,36 +112,41 @@ export class Shell {
       aliases: () => {},
       env: () => {},
     }
-    this._connection.on('Runtime.bindingCalled', message => {
+    connection.on('Runtime.bindingCalled', message => {
       if (message.name !== "magic_binding")
         return;
       const {method, params} = JSON.parse(message.payload);
       handler[method](params);
     });
+    await connection.send('Runtime.enable', {});
+    await connection.send('Runtime.addBinding', {
+      name: 'magic_binding',
+    });
+    const {result: {objectId: notifyObjectId}} = await connection.send('Runtime.evaluate', {
+      expression: 'bootstrap()',
+      returnByValue: false,
+    });
+    this._notifyObjectId.set(connection, notifyObjectId);
+    this._connections.push(connection);
   }
+
   static async create(): Promise<Shell> {
     const {shellId, url} = await window.electronAPI.sendMessage({
       method: 'createShell',
     });
-    const shell = new Shell(shellId, url);
+    const shell = new Shell(shellId);
     shells.set(shellId, shell);
-    await shell._connection.send('Runtime.enable', {});
-    await shell._connection.send('Runtime.addBinding', {
-      name: 'magic_binding',
-    });
-    const {result: {objectId: notifyObjectId}} = await shell._connection.send('Runtime.evaluate', {
-      expression: 'bootstrap()',
-      returnByValue: false,
-    });
-    shell._notifyObjectId = notifyObjectId;
-
+    await shell._setupConnection(url);
     await shell.updateSize();
     return shell;
   }
 
+  private get connection() {
+    return this._connections[this._connections.length - 1];
+  }
   async _notify(method: string, params: any) {
-    await this._connection.send('Runtime.callFunctionOn', {
-      objectId: this._notifyObjectId,
+    await this.connection.send('Runtime.callFunctionOn', {
+      objectId: this._notifyObjectId.get(this.connection),
       functionDeclaration: `function(data) { return this(data); }`,
       arguments: [{
         value: {method, params}
@@ -149,8 +158,8 @@ export class Shell {
     if (this._cachedGlobalVars)
       return this._cachedGlobalVars;
     try {
-      const {names} = await this._connection.send('Runtime.globalLexicalScopeNames', {});
-      const {result} = await this._connection.send('Runtime.getProperties', {
+      const {names} = await this.connection.send('Runtime.globalLexicalScopeNames', {});
+      const {result} = await this.connection.send('Runtime.getProperties', {
         objectId: await this.globalObjectId(),
         generatePreview: false,
         ownProperties: false,
@@ -167,7 +176,7 @@ export class Shell {
   async globalObjectId() {
     if (this._cachedGlobalObjectId)
       return this._cachedGlobalObjectId;
-    const {result: {objectId}} = await this._connection.send('Runtime.evaluate', {
+    const {result: {objectId}} = await this.connection.send('Runtime.evaluate', {
       expression: '(function() {return this})()',
       returnByValue: false,
     });
@@ -180,6 +189,13 @@ export class Shell {
     return jsCode;
   }
 
+  async _clearCache() {
+    this._cachedEvaluationResult = new Map();
+    delete this._cachedGlobalVars;
+    this._cachedSuggestions = new Map();
+    delete this._cachedGlobalObjectId;
+  }
+
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
@@ -190,7 +206,7 @@ export class Shell {
     this.activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
     const jsCode = await this._transformCode(command);
-    const result = await this._connection.send('Runtime.evaluate', {
+    const result = await this.connection.send('Runtime.evaluate', {
       expression: preprocessForJS(jsCode),
       returnByValue: false,
       generatePreview: true,
@@ -198,9 +214,7 @@ export class Shell {
       replMode: true,
       allowUnsafeEvalBlockedByCSP: true,
     });
-    this._cachedEvaluationResult = new Map();
-    delete this._cachedGlobalVars;
-    this._cachedSuggestions = new Map();
+    this._clearCache();
     // TODO update the prompt line here?
     if (historyId) {
       await updateHistory(historyId, 'end', Date.now());
@@ -239,7 +253,7 @@ export class Shell {
     this._unlockPrompt();
     if (result.result?.type === 'string' && result.result.value === 'this is the secret secret string')
       return;
-    const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._connection, this._size);
+    const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this.connection, this._size);
 
     this.addItem(jsBlock);
   }
@@ -346,7 +360,7 @@ export class Shell {
         belowPrompt.textContent = '';
         return;
       }
-      const result = await this._connection.send('Runtime.evaluate', {
+      const result = await this.connection.send('Runtime.evaluate', {
         expression: code,
         replMode: true,
         returnByValue: false,
@@ -360,7 +374,7 @@ export class Shell {
       if (lock !== mylock)
         return;
       belowPrompt.textContent = '';
-      void this._connection.send('Runtime.releaseObjectGroup', {
+      void this.connection.send('Runtime.releaseObjectGroup', {
         objectGroup: 'eager-eval',
       });
       if (result.exceptionDetails)
@@ -401,7 +415,7 @@ export class Shell {
   async jsCompletions(prefix: string): Promise<Suggestion[]> {
     if (!this._cachedSuggestions.has(prefix)) {
       const inner = async () => {
-        const {exceptionDetails, result} = await this._connection.send('Runtime.evaluate', {
+        const {exceptionDetails, result} = await this.connection.send('Runtime.evaluate', {
           throwOnSideEffect: true,
           timeout: 1000,
           expression: `Object(${prefix})`,
@@ -411,7 +425,7 @@ export class Shell {
         });
         if (exceptionDetails || !result.objectId)
           return [];
-        const { result: properties } = await this._connection.send('Runtime.getProperties', {
+        const { result: properties } = await this.connection.send('Runtime.getProperties', {
           objectId: result.objectId,
           ownProperties: false,
           generatePreview: false,
