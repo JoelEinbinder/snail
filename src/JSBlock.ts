@@ -8,7 +8,7 @@ export class JSBlock implements LogItem {
   willResizeEvent = new JoelEvent(undefined);
   private _element: HTMLElement;
   constructor(object: Protocol.Runtime.RemoteObject, private _connection: JSConnection, size: JoelEvent<{cols: number, rows: number}>) {
-    this._element = renderRemoteObject(object, this._connection, this.willResizeEvent, size.current.cols - 1);
+    this._element = renderRemoteObject(object, this._connection, this.willResizeEvent, size.current.cols - 1, true);
   }
   render(): Element {
     return this._element;
@@ -49,7 +49,7 @@ export class JSLogBlock implements LogItem {
   }
 }
 
-function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: JSConnection, willResize: JoelEvent<void>, charBudget: number): HTMLElement {
+function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: JSConnection, willResize: JoelEvent<void>, charBudget: number, open = false): HTMLElement {
   switch (object.type) {
     case 'number':
     case 'bigint':
@@ -64,7 +64,7 @@ function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: J
         return renderBasicRemoteObject(object);
       if (object.subtype === 'error')
         return renderErrorRemoteObject(object);
-      return renderObjectRemoteObject(object, connection, willResize, charBudget);
+      return renderObjectRemoteObject(object, connection, willResize, charBudget, undefined, open);
     case 'function':
       return renderObjectRemoteObject(object, connection, willResize, charBudget);
     default:
@@ -105,7 +105,8 @@ function renderObjectRemoteObject(
   connection: JSConnection,
   willResize: JoelEvent<void>,
   charBudget: number,
-  prefix?: Element) {
+  prefix?: Element,
+  open = false) {
   if (!object.objectId)
     return renderStaleRemoteObject(object, charBudget, prefix);
   const innerCharBudget = charBudget - 4;
@@ -181,6 +182,8 @@ function renderObjectRemoteObject(
       details.removeChild(content);
     }      
   }, false);
+  if (object.preview?.overflow)
+    details.open = open;
   return details;
 }
 
