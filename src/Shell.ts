@@ -37,7 +37,6 @@ export class Shell {
   public clearEvent = new JoelEvent<void>(undefined);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
   private _connections: JSConnection[] = [];
-  private _notifyObjectId = new WeakMap<JSConnection, string>();
   private _size = new JoelEvent(size);
   private _cachedGlobalObjectId: string;
   private _cachedGlobalVars: Set<string>|undefined;
@@ -50,7 +49,17 @@ export class Shell {
       method: 'createJSShell',
     });
     this._clearCache();
-    const connection = new JSConnection(new WebSocket(url));
+    const transport = new WebSocket(url);
+    const connection = new JSConnection(transport);
+    const notify = async function(method: string, params: any) {
+      await connection.send('Runtime.callFunctionOn', {
+        objectId: notifyObjectId,
+        functionDeclaration: `function(data) { return this(data); }`,
+        arguments: [{
+          value: {method, params}
+        }]
+      });
+    }
     connection.on('Runtime.consoleAPICalled', message => {
       // console.timeEnd messages are sent twice
       if (message.stackTrace?.callFrames[0]?.functionName === 'timeLogImpl')
@@ -77,7 +86,7 @@ export class Shell {
       },
       startTerminal:({id}: {id: number}) => {
         const terminalBlock = new TerminalBlock(this._size, async data => {
-          await this._notify('input', { data, id});
+          await notify('input', { data, id});
         });
         const onFullScreen = (value: boolean) => {
           if (value)
@@ -129,8 +138,24 @@ export class Shell {
       expression: 'bootstrap()',
       returnByValue: false,
     });
-    this._notifyObjectId.set(connection, notifyObjectId);
+    const resize = size => notify('resize', size);
+    notify('resize', resize);
+    this._size.on(resize);
     this._connections.push(connection);
+    let destroyed = false;
+    const destroy = () => {
+      if (destroyed)
+        return;
+      transport.removeEventListener('close', destroy);
+      destroyed = true;
+      this._size.off(resize);
+      if (this._connections[this._connections.length - 1] === connection) {
+        this._clearCache();
+      }
+      this._connections.splice(this._connections.indexOf(connection), 1);
+    }
+    // TODO handle the transport just messing up vs the node process dying
+    transport.addEventListener('close', destroy);
   }
 
   static async create(): Promise<Shell> {
@@ -139,22 +164,13 @@ export class Shell {
     });
     const shell = new Shell(shellId);
     shells.set(shellId, shell);
-    await shell._setupConnection();
     await shell.updateSize();
+    await shell._setupConnection();
     return shell;
   }
 
   private get connection() {
     return this._connections[this._connections.length - 1];
-  }
-  async _notify(method: string, params: any) {
-    await this.connection.send('Runtime.callFunctionOn', {
-      objectId: this._notifyObjectId.get(this.connection),
-      functionDeclaration: `function(data) { return this(data); }`,
-      arguments: [{
-        value: {method, params}
-      }]
-    });
   }
 
   async globalVars(): Promise<Set<string>> {
@@ -274,7 +290,6 @@ export class Shell {
 
   async updateSize() {
     this._size.dispatch(size);
-    this._notify('resize', size);
   }
 
   async cachedEvaluation(code: string): Promise<string> {
