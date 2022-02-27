@@ -6,12 +6,12 @@ const getPort = require('get-port');
 getPort().then(port => {
   require('inspector').open(port, undefined, false);
 });
-/** @typedef {{env?: {[key: string]: string}, aliases?: {[key: string]: string[]}, cwd?: string}} Changes */
+/** @typedef {{env?: {[key: string]: string}, aliases?: {[key: string]: string[]}, cwd?: string, nod?: string[]}} Changes */
 
 /** @type {Map<number, (s: WebSocket) => void} */
 const resolveShellConnection = new Map();
 
-global.bootstrap = () => {
+global.bootstrap = (args) => {
   const binding = global.magic_binding;
   delete global.magic_binding;
   delete global.bootstrap;
@@ -102,6 +102,11 @@ global.bootstrap = () => {
         for (const key of Object.keys(changes.aliases)) {
           setAlias(key, changes.aliases[key]);
         }
+      }
+      if (changes.nod)
+        notify('nod', changes.nod);
+      if (changes.exit !== undefined) {
+        process.exit(changes.exit);
       }
     }
     notify('endTerminal', {id, returnValue});

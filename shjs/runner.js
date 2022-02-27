@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * @type {{env?: {[key: string]: string}, aliases?: {[key: string]: string[]}, cwd?: string}}
+ * @type {{env?: {[key: string]: string}, aliases?: {[key: string]: string[]}, cwd?: string, nod?: string[], exit?: number}}
  */
 let changes = null;
 
@@ -58,6 +58,27 @@ const builtins = {
         if (!changes.aliases)
             changes.aliases = {};
         changes.aliases[args[0]] = args.slice(1);
+        return 0;
+    },
+    nod: async (args, stdout, stderr) => {
+        for (const arg of args) {
+            if (arg === '--version') {
+                stdout.write(process.version + '\n');
+                return 0;
+            } else if (arg === '--help') {
+                stdout.write(`nod help unimplemented\n`);
+                return 0;
+            }
+        }
+        if (!changes)
+            changes = {};
+        changes.nod = args;
+        return 0;
+    },
+    exit: async (args, stdout, stderr) => {
+        if (!changes)
+            changes = {};
+        changes.exit = args.length ? parseInt(args[0]) : 0;
         return 0;
     },
     __git_ref_name: async (args, stdout, stderr) => {

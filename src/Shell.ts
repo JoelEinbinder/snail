@@ -42,6 +42,7 @@ export class Shell {
   private _cachedGlobalVars: Set<string>|undefined;
   private _cachedSuggestions = new Map<string, Promise<Suggestion[]>>();
   private _connectionToName = new WeakMap<JSConnection, string>();
+  private _connectionToDestroy = new WeakMap<JSConnection, (() => void)>();
   private _connectionNameEvent = new JoelEvent<string>('');
 
   private _connectionNameElement = document.createElement('div');
@@ -52,14 +53,15 @@ export class Shell {
     });
   }
 
-  async _setupConnection(name: string) {
+  async _setupConnection(args: string[]) {
     const {url} = await window.electronAPI.sendMessage({
       method: 'createJSShell',
     });
     this._clearCache();
     const transport = new WebSocket(url);
     const connection = new JSConnection(transport);
-    this._connectionToName.set(connection, name);
+    const filePath = args[0];
+    this._connectionToName.set(connection, filePath);
     const notify = async function(method: string, params: any) {
       await connection.send('Runtime.callFunctionOn', {
         objectId: notifyObjectId,
@@ -132,6 +134,11 @@ export class Shell {
       },
       aliases: () => {},
       env: () => {},
+      nod: async (args) => {
+        this._lockPrompt();
+        await this._setupConnection(args);
+        this._unlockPrompt();
+      }
     }
     connection.on('Runtime.bindingCalled', message => {
       if (message.name !== "magic_binding")
@@ -144,7 +151,7 @@ export class Shell {
       name: 'magic_binding',
     });
     const {result: {objectId: notifyObjectId}} = await connection.send('Runtime.evaluate', {
-      expression: 'bootstrap()',
+      expression: `bootstrap(${JSON.stringify(args)})`,
       returnByValue: false,
     });
     const resize = size => notify('resize', size);
@@ -158,6 +165,8 @@ export class Shell {
         return;
       transport.removeEventListener('close', destroy);
       destroyed = true;
+      for (const id of terminals.keys())
+        handler.endTerminal({id});
       this._size.off(resize);
       if (this._connections[this._connections.length - 1] === connection) {
         this._clearCache();
@@ -165,8 +174,23 @@ export class Shell {
       this._connections.splice(this._connections.indexOf(connection), 1);
       this._connectionNameEvent.dispatch(this._connectionToName.get(this.connection));
     }
+    this._connectionToDestroy.set(connection, destroy);
     // TODO handle the transport just messing up vs the node process dying
     transport.addEventListener('close', destroy);
+    if (args.length) {
+      const file = args[0];
+      const {result: {value}} = await connection.send('Runtime.evaluate', {
+        expression: `require('fs').readFileSync(${JSON.stringify(file)}, 'utf8')`,
+        returnByValue: true,
+      });
+      await connection.send('Runtime.evaluate', {
+        expression: value,
+        replMode: true,
+      }).catch(() => {
+        // it could exit
+        destroy();
+      });
+    }
   }
 
   static async create(): Promise<Shell> {
@@ -176,7 +200,7 @@ export class Shell {
     const shell = new Shell(shellId);
     shells.set(shellId, shell);
     await shell.updateSize();
-    await shell._setupConnection('');
+    await shell._setupConnection([]);
     return shell;
   }
 
@@ -236,6 +260,7 @@ export class Shell {
     this.activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
     const jsCode = await this._transformCode(command);
+    let error;
     const result = await this.connection.send('Runtime.evaluate', {
       expression: preprocessForJS(jsCode),
       returnByValue: false,
@@ -243,7 +268,16 @@ export class Shell {
       userGesture: true,
       replMode: true,
       allowUnsafeEvalBlockedByCSP: true,
+    }).catch(e => {
+      error = e;
+      return null;
     });
+    // thes script could cause the shell to be destroyed
+    if (error) {
+      this._connectionToDestroy.get(this.connection)();
+      this._unlockPrompt();
+      return;
+    }
     this._clearCache();
     // TODO update the prompt line here?
     if (historyId) {
