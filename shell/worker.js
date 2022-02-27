@@ -1,7 +1,6 @@
 //@ts-check
 const {PipeTransport} = require('../protocol/pipeTransport');
 const {RPC} = require('../protocol/rpc');
-const { spawnJSProcess } = require('./spawnJSProcess');
 const transport = new PipeTransport(process.stdout, process.stdin);
 process.stdin.on('close', () => process.exit());
 
@@ -16,8 +15,4 @@ const rpc = RPC(transport, {
   async chdir(dir) {
     process.chdir(dir);
   }
-});
-
-spawnJSProcess().then(({url, child}) => {
-  rpc.notify('url', url);
 });

@@ -45,7 +45,10 @@ export class Shell {
   private constructor(private _shellId: number) {
   }
 
-  async _setupConnection(url: string) {
+  async _setupConnection() {
+    const {url} = await window.electronAPI.sendMessage({
+      method: 'createJSShell',
+    });
     this._clearCache();
     const connection = new JSConnection(new WebSocket(url));
     connection.on('Runtime.consoleAPICalled', message => {
@@ -131,12 +134,12 @@ export class Shell {
   }
 
   static async create(): Promise<Shell> {
-    const {shellId, url} = await window.electronAPI.sendMessage({
+    const {shellId} = await window.electronAPI.sendMessage({
       method: 'createShell',
     });
     const shell = new Shell(shellId);
     shells.set(shellId, shell);
-    await shell._setupConnection(url);
+    await shell._setupConnection();
     await shell.updateSize();
     return shell;
   }

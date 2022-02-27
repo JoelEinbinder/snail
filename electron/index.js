@@ -172,8 +172,28 @@ const handler = {
       shell.close();
       shells.delete(shellId);    
     }
-    const url = await shell.urlPromise;
-    return {shellId, url};
+    return {shellId};
+  },
+  async createJSShell(_, sender) {
+    /** @type {import('child_process').ChildProcessWithoutNullStreams} */
+    let child;
+    let killed = false;
+    sender.on('destroyed', destroy);
+    sender.on('did-navigate', destroy);
+
+    function destroy() {
+      killed = true;
+      sender.off('destroyed', destroy);
+      sender.off('did-navigate', destroy);
+      child?.kill();
+    }
+    const { spawnJSProcess } = require('../shell/spawnJSProcess');
+    const result = await spawnJSProcess();
+    child = result.child;
+    if (killed)
+      child.kill();
+
+    return { url: result.url };
   },
   async getHistory() {
     const util = require('util');
