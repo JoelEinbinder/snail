@@ -37,3 +37,7 @@ body.fullscreen-entry {
   text-overflow: ellipsis;
   opacity: 0.6;
 }
+.connection-name {
+  color: var(--ansi-237);
+  padding-right: 2px;
+}

@@ -41,16 +41,25 @@ export class Shell {
   private _cachedGlobalObjectId: string;
   private _cachedGlobalVars: Set<string>|undefined;
   private _cachedSuggestions = new Map<string, Promise<Suggestion[]>>();
+  private _connectionToName = new WeakMap<JSConnection, string>();
+  private _connectionNameEvent = new JoelEvent<string>('');
+
+  private _connectionNameElement = document.createElement('div');
   private constructor(private _shellId: number) {
+    this._connectionNameElement.classList.add('connection-name');
+    this._connectionNameEvent.on(name => {
+      this._connectionNameElement.textContent = name;
+    });
   }
 
-  async _setupConnection() {
+  async _setupConnection(name: string) {
     const {url} = await window.electronAPI.sendMessage({
       method: 'createJSShell',
     });
     this._clearCache();
     const transport = new WebSocket(url);
     const connection = new JSConnection(transport);
+    this._connectionToName.set(connection, name);
     const notify = async function(method: string, params: any) {
       await connection.send('Runtime.callFunctionOn', {
         objectId: notifyObjectId,
@@ -142,6 +151,7 @@ export class Shell {
     notify('resize', resize);
     this._size.on(resize);
     this._connections.push(connection);
+    this._connectionNameEvent.dispatch(this._connectionToName.get(connection));
     let destroyed = false;
     const destroy = () => {
       if (destroyed)
@@ -153,6 +163,7 @@ export class Shell {
         this._clearCache();
       }
       this._connections.splice(this._connections.indexOf(connection), 1);
+      this._connectionNameEvent.dispatch(this._connectionToName.get(this.connection));
     }
     // TODO handle the transport just messing up vs the node process dying
     transport.addEventListener('close', destroy);
@@ -165,7 +176,7 @@ export class Shell {
     const shell = new Shell(shellId);
     shells.set(shellId, shell);
     await shell.updateSize();
-    await shell._setupConnection();
+    await shell._setupConnection('');
     return shell;
   }
 
@@ -216,7 +227,7 @@ export class Shell {
   }
 
   async runCommand(command: string) {
-    const commandBlock = new CommandBlock(command);
+    const commandBlock = new CommandBlock(command, this._connectionNameEvent.current);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)
@@ -357,6 +368,7 @@ export class Shell {
     editorLine.appendChild(editorWrapper);
     const {editor, autocomplete} = makePromptEditor(this);
     editorWrapper.appendChild(editor.element);
+    editorLine.appendChild(this._connectionNameElement);
     container.appendChild(element);
     editor.layout();
     editor.focus();

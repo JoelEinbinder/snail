@@ -7,7 +7,7 @@ export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
   willResizeEvent = new JoelEvent<void>(undefined);
   private _editor: Editor;
-  constructor(public command: string) {
+  constructor(public command: string, private _connectionName: string) {
     this._editor = new Editor('', {
       inline: true,
       lineNumbers: false,
@@ -38,6 +38,10 @@ export class CommandBlock implements LogItem {
     editorWrapper.style.minHeight = '14px';
     command.append(editorWrapper);
     editorWrapper.append(this._editor.element);
+    const connectionNameElement = document.createElement('div');
+    connectionNameElement.classList.add('connection-name');
+    connectionNameElement.textContent = this._connectionName;
+    command.append(connectionNameElement);
     Promise.resolve().then(() => {
       this.willResizeEvent.dispatch();
       this._editor.layout();
