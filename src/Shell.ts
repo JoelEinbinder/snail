@@ -30,6 +30,7 @@ updateSize();
 
 export class Shell {
   log: LogItem[] = [];
+  cwd: string;
   public fullscreenItem: JoelEvent<LogItem> = new JoelEvent<LogItem>(null);
   public activeItem = new JoelEvent<LogItem>(null);
   public promptLock = new JoelEvent<number>(0);
@@ -56,6 +57,9 @@ export class Shell {
   async _setupConnection(args: string[]) {
     const {url} = await window.electronAPI.sendMessage({
       method: 'createJSShell',
+      params: {
+        cwd: this.cwd,
+      }
     });
     this._clearCache();
     const transport = new WebSocket(url);
@@ -124,6 +128,7 @@ export class Shell {
         this.activeItem.dispatch(terminalBlock);
       },
       cwd: cwd => {
+        this.cwd = cwd;
         window.electronAPI.sendMessage({
           method: 'chdir',
           params: {
@@ -179,12 +184,12 @@ export class Shell {
     transport.addEventListener('close', destroy);
     if (args.length) {
       const file = args[0];
-      const {result: {value}} = await connection.send('Runtime.evaluate', {
+      const result = await connection.send('Runtime.evaluate', {
         expression: `require('fs').readFileSync(${JSON.stringify(file)}, 'utf8')`,
         returnByValue: true,
       });
       await connection.send('Runtime.evaluate', {
-        expression: value,
+        expression: result.result.value,
         replMode: true,
       }).catch(() => {
         // it could exit

@@ -174,7 +174,7 @@ const handler = {
     }
     return {shellId};
   },
-  async createJSShell(_, sender) {
+  async createJSShell({cwd}, sender) {
     /** @type {import('child_process').ChildProcessWithoutNullStreams} */
     let child;
     let killed = false;
@@ -188,7 +188,7 @@ const handler = {
       child?.kill();
     }
     const { spawnJSProcess } = require('../shell/spawnJSProcess');
-    const result = await spawnJSProcess();
+    const result = await spawnJSProcess(cwd);
     child = result.child;
     if (killed)
       child.kill();
