@@ -18,6 +18,8 @@ import { HTMLBlock } from 'common/buffer/HTMLBlock';
 
 export const MAX_BUFFER_SIZE = 4294967295; // 2^32 - 1
 
+const MAX_DELEGATES_SCROLLING_HEIGHT = 100;
+
 /**
  * This class represents a terminal buffer (an internal state of the terminal), where the
  * following information is stored (in high-level):
@@ -107,6 +109,8 @@ export class Buffer implements IBuffer {
    * @param rows The terminal rows to use in the calculation.
    */
   private _getCorrectBufferLength(rows: number): number {
+    if (this.delegatesScrolling)
+      return MAX_DELEGATES_SCROLLING_HEIGHT;
     if (!this._hasScrollback) {
       return rows;
     }
@@ -257,7 +261,7 @@ export class Buffer implements IBuffer {
 
     this._cols = newCols;
     if (this.delegatesScrolling) {
-      this.rows = this.lines.length;
+      this.rows = Math.min(this.lines.length, MAX_DELEGATES_SCROLLING_HEIGHT);
       this.scrollBottom = this.rows - 1;
       this.ybase = 0;
       this.ydisp = 0;
