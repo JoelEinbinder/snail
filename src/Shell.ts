@@ -81,6 +81,10 @@ export class Shell {
         return;
       this.addItem(new JSLogBlock(message, connection));
     });
+    connection.on('Runtime.executionContextDestroyed', message => {
+        if (message.executionContextId === 1)
+          destroy();
+    });
     const terminals = new Map<number, {block: TerminalBlock, cleanup: () => void}>();
     const handler = {
       data: ({data, id}: {data: string, id: number}) => {
@@ -168,8 +172,9 @@ export class Shell {
     const destroy = () => {
       if (destroyed)
         return;
-      transport.removeEventListener('close', destroy);
+      transport.removeEventListener('close', transportClose);
       destroyed = true;
+      transport.close();
       for (const id of terminals.keys())
         handler.endTerminal({id});
       this._size.off(resize);
@@ -181,7 +186,27 @@ export class Shell {
     }
     this._connectionToDestroy.set(connection, destroy);
     // TODO handle the transport just messing up vs the node process dying
-    transport.addEventListener('close', destroy);
+    transport.addEventListener('close', transportClose);
+    async function transportClose(event: CloseEvent) {
+      if (event.wasClean || event.code !== 1006) {
+        destroy();
+        return;
+      }
+      // wait for visibility to come back and try to reconnect
+      let callback;
+      const promise = new Promise(x => callback = x);
+      function onVisibilityChange(event: Event) {
+        if (document.visibilityState === 'visible')
+          callback();
+      }
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      await promise;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      console.log('reconnecting');
+      const transport = new WebSocket(url);
+      const connection = new JSConnection(transport);
+      console.error('TODO IMPLEMENT RECONNECT');
+    }
     if (args.length) {
       const file = args[0];
       const result = await connection.send('Runtime.evaluate', {
@@ -266,7 +291,8 @@ export class Shell {
     const historyId = await this._addToHistory(command);
     const jsCode = await this._transformCode(command);
     let error;
-    const result = await this.connection.send('Runtime.evaluate', {
+    const connection = this.connection;
+    const result = await connection.send('Runtime.evaluate', {
       expression: preprocessForJS(jsCode),
       returnByValue: false,
       generatePreview: true,
@@ -279,7 +305,7 @@ export class Shell {
     });
     // thes script could cause the shell to be destroyed
     if (error) {
-      this._connectionToDestroy.get(this.connection)();
+      this._connectionToDestroy.get(connection)();
       this._unlockPrompt();
       return;
     }
@@ -322,7 +348,7 @@ export class Shell {
     this._unlockPrompt();
     if (result.result?.type === 'string' && result.result.value === 'this is the secret secret string')
       return;
-    const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this.connection, this._size);
+    const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, connection, this._size);
 
     this.addItem(jsBlock);
   }
