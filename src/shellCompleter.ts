@@ -38,7 +38,7 @@ export function makeShellCompleter(shell: Shell): Completer {
     const command = prefix.shPrefix.split(' ')[0];
     if (registry.has(command))
       result = await registry.get(command)(shell, prefix.shPrefix, abortSignal);
-    else 
+    if (!result)
       result = await fileCompleter(shell, prefix.shPrefix, false);
     return {
       anchor: offset + result.anchor,
