@@ -2,6 +2,7 @@ import { Terminal, IDisposable } from "xterm";
 import { JoelEvent } from "./JoelEvent";
 import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
+import { titleThrottle } from "./UIThrottle";
 
 let lastTerminalBlock: TerminalBlock = null;
 window.electronAPI.onEvent('data', ({shellId, data}) => {
@@ -69,6 +70,9 @@ export class TerminalBlock implements LogItem {
     this._listeners.push(this._terminal.buffer.onBufferChange(() => {
       this._willResize();
       this.fullscreenEvent.dispatch(this._terminal.buffer.active === this._terminal.buffer.alternate);
+    }));
+    this._listeners.push(this._terminal.onTitleChange(title => {
+      titleThrottle.update(title);
     }));
     this._listeners.push(this._terminal.onClear(() => {
       this.cleared = true;

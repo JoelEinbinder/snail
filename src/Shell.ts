@@ -3,12 +3,13 @@ import { addHistory, updateHistory } from './history';
 import { makePromptEditor } from './PromptEditor';
 import { JoelEvent } from './JoelEvent';
 import type { LogItem } from './LogView';
-import { CommandBlock, CommandPrefix } from './CommandBlock';
+import { CommandBlock, CommandPrefix, computePrettyDirName } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { JSConnection } from './JSConnection';
 import { JSBlock, JSLogBlock, renderRemoteObjectOneLine } from './JSBlock';
 import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 import type { Suggestion } from './autocomplete';
+import { titleThrottle } from './UIThrottle';
 
 const shells = new Map<number, Shell>();
 
@@ -96,6 +97,7 @@ export class Shell {
         this.activeItem.dispatch(null);
         this._unlockPrompt();
         await block.close();
+        titleThrottle.update('');
         cleanup();
         if (block.cleared && block.empty) {
           block.dispose();
@@ -286,6 +288,8 @@ export class Shell {
     this.addItem(commandBlock);
     if (!command)
       return;
+    
+    titleThrottle.update(command);
     this._lockPrompt();
     this.activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
@@ -392,6 +396,7 @@ export class Shell {
     const isReady = new Promise<void>(resolve => {
       editorLine.append(CommandPrefix(this, resolve));
     });
+    titleThrottle.update(computePrettyDirName(this));
     Promise.race([isReady, new Promise(x => setTimeout(x, 100))]).then(() => {
       element.style.removeProperty('opacity');
     });
