@@ -166,7 +166,7 @@ export class Shell {
       returnByValue: false,
     });
     const resize = size => notify('resize', size);
-    notify('resize', resize);
+    notify('resize', size);
     this._size.on(resize);
     this._connections.push(connection);
     this._connectionNameEvent.dispatch(this._connectionToName.get(connection));
