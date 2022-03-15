@@ -56,10 +56,11 @@ export class TerminalBlock implements LogItem {
         brightCyan: '#00E5E5',
         brightWhite: '#E5E5E5',
         foreground: '#F4F4F4',
-        background: '#000000',
+        background: 'transparent',
         selection: '#525252',
         cursor: '#606060',
       },
+      allowTransparency: true,
       rendererType: 'canvas',
     });
     this._terminal.open(this.element);

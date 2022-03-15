@@ -10,7 +10,7 @@ export class LogView {
   private _undoFullscreen: () => void = null;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._updateFullscreen();
-    this._fullscreenElement.classList.add('fullscreen', 'entry');
+    this._fullscreenElement.classList.add('fullscreen-element');
     this._shell.fullscreenItem.on(() => this._updateFullscreen());
     this._container.appendChild(this._element);
     this._element.style.overflowY = 'auto';
@@ -55,7 +55,7 @@ export class LogView {
   _updateFullscreen() {
     const fullScreenEntry = this._shell.fullscreenItem.current;
     if (fullScreenEntry) {
-      this._element.style.display = 'none';
+      this._element.classList.add('inert');
       const placeholder = document.createElement('div');
       const element = fullScreenEntry.render();
       element.parentElement.replaceChild(placeholder, element);
@@ -73,7 +73,7 @@ export class LogView {
       }
       this._fullscreenElement.remove();
       this._fullscreenElement.textContent = '';
-      this._element.style.display = 'block';
+      this._element.classList.remove('inert');
       document.body.classList.remove('fullscreen-entry');
     }
   }
