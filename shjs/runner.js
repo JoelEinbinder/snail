@@ -185,6 +185,10 @@ const builtins = {
             stdout.write(description + '\n');
         return 0;
     },
+    __environment_variables: async (args, stdout, stderr) => {
+        stdout.write(JSON.stringify(process.env) + '\n');
+        return 0;
+    },
 };
 
 /** @type {Object<string, string[]>} */

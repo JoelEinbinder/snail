@@ -36,7 +36,8 @@ export function makeShellCompleter(shell: Shell): Completer {
     }
     const offset = line.lastIndexOf(prefix.shPrefix);
     const command = prefix.shPrefix.split(' ')[0];
-    if (registry.has(command))
+    result = await envCompleter(shell, line);
+    if (!result && registry.has(command))
       result = await registry.get(command)(shell, prefix.shPrefix, abortSignal);
     if (!result)
       result = await fileCompleter(shell, prefix.shPrefix, false);
@@ -45,6 +46,23 @@ export function makeShellCompleter(shell: Shell): Completer {
       suggestions: result.suggestions,
     };
   };
+}
+
+async function envCompleter(shell: Shell, line: string): Promise<{anchor: number, suggestions: Suggestion[]}> {
+  const anchor = line.lastIndexOf('$');
+  if (anchor === -1)
+    return null;
+  if (!/^\$\w*$/.test(line.slice(anchor)))
+    return null;
+  const envVars: {[key: string]: string} = JSON.parse(await shell.cachedEvaluation('__environment_variables'));
+  console.log(envVars)
+  return {
+    anchor,
+    suggestions: Object.entries(envVars).map(([key, value]) => ({
+      text: '$' + key,
+      description: async () => value,
+    })),
+  }
 }
 
 async function commandCompleter(shell: Shell, line: string) {
