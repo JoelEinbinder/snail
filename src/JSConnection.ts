@@ -3,10 +3,9 @@ export class JSConnection {
   private _id = 0;
   private _callbacks = new Map();
   private _listeners = new Map<string, Set<Function>>();
-  private _ready: Promise<void>;
-  constructor(private _transport: WebSocket) {
-    this._transport.addEventListener('message', event => {
-      const message = JSON.parse(event.data);
+  constructor(private _transport: Transport) {
+    this._transport.listen(data => {
+      const message = JSON.parse(data);
       if ('id' in message) {
         const callback = this._callbacks.get(message.id);
         callback.call(null, message);
@@ -14,9 +13,6 @@ export class JSConnection {
       } else {
         this._emit(message.method, message.params);
       }
-    });
-    this._ready = new Promise(x => {
-      this._transport.onopen = () => x();
     });
   }
   private _emit(method: string, params: any) {
@@ -40,11 +36,17 @@ export class JSConnection {
     const id = this._id++;
     const message = {id, method, params};
     const promise = new Promise<any>(x => this._callbacks.set(id, x));
-    await this._ready;
+    await this._transport.ready;
     this._transport.send(JSON.stringify(message));
     const data = await promise;
     if (data.error)
       throw new Error(method + ': ' + data.error.message);
     return data.result;
   }
+}
+
+interface Transport {
+  send(message: string): void;
+  ready: Promise<void>;
+  listen(callback: (message: string) => void): void;
 }

@@ -12,7 +12,7 @@ import type { Suggestion } from './autocomplete';
 import { titleThrottle } from './UIThrottle';
 
 const shells = new Map<number, Shell>();
-
+const socketListeners = new Map<number, (message: string) => void>();
 const size = {
   rows: 0,
   cols: 0,
@@ -28,6 +28,10 @@ function updateSize() {
 }
 window.addEventListener('resize', updateSize);
 updateSize();
+
+window.electronAPI.onEvent('websocket', ({socketId, message}) => {
+  socketListeners.get(socketId)(message);
+});
 
 export class Shell {
   log: LogItem[] = [];
@@ -56,15 +60,22 @@ export class Shell {
   }
 
   async _setupConnection(args: string[]) {
-    const {url} = await window.electronAPI.sendMessage({
+    const {socketId} = await window.electronAPI.sendMessage({
       method: 'createJSShell',
       params: {
         cwd: this.cwd,
       }
     });
     this._clearCache();
-    const transport = new WebSocket(url);
-    const connection = new JSConnection(transport);
+    const connection = new JSConnection({
+      listen: callback => {
+        socketListeners.set(socketId, callback);
+      },
+      send: message => {
+        window.electronAPI.notify({method: 'sendMessageToWebSocket', params: {socketId, message}});
+      },
+      ready: Promise.resolve(),
+    });
     const filePath = args[0];
     this._connectionToName.set(connection, filePath);
     const notify = async function(method: string, params: any) {
@@ -175,9 +186,8 @@ export class Shell {
     const destroy = () => {
       if (destroyed)
         return;
-      transport.removeEventListener('close', transportClose);
       destroyed = true;
-      transport.close();
+      window.electronAPI.notify({method: 'destroyWebsocket', params: {socketId}});
       for (const id of terminals.keys())
         handler.endTerminal({id});
       this._size.off(resize);
@@ -188,28 +198,7 @@ export class Shell {
       this._connectionNameEvent.dispatch(this._connectionToName.get(this.connection));
     }
     this._connectionToDestroy.set(connection, destroy);
-    // TODO handle the transport just messing up vs the node process dying
-    transport.addEventListener('close', transportClose);
-    async function transportClose(event: CloseEvent) {
-      if (event.wasClean || event.code !== 1006) {
-        destroy();
-        return;
-      }
-      // wait for visibility to come back and try to reconnect
-      let callback;
-      const promise = new Promise(x => callback = x);
-      function onVisibilityChange(event: Event) {
-        if (document.visibilityState === 'visible')
-          callback();
-      }
-      document.addEventListener('visibilitychange', onVisibilityChange);
-      await promise;
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      console.log('reconnecting');
-      const transport = new WebSocket(url);
-      const connection = new JSConnection(transport);
-      console.error('TODO IMPLEMENT RECONNECT');
-    }
+
     if (args.length) {
       const file = args[0];
       const result = await connection.send('Runtime.evaluate', {

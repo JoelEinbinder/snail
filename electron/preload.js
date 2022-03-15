@@ -12,6 +12,9 @@ const electronAPI = {
     ipcRenderer.invoke('message', {id, ...message});
     return promise;
   },
+  notify: message => {
+    ipcRenderer.invoke('message', message);
+  },
   onEvent: (eventName, listener) => {
     if (!listeners.has(eventName))
       listeners.set(eventName, new Set());

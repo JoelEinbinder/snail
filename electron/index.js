@@ -152,6 +152,9 @@ app.on('new-window-for-tab', () => {
 let lastShellId = 0;
 /** @type {Map<number, import('../shell/shell').Shell>} */
 const shells = new Map();
+let lastWebsocketId = 0;
+/** @type {Map<number, import('ws').WebSocket>} */
+const websockets = new Map();
 const handler = {
   async evaluate({shellId, code}) {
     return shells.get(shellId).evaluate(code);
@@ -185,6 +188,7 @@ const handler = {
       killed = true;
       sender.off('destroyed', destroy);
       sender.off('did-navigate', destroy);
+      websockets.delete(socketId);
       child?.kill();
     }
     const { spawnJSProcess } = require('../shell/spawnJSProcess');
@@ -192,8 +196,21 @@ const handler = {
     child = result.child;
     if (killed)
       child.kill();
-
-    return { url: result.url };
+    const socketId = ++lastWebsocketId;
+    const socket = new (require('ws').WebSocket)(result.url);
+    socket.onmessage = event => {
+      sender.send('message', { method: 'websocket', params: {socketId, message: event.data}});
+    };
+    websockets.set(socketId, socket);
+    await new Promise(x => socket.onopen = x);
+    return { socketId };
+  },
+  sendMessageToWebSocket({socketId, message}) {
+    websockets.get(socketId).send(message);
+  },
+  destroyWebsocket({socketId}) {
+    websockets.get(socketId).close();
+    websockets.delete(socketId);
   },
   async getHistory() {
     const util = require('util');
@@ -250,7 +267,8 @@ ipcMain.handle('message', async (event, ...args) => {
   if (!handler.hasOwnProperty(method))
     throw new Error('command not found');
   const result = await handler[method](params, event.sender);
-  event.sender.send('message', {result, id});
+  if (id)
+    event.sender.send('message', {result, id});
 });
 
 protocol.registerSchemesAsPrivileged([
