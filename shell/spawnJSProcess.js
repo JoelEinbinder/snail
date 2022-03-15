@@ -26,7 +26,7 @@ async function spawnJSProcess(cwd) {
   `], {
     stdio: 'pipe',
     detached: false,
-    cwd: cwd || process.cwd(),
+    cwd: cwd || require('os').homedir(),
   });
   const url = await waitForURL(child);
   return {url, child};

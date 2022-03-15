@@ -31,7 +31,7 @@ updateSize();
 
 export class Shell {
   log: LogItem[] = [];
-  cwd: string;
+  cwd = localStorage.getItem('cwd') || '';
   public fullscreenItem: JoelEvent<LogItem> = new JoelEvent<LogItem>(null);
   public activeItem = new JoelEvent<LogItem>(null);
   public promptLock = new JoelEvent<number>(0);
@@ -135,6 +135,7 @@ export class Shell {
       },
       cwd: cwd => {
         this.cwd = cwd;
+        localStorage.setItem('cwd', cwd);
         window.electronAPI.sendMessage({
           method: 'chdir',
           params: {
@@ -232,6 +233,13 @@ export class Shell {
     const shell = new Shell(shellId);
     shells.set(shellId, shell);
     await shell.updateSize();
+    await window.electronAPI.sendMessage({
+      method: 'chdir',
+      params: {
+        shellId,
+        dir: shell.cwd,
+      },
+    });
     await shell._setupConnection([]);
     return shell;
   }

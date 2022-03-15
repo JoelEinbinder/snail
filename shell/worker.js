@@ -13,6 +13,6 @@ const rpc = RPC(transport, {
   },
   /** @param {string} dir */
   async chdir(dir) {
-    process.chdir(dir);
+    process.chdir(dir || require('os').homedir());
   }
 });
