@@ -312,3 +312,9 @@ void app.whenReady().then(() => {
     });
   });
 });
+app.on('window-all-closed', e => e.preventDefault());
+app.on('activate', event => {
+  if (windows.size)
+    return;
+  makeWindow();
+});
