@@ -21,7 +21,7 @@ async function waitForURL(child) {
 }
 
 async function spawnJSProcess(cwd) {
-  const child = spawn('node', ['-e', `
+  const child = spawn('/usr/local/bin/node', ['-e', `
     require(${JSON.stringify(path.join(__dirname, 'bootstrap.js'))});
   `], {
     stdio: 'pipe',

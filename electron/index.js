@@ -162,6 +162,9 @@ const handler = {
   async chdir({shellId, dir}) {
     return shells.get(shellId).chdir(dir);
   },
+  async env({shellId, env}) {
+    return shells.get(shellId).env(env);
+  },
   async createShell(_, sender) {
     const shellId = ++lastShellId;
     const shell = new (require('../shell/shell').Shell)();

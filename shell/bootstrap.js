@@ -36,7 +36,7 @@ global.bootstrap = (args) => {
     const url = await getServerUrl();
     /** @type {Promise<WebSocket>|WebSocket} */
     const conncectionPromise = freeShell ? freeShell.connection : new Promise(x => resolveShellConnection.set(id, x));
-    const shell = freeShell ? freeShell.shell : require('node-pty').spawn('node', [path.join(__dirname, '..', 'shjs', 'wrapper.js'), url, id], {
+    const shell = freeShell ? freeShell.shell : require('node-pty').spawn(process.execPath, [path.join(__dirname, '..', 'shjs', 'wrapper.js'), url, id], {
       env,
       rows,
       cols,

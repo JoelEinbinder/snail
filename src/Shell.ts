@@ -153,10 +153,18 @@ export class Shell {
             shellId: this._shellId,
             dir: cwd,
           },
-        })
+        });
       },
       aliases: () => {},
-      env: () => {},
+      env: env => {
+        window.electronAPI.sendMessage({
+          method: 'env',
+          params: {
+            shellId: this._shellId,
+            env,
+          },
+        });
+      },
       nod: async (args) => {
         this._lockPrompt();
         await this._setupConnection(args);

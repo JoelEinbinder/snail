@@ -14,5 +14,9 @@ const rpc = RPC(transport, {
   /** @param {string} dir */
   async chdir(dir) {
     process.chdir(dir || require('os').homedir());
+  },
+  async env(env) {
+    for (const [key, value] of Object.entries(env))
+      process.env[key] = value;
   }
 });

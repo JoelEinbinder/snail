@@ -6,7 +6,7 @@ const { RPC } = require('../protocol/rpc');
 
 class Shell {
   constructor() {
-    this.process = child_process.spawn('node', [path.join(__dirname, 'worker.js')], {
+    this.process = child_process.spawn('/usr/local/bin/node', [path.join(__dirname, 'worker.js')], {
       stdio: ['pipe', 'pipe', 'inherit'],
     });
     const transport = new PipeTransport(this.process.stdin, this.process.stdout);
@@ -34,6 +34,10 @@ class Shell {
    */
   async chdir(dir) {
     return this.rpc.send('chdir', dir);
+  }
+
+  async env(env) {
+    return this.rpc.send('env', env);
   }
 
   close() {
