@@ -212,6 +212,25 @@ export class Shell {
         // it could exit
         destroy();
       });
+    } else {
+      const {result, exceptionDetails} = await connection.send('Runtime.evaluate', {
+        expression: `require('fs').readFileSync(require('path').join(require('os').homedir(), '.bootstrap.shjs'), 'utf8');`,
+        returnByValue: true
+      });
+      if (!exceptionDetails && result.type === 'string') {
+        const expression = await this._transformCode(result.value);
+        await connection.send('Runtime.evaluate', {
+          expression,
+          returnByValue: true,
+          generatePreview: false,
+          userGesture: false,
+          replMode: true,
+          allowUnsafeEvalBlockedByCSP: true,
+        }).catch(() => {
+          // it could exit
+          destroy();
+        });
+      }
     }
   }
 

@@ -80,6 +80,8 @@ export class LogView {
 
   _addEntry(logItem: LogItem) {
     const element = logItem.render();
+    if (!element)
+      return;
     logItem.willResizeEvent.on(async () => {
       this._lockScroll();
     });

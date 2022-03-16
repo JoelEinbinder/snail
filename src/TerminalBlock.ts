@@ -27,6 +27,7 @@ export class TerminalBlock implements LogItem {
   private _trailingNewline = false;
   private _lastWritePromise = Promise.resolve();
   public empty = true;
+  private _closed = false;
   constructor(private _size: JoelEvent<{cols: number, rows: number}>, sendInput: (data: string) => void) {
 
     this.element = document.createElement('div');
@@ -107,6 +108,8 @@ export class TerminalBlock implements LogItem {
     this._terminal.focus();
   }
   render(): Element {
+    if (this.empty && this._closed)
+      return null;
     return this.element;
   }
 
@@ -141,10 +144,12 @@ export class TerminalBlock implements LogItem {
         this._terminal.buffer.active.length === 1 &&
         this._terminal.buffer.active.getLine(0).translateToString(true) === '') {
         this.element.style.display = 'none';
+        this.element.remove();
         this.empty = true;
       }
       // TODO write some extra '%' character to show there was no trailing newline?
     }
+    this._closed = true;
     this._terminal.blur();
     this._terminal.disable();
   }
