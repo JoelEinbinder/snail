@@ -235,19 +235,29 @@ function processAlias(executable, args) {
 
 /**
  * @param {import('./ast').Word} word
- * @return {string}
+ * @return {string[]}
  */
 function processWord(word) {
     if (typeof word === 'string')
-        return word;
+        return [word];
+    /** @type {(string|{glob: string})[]} */
     const parts = [];
     for (const part of word) {
         if (typeof part === 'string')
             parts.push(part);
-        else
+        else if ('replacement' in part)
             parts.push(computeReplacement(part.replacement));
+        else
+            parts.push(part);
     }
-    return parts.join('');
+    if (parts.some(x => typeof x !== 'string')) {
+        const glob = require('fast-glob');
+        const output = glob.sync(parts.map(p => typeof p === 'string' ? glob.escapePath(p) : p.glob).join(''), {
+            onlyFiles: false,       
+        });
+        return output;
+    }
+    return [parts.join('')];
 }
 
 /**
@@ -272,10 +282,10 @@ function computeReplacement(replacement) {
  */
 function execute(expression, stdout, stderr, stdin) {
     if ('executable' in expression) {
-        const {executable, args} = processAlias(processWord(expression.executable), [...expression.args.map(processWord)]);
+        const {executable, args} = processAlias(processWord(expression.executable)[0], expression.args.flatMap(processWord));
         const env = {...process.env};
         for (const {name, value} of expression.assignments || [])
-            env[name] = processWord(value);
+            env[name] = processWord(value)[0];
         if (executable in builtins) {
             const closePromise = builtins[executable](args, stdout, stderr);
             return {

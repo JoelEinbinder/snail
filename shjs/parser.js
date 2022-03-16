@@ -132,7 +132,7 @@ function parseArgs(tokens) {
 function parseWord(tokens) {
     /** @type {import('./ast').Word} */
     const word = [];
-    while (tokens.length && (tokens[0].type === 'word' || tokens[0].type === 'replacement')) {
+    while (tokens.length && (tokens[0].type === 'word' || tokens[0].type === 'replacement' || tokens[0].type === 'glob')) {
         const token = tokens.shift();
         switch(token.type) {
             case 'word':
@@ -140,6 +140,9 @@ function parseWord(tokens) {
                 break;
             case 'replacement':
                 word.push({replacement: token.value});
+                break;
+            case 'glob':
+                word.push({glob: token.value});
                 break;
             default:
                 throw new Error(`Unexpected token: ${token.type}`);

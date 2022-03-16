@@ -327,3 +327,15 @@ describe('transform', () => {
         expect(transformCode(code)).toEqual(code);
     }
 });
+
+describe('glob', () => {
+    const {sh} = require('./jsapi');
+    it('should glob everything in the test-assets folder', async () => {
+        const output = await sh`echo test-assets/*`;
+        expect(output).toEqual(['test-assets/bar.txt test-assets/baz.txt test-assets/foo.txt']);
+    });
+    it('should not glob when there are quotes', async () => {
+        const output = await sh`echo '*'`;
+        expect(output).toEqual(['*']);
+    });
+});

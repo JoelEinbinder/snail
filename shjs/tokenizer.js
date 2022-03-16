@@ -1,6 +1,7 @@
 /**
  * @typedef Token
- * @property {"word"|"operator"|"replacement"|"space"} type
+ * @property {"word"|"operator"|"replacement"|"space"|"glob"} type
+ * @property {boolean=} isQuoted
  * @property {string} value
  */
 /**
@@ -17,14 +18,16 @@ function tokenize(code) {
     let inSpace = false;
     let inReplacement = false;
     let tokenStart = 0;
+    let couldBeOperator = true;
     let i = 0;
-    const metaChars = new Set('&|;()<>');
+    const metaChars = new Set('&|;()<>*');
     const operators = new Set([
         '&',
         '&&',
         '|',
         '||',
         ';',
+        '*'
     ])
     for (; i < code.length; i++) {
         const char = code[i];
@@ -54,6 +57,7 @@ function tokenize(code) {
             else
                 value += char;
         } else if (char === '\\') {
+            couldBeOperator = false;
             escaped = true;
         } else if (char === '$') {
             pushToken();
@@ -68,8 +72,10 @@ function tokenize(code) {
                 value += char;
         } else if (char === '\'') {
             inSingleQuotes = true;
+            couldBeOperator = false;
         } else if (char === '"') {
             inDoubleQuotes = true;
+            couldBeOperator = false;
         } else if (char === '~' && value === '' && (!code[i + 1] || '&|;()<> \t\n$/'.includes(code[i + 1]))) {
             value = '~';
             inReplacement = true;
@@ -103,6 +109,7 @@ function tokenize(code) {
         value = '';
         inSpace = false;
         inReplacement = false;
+        couldBeOperator = true;
         tokenStart = i + 1;
     }
 
@@ -111,6 +118,10 @@ function tokenize(code) {
             return 'space';
         if (inReplacement)
             return 'replacement';
+        if (!couldBeOperator)
+            return 'word';
+        if (value === '*')
+            return 'glob';
         if (operators.has(value))
             return 'operator';
         return 'word';

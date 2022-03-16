@@ -16,7 +16,7 @@ export type Assignment = {
     value: Word;
 }
 
-export type Word = ((string|{replacement: string})[]) | string;
+export type Word = ((string|{replacement: string}|{glob: string})[]) | string;
 
 export type CompoundExpression = {
     type: 'and'|'or',
