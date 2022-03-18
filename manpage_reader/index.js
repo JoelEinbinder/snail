@@ -8,8 +8,8 @@ const paths = spawnSync('manpath').stdout.toString().trim().split(':').filter(x 
  */
 function manPathForCommand(command) {
   for (const searchPath of paths) {
-    for (const searchDir of ['1', '8']) {
-      const manPath = path.join(searchPath, 'man' + searchDir, `${command}.${searchDir}`);
+    for (const searchDir of ['1', '8', '1.gz', '8.gz']) {
+      const manPath = path.join(searchPath, 'man' + searchDir[0], `${command}.${searchDir}`);
       const exists = fs.existsSync(manPath);
       if (exists)
         return manPath;
@@ -25,10 +25,19 @@ function descriptionOfCommand(command) {
   return descriptionOfManpage(manPathForCommand(command));
 }
 
+/**
+ * @param {string} manPath
+ * @return {string}
+ */
+function readManpage(manPath) {
+  if (!manPath.endsWith('.gz'))
+    return fs.readFileSync(manPath, 'utf8');
+  return spawnSync('gunzip', ['-c', manPath]).stdout.toString();
+}
 function descriptionOfManpage(manPath) {
   if (!manPath)
     return null;
-  const lines = fs.readFileSync(manPath, 'utf8').split('\n');
+  const lines = readManpage(manPath).split('\n');
   if (lines.length < 10) {
     for (const line of lines) {
       const match = /^.so (.*)$/i.exec(line);
