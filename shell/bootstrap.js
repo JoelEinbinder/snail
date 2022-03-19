@@ -65,13 +65,17 @@ global.bootstrap = (args) => {
     shells.set(id, shell);
     let waitForDoneCallback;
     const waitForDonePromise = new Promise(x => waitForDoneCallback = x);
+    let last = '';
     const disposeDataListener = shell.onData(d => {
       let data = d.toString();
-      if (data.slice(data.length - magicString.length).toString() === magicString) {
+      if ((last + data).slice(last.length + data.length - magicString.length).toString() === magicString) {
         data = data.slice(0, -magicString.length);
+        if (data)
+          notify('data', {id, data});
         waitForDoneCallback();
         return;
       }
+      last = (last + data).slice(-magicString.length);
       notify('data', {id, data});
     });
     /** @type {{exitCode: number, died?: boolean, signal?: number, changes?: Changes}} */
