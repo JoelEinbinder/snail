@@ -31,7 +31,7 @@ async function runCommand(command, magicToken) {
   const c = await closePromise;
   process.exitCode = c;
   if (magicToken) {
-    const magicString = `\x33[JOELMAGIC${magicToken}]\n`;
+    const magicString = `\x1B[JOELMAGIC${magicToken}]\n`;
     process.stdout.write(magicString);
   }
   return {exitCode: c, changes: getAndResetChanges()};

@@ -37,7 +37,7 @@ global.bootstrap = (args) => {
   let freeShell = null;
   global.pty = async function(command) {
     const magicToken = String(Math.random());
-    const magicString = `\x33[JOELMAGIC${magicToken}]\r\n`;
+    const magicString = `\x1B[JOELMAGIC${magicToken}]\r\n`;
     let env = {...process.env};
     let cwd = process.cwd();
     const id = ++shellId;
@@ -70,15 +70,19 @@ global.bootstrap = (args) => {
       let data = last + d.toString();
       if (data.slice(data.length - magicString.length).toString() === magicString) {
         data = data.slice(0, -magicString.length);
-        if (data)
+        if (data) {
           notify('data', {id, data});
+          last = '';
+        }
         waitForDoneCallback();
         return;
       }
       const magicMaybeStart = data.lastIndexOf(magicString[0]);
-      if (magicString.startsWith(data.slice(magicMaybeStart))) {
+      if (magicMaybeStart !== -1 && magicString.startsWith(data.slice(magicMaybeStart))) {
         last = data.slice(magicMaybeStart);
         data = data.slice(0, magicMaybeStart);
+      } else {
+        last = '';
       }
       if (data)
         notify('data', {id, data});
