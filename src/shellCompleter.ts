@@ -66,7 +66,6 @@ async function envCompleter(shell: Shell, line: string): Promise<{anchor: number
   if (!/^\$\w*$/.test(line.slice(anchor)))
     return null;
   const envVars: {[key: string]: string} = JSON.parse(await shell.cachedEvaluation('__environment_variables'));
-  console.log(envVars)
   return {
     anchor,
     suggestions: Object.entries(envVars).map(([key, value]) => ({
