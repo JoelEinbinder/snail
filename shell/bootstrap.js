@@ -13,6 +13,7 @@ getPort().then(port => {
  * cwd?: string,
  * nod?: string[],
  * ssh?: string,
+ * code?: string,
  * exit?: number,
  * }} Changes
  */
@@ -128,6 +129,8 @@ global.bootstrap = (args) => {
         notify('nod', changes.nod);
       if (changes.ssh)
         notify('ssh', changes.ssh);
+      if (changes.code)
+        notify('code', changes.code);
       if (changes.exit !== undefined) {
         process.exit(changes.exit);
       }

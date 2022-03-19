@@ -10,6 +10,7 @@ const path = require('path');
  * cwd?: string,
  * nod?: string[],
  * ssh?: string,
+ * code?: string,
  * exit?: number,
  * }}
  */
@@ -83,12 +84,21 @@ const builtins = {
         return 0;
     },
     ssh2: (args, stdout, stderr) => {
-        if (args.length !== 1 || args[0].startsWith('-')) {
+        if (args.length !== 1 || args[0].startsWith('-'))
             return 'pass';
-        }
         if (!changes)
             changes = {};
         changes.ssh = args[0];
+        return Promise.resolve(0);
+    },
+    code: (args, stdout, stderr) => {
+        if (!('SSH_CONNECTION' in process.env || 'SSH_CLIENT' in process.env))
+            return 'pass';
+        if (args.length !== 1 || args[0].startsWith('-'))
+            return 'pass';
+        if (!changes)
+            changes = {};
+        changes.code = args[0];
         return Promise.resolve(0);
     },
     exit: async (args, stdout, stderr) => {

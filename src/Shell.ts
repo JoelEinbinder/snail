@@ -186,7 +186,21 @@ export class Shell {
         this._lockPrompt();
         await this._setupConnection([], sshAddress);
         this._unlockPrompt();
-      }
+      },
+      code: async (file: string) => {
+        let code;
+        if (sshAddress)
+          code = `code --remote ssh-remote+${sshAddress} ${JSON.stringify(file)}`;
+        else
+          code = `code ${JSON.stringify(file)}`;
+        await window.electronAPI.sendMessage({
+          method: 'evaluate',
+          params: {
+            shellId: this._connectionToShellId.get(this._connections[0]),
+            code,
+          },
+        });
+      },
     }
     connection.on('Runtime.bindingCalled', message => {
       if (message.name !== "magic_binding")
