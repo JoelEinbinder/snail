@@ -98,7 +98,7 @@ const builtins = {
             return 'pass';
         if (!changes)
             changes = {};
-        changes.code = args[0];
+        changes.code = path.resolve(process.cwd(), args[0]);
         return Promise.resolve(0);
     },
     exit: async (args, stdout, stderr) => {

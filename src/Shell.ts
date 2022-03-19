@@ -190,9 +190,9 @@ export class Shell {
       code: async (file: string) => {
         let code;
         if (sshAddress)
-          code = `code --remote ssh-remote+${sshAddress} ${JSON.stringify(file)}`;
+          code = `code --remote 'ssh-remote+${sshAddress}' '${file}'`;
         else
-          code = `code ${JSON.stringify(file)}`;
+          code = `code '${file}'`;
         await window.electronAPI.sendMessage({
           method: 'evaluate',
           params: {
