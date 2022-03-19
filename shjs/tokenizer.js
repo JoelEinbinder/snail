@@ -20,7 +20,7 @@ function tokenize(code) {
     let tokenStart = 0;
     let couldBeOperator = true;
     let i = 0;
-    const metaChars = new Set('&|;()<>*');
+    const metaChars = new Set('&|()<>*');
     const operators = new Set([
         '&',
         '&&',
@@ -28,10 +28,10 @@ function tokenize(code) {
         '||',
         ';',
         '*'
-    ])
+    ]);
     for (; i < code.length; i++) {
         const char = code[i];
-        const isSpace = ' \t\n'.includes(char);
+        const isSpace = ' \t'.includes(char);
         if (inOperator) {
             inOperator = false;
             if (operators.has(value + char)) {
@@ -85,6 +85,8 @@ function tokenize(code) {
                 pushToken();
             value += char;
             inSpace = true;
+        } else if (char === ';' || char === '\n') {
+            break;
         } else if (metaChars.has(char)) {
             pushToken();
             value += char;
@@ -94,7 +96,7 @@ function tokenize(code) {
         }
     }
     pushToken();
-    return tokens;
+    return {tokens, raw: code.substring(0, i)};
     function pushToken() {
         if (!value && tokenStart >= i) {
             inSpace = false;

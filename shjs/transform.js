@@ -26,8 +26,8 @@ const MyParser = Parser.extend(
           if (this.type.label.length === 1 && ',=+-:('.includes(this.type.label))
             return null;
         }
-        const out = /[;\n]/.exec(this.input.slice(this.start)) || {index: this.input.length};
-        const candidate = this.input.slice(this.start, this.start + out.index);
+        const {tokens, raw} = tokenize(this.input.slice(this.start));
+        const candidate = raw;
         if (candidate.startsWith('/')) {
           // TODO allow regex
           return candidate;

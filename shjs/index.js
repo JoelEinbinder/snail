@@ -10,12 +10,12 @@ module.exports = {
    * @param {import('stream').Readable=} stdin
    */
   execute(command, stdout = process.stdout, stderr = process.stderr, stdin = process.stdin) {
-    const tokens = tokenize(command);
+    const {tokens} = tokenize(command);
     const ast = parse(tokens);
     return execute(ast, stdout, stderr, stdin);
   },
   getResult(command) {
-    const tokens = tokenize(command);
+    const {tokens} = tokenize(command);
     const ast = parse(tokens);
     return getResult(ast);
   },

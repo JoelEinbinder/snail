@@ -128,7 +128,7 @@ describe('runner', () => {
 describe('tokenizer', () => {
     const {tokenize} = require('./tokenizer');
     it('should split arguments', () => {
-        expect(tokenize('foo bar  baz')).toEqual([
+        expect(tokenize('foo bar  baz').tokens).toEqual([
             {type: 'word', value: 'foo'},
             {type: 'space', value: ' '},
             {type: 'word', value: 'bar'},
@@ -137,7 +137,7 @@ describe('tokenizer', () => {
         ]);
     });
     it('should detect a pipe', () => {
-        expect(tokenize('foo | bar')).toEqual([
+        expect(tokenize('foo | bar').tokens).toEqual([
             {type: 'word', value: 'foo'},
             {type: 'space', value: ' '},
             {type: 'operator', value: '|'},
@@ -146,35 +146,35 @@ describe('tokenizer', () => {
         ]);
     });
     it('should handle double qoutes', () => {
-        expect(tokenize('foo "bar baz"')).toEqual([
+        expect(tokenize('foo "bar baz"').tokens).toEqual([
             {type: 'word', value: 'foo'},
             {type: 'space', value: ' '},
             {type: 'word', value: 'bar baz'},
         ]);
     });
     it('should handle single qoutes', () => {
-        expect(tokenize('foo \'bar baz\'')).toEqual([
+        expect(tokenize('foo \'bar baz\'').tokens).toEqual([
             {type: 'word', value: 'foo'},
             {type: 'space', value: ' '},
             {type: 'word', value: 'bar baz'},
         ]);
     });
     it('should handle escaped qoutes', () => {
-        expect(tokenize(`foo "bar \\'baz\\'"`)).toEqual([
+        expect(tokenize(`foo "bar \\'baz\\'"`).tokens).toEqual([
             {type: 'word', value: 'foo'},
             {type: 'space', value: ' '},
             {type: 'word', value: `bar 'baz'`},
         ]);
     });
     it('should handle escaped qoutes 2', () => {
-        expect(tokenize(`foo 'bar \\"baz\\"'"`)).toEqual([
+        expect(tokenize(`foo 'bar \\"baz\\"'"`).tokens).toEqual([
             {type: 'word', value: 'foo'},
             {type: 'space', value: ' '},
             {type: 'word', value: `bar \\"baz\\"`},
         ]);
     });
     it('should handle empty qoutes', () => {
-        expect(tokenize(`foo '' "" 'a'`)).toEqual([
+        expect(tokenize(`foo '' "" 'a'`).tokens).toEqual([
             {type: 'word', value: 'foo'},
             {type: 'space', value: ' '},
             {type: 'word', value: ''},
@@ -184,20 +184,38 @@ describe('tokenizer', () => {
             {type: 'word', value: 'a'},
         ]);
     });
+    it('return correct raw', () => {
+        const {raw, tokens} = tokenize(`foo bar`);
+        expect(raw).toEqual('foo bar');
+        expect(tokens).toEqual([
+            {type: 'word', value: 'foo'},
+            {type: 'space', value: ' '},
+            {type: 'word', value: 'bar'},
+        ]);
+    });
+    it('should semi colons in quotes but not out of quotes', () => {
+        const {raw, tokens} = tokenize(`foo "1;"; 2; 3;`);
+        expect(raw).toEqual('foo "1;"');
+        expect(tokens).toEqual([
+            {type: 'word', value: 'foo'},
+            {type: 'space', value: ' '},
+            {type: 'word', value: '1;'},
+        ]);
+    });
 });
 
 describe('parser', () => {
     const {parse} = require('./parser');
     const {tokenize} = require('./tokenizer');
     it('should do a simple command', () => {
-        const tokens = tokenize('foo bar baz');
+        const {tokens} = tokenize('foo bar baz');
         expect(parse(tokens)).toEqual({
             executable: 'foo',
             args: ['bar', 'baz']
         });
     });
     it('should do a pipe command', () => {
-        const tokens = tokenize('foo bar baz | grep "woo"');
+        const {tokens} = tokenize('foo bar baz | grep "woo"');
         expect(parse(tokens)).toEqual({
             main: {
                 executable: 'foo',
@@ -210,7 +228,7 @@ describe('parser', () => {
         });
     });
     it('should do a pipe command with a pipe', () => {
-        const tokens = tokenize('foo bar baz | grep "woo" | grep "zoo"');
+        const {tokens} = tokenize('foo bar baz | grep "woo" | grep "zoo"');
         expect(parse(tokens)).toEqual({
             main: {
                 executable: 'foo',
@@ -229,7 +247,7 @@ describe('parser', () => {
         });
     });
     it('should do an and', () => {
-        const tokens = tokenize('foo bar baz && man "woo"');
+        const {tokens} = tokenize('foo bar baz && man "woo"');
         expect(parse(tokens)).toEqual({
             type: 'and',
             left: {
@@ -243,7 +261,7 @@ describe('parser', () => {
         });
     });
     it('should do an or', () => {
-        const tokens = tokenize('foo bar baz || man "woo"');
+        const {tokens} = tokenize('foo bar baz || man "woo"');
         expect(parse(tokens)).toEqual({
             type: 'or',
             left: {
@@ -305,9 +323,19 @@ describe('transform', () => {
         expect(transformCode(code)).toEqual(`await sh("cd foo"); await sh("cd bar");
             await sh("nano")`);
     });
+    it('should transform multiple statements on two lines', () => {
+        const code = `foo bar
+bar foo`;
+        expect(transformCode(code)).toEqual(`await sh("foo bar")
+await sh("bar foo")`);
+    });
     it('should transform export', () => {
         const code = `export FOO=123`;
         expect(transformCode(code)).toEqual(`await sh("export FOO=123")`);
+    });
+    it('should transform with semi', () => {
+        const code = `foo "1;"`;
+        expect(transformCode(code)).toEqual(`await sh("foo \\"1;\\"")`);
     });
     it('should transform one-line if', () => {
         const code = `if (true) echo 123`;
