@@ -5,10 +5,17 @@ const { PipeTransport } = require('../protocol/pipeTransport');
 const { RPC } = require('../protocol/rpc');
 
 class Shell {
-  constructor() {
-    this.process = child_process.spawn('/usr/local/bin/node', [path.join(__dirname, 'worker.js')], {
-      stdio: ['pipe', 'pipe', 'inherit'],
-    });
+  /** @param {string=} sshAddress */
+  constructor(sshAddress) {
+    if (sshAddress) {
+      this.process = child_process.spawn('ssh', [sshAddress, 'node ~/gap-year/shell/worker.js'], {
+        stdio: ['pipe', 'pipe', 'inherit'],
+      });
+    } else {
+      this.process = child_process.spawn('/usr/local/bin/node', [path.join(__dirname, 'worker.js')], {
+        stdio: ['pipe', 'pipe', 'inherit'],
+      });
+    }
     const transport = new PipeTransport(this.process.stdin, this.process.stdout);
     let urlCallback;
     this.urlPromise = new Promise(resolve => {

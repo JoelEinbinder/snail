@@ -20,16 +20,49 @@ async function waitForURL(child) {
   }
 }
 
-async function spawnJSProcess(cwd) {
-  const child = spawn('/usr/local/bin/node', ['-e', `
-    require(${JSON.stringify(path.join(__dirname, 'bootstrap.js'))});
-  `], {
+async function spawnJSProcess(cwd, sshAddress) {
+  if (sshAddress) {
+    /** @type {{send: (message:string) => void, close: () => void, onmessage?: (event: {data: string}, onopen?: () => void) => void}} */ 
+    const socket = {
+      send(message) {
+        rpc.notify('message', message);
+      },
+      close() {
+        child.kill();
+      },
+      onmessage: undefined
+    };
+    const child = spawn('ssh', [sshAddress, 'node ~/gap-year/shell/wsPipeWrapper.js'], {
+      stdio: ['pipe', 'pipe', 'inherit'],
+      detached: false,
+      cwd: cwd || require('os').homedir(),
+    });
+    const {RPC} = require('../protocol/rpc');
+    const {PipeTransport} = require('../protocol/pipeTransport');
+    const transport = new PipeTransport(child.stdin, child.stdout);
+    const rpc = RPC(transport, {
+      message: data => {
+        socket.onmessage && socket.onmessage({data});
+      },
+      ready: () => {
+        socket.onopen && socket.onopen();
+      }
+    });
+
+    return {child, socket};
+  }
+  if (!cwd || !require('fs').existsSync(cwd))
+    cwd = require('os').homedir();
+  const nodePath = process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node';
+  const child = spawn(nodePath, ['-e', `require(${JSON.stringify(path.join(__dirname, 'bootstrap.js'))})`], {
     stdio: 'pipe',
     detached: false,
-    cwd: cwd || require('os').homedir(),
+    cwd,
   });
   const url = await waitForURL(child);
-  return {url, child};
+  /** @type {{send: (message:string) => void, close: () => void, onmessage?: (event: {data: string}) => void, onopen?: () => void}} */ 
+  const socket = new (require('ws').WebSocket)(url);
+  return {child, socket};
 }
 
 module.exports = {spawnJSProcess};

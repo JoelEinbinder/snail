@@ -6,8 +6,16 @@ const getPort = require('get-port');
 getPort().then(port => {
   require('inspector').open(port, undefined, false);
 });
-/** @typedef {{env?: {[key: string]: string}, aliases?: {[key: string]: string[]}, cwd?: string, nod?: string[]}} Changes */
-
+/**
+ * @typedef {{
+ * env?: {[key: string]: string},
+ * aliases?: {[key: string]: string[]},
+ * cwd?: string,
+ * nod?: string[],
+ * ssh?: string,
+ * exit?: number,
+ * }} Changes
+ */
 /** @type {Map<number, (s: WebSocket) => void} */
 const resolveShellConnection = new Map();
 
@@ -36,7 +44,7 @@ global.bootstrap = (args) => {
     const url = await getServerUrl();
     /** @type {Promise<WebSocket>|WebSocket} */
     const conncectionPromise = freeShell ? freeShell.connection : new Promise(x => resolveShellConnection.set(id, x));
-    const shell = freeShell ? freeShell.shell : require('node-pty').spawn(process.execPath, [path.join(__dirname, '..', 'shjs', 'wrapper.js'), url, id], {
+    const shell = freeShell ? freeShell.shell : require('node-pty').spawn(process.execPath, [require('path').join(__dirname, '..', 'shjs', 'wrapper.js'), url, id], {
       env,
       rows,
       cols,
@@ -105,6 +113,8 @@ global.bootstrap = (args) => {
       }
       if (changes.nod)
         notify('nod', changes.nod);
+      if (changes.ssh)
+        notify('ssh', changes.ssh);
       if (changes.exit !== undefined) {
         process.exit(changes.exit);
       }

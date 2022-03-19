@@ -153,7 +153,7 @@ let lastShellId = 0;
 /** @type {Map<number, import('../shell/shell').Shell>} */
 const shells = new Map();
 let lastWebsocketId = 0;
-/** @type {Map<number, import('ws').WebSocket>} */
+/** @type {Map<number, {send: (message:string) => void, close: () => void, onmessage?: (event: {data: string}, onopen?: () => void) => void}>} */
 const websockets = new Map();
 const handler = {
   async evaluate({shellId, code}) {
@@ -165,9 +165,9 @@ const handler = {
   async env({shellId, env}) {
     return shells.get(shellId).env(env);
   },
-  async createShell(_, sender) {
+  async createShell({sshAddress}, sender) {
     const shellId = ++lastShellId;
-    const shell = new (require('../shell/shell').Shell)();
+    const shell = new (require('../shell/shell').Shell)(sshAddress);
     shells.set(shellId, shell);
     sender.on('destroyed', destroy);
     sender.on('did-navigate', destroy);
@@ -180,7 +180,7 @@ const handler = {
     }
     return {shellId};
   },
-  async createJSShell({cwd}, sender) {
+  async createJSShell({cwd, sshAddress}, sender) {
     /** @type {import('child_process').ChildProcessWithoutNullStreams} */
     let child;
     let killed = false;
@@ -195,12 +195,12 @@ const handler = {
       child?.kill();
     }
     const { spawnJSProcess } = require('../shell/spawnJSProcess');
-    const result = await spawnJSProcess(cwd);
+    const result = await spawnJSProcess(cwd, sshAddress);
     child = result.child;
     if (killed)
       child.kill();
     const socketId = ++lastWebsocketId;
-    const socket = new (require('ws').WebSocket)(result.url);
+    const socket = result.socket;
     socket.onmessage = event => {
       sender.send('message', { method: 'websocket', params: {socketId, message: event.data}});
     };

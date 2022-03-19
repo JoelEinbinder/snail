@@ -11,7 +11,7 @@ import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 import type { Suggestion } from './autocomplete';
 import { titleThrottle } from './UIThrottle';
 
-const shells = new Map<number, Shell>();
+const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
 const size = {
   rows: 0,
@@ -23,7 +23,7 @@ function updateSize() {
   const padding = PADDING / window.devicePixelRatio;
   size.cols = Math.floor((window.innerWidth - padding * 2) / width);
   size.rows = Math.floor((window.innerHeight - padding * 2) / height);
-  for (const shell of shells.values())
+  for (const shell of shells)
     shell.updateSize();
 }
 window.addEventListener('resize', updateSize);
@@ -50,20 +50,28 @@ export class Shell {
   private _connectionToName = new WeakMap<JSConnection, string>();
   private _connectionToDestroy = new WeakMap<JSConnection, (() => void)>();
   private _connectionNameEvent = new JoelEvent<string>('');
+  private _connectionToShellId = new WeakMap<JSConnection, number>();
 
   private _connectionNameElement = document.createElement('div');
-  private constructor(private _shellId: number) {
+  private constructor() {
     this._connectionNameElement.classList.add('connection-name');
     this._connectionNameEvent.on(name => {
       this._connectionNameElement.textContent = name;
     });
   }
 
-  async _setupConnection(args: string[]) {
+  async _setupConnection(args: string[], sshAddress = null) {
+    const {shellId} = await window.electronAPI.sendMessage({
+      method: 'createShell',
+      params: {
+        sshAddress,
+      }
+    });
     const {socketId} = await window.electronAPI.sendMessage({
       method: 'createJSShell',
       params: {
         cwd: this.cwd,
+        sshAddress,
       }
     });
     this._clearCache();
@@ -76,8 +84,9 @@ export class Shell {
       },
       ready: Promise.resolve(),
     });
+    this._connectionToShellId.set(connection, shellId);
     const filePath = args[0];
-    this._connectionToName.set(connection, filePath);
+    this._connectionToName.set(connection, filePath || sshAddress);
     const notify = async function(method: string, params: any) {
       await connection.send('Runtime.callFunctionOn', {
         objectId: notifyObjectId,
@@ -146,11 +155,12 @@ export class Shell {
       },
       cwd: cwd => {
         this.cwd = cwd;
-        localStorage.setItem('cwd', cwd);
+        if (this._connections[0] === connection)
+          localStorage.setItem('cwd', cwd);
         window.electronAPI.sendMessage({
           method: 'chdir',
           params: {
-            shellId: this._shellId,
+            shellId,
             dir: cwd,
           },
         });
@@ -160,14 +170,19 @@ export class Shell {
         window.electronAPI.sendMessage({
           method: 'env',
           params: {
-            shellId: this._shellId,
+            shellId,
             env,
           },
         });
       },
-      nod: async (args) => {
+      nod: async (args: string[]) => {
         this._lockPrompt();
         await this._setupConnection(args);
+        this._unlockPrompt();
+      },
+      ssh: async (sshAddress: string) => {
+        this._lockPrompt();
+        await this._setupConnection([], sshAddress);
         this._unlockPrompt();
       }
     }
@@ -242,21 +257,18 @@ export class Shell {
     }
   }
 
-  static async create(): Promise<Shell> {
-    const {shellId} = await window.electronAPI.sendMessage({
-      method: 'createShell',
-    });
-    const shell = new Shell(shellId);
-    shells.set(shellId, shell);
+  static async create(sshAddress?: string): Promise<Shell> {
+    const shell = new Shell();
+    shells.add(shell);
+    await shell._setupConnection([], sshAddress);
     await shell.updateSize();
     await window.electronAPI.sendMessage({
       method: 'chdir',
       params: {
-        shellId,
+        shellId: shell._connectionToShellId.get(shell.connection),
         dir: shell.cwd,
       },
     });
-    await shell._setupConnection([]);
     return shell;
   }
 
@@ -385,7 +397,7 @@ export class Shell {
     const result = await window.electronAPI.sendMessage({
       method: 'evaluate',
       params: {
-        shellId: this._shellId,
+        shellId: this._connectionToShellId.get(this.connection),
         code,
       },
     });
@@ -420,7 +432,9 @@ export class Shell {
     const isReady = new Promise<void>(resolve => {
       editorLine.append(CommandPrefix(this, resolve));
     });
-    titleThrottle.update(computePrettyDirName(this));
+    titleThrottle.update(computePrettyDirName(this).then(dir => {
+      return [this._connectionToName.get(this.connection), dir].filter(Boolean).join(' - ');
+    }));
     Promise.race([isReady, new Promise(x => setTimeout(x, 100))]).then(() => {
       element.style.removeProperty('opacity');
     });

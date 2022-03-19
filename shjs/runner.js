@@ -4,11 +4,18 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * @type {{env?: {[key: string]: string}, aliases?: {[key: string]: string[]}, cwd?: string, nod?: string[], exit?: number}}
+ * @type {{
+ * env?: {[key: string]: string},
+ * aliases?: {[key: string]: string[]},
+ * cwd?: string,
+ * nod?: string[],
+ * ssh?: string,
+ * exit?: number,
+ * }}
  */
 let changes = null;
 
-/** @type {Object<string, (args: string[], stdout: Writable, stderr: Writable) => Promise<number>>} */
+/** @type {Object<string, (args: string[], stdout: Writable, stderr: Writable) => Promise<number>|'pass'>} */
 const builtins = {
     cd: async (args, stdout, stderr) => {
         try {
@@ -74,6 +81,15 @@ const builtins = {
             changes = {};
         changes.nod = args;
         return 0;
+    },
+    ssh: (args, stdout, stderr) => {
+        if (args.length !== 1 || args[0].startsWith('-')) {
+            return 'pass';
+        }
+        if (!changes)
+            changes = {};
+        changes.ssh = args[0];
+        return Promise.resolve(0);
     },
     exit: async (args, stdout, stderr) => {
         if (!changes)
@@ -286,12 +302,15 @@ function execute(expression, stdout, stderr, stdin) {
             env[name] = processWord(value)[0];
         if (executable in builtins) {
             const closePromise = builtins[executable](args, stdout, stderr);
-            return {
-                closePromise,
-                stdin: new Writable({write(){}}),
-                kill: () => void 0,
+            if (closePromise !== 'pass') {
+                return {
+                    closePromise,
+                    stdin: new Writable({write(){}}),
+                    kill: () => void 0,
+                }
             }
-        } else if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
+        } 
+        if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
             return execute({executable: 'cd', args: [executable]}, stdout, stderr, stdin);
         } else {
             const child = spawn(executable, args, {
