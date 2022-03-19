@@ -82,7 +82,7 @@ const builtins = {
         changes.nod = args;
         return 0;
     },
-    ssh: (args, stdout, stderr) => {
+    ssh2: (args, stdout, stderr) => {
         if (args.length !== 1 || args[0].startsWith('-')) {
             return 'pass';
         }
