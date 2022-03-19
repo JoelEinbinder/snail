@@ -7,7 +7,7 @@ export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
   willResizeEvent = new JoelEvent<void>(undefined);
   private _editor: Editor;
-  constructor(public command: string, private _connectionName: string) {
+  constructor(public command: string, private _connectionName: string, private _sshAddress?: string) {
     this._editor = new Editor('', {
       inline: true,
       lineNumbers: false,
@@ -22,6 +22,10 @@ export class CommandBlock implements LogItem {
     });
     this._editor.value = this.command;
 
+  }
+
+  get sshAddress() {
+    return this._sshAddress;
   }
 
   addSquiggly(range: TextRange, color: string) {
@@ -73,8 +77,15 @@ export function CommandPrefix(shellOrCommand: Shell|CommandBlock, onReady = () =
       shellOrCommand.cachedEvaluation('__git_ref_name'),
       shellOrCommand.cachedEvaluation('__is_git_dirty'),
     ]);
-    const GitStatus = revName ? Ansi(75,"(", Ansi(78, revName), Ansi(214, dirtyState ? '*' : ''), ")") : '';
-    div.append(Ansi(32, prettyName), GitStatus, ' ', Ansi(105, '»'), ' ');
+    const sshAddress = shellOrCommand.sshAddress;
+    const colors = {
+      path: sshAddress? 112 : 32,
+      arrow: sshAddress ? 106 : 105,
+      paren: sshAddress ? 119 : 75,
+      gitName: sshAddress? 119 : 78,
+    }
+    const GitStatus = revName ? Ansi(colors.paren,"(", Ansi(colors.gitName, revName), Ansi(214, dirtyState ? '*' : ''), ")") : '';
+    div.append(Ansi(colors.path, prettyName), GitStatus, ' ', Ansi(colors.arrow, '»'), ' ');
     onReady();
   }
 }

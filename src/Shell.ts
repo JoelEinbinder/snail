@@ -51,6 +51,7 @@ export class Shell {
   private _connectionToDestroy = new WeakMap<JSConnection, (() => void)>();
   private _connectionNameEvent = new JoelEvent<string>('');
   private _connectionToShellId = new WeakMap<JSConnection, number>();
+  private _connectionToSSHAddress = new WeakMap<JSConnection, string>();
 
   private _connectionNameElement = document.createElement('div');
   private constructor() {
@@ -85,6 +86,7 @@ export class Shell {
       ready: Promise.resolve(),
     });
     this._connectionToShellId.set(connection, shellId);
+    this._connectionToSSHAddress.set(connection, sshAddress);
     const filePath = args[0];
     this._connectionToName.set(connection, filePath || sshAddress);
     const notify = async function(method: string, params: any) {
@@ -319,7 +321,7 @@ export class Shell {
   }
 
   async runCommand(command: string) {
-    const commandBlock = new CommandBlock(command, this._connectionNameEvent.current);
+    const commandBlock = new CommandBlock(command, this._connectionNameEvent.current, this.sshAddress);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)
@@ -420,6 +422,10 @@ export class Shell {
 
   _unlockPrompt() {
     this.promptLock.dispatch(this.promptLock.current - 1);
+  }
+
+  get sshAddress() {
+    return this._connectionToSSHAddress.get(this.connection);
   }
 
   addPrompt(container: Element, willResize: () => void) {
