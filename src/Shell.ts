@@ -433,7 +433,7 @@ export class Shell {
       editorLine.append(CommandPrefix(this, resolve));
     });
     titleThrottle.update(computePrettyDirName(this).then(dir => {
-      return [this._connectionToName.get(this.connection), dir].filter(Boolean).join(' - ');
+      return [this._connectionToName.get(this.connection), dir].filter(Boolean).join(' ');
     }));
     Promise.race([isReady, new Promise(x => setTimeout(x, 100))]).then(() => {
       element.style.removeProperty('opacity');

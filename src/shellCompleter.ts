@@ -8,6 +8,17 @@ export function registerCompleter(prefix: string, completer: ShellCompleter) {
   registry.set(prefix, completer);
 }
 
+registry.set('sudo', async (shell, line, abortSignal) => {
+  const completer = makeShellCompleter(shell);
+  const result = await completer(line.substring('sudo '.length), abortSignal);
+  if (!result)
+    return result;
+  return {
+    anchor: result.anchor + 'sudo '.length,
+    suggestions: result.suggestions,
+  };
+});
+
 export function makeShellCompleter(shell: Shell): Completer {
   return async (line: string, abortSignal: AbortSignal) => {
     const {getAutocompletePrefix} = await import('../shjs/transform');
