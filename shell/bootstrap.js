@@ -67,16 +67,21 @@ global.bootstrap = (args) => {
     const waitForDonePromise = new Promise(x => waitForDoneCallback = x);
     let last = '';
     const disposeDataListener = shell.onData(d => {
-      let data = d.toString();
-      if ((last + data).slice(last.length + data.length - magicString.length).toString() === magicString) {
+      let data = last + d.toString();
+      if (data.slice(data.length - magicString.length).toString() === magicString) {
         data = data.slice(0, -magicString.length);
         if (data)
           notify('data', {id, data});
         waitForDoneCallback();
         return;
       }
-      last = (last + data).slice(-magicString.length);
-      notify('data', {id, data});
+      const magicMaybeStart = data.lastIndexOf(magicString[0]);
+      if (magicString.startsWith(data.slice(magicMaybeStart))) {
+        last = data.slice(magicMaybeStart);
+        data = data.slice(0, magicMaybeStart);
+      }
+      if (data)
+        notify('data', {id, data});
     });
     /** @type {{exitCode: number, died?: boolean, signal?: number, changes?: Changes}} */
     const returnValue = await Promise.race([
