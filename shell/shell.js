@@ -8,7 +8,7 @@ class Shell {
   /** @param {string=} sshAddress */
   constructor(sshAddress) {
     if (sshAddress) {
-      this.process = child_process.spawn('ssh', [sshAddress, 'node ~/gap-year/shell/worker.js'], {
+      this.process = child_process.spawn('ssh', [sshAddress, 'PATH=$PATH:/usr/local/bin node ~/gap-year/shell/worker.js'], {
         stdio: ['pipe', 'pipe', 'inherit'],
       });
     } else {

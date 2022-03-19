@@ -32,7 +32,7 @@ async function spawnJSProcess(cwd, sshAddress) {
       },
       onmessage: undefined
     };
-    const child = spawn('ssh', [sshAddress, 'node ~/gap-year/shell/wsPipeWrapper.js'], {
+    const child = spawn('ssh', [sshAddress, 'PATH=$PATH:/usr/local/bin node ~/gap-year/shell/wsPipeWrapper.js'], {
       stdio: ['pipe', 'pipe', 'inherit'],
       detached: false,
       cwd: cwd || require('os').homedir(),
