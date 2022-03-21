@@ -6,6 +6,7 @@ import { makeShellCompleter } from "./shellCompleter";
 import './completions/git';
 import './completions/npx';
 import './completions/npm';
+import './completions/apt';
 import { historyPromise } from "./history";
 import { setSelection } from "./selection";
 

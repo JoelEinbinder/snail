@@ -14,6 +14,7 @@ registerCompleter('git', async (shell, line, abortSignal) => {
         suggestions: branches.map(text => ({text})),
       };
     }
+    return null;
   }
   
   return {
