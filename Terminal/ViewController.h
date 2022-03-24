@@ -6,9 +6,13 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <WebKit/WebKit.h>
+#import "NodeTalker.h"
 
-@interface ViewController : NSViewController
-
+@interface ViewController : NSViewController<WKUIDelegate, WKScriptMessageHandler> {
+    WKWebView* webView;
+    NodeTalker* nodeTalker;
+}
 
 @end
 

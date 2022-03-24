@@ -15,6 +15,8 @@
 		F0EA447727EC0C4E0085A081 /* TerminalTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA447627EC0C4E0085A081 /* TerminalTests.m */; };
 		F0EA448127EC0C4E0085A081 /* TerminalUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA448027EC0C4E0085A081 /* TerminalUITests.m */; };
 		F0EA448327EC0C4E0085A081 /* TerminalUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA448227EC0C4E0085A081 /* TerminalUITestsLaunchTests.m */; };
+		F0EA449127EC12740085A081 /* NSObject+KVOBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA449027EC12740085A081 /* NSObject+KVOBlock.m */; };
+		F0EA449427EC2C1E0085A081 /* NodeTalker.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA449327EC2C1E0085A081 /* NodeTalker.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +51,10 @@
 		F0EA447C27EC0C4E0085A081 /* TerminalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TerminalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0EA448027EC0C4E0085A081 /* TerminalUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TerminalUITests.m; sourceTree = "<group>"; };
 		F0EA448227EC0C4E0085A081 /* TerminalUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TerminalUITestsLaunchTests.m; sourceTree = "<group>"; };
+		F0EA448F27EC124B0085A081 /* NSObject+KVOBlock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+KVOBlock.h"; sourceTree = "<group>"; };
+		F0EA449027EC12740085A081 /* NSObject+KVOBlock.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+KVOBlock.m"; sourceTree = "<group>"; };
+		F0EA449227EC2C1E0085A081 /* NodeTalker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NodeTalker.h; sourceTree = "<group>"; };
+		F0EA449327EC2C1E0085A081 /* NodeTalker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NodeTalker.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,7 +108,11 @@
 				F0EA446027EC0C4A0085A081 /* AppDelegate.h */,
 				F0EA446127EC0C4A0085A081 /* AppDelegate.m */,
 				F0EA446327EC0C4A0085A081 /* ViewController.h */,
+				F0EA449027EC12740085A081 /* NSObject+KVOBlock.m */,
+				F0EA448F27EC124B0085A081 /* NSObject+KVOBlock.h */,
 				F0EA446427EC0C4A0085A081 /* ViewController.m */,
+				F0EA449227EC2C1E0085A081 /* NodeTalker.h */,
+				F0EA449327EC2C1E0085A081 /* NodeTalker.m */,
 				F0EA446627EC0C4D0085A081 /* Assets.xcassets */,
 				F0EA446827EC0C4D0085A081 /* Main.storyboard */,
 				F0EA446B27EC0C4D0085A081 /* main.m */,
@@ -257,6 +267,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F0EA449427EC2C1E0085A081 /* NodeTalker.m in Sources */,
+				F0EA449127EC12740085A081 /* NSObject+KVOBlock.m in Sources */,
 				F0EA446527EC0C4A0085A081 /* ViewController.m in Sources */,
 				F0EA446C27EC0C4D0085A081 /* main.m in Sources */,
 				F0EA446227EC0C4A0085A081 /* AppDelegate.m in Sources */,
