@@ -73,11 +73,11 @@ const handler = {
   },
   async getHistory() {
     const util = require('util');
-    const database = getDatabase();
+    const database = await getDatabase();
     return await util.promisify(database.all.bind(database))('SELECT command FROM history ORDER BY command_id ASC');
   },
   async addHistory(item) {
-    const database = getDatabase();
+    const database = await getDatabase();
     const runResult = await new Promise((res, rej) => {
       database.run(`INSERT INTO history (command, start) VALUES (?, ?)`, [item.command, item.start], function (err) {
         if (err)
@@ -89,7 +89,7 @@ const handler = {
     return runResult.lastID;;
   },
   async updateHistory({id, col, value}) {
-    const database = getDatabase();
+    const database = await getDatabase();
     const runResult = await new Promise((res, rej) => {
       database.run(`UPDATE history SET '${col}' = ? WHERE command_id = ?`, [value, id], function (err) {
         if (err)
@@ -103,13 +103,29 @@ const handler = {
 }
 
 let database;
-/** @return {import('sqlite3').Database} */
-function getDatabase() {
+/** @return {Promise<import('sqlite3').Database>} */
+async function getDatabase() {
   if (database)
     return database;
   const path = require('path');
   const sqlite3 = require('sqlite3');
   database = new sqlite3.Database(path.join(__dirname, '..', 'history.sqlite3'));
+  await new Promise(x => database.run(`CREATE TABLE IF NOT EXISTS history (
+    command_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    start INTEGER,
+    end INTEGER,
+    command TEXT,
+    output TEXT,
+    git_hash TEXT,
+    git_branch TEXT,
+    git_dirty TEXT,
+    git_diff TEXT,
+    pwd TEXT,
+    home TEXT,
+    username TEXT,
+    hostname TEXT,
+    exit_code INTEGER
+  )`, x));
   return database;
 }
 
