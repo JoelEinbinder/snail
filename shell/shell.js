@@ -12,7 +12,8 @@ class Shell {
         stdio: ['pipe', 'pipe', 'inherit'],
       });
     } else {
-      this.process = child_process.spawn('/usr/local/bin/node', [path.join(__dirname, 'worker.js')], {
+      const nodePath = process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node';
+      this.process = child_process.spawn(nodePath, [path.join(__dirname, 'worker.js')], {
         stdio: ['pipe', 'pipe', 'inherit'],
       });
     }
