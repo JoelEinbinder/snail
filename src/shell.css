@@ -47,3 +47,12 @@ body.fullscreen-entry {
   -webkit-backdrop-filter: blur(15px);
   background: rgb(0,0,0,0.5);
 }
+
+body.vscode-dark .fullscreen-element {
+  backdrop-filter: initial;
+  -webkit-backdrop-filter: initial;
+  background: none;
+}
+body.vscode-dark.fullscreen-entry > :not(.fullscreen-element){
+  display: none;
+}

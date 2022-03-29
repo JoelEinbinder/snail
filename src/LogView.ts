@@ -5,7 +5,7 @@ import './shell.css';
 export class LogView {
   private _element = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
-  private _promptElement: Element;
+  private _promptElement: HTMLElement;
   private _lockingScroll = false;
   private _undoFullscreen: () => void = null;
   constructor(private _shell: Shell, private _container: HTMLElement) {
@@ -13,6 +13,18 @@ export class LogView {
     this._fullscreenElement.classList.add('fullscreen-element');
     this._shell.fullscreenItem.on(() => this._updateFullscreen());
     this._container.appendChild(this._element);
+    this._container.addEventListener('keydown', e => {
+      if (!this._promptElement)
+        return;
+      if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey)
+        return;
+      const element = e.target as HTMLElement;
+      if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT' || element.isContentEditable)
+        return;
+      if (e.defaultPrevented)
+        return;
+      this._promptElement.focus();
+    })
     this._element.style.overflowY = 'auto';
     this._element.style.overflowX = 'hidden';
     this._element.style.position = 'absolute';

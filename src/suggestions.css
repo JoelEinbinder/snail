@@ -16,9 +16,14 @@
     text-overflow: ellipsis;
     height: fit-content;
 }
+body.vscode-dark .suggestions {
+    backdrop-filter: initial;
+    -webkit-backdrop-filter: initial;
+}
 body.glass-pane .suggestions {
     background: rgba(0, 0, 0);
     backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 .suggestion {
     padding: 0 2px;

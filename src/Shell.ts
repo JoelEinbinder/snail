@@ -448,6 +448,7 @@ export class Shell {
 
   addPrompt(container: Element, willResize: () => void) {
     const element = document.createElement('div');
+    element.tabIndex = -1;
     element.style.opacity = '0';
     element.classList.add('prompt');
     const editorLine = document.createElement('div');
@@ -504,6 +505,7 @@ export class Shell {
     container.appendChild(element);
     editor.layout();
     editor.focus();
+    element.onfocus = () => editor.focus();
 
     const belowPrompt = document.createElement('div');
     belowPrompt.classList.add('below-prompt');
