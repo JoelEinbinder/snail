@@ -14,6 +14,7 @@ export class LogView {
     this._shell.fullscreenItem.on(() => this._updateFullscreen());
     this._container.appendChild(this._element);
     this._element.style.overflowY = 'auto';
+    this._element.style.overflowX = 'hidden';
     this._element.style.position = 'absolute';
     this._element.style.inset = '0';
     this._element.style.padding = '4px';

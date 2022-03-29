@@ -1,0 +1,57 @@
+{
+  "name": "joel-terminal",
+	"displayName": "joel-terminal",
+	"description": "Joel's Terminal",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.65.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+        "onCommand:joel-terminal.helloWorld",
+				"onView:joel-terminal.terminal"
+	],
+	"main": "./extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "joel-terminal.helloWorld",
+				"title": "Hello World"
+			}
+		],
+		"views": {
+			"joel-terminal-container": [
+				{
+					"id": "joel-terminal.terminal",
+					"type": "webview",
+					"name": "Joel Terminal"
+				}
+			]
+		},
+		"viewsContainers": {
+			"panel": [
+				{
+					"id": "joel-terminal-container",
+					"icon": "none",
+					"title": "Joel Terminal"
+				}
+			]
+		}
+	},
+	"scripts": {
+	},
+	"devDependencies": {
+        "@types/vscode": "^1.65.0",
+        "@types/glob": "^7.2.0",
+        "@types/mocha": "^9.1.0",
+        "@types/node": "14.x",
+        "eslint": "^8.11.0",
+        "glob": "^7.2.0",
+        "mocha": "^9.2.2",
+        "typescript": "^4.5.5",
+        "@vscode/test-electron": "^2.1.3"
+    }
+
+}

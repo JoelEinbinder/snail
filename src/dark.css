@@ -285,6 +285,10 @@ body {
   font-size: 10px;
   margin: 0;
 }
+body.vscode-dark {
+  background: none;
+  padding: 0;
+}
 body.glass-pane {
   padding: 0;
   background: none;

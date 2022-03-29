@@ -30,3 +30,4 @@ transport.onmessage = async (message) => {
   if (id)
     transport.send({error: String(error), id});
 };
+transport.send('ready');
