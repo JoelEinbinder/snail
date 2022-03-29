@@ -22,6 +22,8 @@ function activate(context) {
 				enableCommandUris: true,
 			};
 			const {PipeTransport} = require(path.join(os.homedir(), '/gap-year/protocol/pipeTransport'));
+			let ready = false;
+			let buffer = [];
 			const child = spawn('node', [require.resolve(path.join(os.homedir(), '/gap-year/node_host/'))], {
 				stdio: ['pipe', 'pipe', 'inherit'],
 			});
@@ -34,14 +36,24 @@ function activate(context) {
 					<script>localStorage.setItem("cwd", ${JSON.stringify(cwd)})</script>
 				</head>
 				<body>
-					<script src="http://localhost/gap-year/main.bundle.js" />
+					<script src="http://localhost/gap-year/main.bundle.js"></script>
 				</body>`;
 			webview.webview.onDidReceiveMessage(message => {
 				if (message.method === 'beep')
 					return;
-				pipe.send(message);
+				if (ready)
+					pipe.send(message);
+				else
+					buffer.push(message);
 			});
 			pipe.onmessage = message => {
+				if (message === 'ready') {
+					ready = true;
+					buffer = [];
+					for (const message of buffer)
+						pipe.send(message);
+					return;	
+				}
 				webview.webview.postMessage(message);
 			};
 			webview.onDidDispose(() => {

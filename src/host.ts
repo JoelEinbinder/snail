@@ -14,7 +14,9 @@ function makeHostAPI(): IHostAPI {
   }
   if ('acquireVsCodeApi' in window) {
     const api = window['acquireVsCodeApi']();
-    const {host, callback} = hostApiHelper(message => api.postMessage(message));
+    const {host, callback} = hostApiHelper(message => {
+      api.postMessage(message);
+    });
     window.addEventListener('message', event => {
       callback(event.data);
     });
