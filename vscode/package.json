@@ -1,8 +1,14 @@
 {
   "name": "joel-terminal",
 	"displayName": "joel-terminal",
+	"license": "Don't use my code",
+	"author": "Joel Einbinder",
 	"description": "Joel's Terminal",
-	"version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JoelEinbinder/gap-year.git"
+  },
+	"version": "0.1.0",
 	"engines": {
 		"vscode": "^1.65.0"
 	},
@@ -10,7 +16,6 @@
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:joel-terminal.helloWorld",
 				"onView:joel-terminal.terminal"
 	],
 	"main": "./extension.js",
