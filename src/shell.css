@@ -44,5 +44,6 @@ body.fullscreen-entry {
 
 .fullscreen-element {
   backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   background: rgb(0,0,0,0.5);
 }

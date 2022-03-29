@@ -1,11 +1,12 @@
 import { Terminal, IDisposable } from "xterm";
+import { host } from "./host";
 import { JoelEvent } from "./JoelEvent";
 import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
 import { titleThrottle } from "./UIThrottle";
 
 let lastTerminalBlock: TerminalBlock = null;
-window.electronAPI.onEvent('data', ({shellId, data}) => {
+host.onEvent('data', ({shellId, data}) => {
   // TODO have this say block ID, not shell ID. and then find the correct one.
   if (lastTerminalBlock)
     lastTerminalBlock.addData(data);
@@ -61,6 +62,7 @@ export class TerminalBlock implements LogItem {
         selection: '#525252',
         cursor: '#606060',
       },
+      fontWeightBold: 'normal',
       allowTransparency: true,
       rendererType: 'canvas',
     });

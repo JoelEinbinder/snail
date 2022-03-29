@@ -1,3 +1,5 @@
+import { host } from "./host";
+
 // TODO use https://www.electronjs.org/docs/latest/api/structures/display
 const nativeDPI = 2;
 class ExternalGlassPane {
@@ -50,7 +52,7 @@ class ExternalGlassPane {
       return;
     delete this.window;
     this.observer.unobserve(this.element);
-    window.electronAPI.sendMessage({
+    host.sendMessage({
       method: 'closeAllPopups',
       params: {}
     })
@@ -107,5 +109,5 @@ class InPageGlassPane {
   }
 }
 
-export const GlassPlane = window.electronAPI ? ExternalGlassPane : InPageGlassPane;
+export const GlassPlane = 'electronAPI' in window ? ExternalGlassPane : InPageGlassPane;
 export type GlassPlane = ExternalGlassPane | InPageGlassPane;

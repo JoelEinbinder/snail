@@ -10,6 +10,7 @@ import { JSBlock, JSLogBlock, renderRemoteObjectOneLine } from './JSBlock';
 import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 import type { Suggestion } from './autocomplete';
 import { titleThrottle } from './UIThrottle';
+import { host } from './host';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
@@ -29,7 +30,7 @@ function updateSize() {
 window.addEventListener('resize', updateSize);
 updateSize();
 
-window.electronAPI.onEvent('websocket', ({socketId, message}) => {
+host.onEvent('websocket', ({socketId, message}) => {
   socketListeners.get(socketId)(message);
 });
 
@@ -62,13 +63,13 @@ export class Shell {
   }
 
   async _setupConnection(args: string[], sshAddress = null) {
-    const {shellId} = await window.electronAPI.sendMessage({
+    const {shellId} = await host.sendMessage({
       method: 'createShell',
       params: {
         sshAddress,
       }
     });
-    const {socketId} = await window.electronAPI.sendMessage({
+    const {socketId} = await host.sendMessage({
       method: 'createJSShell',
       params: {
         cwd: this.cwd,
@@ -81,7 +82,7 @@ export class Shell {
         socketListeners.set(socketId, callback);
       },
       send: message => {
-        window.electronAPI.notify({method: 'sendMessageToWebSocket', params: {socketId, message}});
+        host.notify({method: 'sendMessageToWebSocket', params: {socketId, message}});
       },
       ready: Promise.resolve(),
     });
@@ -159,7 +160,7 @@ export class Shell {
         this.cwd = cwd;
         if (this._connections[0] === connection)
           localStorage.setItem('cwd', cwd);
-        window.electronAPI.sendMessage({
+        host.sendMessage({
           method: 'chdir',
           params: {
             shellId,
@@ -169,7 +170,7 @@ export class Shell {
       },
       aliases: () => {},
       env: env => {
-        window.electronAPI.sendMessage({
+        host.sendMessage({
           method: 'env',
           params: {
             shellId,
@@ -193,7 +194,7 @@ export class Shell {
           code = `code --remote 'ssh-remote+${sshAddress}' '${file}'`;
         else
           code = `code '${file}'`;
-        await window.electronAPI.sendMessage({
+        await host.sendMessage({
           method: 'evaluate',
           params: {
             shellId: this._connectionToShellId.get(this._connections[0]),
@@ -208,10 +209,13 @@ export class Shell {
       const {method, params} = JSON.parse(message.payload);
       handler[method](params);
     });
+    console.log('sending Runtime.enable');
     await connection.send('Runtime.enable', {});
+    console.log('got Runtime.enable callback');
     await connection.send('Runtime.addBinding', {
       name: 'magic_binding',
     });
+    console.log('got Runtime.addBinding callback');
     const {result: {objectId: notifyObjectId}} = await connection.send('Runtime.evaluate', {
       expression: `bootstrap(${JSON.stringify(args)})`,
       returnByValue: false,
@@ -226,7 +230,7 @@ export class Shell {
       if (destroyed)
         return;
       destroyed = true;
-      window.electronAPI.notify({method: 'destroyWebsocket', params: {socketId}});
+      host.notify({method: 'destroyWebsocket', params: {socketId}});
       for (const id of terminals.keys())
         handler.endTerminal({id});
       this._size.off(resize);
@@ -278,7 +282,7 @@ export class Shell {
     shells.add(shell);
     await shell._setupConnection([], sshAddress);
     await shell.updateSize();
-    await window.electronAPI.sendMessage({
+    await host.sendMessage({
       method: 'chdir',
       params: {
         shellId: shell._connectionToShellId.get(shell.connection),
@@ -410,7 +414,7 @@ export class Shell {
   }
 
   async evaluate(code: string): Promise<string> {
-    const result = await window.electronAPI.sendMessage({
+    const result = await host.sendMessage({
       method: 'evaluate',
       params: {
         shellId: this._connectionToShellId.get(this.connection),

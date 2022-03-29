@@ -4,7 +4,7 @@ const { contextBridge, ipcRenderer } = require('electron')
 const callbacks = new Map();
 let lastId = 0;
 const listeners = new Map();
-/** @type {import('../src/electronAPI').IElectronAPI} */
+/** @type {import('../src/host').IHostAPI} */
 const electronAPI = {
   sendMessage: message => {
     const id = ++lastId;

@@ -9,6 +9,7 @@ import './completions/npm';
 import './completions/apt';
 import { historyPromise } from "./history";
 import { setSelection } from "./selection";
+import { host } from "./host";
 
 export function makePromptEditor(shell: Shell) {
   const editor = new Editor('', {
@@ -83,7 +84,7 @@ async function searchHistory(current: string, prefix: string, start: number, dir
 }
 
 function beep() {
-  window.electronAPI.sendMessage({
+  host.sendMessage({
     method: 'beep',
   })
 }

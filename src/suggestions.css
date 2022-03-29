@@ -1,6 +1,7 @@
 .suggestions {
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border-radius: 3px;
     border: 1px solid var(--ansi-237);
     padding: 0;

@@ -1,9 +1,11 @@
+import { host } from "./host";
+
 type HistoryItem = {
   command: string;
   start?: number;
 }
 export const historyPromise : Promise<HistoryItem[]> = (async() => {
-  const history = await window.electronAPI.sendMessage({
+  const history = await host.sendMessage({
     method: 'getHistory',
   });
   return history;
@@ -15,7 +17,7 @@ export async function addHistory(command: string): Promise<number> {
     start: Date.now(),
   };
   (await historyPromise).push(item);
-  const id = await window.electronAPI.sendMessage({
+  const id = await host.sendMessage({
     method: 'addHistory',
     params: item,
   });
@@ -39,7 +41,7 @@ type HistoryDatabaseItem = {
   exit_code: number,
 }
 export async function updateHistory<T extends keyof HistoryDatabaseItem>(id, col: T, value: HistoryDatabaseItem[T]) {
-  await window.electronAPI.sendMessage({
+  await host.sendMessage({
     method: 'updateHistory',
     params: {
       id,
