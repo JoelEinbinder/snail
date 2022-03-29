@@ -31,15 +31,23 @@ function activate(context) {
 				enableScripts: true,
 				enableForms: true,
 				enableCommandUris: true,
-				
-			}
-			const {PipeTransport} = require('../protocol/pipeTransport');
+			};
+			const {PipeTransport} = require('/Users/joeleinbinder/gap-year/protocol/pipeTransport');
 			const {spawn} = require('child_process');
-			const child = spawn('node', [require.resolve('../node_host/')], {
+			const child = spawn('node', [require.resolve('/Users/joeleinbinder/gap-year/node_host/')], {
 				stdio: ['pipe', 'pipe', 'inherit'],
 			});
 			const pipe = new PipeTransport(child.stdin, child.stdout);
-			webview.webview.html = '<head><base href="http://localhost/gap-year/"></head><body><script src="http://localhost/gap-year/main.bundle.js" />';
+			const cwd = vscode.workspace.rootPath || require('os').homedir();
+			webview.webview.html = `
+				<!DOCTYPE html>
+				<head>
+				<base href="http://localhost/gap-year/">
+					<script>localStorage.setItem("cwd", ${JSON.stringify(cwd)})</script>
+				</head>
+				<body>
+					<script src="http://localhost/gap-year/main.bundle.js" />
+				</body>`;
 			webview.webview.onDidReceiveMessage(message => {
 				if (message.method === 'beep')
 					return;
@@ -48,6 +56,9 @@ function activate(context) {
 			pipe.onmessage = message => {
 				webview.webview.postMessage(message);
 			};
+			webview.onDidDispose(() => {
+				child.kill();
+			});
 		},
 	}, {
 		webviewOptions: {
