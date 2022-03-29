@@ -12,19 +12,21 @@ function activate(context) {
 
 	subscribe(vscode.window.registerWebviewViewProvider('joel-terminal.terminal', {
 		resolveWebviewView: (webview, cancellation) => {
+			const path = require('path');
+			const {spawn} = require('child_process');
+			const os = require('os');
 			webview.webview.cspSource;
 			webview.webview.options = {
 				enableScripts: true,
 				enableForms: true,
 				enableCommandUris: true,
 			};
-			const {PipeTransport} = require('/Users/joeleinbinder/gap-year/protocol/pipeTransport');
-			const {spawn} = require('child_process');
-			const child = spawn('node', [require.resolve('/Users/joeleinbinder/gap-year/node_host/')], {
+			const {PipeTransport} = require(path.join(os.homedir(), '/gap-year/protocol/pipeTransport'));
+			const child = spawn('node', [require.resolve(path.join(os.homedir(), '/gap-year/node_host/'))], {
 				stdio: ['pipe', 'pipe', 'inherit'],
 			});
 			const pipe = new PipeTransport(child.stdin, child.stdout);
-			const cwd = vscode.workspace.rootPath || require('os').homedir();
+			const cwd = vscode.workspace.rootPath || os.homedir();
 			webview.webview.html = `
 				<!DOCTYPE html>
 				<head>
