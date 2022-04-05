@@ -103,7 +103,7 @@ export class Shell {
       // console.timeEnd messages are sent twice
       if (message.stackTrace?.callFrames[0]?.functionName === 'timeLogImpl')
         return;
-      this.addItem(new JSLogBlock(message, connection));
+      this.addItem(new JSLogBlock(message, connection, this._size));
     });
     connection.on('Runtime.executionContextDestroyed', message => {
         if (message.executionContextId === 1)
@@ -209,13 +209,10 @@ export class Shell {
       const {method, params} = JSON.parse(message.payload);
       handler[method](params);
     });
-    console.log('sending Runtime.enable');
     await connection.send('Runtime.enable', {});
-    console.log('got Runtime.enable callback');
     await connection.send('Runtime.addBinding', {
       name: 'magic_binding',
     });
-    console.log('got Runtime.addBinding callback');
     const {result: {objectId: notifyObjectId}} = await connection.send('Runtime.evaluate', {
       expression: `bootstrap(${JSON.stringify(args)})`,
       returnByValue: false,

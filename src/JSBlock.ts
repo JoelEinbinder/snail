@@ -22,7 +22,7 @@ export class JSBlock implements LogItem {
 export class JSLogBlock implements LogItem {
   willResizeEvent = new JoelEvent(undefined);
   private _element = document.createElement('div');
-  constructor(log: Protocol.Runtime.consoleAPICalledPayload, connection: JSConnection) {
+  constructor(log: Protocol.Runtime.consoleAPICalledPayload, connection: JSConnection, size: JoelEvent<{cols: number, rows: number}>) {
     this._element.style.whiteSpace = 'pre';
     let first = true;
     for (const arg of log.args) {
@@ -33,7 +33,7 @@ export class JSLogBlock implements LogItem {
       if (arg.type === 'string')
         this._element.append(arg.value);
       else {
-        const object = renderRemoteObject(arg, connection, this.willResizeEvent, 50);
+        const object = renderRemoteObject(arg, connection, this.willResizeEvent, size.current.cols - 1);
         if (object.tagName === 'DETAILS')
           object.style.display = 'inline-block';
         this._element.append(object);
