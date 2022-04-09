@@ -48,10 +48,10 @@ const builtins = {
         }
         return 0;
     },
-    declare: async (args, stdout, stderr) => {
+    declare: (args, stdout, stderr) => {
         if (args[0] !== '-x') {
             stderr.write('declare is only supported with -x\n');
-            return 1;
+            return Promise.resolve(1);
         }
         return builtins.export(args.slice(1), stdout, stderr);
     },
@@ -105,6 +105,57 @@ const builtins = {
         if (!changes)
             changes = {};
         changes.exit = args.length ? parseInt(args[0]) : 0;
+        return 0;
+    },
+    source: async(args, stdout, stderr) => {
+        const magicKey = Math.random().toString();
+        const output = spawnSync('bash', ['-c', `env && echo '${magicKey}' && source '${args[0]}'; echo '${magicKey}'; env;`]);
+        stderr.write(output.stderr);
+        if (output.status)
+            return output.status;
+        const lines = output.stdout.toString().split('\n').map(x => x.trim()).filter(x => x);
+        const index = lines.indexOf(magicKey);
+        if (index === -1)
+            return 1;
+        const oldEnv = new Map();
+        for (const line of lines.slice(0, index)) {
+            const equals = line.indexOf('=');
+            const key = line.substring(0, equals);
+            const value = line.substring(equals + 1);
+            oldEnv.set(key, value);
+        }
+        const index2 = lines.indexOf(magicKey, index + 1);
+        if (index2 === -1)
+            return 1;
+        for (const line of lines.slice(index + 1, index2))
+            stdout.write(line + '\n');
+        const newEnv = new Map();
+        for (const line of lines.slice(index2 + 1)) {
+            const equals = line.indexOf('=');
+            const key = line.substring(0, equals);
+            const value = line.substring(equals + 1);
+            newEnv.set(key, value);
+        }
+        const added = new Map();
+        for (const [key, value] of newEnv.entries()) {
+            if (!oldEnv.has(key))
+                added.set(key, value);
+            else if (value !== oldEnv.get(key))
+                added.set(key, value);
+        }
+        for (const key of oldEnv.keys()) {
+            if (!newEnv.has(key))
+                stderr.write(`${key} was removed. Currently unsupported\n`);
+        }
+        for (const [key, value] of added.entries()) {
+            if (!changes)
+                changes = {};
+            if (!changes.env)
+                changes.env = {};
+            process.env[key] = value;
+            changes.env[key] = value;
+            stdout.write(JSON.stringify({key, value}) + '\n');
+        }
         return 0;
     },
     __git_ref_name: async (args, stdout, stderr) => {
