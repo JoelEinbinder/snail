@@ -37,6 +37,7 @@ host.onEvent('websocket', ({socketId, message}) => {
 export class Shell {
   log: LogItem[] = [];
   cwd = localStorage.getItem('cwd') || '';
+  env: {[key: string]: string} = {};
   public fullscreenItem: JoelEvent<LogItem> = new JoelEvent<LogItem>(null);
   public activeItem = new JoelEvent<LogItem>(null);
   public promptLock = new JoelEvent<number>(0);
@@ -169,7 +170,9 @@ export class Shell {
         });
       },
       aliases: () => {},
-      env: env => {
+      env: (env: {[key: string]: string}) => {
+        for (const [key, value] of Object.entries(env))
+          this.env[key] = value;
         host.sendMessage({
           method: 'env',
           params: {
@@ -272,6 +275,15 @@ export class Shell {
         });
       }
     }
+    {
+      const {result, exceptionDetails} = await connection.send('Runtime.evaluate', {
+        expression: `({env: {...process.env}, cwd: process.cwd()})`,
+        returnByValue: true
+      });
+      this.env = result.value.env;
+      this.cwd = result.value.cwd;
+    }
+
   }
 
   static async create(sshAddress?: string): Promise<Shell> {
@@ -336,7 +348,7 @@ export class Shell {
   }
 
   async runCommand(command: string) {
-    const commandBlock = new CommandBlock(command, this._connectionNameEvent.current, this.sshAddress);
+    const commandBlock = new CommandBlock(command, this._connectionNameEvent.current, {...this.env}, this.cwd, this.sshAddress);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)
@@ -454,9 +466,9 @@ export class Shell {
     const isReady = new Promise<void>(resolve => {
       editorLine.append(CommandPrefix(this, resolve));
     });
-    titleThrottle.update(computePrettyDirName(this).then(dir => {
-      return [this._connectionToName.get(this.connection), dir].filter(Boolean).join(' ');
-    }));
+    const prettyName = computePrettyDirName(this, this.cwd);
+    const title =  [this._connectionToName.get(this.connection), prettyName].filter(Boolean).join(' ');
+    titleThrottle.update(title);
     Promise.race([isReady, new Promise(x => setTimeout(x, 100))]).then(() => {
       element.style.removeProperty('opacity');
     });

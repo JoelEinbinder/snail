@@ -24,6 +24,10 @@ const builtins = {
             if (!changes)
                 changes = {};
             changes.cwd = process.cwd();
+            process.env.PWD = process.cwd();
+            if (!changes.env)
+                changes.env = {};
+            changes.env.PWD = process.cwd();
         } catch (e) {
             stderr.write(e.message + '\n');
             return 1;

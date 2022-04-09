@@ -7,7 +7,11 @@ export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
   willResizeEvent = new JoelEvent<void>(undefined);
   private _editor: Editor;
-  constructor(public command: string, private _connectionName: string, private _sshAddress?: string) {
+  constructor(public command: string,
+    private _connectionName: string,
+    public env: {[key: string]: string},
+    public cwd: string,
+    private _sshAddress?: string) {
     this._editor = new Editor('', {
       inline: true,
       lineNumbers: false,
@@ -72,30 +76,27 @@ export function CommandPrefix(shellOrCommand: Shell|CommandBlock, onReady = () =
   go();
   return div;
   async function go() {
-    const [prettyName, revName, dirtyState] = await Promise.all([
-      computePrettyDirName(shellOrCommand),
+    const [revName, dirtyState] = await Promise.all([
       shellOrCommand.cachedEvaluation('__git_ref_name'),
       shellOrCommand.cachedEvaluation('__is_git_dirty'),
     ]);
+    const prettyName = computePrettyDirName(shellOrCommand, shellOrCommand.cwd);
     const sshAddress = shellOrCommand.sshAddress;
     const colors = {
       path: sshAddress? 112 : 32,
       arrow: sshAddress ? 106 : 105,
       paren: sshAddress ? 119 : 75,
       gitName: sshAddress? 119 : 78,
-    }
+    };
     const GitStatus = revName ? Ansi(colors.paren,"(", Ansi(colors.gitName, revName), Ansi(214, dirtyState ? '*' : ''), ")") : '';
     div.append(Ansi(colors.path, prettyName), GitStatus, ' ', Ansi(colors.arrow, '»'), ' ');
     onReady();
   }
 }
 
-export async function computePrettyDirName(shellOrCommand: Shell|CommandBlock) {
-  const [pwd, home] = await Promise.all([
-    shellOrCommand.cachedEvaluation('pwd'),
-    shellOrCommand.cachedEvaluation('echo $HOME'),
-  ]);
-  return pwd.startsWith(home) ? '~' + pwd.slice(home.length) : pwd;
+export function computePrettyDirName(shellOrCommand: Shell|CommandBlock, dir: string) {
+  const home = shellOrCommand.env.HOME;
+  return dir.startsWith(home) ? '~' + dir.slice(home.length) : dir;
 }
 
 /**
