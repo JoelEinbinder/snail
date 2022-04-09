@@ -158,7 +158,6 @@ const builtins = {
                 changes.env = {};
             process.env[key] = value;
             changes.env[key] = value;
-            stdout.write(JSON.stringify({key, value}) + '\n');
         }
         return 0;
     },
