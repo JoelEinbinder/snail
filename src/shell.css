@@ -56,3 +56,19 @@ body.vscode-dark .fullscreen-element {
 body.vscode-dark.fullscreen-entry > :not(.fullscreen-element){
   display: none;
 }
+
+.venv::before {
+  vertical-align: bottom;
+  margin-left: 2px;
+  margin-right: 2px;
+  --mask-image: url('./icons/language-python.svg');
+  -webkit-mask: var(--mask-image);
+  mask: var(--mask-image);
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+}

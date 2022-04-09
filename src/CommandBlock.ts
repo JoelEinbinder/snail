@@ -89,9 +89,18 @@ export function CommandPrefix(shellOrCommand: Shell|CommandBlock, onReady = () =
       gitName: sshAddress? 119 : 78,
     };
     const GitStatus = revName ? Ansi(colors.paren,"(", Ansi(colors.gitName, revName), Ansi(214, dirtyState ? '*' : ''), ")") : '';
-    div.append(Ansi(colors.path, prettyName), GitStatus, ' ', Ansi(colors.arrow, '»'), ' ');
+    div.append(Ansi(colors.path, prettyName), GitStatus, makeVenvBadge(shellOrCommand) || ' ', Ansi(colors.arrow, '»'), ' ');
     onReady();
   }
+}
+
+function makeVenvBadge(shellOrCommand: Shell|CommandBlock) {
+  if (!shellOrCommand.env.VIRTUAL_ENV)
+    return '';
+  const span = document.createElement('span');
+  span.classList.add('venv');
+  span.title = computePrettyDirName(shellOrCommand, shellOrCommand.env.VIRTUAL_ENV);
+  return Ansi(8, span);
 }
 
 export function computePrettyDirName(shellOrCommand: Shell|CommandBlock, dir: string) {

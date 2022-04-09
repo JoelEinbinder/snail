@@ -36,8 +36,6 @@ host.onEvent('websocket', ({socketId, message}) => {
 
 export class Shell {
   log: LogItem[] = [];
-  cwd = localStorage.getItem('cwd') || '';
-  env: {[key: string]: string} = {};
   public fullscreenItem: JoelEvent<LogItem> = new JoelEvent<LogItem>(null);
   public activeItem = new JoelEvent<LogItem>(null);
   public promptLock = new JoelEvent<number>(0);
@@ -63,6 +61,14 @@ export class Shell {
     });
   }
 
+  get cwd() {
+    return this.connection.cwd;
+  }
+
+  get env() {
+    return this.connection.env;
+  }
+
   async _setupConnection(args: string[], sshAddress = null) {
     const {shellId} = await host.sendMessage({
       method: 'createShell',
@@ -73,7 +79,7 @@ export class Shell {
     const {socketId} = await host.sendMessage({
       method: 'createJSShell',
       params: {
-        cwd: this.cwd,
+        cwd: this.connection ? this.connection.cwd : localStorage.getItem('cwd') || '',
         sshAddress,
       }
     });
@@ -158,7 +164,7 @@ export class Shell {
         this.activeItem.dispatch(terminalBlock);
       },
       cwd: cwd => {
-        this.cwd = cwd;
+        connection.cwd = cwd;
         if (this._connections[0] === connection)
           localStorage.setItem('cwd', cwd);
         host.sendMessage({
@@ -172,7 +178,7 @@ export class Shell {
       aliases: () => {},
       env: (env: {[key: string]: string}) => {
         for (const [key, value] of Object.entries(env))
-          this.env[key] = value;
+          connection.env[key] = value;
         host.sendMessage({
           method: 'env',
           params: {
@@ -280,8 +286,8 @@ export class Shell {
         expression: `({env: {...process.env}, cwd: process.cwd()})`,
         returnByValue: true
       });
-      this.env = result.value.env;
-      this.cwd = result.value.cwd;
+      connection.env = result.value.env;
+      connection.cwd = result.value.cwd;
     }
 
   }

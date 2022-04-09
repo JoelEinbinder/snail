@@ -3,6 +3,8 @@ export class JSConnection {
   private _id = 0;
   private _callbacks = new Map();
   private _listeners = new Map<string, Set<Function>>();
+  public cwd: string;
+  public env: {[key: string]: string} = {};
   constructor(private _transport: Transport) {
     this._transport.listen(data => {
       const message = JSON.parse(data);
