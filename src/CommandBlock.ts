@@ -100,7 +100,7 @@ function makeVenvBadge(shellOrCommand: Shell|CommandBlock) {
   const span = document.createElement('span');
   span.classList.add('venv');
   span.title = computePrettyDirName(shellOrCommand, shellOrCommand.env.VIRTUAL_ENV);
-  return Ansi(8, span);
+  return span;
 }
 
 export function computePrettyDirName(shellOrCommand: Shell|CommandBlock, dir: string) {

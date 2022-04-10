@@ -70,5 +70,5 @@ body.vscode-dark.fullscreen-entry > :not(.fullscreen-element){
   display: inline-block;
   width: 14px;
   height: 14px;
-  background-color: currentColor;
+  background-color: var(--ansi-0);
 }
