@@ -7,6 +7,7 @@ export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
   willResizeEvent = new JoelEvent<void>(undefined);
   private _editor: Editor;
+  private _exitCode = document.createElement('div');
   constructor(public command: string,
     private _connectionName: string,
     public env: {[key: string]: string},
@@ -25,6 +26,7 @@ export class CommandBlock implements LogItem {
       readOnly: true,
     });
     this._editor.value = this.command;
+    this._exitCode.classList.add('exit-code');
 
   }
 
@@ -45,6 +47,7 @@ export class CommandBlock implements LogItem {
     editorWrapper.style.flex = '1';
     editorWrapper.style.minHeight = '14px';
     command.append(editorWrapper);
+    command.append(this._exitCode);
     editorWrapper.append(this._editor.element);
     const connectionNameElement = document.createElement('div');
     connectionNameElement.classList.add('connection-name');
@@ -59,6 +62,13 @@ export class CommandBlock implements LogItem {
   focus(): void {
   }
   dispose(): void {
+  }
+
+  setExitCode(code: number) {
+    this._exitCode.textContent = String(code || '');
+    if (this._editor.element.parentElement) {
+      this._editor.layout();
+    }
   }
   
   cachedEvaluation(code: string): Promise<string> {

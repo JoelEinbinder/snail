@@ -421,8 +421,10 @@ export class Shell {
     if (this.activeItem.current === commandBlock)
       this.activeItem.dispatch(null);
     this._unlockPrompt();
-    if (result.result?.type === 'string' && result.result.value === 'this is the secret secret string')
+    if (result.result?.type === 'string' && result.result.value.startsWith('this is the secret secret string:')) {
+      commandBlock.setExitCode(parseInt(result.result.value.substring('this is the secret secret string:'.length)));
       return;
+    }
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, connection, this._size);
 
     this.addItem(jsBlock);

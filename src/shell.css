@@ -72,3 +72,15 @@ body.vscode-dark.fullscreen-entry > :not(.fullscreen-element){
   height: 14px;
   background-color: var(--ansi-0);
 }
+
+.exit-code:empty {
+  display: none;
+}
+.exit-code::before {
+  content: '➔';
+}
+.exit-code {
+  color: var(--ansi-9);
+  padding-left: 4px;
+  z-index: 1;
+}

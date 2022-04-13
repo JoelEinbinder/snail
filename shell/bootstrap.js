@@ -136,7 +136,7 @@ global.bootstrap = (args) => {
       }
     }
     notify('endTerminal', {id, returnValue});
-    return 'this is the secret secret string';
+    return 'this is the secret secret string:' + returnValue.exitCode;
   }
   const handler = {
     input({id, data}) {
