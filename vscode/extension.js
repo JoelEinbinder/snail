@@ -25,6 +25,7 @@ function activate(context) {
 			let ready = false;
 			let buffer = [];
 			const child = spawn('node', [require.resolve(path.join(os.homedir(), '/gap-year/node_host/'))], {
+				env: {},
 				stdio: ['pipe', 'pipe', 'inherit'],
 			});
 			const pipe = new PipeTransport(child.stdin, child.stdout);
