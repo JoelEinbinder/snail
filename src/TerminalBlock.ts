@@ -1,6 +1,6 @@
 import { Terminal, IDisposable } from "xterm";
 import { host } from "./host";
-import { IFrameBlock } from "./IframeBlock";
+import { IFrameBlock } from "./IFrameBlock";
 import { JoelEvent } from "./JoelEvent";
 import type { LogItem } from "./LogView";
 import { setSelection } from './selection';

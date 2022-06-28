@@ -23,7 +23,6 @@ export class IFrameBlock {
         readyCallback = undefined;
         return;
       }
-      console.log('iframe message', data);
       switch(data.method) {
         case 'setHeight': {
           this.iframe.style.height = `${data.params.height}px`;
