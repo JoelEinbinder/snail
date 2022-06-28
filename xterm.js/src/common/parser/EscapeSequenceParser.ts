@@ -162,7 +162,7 @@ export const VT500_TRANSITION_TABLE = (function (): TransitionTable {
   table.addMany([0x59, 0x5a, 0x5c], ParserState.ESCAPE, ParserAction.ESC_DISPATCH, ParserState.GROUND);
   table.addMany(r(0x60, 0x7f), ParserState.ESCAPE, ParserAction.ESC_DISPATCH, ParserState.GROUND);
   table.add(0x4b, ParserState.ESCAPE, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
-  table.add(0x1b, ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.GROUND);
+  table.add(0x0, ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.GROUND);
   table.addMany([...PRINTABLES, 0x0A, 0x0D, 0x09], ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
 
   table.add(0x4c, ParserState.ESCAPE, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
@@ -836,7 +836,7 @@ export class EscapeSequenceParser extends Disposable {
             else if (code === 0x4d)
               this._htmlType = 'message';
           }
-          else if (code === 27) {
+          else if (code === 0) {
             if (this._htmlType === 'legacy') {
               const height = /^\d*/.exec(this._html)![0];
               this._htmlHandler(parseInt(height), this._html.slice(height?.length));

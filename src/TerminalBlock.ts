@@ -69,12 +69,24 @@ export class TerminalBlock implements LogItem {
     });
     this._terminal.setHTMLDelegate({
       start: (data: string) => {
+        
+        function hasFocus(element: Element) {
+          let active = document.activeElement;
+          while (active) {
+            if (active === element)
+              return true;
+              active = active.parentElement;
+          }
+          return false;
+        }
+        const hadFocus = hasFocus(this.element);
         this.iframe = document.createElement('iframe');
         const url = new URL(`d4://${this._shellId}.fake`);
         url.pathname = data;
         this.iframe.src = url.href;
         this.element.replaceWith(this.iframe);
-        console.log('start', data);
+        if (hadFocus)
+          this.focus();
       },
       end: () =>{
         console.log('end');
@@ -126,7 +138,10 @@ export class TerminalBlock implements LogItem {
     lastTerminalBlock = this;
   }
   focus(): void {
-    this._terminal.focus();
+    if (this.iframe)
+      this.iframe.focus();
+    else
+      this._terminal.focus();
   }
   render(): Element {
     if (this.empty && this._closed)
