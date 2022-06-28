@@ -21,5 +21,28 @@ const rpc = RPC(transport, {
   },
   async requestFile(filePath) {
     return require('fs').readFileSync(filePath).toString('base64');
+  },
+  async resolveFileForIframe({filePath, headers}) {
+    if (headers.Accept && headers.Accept.includes('text/html')) {
+      return {
+        statusCode: 200,
+        data: Buffer.from(new TextEncoder().encode(`<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="${require.resolve('../iframe/iframe.css')}">
+  <script src="${require.resolve('../iframe/runtime.js')}" type="module"></script>
+</head>
+<body>
+<script src="${filePath}" type="module"></script>
+</body>
+</html>`)).toString('base64'),
+        mimeType: 'text/html',
+      };
+    }
+    return {
+      data: require('fs').readFileSync(filePath).toString('base64'),
+      statusCode: 200,
+      mimeType: require('mime-types').lookup(filePath) || undefined,
+    };
   }
 });

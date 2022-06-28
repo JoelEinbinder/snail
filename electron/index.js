@@ -202,8 +202,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 void app.whenReady().then(() => {
   protocol.registerBufferProtocol('d4', async (request, callback) => {
-    const output = await handler.fetchURL({url: request.url});
-    console.log(output);
+    const output = await handler.fetchURL({url: request.url, headers: request.headers});
     callback(output);
   });
 });

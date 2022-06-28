@@ -22,17 +22,16 @@ const handler = {
    * @param {{url: string}} params
    * @return {Promise<import('electron').ProtocolResponse>}
    */
-  async fetchURL({url}) {
+  async fetchURL({url, headers}) {
     try {
       const {hostname, pathname} = new URL(url);
       const shellId = parseInt(hostname);
       const filePath = pathname;
-      const response = await shells.get(shellId).requestFile(filePath);
+      const response = await shells.get(shellId).resolveFileForIframe({filePath, headers});
       return {
-        data: Buffer.from(response, 'base64'),
-        statusCode: 200,
-        mimeType: require('mime-types').lookup(filePath) || undefined,
-      };
+        ...response,
+        data: response.data !== undefined ? Buffer.from(response.data, 'base64') : undefined,
+      }
     } catch(e) {
       console.error(e);
       return {statusCode: 500};
