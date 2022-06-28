@@ -74,7 +74,7 @@ class PipeTransport {
       if (this.onmessage)
         this.onmessage.call(null, JSON.parse(message));
       } catch(e) {
-        console.error(message, e);
+        console.error(message.slice(0, 10), e);
       }
     });
 

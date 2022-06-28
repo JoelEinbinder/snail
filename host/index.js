@@ -22,12 +22,12 @@ const handler = {
    * @param {{url: string}} params
    * @return {Promise<import('electron').ProtocolResponse>}
    */
-  async fetchURL({url, headers}) {
+  async fetchURL({url, search, headers}) {
     try {
-      const {hostname, pathname} = new URL(url);
+      const {hostname, pathname, search} = new URL(url);
       const shellId = parseInt(hostname);
       const filePath = pathname;
-      const response = await shells.get(shellId).resolveFileForIframe({filePath, headers});
+      const response = await shells.get(shellId).resolveFileForIframe({filePath, search, headers});
       return {
         ...response,
         data: response.data !== undefined ? Buffer.from(response.data, 'base64') : undefined,

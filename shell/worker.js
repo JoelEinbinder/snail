@@ -19,10 +19,7 @@ const rpc = RPC(transport, {
     for (const [key, value] of Object.entries(env))
       process.env[key] = value;
   },
-  async requestFile(filePath) {
-    return require('fs').readFileSync(filePath).toString('base64');
-  },
-  async resolveFileForIframe({filePath, headers}) {
+  async resolveFileForIframe({filePath, headers, search}) {
     if (headers.Accept && headers.Accept.includes('text/html')) {
       return {
         statusCode: 200,
@@ -38,6 +35,13 @@ const rpc = RPC(transport, {
 </html>`)).toString('base64'),
         mimeType: 'text/html',
       };
+    }
+    if (search === '?thumbnail') {
+      return {
+        data: require('../thumbnail_generator/').generateThumbnail(filePath),
+        mimeType: 'image/png',
+        statusCode: 200,
+      }
     }
     return {
       data: require('fs').readFileSync(filePath).toString('base64'),

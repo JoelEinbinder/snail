@@ -84,3 +84,8 @@ body.vscode-dark.fullscreen-entry > :not(.fullscreen-element){
   padding-left: 4px;
   z-index: 1;
 }
+
+iframe {
+  border: none;
+  width: 100%;
+}

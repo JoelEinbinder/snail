@@ -48,8 +48,8 @@ class Shell {
     return this.rpc.send('env', env);
   }
 
-  async resolveFileForIframe({filePath, headers}) {
-    return this.rpc.send('resolveFileForIframe', {filePath, headers});
+  async resolveFileForIframe({filePath, search, headers}) {
+    return this.rpc.send('resolveFileForIframe', {filePath, search, headers});
   }
 
   close() {

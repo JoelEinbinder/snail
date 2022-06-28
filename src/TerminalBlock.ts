@@ -1,5 +1,6 @@
 import { Terminal, IDisposable } from "xterm";
 import { host } from "./host";
+import { IFrameBlock } from "./IframeBlock";
 import { JoelEvent } from "./JoelEvent";
 import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
@@ -12,7 +13,6 @@ host.onEvent('data', ({shellId, data}) => {
     lastTerminalBlock.addData(data);
 });
 
-
 export class TerminalBlock implements LogItem {
   public willResizeEvent = new JoelEvent<void>(undefined);
   public dispose: () => void;
@@ -23,7 +23,7 @@ export class TerminalBlock implements LogItem {
 
   private _terminal: Terminal;
   private element: HTMLDivElement;
-  private iframe: HTMLIFrameElement|null = null;
+  private _iframeBlock: IFrameBlock = null;
   private _listeners: IDisposable[] = [];
   private _data: (string|Uint8Array)[] = [];
   private _trailingNewline = false;
@@ -69,7 +69,6 @@ export class TerminalBlock implements LogItem {
     });
     this._terminal.setHTMLDelegate({
       start: (data: string) => {
-        
         function hasFocus(element: Element) {
           let active = document.activeElement;
           while (active) {
@@ -80,21 +79,17 @@ export class TerminalBlock implements LogItem {
           return false;
         }
         const hadFocus = hasFocus(this.element);
-        this.iframe = document.createElement('iframe');
-        const url = new URL(`d4://${this._shellId}.fake`);
-        url.pathname = data;
-        this.iframe.src = url.href;
-        this.element.replaceWith(this.iframe);
+        this._iframeBlock = new IFrameBlock(data, this._shellId);
+        this.element.replaceWith(this._iframeBlock.iframe);
         if (hadFocus)
           this.focus();
       },
       end: () =>{
-        console.log('end');
-        this.iframe.replaceWith(this.element);
-        this.iframe = null;
+        this._iframeBlock.iframe.replaceWith(this.element);
+        this._iframeBlock = null;
       },
       message: (data: string) => {
-        console.log('message', data);
+        this._iframeBlock.message(data);
       }
     })
     this._terminal.open(this.element);
@@ -138,16 +133,16 @@ export class TerminalBlock implements LogItem {
     lastTerminalBlock = this;
   }
   focus(): void {
-    if (this.iframe)
-      this.iframe.focus();
+    if (this._iframeBlock)
+      this._iframeBlock.iframe.focus();
     else
       this._terminal.focus();
   }
   render(): Element {
     if (this.empty && this._closed)
       return null;
-    if (this.iframe)
-      return this.iframe;
+    if (this._iframeBlock)
+      return this._iframeBlock.iframe;
     return this.element;
   }
 
