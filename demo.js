@@ -9,7 +9,7 @@ const {dirs, cwd} = await d4.waitForMessage();
 for (const dir of dirs) {
   const div = document.createElement('div');
   const image = document.createElement('img');
-  image.src = `${cwd}/${dir}?thumbnail`;
+  image.src = `${cwd === '/' ? '' : cwd}/${dir}?thumbnail`;
   image.width = image.height = 16;
   image.style.verticalAlign = 'middle';
   image.style.margin = '0 2px'
