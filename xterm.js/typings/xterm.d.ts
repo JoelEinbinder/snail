@@ -1137,6 +1137,8 @@ declare module 'xterm' {
      * Removes the last line from the terminal and shrinks the viewport.
      */
     deleteLastLine(): void;
+
+    setHTMLDelegate(delegate: HTMLDelegate): void;
   }
 
   /**
@@ -1757,4 +1759,10 @@ declare module 'xterm' {
      */
     readonly wraparoundMode: boolean
   }
+
+  export type HTMLDelegate = {
+    start(data: string): void;
+    message(data: string): void;
+    end(): void;
+  };
 }

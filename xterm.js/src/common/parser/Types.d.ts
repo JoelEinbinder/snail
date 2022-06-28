@@ -140,68 +140,6 @@ export type OscFallbackHandlerType = (ident: number, action: 'START' | 'PUT' | '
 export type PrintHandlerType = (data: Uint32Array, start: number, end: number) => void;
 export type PrintFallbackHandlerType = PrintHandlerType;
 
-
-/**
-* EscapeSequenceParser interface.
-*/
-export interface IEscapeSequenceParser extends IDisposable {
-  /**
-   * Preceding codepoint to get REP working correctly.
-   * This must be set by the print handler as last action.
-   * It gets reset by the parser for any valid sequence beside REP itself.
-   */
-  precedingCodepoint: number;
-
-  /**
-   * Reset the parser to its initial state (handlers are kept).
-   */
-  reset(): void;
-
-  /**
-   * Parse UTF32 codepoints in `data` up to `length`.
-   * @param data The data to parse.
-   */
-  parse(data: Uint32Array, length: number, promiseResult?: boolean): void | Promise<boolean>;
-
-  /**
-   * Get string from numercial function identifier `ident`.
-   * Useful in fallback handlers which expose the low level
-   * numcerical function identifier for debugging purposes.
-   * Note: A full back translation to `IFunctionIdentifier`
-   * is not implemented.
-   */
-  identToString(ident: number): string;
-
-  setPrintHandler(handler: PrintHandlerType): void;
-  clearPrintHandler(): void;
-
-  setHTMLHandler(handler: (height: number, html: string) => void): void;
-  clearHTMLHandler(): void;
-
-  registerEscHandler(id: IFunctionIdentifier, handler: EscHandlerType): IDisposable;
-  clearEscHandler(id: IFunctionIdentifier): void;
-  setEscHandlerFallback(handler: EscFallbackHandlerType): void;
-
-  setExecuteHandler(flag: string, handler: ExecuteHandlerType): void;
-  clearExecuteHandler(flag: string): void;
-  setExecuteHandlerFallback(handler: ExecuteFallbackHandlerType): void;
-
-  registerCsiHandler(id: IFunctionIdentifier, handler: CsiHandlerType): IDisposable;
-  clearCsiHandler(id: IFunctionIdentifier): void;
-  setCsiHandlerFallback(callback: CsiFallbackHandlerType): void;
-
-  registerDcsHandler(id: IFunctionIdentifier, handler: IDcsHandler): IDisposable;
-  clearDcsHandler(id: IFunctionIdentifier): void;
-  setDcsHandlerFallback(handler: DcsFallbackHandlerType): void;
-
-  registerOscHandler(ident: number, handler: IOscHandler): IDisposable;
-  clearOscHandler(ident: number): void;
-  setOscHandlerFallback(handler: OscFallbackHandlerType): void;
-
-  setErrorHandler(handler: (state: IParsingState) => IParsingState): void;
-  clearErrorHandler(): void;
-}
-
 /**
  * Subparser interfaces.
  * The subparsers are instantiated in `EscapeSequenceParser` and

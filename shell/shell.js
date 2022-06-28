@@ -48,6 +48,10 @@ class Shell {
     return this.rpc.send('env', env);
   }
 
+  async requestFile(filePath) {
+    return this.rpc.send('requestFile', filePath);
+  }
+
   close() {
     this.process.kill();
   }

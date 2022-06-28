@@ -136,7 +136,7 @@ export class Shell {
         }
       },
       startTerminal:({id}: {id: number}) => {
-        const terminalBlock = new TerminalBlock(this._size, async data => {
+        const terminalBlock = new TerminalBlock(this._size, shellId, async data => {
           await notify('input', { data, id});
         });
         const onFullScreen = (value: boolean) => {

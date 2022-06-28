@@ -18,5 +18,8 @@ const rpc = RPC(transport, {
   async env(env) {
     for (const [key, value] of Object.entries(env))
       process.env[key] = value;
+  },
+  async requestFile(filePath) {
+    return require('fs').readFileSync(filePath).toString('base64');
   }
 });

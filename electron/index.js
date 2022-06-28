@@ -189,40 +189,22 @@ function clientForSender(sender) {
 
 protocol.registerSchemesAsPrivileged([
   {
-    scheme: 'remote',
+    scheme: 'd4',
     privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      standard: true,
+      allowServiceWorkers: true,
+      bypassCSP: true,
       stream: true
     }
   }
 ]);
 void app.whenReady().then(() => {
-  protocol.registerFileProtocol('local', (request, callback) => {
-    const url = new URL(request.url);
-    callback({path: url.pathname});
-  });
-  protocol.registerBufferProtocol('remote', (request, callback) => {
-    const url = new URL(request.url);
-    /** @type {Buffer[]} */
-    const buffers = [];
-    const process = require('child_process').spawn('ssh', [
-      '-p',
-      String(url.port || 22),
-      `${url.username}@${url.hostname}`,
-      'cat',
-      url.pathname
-    ]);
-    process.stdout.on('data', (d) => buffers.push(d));
-    process.on('close', (code) => {
-      if (code) {
-        callback({statusCode: 404});
-        return;
-      }
-      callback({
-        statusCode: 200,
-        data: Buffer.concat(buffers),
-        mimeType: require('mime-types').lookup(url.pathname) || undefined
-      });
-    });
+  protocol.registerBufferProtocol('d4', async (request, callback) => {
+    const output = await handler.fetchURL({url: request.url});
+    console.log(output);
+    callback(output);
   });
 });
 app.on('window-all-closed', e => e.preventDefault());

@@ -19,6 +19,26 @@ const handler = {
     return shells.get(shellId).env(env);
   },
   /**
+   * @param {{url: string}} params
+   * @return {Promise<import('electron').ProtocolResponse>}
+   */
+  async fetchURL({url}) {
+    try {
+      const {hostname, pathname} = new URL(url);
+      const shellId = parseInt(hostname);
+      const filePath = pathname;
+      const response = await shells.get(shellId).requestFile(filePath);
+      return {
+        data: Buffer.from(response, 'base64'),
+        statusCode: 200,
+        mimeType: require('mime-types').lookup(filePath) || undefined,
+      };
+    } catch(e) {
+      console.error(e);
+      return {statusCode: 500};
+    }
+  },
+  /**
    * @param {Client} sender
    */
   async createShell({sshAddress}, sender) {

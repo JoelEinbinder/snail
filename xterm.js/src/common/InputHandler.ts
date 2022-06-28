@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { IInputHandler, IAttributeData, IDisposable, IWindowOptions, IColorEvent, IParseStack, ColorIndex, ColorRequestType } from 'common/Types';
+import { IAttributeData, IDisposable, IWindowOptions, IColorEvent, IParseStack, ColorIndex, ColorRequestType } from 'common/Types';
 import { C0, C1 } from 'common/data/EscapeSequences';
 import { CHARSETS, DEFAULT_CHARSET } from 'common/data/Charsets';
 import { EscapeSequenceParser } from 'common/parser/EscapeSequenceParser';
@@ -13,7 +13,7 @@ import { concat } from 'common/TypedArrayUtils';
 import { StringToUtf32, stringFromCodePoint, utf32ToString, Utf8ToUtf32 } from 'common/input/TextDecoder';
 import { DEFAULT_ATTR_DATA } from 'common/buffer/BufferLine';
 import { EventEmitter, IEvent } from 'common/EventEmitter';
-import { IParsingState, IDcsHandler, IEscapeSequenceParser, IParams, IFunctionIdentifier } from 'common/parser/Types';
+import { IParsingState, IDcsHandler, IParams, IFunctionIdentifier } from 'common/parser/Types';
 import { NULL_CELL_CODE, NULL_CELL_WIDTH, Attributes, FgFlags, BgFlags, Content, UnderlineStyle } from 'common/buffer/Constants';
 import { CellData } from 'common/buffer/CellData';
 import { AttributeData, ExtendedAttrs } from 'common/buffer/AttributeData';
@@ -23,6 +23,7 @@ import { DcsHandler } from 'common/parser/DcsParser';
 import { IBuffer } from 'common/buffer/Types';
 import { parseColor } from 'common/input/XParseColor';
 import { HTMLBlock } from 'common/buffer/HTMLBlock';
+import { HTMLDelegate } from 'xterm';
 
 /**
  * Map collect to glevel. Used in `selectCharset`.
@@ -224,7 +225,7 @@ class DECRQSS implements IDcsHandler {
  * Refer to http://invisible-island.net/xterm/ctlseqs/ctlseqs.html to understand
  * each function's header comment.
  */
-export class InputHandler extends Disposable implements IInputHandler {
+export class InputHandler extends Disposable {
   private _parseBuffer: Uint32Array = new Uint32Array(4096);
   private _stringDecoder: StringToUtf32 = new StringToUtf32();
   private _utf8Decoder: Utf8ToUtf32 = new Utf8ToUtf32();
@@ -286,7 +287,7 @@ export class InputHandler extends Disposable implements IInputHandler {
     private readonly _optionsService: IOptionsService,
     private readonly _coreMouseService: ICoreMouseService,
     private readonly _unicodeService: IUnicodeService,
-    private readonly _parser: IEscapeSequenceParser = new EscapeSequenceParser()
+    private readonly _parser = new EscapeSequenceParser()
   ) {
     super();
     this.register(this._parser);
@@ -3261,5 +3262,9 @@ export class InputHandler extends Disposable implements IInputHandler {
     this._dirtyRowService.markAllDirty();
     this._setCursor(0, 0);
     return true;
+  }
+
+  public setHTMLDelegate(delegate: HTMLDelegate) {
+    this._parser.setHTMLDelegate(delegate);
   }
 }

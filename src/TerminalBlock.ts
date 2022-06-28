@@ -23,13 +23,14 @@ export class TerminalBlock implements LogItem {
 
   private _terminal: Terminal;
   private element: HTMLDivElement;
+  private iframe: HTMLIFrameElement|null = null;
   private _listeners: IDisposable[] = [];
   private _data: (string|Uint8Array)[] = [];
   private _trailingNewline = false;
   private _lastWritePromise = Promise.resolve();
   public empty = true;
   private _closed = false;
-  constructor(private _size: JoelEvent<{cols: number, rows: number}>, sendInput: (data: string) => void) {
+  constructor(private _size: JoelEvent<{cols: number, rows: number}>, private _shellId: number, sendInput: (data: string) => void) {
 
     this.element = document.createElement('div');
     this.element.style.height = '0px';
@@ -66,6 +67,24 @@ export class TerminalBlock implements LogItem {
       allowTransparency: true,
       rendererType: 'canvas',
     });
+    this._terminal.setHTMLDelegate({
+      start: (data: string) => {
+        this.iframe = document.createElement('iframe');
+        const url = new URL(`d4://${this._shellId}.fake`);
+        url.pathname = data;
+        this.iframe.src = url.href;
+        this.element.replaceWith(this.iframe);
+        console.log('start', data);
+      },
+      end: () =>{
+        console.log('end');
+        this.iframe.replaceWith(this.element);
+        this.iframe = null;
+      },
+      message: (data: string) => {
+        console.log('message', data);
+      }
+    })
     this._terminal.open(this.element);
     
     this._listeners.push(this._terminal.onData(data => {
@@ -112,6 +131,8 @@ export class TerminalBlock implements LogItem {
   render(): Element {
     if (this.empty && this._closed)
       return null;
+    if (this.iframe)
+      return this.iframe;
     return this.element;
   }
 

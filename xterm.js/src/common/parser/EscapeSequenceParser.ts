@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-import { IParsingState, IDcsHandler, IEscapeSequenceParser, IParams, IOscHandler, IHandlerCollection, CsiHandlerType, OscFallbackHandlerType, IOscParser, EscHandlerType, IDcsParser, DcsFallbackHandlerType, IFunctionIdentifier, ExecuteFallbackHandlerType, CsiFallbackHandlerType, EscFallbackHandlerType, PrintHandlerType, PrintFallbackHandlerType, ExecuteHandlerType, IParserStackState, ParserStackType, ResumableHandlersType } from 'common/parser/Types';
+import { IParsingState, IDcsHandler, IParams, IOscHandler, IHandlerCollection, CsiHandlerType, OscFallbackHandlerType, IOscParser, EscHandlerType, IDcsParser, DcsFallbackHandlerType, IFunctionIdentifier, ExecuteFallbackHandlerType, CsiFallbackHandlerType, EscFallbackHandlerType, PrintHandlerType, PrintFallbackHandlerType, ExecuteHandlerType, IParserStackState, ParserStackType, ResumableHandlersType } from 'common/parser/Types';
 import { ParserState, ParserAction } from 'common/parser/Constants';
 import { Disposable } from 'common/Lifecycle';
 import { IDisposable } from 'common/Types';
@@ -11,6 +11,7 @@ import { fill } from 'common/TypedArrayUtils';
 import { Params } from 'common/parser/Params';
 import { OscParser } from 'common/parser/OscParser';
 import { DcsParser } from 'common/parser/DcsParser';
+import { HTMLDelegate } from 'xterm';
 
 /**
  * Table values are generated like this:
@@ -163,6 +164,11 @@ export const VT500_TRANSITION_TABLE = (function (): TransitionTable {
   table.add(0x4b, ParserState.ESCAPE, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
   table.add(0x1b, ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.GROUND);
   table.addMany([...PRINTABLES, 0x0A, 0x0D, 0x09], ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
+
+  table.add(0x4c, ParserState.ESCAPE, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
+  table.add(0x4d, ParserState.ESCAPE, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
+  table.add(0x4e, ParserState.ESCAPE, ParserAction.HTML_BLOCK, ParserState.GROUND);
+
   // dcs entry
   table.add(0x50, ParserState.ESCAPE, ParserAction.CLEAR, ParserState.DCS_ENTRY);
   table.addMany(EXECUTABLES, ParserState.DCS_ENTRY, ParserAction.IGNORE, ParserState.DCS_ENTRY);
@@ -201,7 +207,6 @@ export const VT500_TRANSITION_TABLE = (function (): TransitionTable {
   return table;
 })();
 
-
 /**
  * EscapeSequenceParser.
  * This class implements the ANSI/DEC compatible parser described by
@@ -232,7 +237,7 @@ export const VT500_TRANSITION_TABLE = (function (): TransitionTable {
  *
  * TODO: implement error recovery hook via error handler return values
  */
-export class EscapeSequenceParser extends Disposable implements IEscapeSequenceParser {
+export class EscapeSequenceParser extends Disposable {
   public initialState: number;
   public currentState: number;
   public precedingCodepoint: number;
@@ -241,6 +246,7 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
   protected _params: Params;
   protected _collect: number;
   protected _html: string|null = null;
+  private _htmlType: 'legacy'|'start'|'message'|'end'|null = null;
 
   // handler lookup containers
   protected _printHandler: PrintHandlerType;
@@ -251,6 +257,8 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
   protected _oscParser: IOscParser;
   protected _dcsParser: IDcsParser;
   protected _errorHandler: (state: IParsingState) => IParsingState;
+
+  protected _htmlDelegate: HTMLDelegate|null = null;
 
   // fallback handlers
   protected _printHandlerFb: PrintFallbackHandlerType;
@@ -366,8 +374,16 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
     this._htmlHandler = handler;
   }
 
+  public setHTMLDelegate(delegate: HTMLDelegate): void {
+    this._htmlDelegate = delegate;
+  }
+
   public clearHTMLHandler(): void {
     this._htmlHandler = this._htmlHandlerFb;
+  }
+
+  public clearHTMLDelegate(): void {
+    this._htmlDelegate = null;
   }
 
   public registerEscHandler(id: IFunctionIdentifier, handler: EscHandlerType): IDisposable {
@@ -807,11 +823,28 @@ export class EscapeSequenceParser extends Disposable implements IEscapeSequenceP
           this.precedingCodepoint = 0;
           break;
         case ParserAction.HTML_BLOCK:
-          if (this._html === null)
+          if (this._html === null && code === 0x4e) {
+            this._htmlDelegate?.end();
+            break;
+          }
+          if (this._html === null) {
             this._html = '';
+            if (code === 0x4b)
+              this._htmlType = 'legacy';
+            else if (code === 0x4c)
+              this._htmlType = 'start';
+            else if (code === 0x4d)
+              this._htmlType = 'message';
+          }
           else if (code === 27) {
-            const height = /^\d*/.exec(this._html)![0];
-            this._htmlHandler(parseInt(height), this._html.slice(height?.length));
+            if (this._htmlType === 'legacy') {
+              const height = /^\d*/.exec(this._html)![0];
+              this._htmlHandler(parseInt(height), this._html.slice(height?.length));
+            } else if (this._htmlType === 'start') {
+              this._htmlDelegate?.start(this._html);
+            } else if (this._htmlType === 'message') {
+              this._htmlDelegate?.message(this._html);
+            }
             this._html = null;
           } else {
             this._html += String.fromCharCode(code);

@@ -38,7 +38,7 @@ import * as Strings from 'browser/LocalizableStrings';
 import { SoundService } from 'browser/services/SoundService';
 import { MouseZoneManager } from 'browser/MouseZoneManager';
 import { AccessibilityManager } from './AccessibilityManager';
-import { ITheme, IMarker, IDisposable, ISelectionPosition, ILinkProvider } from 'xterm';
+import { ITheme, IMarker, IDisposable, ISelectionPosition, ILinkProvider, HTMLDelegate } from 'xterm';
 import { DomRenderer } from 'browser/renderer/dom/DomRenderer';
 import { KeyboardResultType, CoreMouseEventType, CoreMouseButton, CoreMouseAction, ITerminalOptions, ScrollSource, IColorEvent, ColorIndex, ColorRequestType } from 'common/Types';
 import { evaluateKeyboardEvent } from 'common/input/Keyboard';
@@ -175,6 +175,10 @@ export class Terminal extends CoreTerminal implements ITerminal {
 
     // Setup listeners
     this.register(this._bufferService.onResize(e => this._afterResize(e.cols, e.rows)));
+  }
+
+  setHTMLDelegate(delegate: HTMLDelegate): void {
+    this._inputHandler.setHTMLDelegate(delegate);
   }
 
   /**
