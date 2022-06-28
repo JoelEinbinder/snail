@@ -1,0 +1,1 @@
+export function generateThumbnail(filePath: string): string;
