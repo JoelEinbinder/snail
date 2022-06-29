@@ -1,3 +1,4 @@
+import type { JoelEvent } from "./JoelEvent";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -12,7 +13,12 @@ window.onmessage = event => {
 export class IFrameBlock {
   public iframe: HTMLIFrameElement|null = document.createElement('iframe');
   private readyPromise: Promise<void>;
-  constructor(data: string, shellId: number) {
+  constructor(
+    data: string,
+    shellId: number,
+    private _willResizeEvent: JoelEvent<void>,
+    ) {
+    this.iframe.style.height = '0';
     let readyCallback;
     this.readyPromise = new Promise(resolve => {
       readyCallback = resolve;
@@ -25,6 +31,7 @@ export class IFrameBlock {
       }
       switch(data.method) {
         case 'setHeight': {
+          this._willResizeEvent.dispatch();
           this.iframe.style.height = `${data.params.height}px`;
           break;
         }

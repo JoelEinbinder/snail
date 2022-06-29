@@ -34,6 +34,37 @@ const builtins = {
         }
         return 0;
     },
+    ls: (args, stdout, stderr) => {
+        if (args.length > 1 || stdout !== process.stdout || args.some(x => x.startsWith('-')))
+            return 'pass';
+        const path = require('path')
+        stdout.write(`\x1bL${path.join(__dirname, '..', 'apps', 'ls', 'index.js')}\x00`);
+
+        /**
+         * @param {any} data
+         */
+        function send(data) {
+            stdout.write(`\x1bM${JSON.stringify(data)}\x00`);
+        }
+        const fs = require('fs');
+        const resolved = args.length === 1 ? path.resolve(process.cwd(), args[0]) : process.cwd();
+        const isDirectory = fs.statSync(resolved).isDirectory();
+        if (!isDirectory) {
+            send({
+                dirs: [path.basename(resolved)],
+                cwd: path.dirname(resolved),
+                showHidden: true,
+            })
+        } else {
+            const dirs = fs.statSync(resolved).isDirectory() ? fs.readdirSync(resolved) : [path.dir];
+            send({
+                dirs,
+                cwd: resolved,
+                showHidden: false,
+            });
+        }
+        return Promise.resolve(0);
+    },
     export: async (args, stdout, stderr) => {
         for (const arg of args) {
             const index = arg.indexOf('=');

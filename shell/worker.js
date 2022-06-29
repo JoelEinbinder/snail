@@ -36,7 +36,6 @@ const rpc = RPC(transport, {
         mimeType: 'text/html',
       };
     }
-    const fs = require('fs');
     const responseHeaders = {
       'cache-control': 'no-cache',
       'Access-Control-Allow-Origin': '*',
@@ -49,6 +48,17 @@ const rpc = RPC(transport, {
         headers: responseHeaders,
       }
     }
+    if (filePath.endsWith('.css') && headers.Accept && !headers.Accept.includes('text/css')) {
+      return {
+        statusCode: 200,
+        mimeType: 'application/javascript',
+        data: Buffer.from(new TextEncoder().encode(`const link = document.createElement('link');
+link.rel = 'stylesheet';
+link.href = ${JSON.stringify(filePath)};
+document.head.append(link);`)).toString('base64'),
+      }
+    }
+    const fs = require('fs');
     return {
       data: fs.readFileSync(filePath).toString('base64'),
       statusCode: 200,

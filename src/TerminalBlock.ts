@@ -79,7 +79,7 @@ export class TerminalBlock implements LogItem {
           return false;
         }
         const hadFocus = hasFocus(this.element);
-        this._iframeBlock = new IFrameBlock(data, this._shellId);
+        this._iframeBlock = new IFrameBlock(data, this._shellId, this.willResizeEvent);
         this.element.replaceWith(this._iframeBlock.iframe);
         if (hadFocus)
           this.focus();
