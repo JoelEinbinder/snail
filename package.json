@@ -28,6 +28,7 @@
     "clean-webpack-plugin": "^4.0.0-alpha.0",
     "copy-webpack-plugin": "^9.0.1",
     "css-loader": "^6.2.0",
+    "electron": "^19.0.6",
     "electron-rebuild": "^3.2.5",
     "expect": "^27.4.6",
     "file-loader": "^6.2.0",
@@ -46,7 +47,6 @@
   },
   "dependencies": {
     "acorn": "^8.7.0",
-    "electron": "^16.0.6",
     "fast-glob": "^3.2.11",
     "get-port": "^5.1.1",
     "node-pty": "^0.10.1",

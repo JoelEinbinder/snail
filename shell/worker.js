@@ -36,17 +36,24 @@ const rpc = RPC(transport, {
         mimeType: 'text/html',
       };
     }
+    const fs = require('fs');
+    const responseHeaders = {
+      'cache-control': 'no-cache',
+      'Access-Control-Allow-Origin': '*',
+    };
     if (search === '?thumbnail') {
       return {
         data: require('../thumbnail_generator/').generateThumbnail(filePath),
         mimeType: 'image/png',
         statusCode: 200,
+        headers: responseHeaders,
       }
     }
     return {
-      data: require('fs').readFileSync(filePath).toString('base64'),
+      data: fs.readFileSync(filePath).toString('base64'),
       statusCode: 200,
       mimeType: require('mime-types').lookup(filePath) || undefined,
+      headers: responseHeaders,
     };
   }
 });

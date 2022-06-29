@@ -9,7 +9,7 @@ function RPC(transport, reciever) {
   /** @type {Map<number, (value: any) => void>} */
   const callbacks = new Map();
   transport.onmessage = async message => {
-    const {method, params, id, result} = message;
+    const {method, params, id, result, error} = message;
     if (method) {
       try {
         const result = await reciever[method](params);
@@ -21,6 +21,8 @@ function RPC(transport, reciever) {
       }
     } else {
       const callback = callbacks.get(id);
+      if (error)
+        console.error(error);
       if (callback)
         callback(result);
     }

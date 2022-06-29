@@ -26,7 +26,7 @@ const handler = {
     try {
       const {hostname, pathname, search} = new URL(url);
       const shellId = parseInt(hostname);
-      const filePath = pathname;
+      const filePath = decodeURIComponent(pathname);
       const response = await shells.get(shellId).resolveFileForIframe({filePath, search, headers});
       return {
         ...response,

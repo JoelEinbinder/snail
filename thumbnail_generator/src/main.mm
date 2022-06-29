@@ -6,7 +6,7 @@
 
 const char* generate_thumbnail(std::string path) {
   NSString* path_ns = [NSString stringWithUTF8String:path.c_str()];
-  NSURL *url = [NSURL URLWithString:[@"file://" stringByAppendingString:path_ns]];
+  NSURL *url = [NSURL fileURLWithPath:path_ns];
   QLThumbnailGenerationRequest * request = [[QLThumbnailGenerationRequest alloc] initWithFileAtURL:url size:CGSizeMake(16, 16) scale:2.0f
     representationTypes:QLThumbnailGenerationRequestRepresentationTypeAll];
   [request setIconMode:YES];
