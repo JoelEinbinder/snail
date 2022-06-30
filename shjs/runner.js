@@ -56,7 +56,7 @@ const builtins = {
                 showHidden: true,
             })
         } else {
-            const dirs = fs.statSync(resolved).isDirectory() ? fs.readdirSync(resolved) : [path.dir];
+            const dirs = fs.readdirSync(resolved);
             send({
                 dirs,
                 cwd: resolved,
