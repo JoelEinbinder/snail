@@ -23,7 +23,7 @@ const rpc = RPC(transport, {
     if (headers.Accept && headers.Accept.includes('text/html')) {
       return {
         statusCode: 200,
-        data: Buffer.from(new TextEncoder().encode(`<!DOCTYPE html>
+        data: toBuffer(`<!DOCTYPE html>
 <html>
 <head>
   <link rel="stylesheet" href="${require.resolve('../iframe/iframe.css')}">
@@ -32,13 +32,12 @@ const rpc = RPC(transport, {
 <body>
 <script src="${filePath}" type="module"></script>
 </body>
-</html>`)).toString('base64'),
+</html>`),
         mimeType: 'text/html',
       };
     }
     const responseHeaders = {
       'cache-control': 'no-cache',
-      'Access-Control-Allow-Origin': '*',
     };
     if (search === '?thumbnail') {
       return {
@@ -48,17 +47,35 @@ const rpc = RPC(transport, {
         headers: responseHeaders,
       }
     }
-    if (filePath.endsWith('.css') && headers.Accept && !headers.Accept.includes('text/css')) {
+    const fs = require('fs');
+    if (headers.Accept && headers.Accept === '*/*') {
+      const resolved = resolveScript(filePath);
+      console.error(filePath, 'resolved', resolved);
+      if (!resolved) {
+        return {
+          statusCode: 404,
+          data: '404',
+          mimeType: 'text/plain',
+        }
+      }
+      if (resolved.endsWith('.css')) {
+        return {
+          statusCode: 200,
+          mimeType: 'application/javascript',
+          data: toBuffer(`const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = ${JSON.stringify(resolved)};
+  document.head.append(link);`),
+        }
+      }
       return {
         statusCode: 200,
         mimeType: 'application/javascript',
-        data: Buffer.from(new TextEncoder().encode(`const link = document.createElement('link');
-link.rel = 'stylesheet';
-link.href = ${JSON.stringify(filePath)};
-document.head.append(link);`)).toString('base64'),
+        data: resolved.endsWith('.ts') ? toBuffer(transformTs(resolved)) : fs.readFileSync(resolved).toString('base64'),
+        headers: responseHeaders,
       }
     }
-    const fs = require('fs');
+
     return {
       data: fs.readFileSync(filePath).toString('base64'),
       statusCode: 200,
@@ -67,3 +84,32 @@ document.head.append(link);`)).toString('base64'),
     };
   }
 });
+
+function resolveScript(filePath) {
+  const old = require.extensions;
+  if (!require.extensions['.ts'])
+    require.extensions['.ts'] = require.extensions['.js'];
+  try {
+    return require.resolve(filePath);
+  } catch {
+    return null;
+  }
+}
+
+function toBuffer(text) {
+  return Buffer.from(new TextEncoder().encode(text)).toString('base64');
+}
+
+function transformTs(filename) {
+  const babel = require('@babel/core');
+  const result = babel.transformFileSync(filename, {
+    presets: [
+      // ['@babel/preset-env', { targets: {node: '10.17.0'} }],
+      [require.resolve('@babel/preset-typescript'), { onlyRemoveTypeImports: false }],
+    ],
+    // plugins: [['@babel/plugin-proposal-class-properties', {loose: true}]],
+    sourceMaps: false,
+    // cwd: __dirname
+  });
+  return result?.code || '';
+}
