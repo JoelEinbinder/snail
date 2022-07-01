@@ -130,7 +130,7 @@ async function fileCompleter(shell: Shell, line: string, executablesOnly: boolea
           '/': file + '/'
         } });
       else
-        suggestions.push({ text: file });
+        suggestions.push({ text: file.replace(/\\/g, '\\\\').replace(/ /g, '\\ ') });
   }
   return {
     anchor,
