@@ -48,6 +48,8 @@ export class HTMLBlock implements IHTMLBlock {
     const colorRules: string[] = [];
     if (!this._div.isConnected) {
       container.appendChild(this._div);
+      if (!this._div.isConnected)
+        return;
       this._div.contentDocument!.write(this.html);
       const style = this._div.contentDocument!.createElement('style');
       addColorRule('background', colors.background);
