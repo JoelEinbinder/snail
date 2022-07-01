@@ -18,6 +18,7 @@ export class IFrameBlock {
     shellId: number,
     private _willResizeEvent: JoelEvent<void>,
     ) {
+    this.iframe.allowFullscreen = true;
     this.iframe.style.height = '0';
     let readyCallback;
     this.readyPromise = new Promise(resolve => {
