@@ -44,7 +44,10 @@ const builtins = {
          * @param {any} data
          */
         function send(data) {
-            stdout.write(`\x1bM${JSON.stringify(data)}\x00`);
+            const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
+                return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
+            });
+            stdout.write(`\x1bM${str}\x00`);
         }
         const fs = require('fs');
         const resolved = args.length === 1 ? path.resolve(process.cwd(), args[0]) : process.cwd();
