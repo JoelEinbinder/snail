@@ -10,7 +10,7 @@ export class SuggestBox {
     private _glassPane: GlassPlane;
     private _viewport = new Viewport<Suggestion>(14, 14 * 9, this._renderItem.bind(this));
     private _description = document.createElement('div');
-    constructor(private _onPick: (suggestion: Suggestion) => void, private _onSelectionChanged: () => void) {
+    constructor(private _onPick: (suggestion: Suggestion) => boolean, private _onSelectionChanged: () => void) {
         this.element = document.createElement('div');
         this.element.classList.add('suggest-popup');
         this._description.classList.add('description');
@@ -76,9 +76,7 @@ export class SuggestBox {
                 this._moveSelection(1);
                 return true;
             case 'Enter':
-                const prefix = this._prefix;
-                this._onPick(suggestion);
-                return !this.showing || prefix !== suggestion.text;
+                return this._onPick(suggestion);
             case 'Tab':
                 this._onPick(suggestion);
                 return true;

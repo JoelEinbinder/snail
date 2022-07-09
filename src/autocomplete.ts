@@ -84,18 +84,23 @@ export class Autocomplete {
     }
 
     _onPick(suggestion: Suggestion) {
-        if (this._refreshingSuggestions) {
-            this.hideSuggestBox();
-            return;
-        }
-        const loc = this._editor.replaceRange(suggestion.text, {
+        const rangeToReplace = {
             start: { line: this._editor.selections[0].start.line, column: this._anchor },
             end: { line: this._editor.selections[0].start.line, column: this._editor.selections[0].start.column },
-        });
+        };
+        const prefix = this._editor.text(rangeToReplace);
+        if (this._refreshingSuggestions && !suggestion.text.startsWith(prefix)) {
+            this.hideSuggestBox();
+            return true;
+        }
+        const loc = this._editor.replaceRange(suggestion.text, rangeToReplace);
         this.hideSuggestBox();
         this._editor.selections = [{ start: loc, end: loc }];
-        if (this._activationChars.includes(suggestion.text[suggestion.text.length - 1]))
+        if (this._activationChars.includes(suggestion.text[suggestion.text.length - 1])) {
             this.showSuggestBox();
+            return true;
+        }
+        return prefix !== suggestion.text;
     }
 
     updateSuggestBox() {
