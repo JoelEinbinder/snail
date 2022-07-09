@@ -111,6 +111,7 @@ const handler = {
     const address = await startOrGetServer();
     const url = new URL(`http://${shellId}.localhost:${address.port}`);
     url.pathname = filePath;
+    url.search = '?entry';
     return url.href;
   }
 }

@@ -20,7 +20,8 @@ const rpc = RPC(transport, {
       process.env[key] = value;
   },
   async resolveFileForIframe({filePath, headers, search}) {
-    if (headers.accept && headers.accept.includes('text/html')) {
+    const searchParams = new URLSearchParams(search);
+    if (searchParams.has('entry')) {
       return {
         statusCode: 200,
         data: toBuffer(`<!DOCTYPE html>
@@ -34,12 +35,24 @@ const rpc = RPC(transport, {
 </body>
 </html>`),
         mimeType: 'text/html',
+        headers: {
+          'Cache-Control': 'max-age=31536000',
+        }
       };
     }
+    const fs = require('fs');
     const responseHeaders = {
       'cache-control': 'no-cache',
     };
-    if (search === '?thumbnail') {
+    if (searchParams.has('thumbnail')) {
+      responseHeaders.etag = fs.statSync(filePath).ctimeMs.toString();
+      if (headers['if-none-match'] === responseHeaders.etag) {
+        return {
+          statusCode: 304,
+          mimeType: 'image/png',
+          headers: responseHeaders,
+        }
+      }
       return {
         data: require('../thumbnail_generator/').generateThumbnail(filePath),
         mimeType: 'image/png',
@@ -47,10 +60,8 @@ const rpc = RPC(transport, {
         headers: responseHeaders,
       }
     }
-    const fs = require('fs');
     if (headers.accept && headers.accept === '*/*') {
       const resolved = resolveScript(filePath);
-      console.error(filePath, 'resolved', resolved);
       if (!resolved) {
         return {
           statusCode: 404,
