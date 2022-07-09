@@ -49,7 +49,7 @@ export class Autocomplete {
                 } else if (this._activationChars.includes(event.key) && !event.ctrlKey && !event.altKey && !event.metaKey) {
                     if (this._editor.line(selections[0].start.line).length !== selections[0].start.column)
                         return;
-                    this.showSuggestBox();
+                    this._wantsSuggestBoxShown = true;
                     return;
                 } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && legalChars.test(event.key)) {
                     if (this._editor.line(selections[0].start.line).length !== selections[0].start.column)
