@@ -109,5 +109,6 @@ class InPageGlassPane {
   }
 }
 
-export const GlassPlane = 'electronAPI' in window ? ExternalGlassPane : InPageGlassPane;
+// export const GlassPlane = 'electronAPI' in window ? ExternalGlassPane : InPageGlassPane;
+export const GlassPlane = InPageGlassPane;
 export type GlassPlane = ExternalGlassPane | InPageGlassPane;

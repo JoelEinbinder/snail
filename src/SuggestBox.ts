@@ -1,4 +1,3 @@
-import React from 'react';
 import {Viewport} from './Viewport';
 import './suggestions.css';
 import { Suggestion } from './autocomplete';
@@ -48,11 +47,20 @@ export class SuggestBox {
     private _renderItem(suggestion: Suggestion) {
         const isSelected = this._selectedSuggestion ? this._selectedSuggestion === suggestion : this._suggestions[0] === suggestion;
         const prefix = this._prefix;
-        return <div title={suggestion.text} onMouseDown={() => this._onPick(suggestion)} className={`suggestion ${isSelected ? 'selected' : ''}`}>
-            <span style={{textShadow: '0.5px 0 0 currentColor', color: '#FFF', lineHeight: '14px'}}>{prefix}</span>
-            {suggestion.text.substring(prefix.length)}
-            <span style={{ color: 'var(--ansi-246 )'}}>{suggestion.suffix}</span>
-        </div>
+        const suggestionDiv = document.createElement('div');
+        suggestionDiv.classList.add('suggestion');
+        suggestionDiv.classList.toggle('selected', isSelected);
+        suggestionDiv.title = suggestion.text;
+        suggestionDiv.addEventListener('mousedown', () => this._onPick(suggestion));
+
+        const prefixSpan = document.createElement('span');
+        prefixSpan.classList.add('prefix');
+        prefixSpan.textContent = prefix;
+        const suffixSpan = document.createElement('span');
+        suffixSpan.classList.add('suffix');
+        suffixSpan.textContent = suggestion.suffix;
+        suggestionDiv.append(prefixSpan, suggestion.text.substring(prefix.length), suffixSpan);
+        return suggestionDiv;
     }
     onKeyDown(event: KeyboardEvent): boolean {
         const suggestion = this._selectedSuggestion || this._suggestions[0];

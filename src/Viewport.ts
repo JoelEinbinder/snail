@@ -1,11 +1,9 @@
-import React from 'react';
-import { render } from 'react-dom';
 
 export class Viewport<Item> {
   element: HTMLElement;
   private _wrapper: HTMLElement;
   private _items: Item[] = [];
-  constructor(private _itemHeight: number, private _maxHeight: number, private _renderItem: (item: Item) => React.ReactNode) {
+  constructor(private _itemHeight: number, private _maxHeight: number, private _renderItem: (item: Item) => Element) {
     this.element = document.createElement('div');
     this.element.className = 'scroller';
     this.element.style.overflowY = 'scroll';
@@ -28,12 +26,19 @@ export class Viewport<Item> {
 
   _refresh() {
     this._wrapper.style.height = this._itemHeight * this._items.length + 'px';
-    render(<>
-      {this._items.map((item, index) => {
-        // TODO maybe put keys on suggestions for effeciency?
-        return this._isInView(index) && <div style={{position: 'absolute', height: this._itemHeight, top: index * this._itemHeight, left:0, right: 0}} key={index}>{this._renderItem(item)}</div>;
-      })}
-    </>, this._wrapper);
+    this._wrapper.textContent = '';
+    this._items.forEach((item, index) => {
+      if (!this._isInView(index))
+        return;
+      const div = document.createElement('div');
+      div.style.position = 'absolute';
+      div.style.top = index * this._itemHeight + 'px';
+      div.style.left = '0';
+      div.style.right = '0';
+      div.style.height = this._itemHeight + 'px';
+      div.append(this._renderItem(item));
+      this._wrapper.appendChild(div);
+    });
   }
 
   setItems(items: Item[]) {
