@@ -7,6 +7,7 @@ export class Autocomplete {
     private _abortController?: AbortController;
     private _wantsSuggestBoxShown = false;
     private _anchor = 0;
+    private _refreshingSuggestions = false;
     public suggestionChanged = new JoelEvent<void>(undefined);
     constructor(private _editor: Editor, private _completer: Completer, private _activationChars: string) {
         this._editor.on('selectionChanged', event => {
@@ -83,6 +84,10 @@ export class Autocomplete {
     }
 
     _onPick(suggestion: Suggestion) {
+        if (this._refreshingSuggestions) {
+            this.hideSuggestBox();
+            return;
+        }
         const loc = this._editor.replaceRange(suggestion.text, {
             start: { line: this._editor.selections[0].start.line, column: this._anchor },
             end: { line: this._editor.selections[0].start.line, column: this._editor.selections[0].start.column },
@@ -116,7 +121,9 @@ export class Autocomplete {
         const abortController = new AbortController();
         this._abortController = abortController;
         const textBeforeCursor = this._editor.text({ start: { line: location.line, column: 0 }, end: location });
+        this._refreshingSuggestions = true;
         const {anchor, suggestions} = await this._completer(textBeforeCursor, abortController.signal);
+        this._refreshingSuggestions = false;
         if (abortController.signal.aborted)
             return;
 

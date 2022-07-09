@@ -78,7 +78,7 @@ export class SuggestBox {
             case 'Enter':
                 const prefix = this._prefix;
                 this._onPick(suggestion);
-                return prefix !== suggestion.text;
+                return !this.showing || prefix !== suggestion.text;
             case 'Tab':
                 this._onPick(suggestion);
                 return true;
