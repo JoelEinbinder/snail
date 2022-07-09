@@ -96,11 +96,11 @@ export class Autocomplete {
         const loc = this._editor.replaceRange(suggestion.text, rangeToReplace);
         this.hideSuggestBox();
         this._editor.selections = [{ start: loc, end: loc }];
-        if (this._activationChars.includes(suggestion.text[suggestion.text.length - 1])) {
+        if (prefix === suggestion.text)
+            return false;
+        if (this._activationChars.includes(suggestion.text[suggestion.text.length - 1]))
             this.showSuggestBox();
-            return true;
-        }
-        return prefix !== suggestion.text;
+        return true;
     }
 
     updateSuggestBox() {

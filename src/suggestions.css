@@ -63,11 +63,11 @@ body.glass-pane .suggestions {
 .description:empty {
     visibility: hidden;
 }
-.prefix {
+.suggestion > .prefix {
     text-shadow: 0.5px 0 0 currentColor;
     color: #FFF;
     line-height: 14px;
 }
-.suffix {
+.suggestion > .suffix {
     color: var(--ansi-246)
 }
