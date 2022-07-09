@@ -1,3 +1,4 @@
+import { host } from "./host";
 import type { JoelEvent } from "./JoelEvent";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
@@ -38,9 +39,15 @@ export class IFrameBlock {
         }
       }
     })
-    const url = new URL(`d4://${shellId}.fake`);
-    url.pathname = data;
-    this.iframe.src = url.href;
+    host.sendMessage({
+      method: 'urlForIFrame',
+      params: {
+        shellId,
+        filePath: data,
+      }
+    }).then(url => {
+      this.iframe.src = url;
+    });
   }
   async message(data: string) {
     await this.readyPromise;

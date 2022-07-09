@@ -2,6 +2,13 @@
 /**
  * @typedef {import('events').EventEmitter & {send: (message: any) => void}} Client
  */
+/**
+ * @typedef {Object} FetchResponse
+ * @property {string=} data
+ * @property {string=} mimeType
+ * @property {number} statusCode
+ * @property {Record<string, string|string[]>=} headers
+ */
 let lastShellId = 0;
 /** @type {Map<number, import('../shell/shell').Shell>} */
 const shells = new Map();
@@ -17,25 +24,6 @@ const handler = {
   },
   async env({shellId, env}) {
     return shells.get(shellId).env(env);
-  },
-  /**
-   * @param {{url: string}} params
-   * @return {Promise<import('electron').ProtocolResponse>}
-   */
-  async fetchURL({url, search, headers}) {
-    try {
-      const {hostname, pathname, search} = new URL(url);
-      const shellId = parseInt(hostname);
-      const filePath = decodeURIComponent(pathname);
-      const response = await shells.get(shellId).resolveFileForIframe({filePath, search, headers});
-      return {
-        ...response,
-        data: response.data !== undefined ? Buffer.from(response.data, 'base64') : undefined,
-      }
-    } catch(e) {
-      console.error(e);
-      return {statusCode: 500};
-    }
   },
   /**
    * @param {Client} sender
@@ -118,7 +106,42 @@ const handler = {
       });
     });
     return runResult.changes;
+  },
+  async urlForIFrame({shellId, filePath}) {
+    const address = await startOrGetServer();
+    const url = new URL(`http://${shellId}.localhost:${address.port}`);
+    url.pathname = filePath;
+    return url.href;
   }
+}
+
+let addressPromise;
+async function startOrGetServer() {
+  if (addressPromise)
+    return addressPromise;
+  const http = require('http');
+  const server = http.createServer(async (req, res) => {
+    try {
+      const {hostname, pathname, search} = new URL(req.url, 'http://' + req.headers.host);
+      const shellId = parseInt(hostname);
+      const filePath = decodeURIComponent(pathname);
+      const response = await shells.get(shellId).resolveFileForIframe({filePath, search, headers: req.headers});
+      const headers = response.headers || {};
+      headers['Content-Type'] = response.mimeType;
+      res.writeHead(response.statusCode, headers);
+      res.end(response.data !== undefined ? Buffer.from(response.data, 'base64') : undefined);
+    } catch(e) {
+      console.error(e);
+      res.writeHead(500);
+      res.end();
+    }
+  });
+  addressPromise = new Promise(resolve => {
+    server.listen(undefined, '127.0.0.1', () => {
+      resolve(server.address());
+    });  
+  });
+  return addressPromise;
 }
 
 let database;

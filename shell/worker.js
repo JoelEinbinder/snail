@@ -20,7 +20,7 @@ const rpc = RPC(transport, {
       process.env[key] = value;
   },
   async resolveFileForIframe({filePath, headers, search}) {
-    if (headers.Accept && headers.Accept.includes('text/html')) {
+    if (headers.accept && headers.accept.includes('text/html')) {
       return {
         statusCode: 200,
         data: toBuffer(`<!DOCTYPE html>
@@ -48,7 +48,7 @@ const rpc = RPC(transport, {
       }
     }
     const fs = require('fs');
-    if (headers.Accept && headers.Accept === '*/*') {
+    if (headers.accept && headers.accept === '*/*') {
       const resolved = resolveScript(filePath);
       console.error(filePath, 'resolved', resolved);
       if (!resolved) {

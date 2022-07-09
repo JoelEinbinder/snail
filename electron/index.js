@@ -1,5 +1,5 @@
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
-const { app, protocol, BrowserWindow, ipcMain, Menu, MenuItem } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem } = require('electron');
 const { handler } = require('../host');
 let windowNumber = 0;
 app.setName('Terminal');
@@ -187,25 +187,6 @@ function clientForSender(sender) {
   return clients.get(sender);
 }
 
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'd4',
-    privileges: {
-      secure: true,
-      supportFetchAPI: true,
-      standard: true,
-      allowServiceWorkers: true,
-      bypassCSP: true,
-      stream: true
-    }
-  }
-]);
-void app.whenReady().then(() => {
-  protocol.registerBufferProtocol('d4', async (request, callback) => {
-    const output = await handler.fetchURL({url: request.url, headers: request.headers});
-    callback(output);
-  });
-});
 app.on('window-all-closed', e => e.preventDefault());
 app.on('activate', event => {
   if (windows.size)
