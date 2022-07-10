@@ -2,19 +2,20 @@ export interface IHostAPI {
   sendMessage: (message: {method: string, params?: any}) => Promise<any>;
   notify: (message: {method: string, params?: any}) => void;
   onEvent: (eventName: string, listener: (event: any) => void) => void;
+  type(): string;
 }
 
 function makeHostAPI(): IHostAPI {
   if ('electronAPI' in window)
     return window['electronAPI'];
   if (window['webkit']) {
-    const {host, callback} = hostApiHelper(message => window['webkit'].messageHandlers.wkMessage.postMessage(message));
+    const {host, callback} = hostApiHelper('webkit', message => window['webkit'].messageHandlers.wkMessage.postMessage(message));
     window['webkit_callback'] = callback;
     return host;
   }
   if ('acquireVsCodeApi' in window) {
     const api = window['acquireVsCodeApi']();
-    const {host, callback} = hostApiHelper(message => {
+    const {host, callback} = hostApiHelper('vscode', message => {
       api.postMessage(message);
     });
     window.addEventListener('message', event => {
@@ -27,7 +28,7 @@ function makeHostAPI(): IHostAPI {
   return null;
 }
 
-function hostApiHelper(postMessage: (message: any) => void) {
+function hostApiHelper(type: string, postMessage: (message: any) => void) {
   const callbacks = new Map<number, {resolve: (value: any) => void, reject: (error: any) => void}>();
   let lastId = 0;
   const listeners = new Map<string, Set<(value: any) => void>>();
@@ -48,6 +49,7 @@ function hostApiHelper(postMessage: (message: any) => void) {
       postMessage({...message, id});
       return promise;
     },
+    type() { return type },
   }
   return {
     host,

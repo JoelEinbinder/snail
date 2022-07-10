@@ -20,6 +20,7 @@ const electronAPI = {
       listeners.set(eventName, new Set());
     listeners.get(eventName).add(listener);
   },
+  type() { return "electron"; }
 };
 ipcRenderer.on('message', (sender, event) => {
   if ('id' in event) {
