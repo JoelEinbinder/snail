@@ -3,13 +3,13 @@ import type { JoelEvent } from "./JoelEvent";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
-window.onmessage = event => {
+window.addEventListener('message', event => {
   for (const iframe of iframeMessageHandler.keys()) {
     if (iframe.contentWindow === event.source) {
       iframeMessageHandler.get(iframe)(event.data);
     }
   }
-}
+});
 
 export class IFrameBlock {
   public iframe: HTMLIFrameElement|null = document.createElement('iframe');

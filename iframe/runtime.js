@@ -7,7 +7,7 @@ async function waitForMessage() {
 }
 
 function setHeight(height) {
-  window.top.postMessage({method: 'setHeight', params: {height}}, '*')
+  window.parent.postMessage({method: 'setHeight', params: {height}}, '*')
 }
 
 window.addEventListener('message', event => {
@@ -21,4 +21,4 @@ window.d4 = {
   waitForMessage,
   setHeight,
 }
-window.top.postMessage('ready', '*')
+window.parent.postMessage('ready', '*')

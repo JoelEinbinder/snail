@@ -18,6 +18,8 @@ function makeHostAPI(): IHostAPI {
       api.postMessage(message);
     });
     window.addEventListener('message', event => {
+      if ((event.source as WindowProxy).parent === window)
+        return;
       callback(event.data);
     });
     return host;
