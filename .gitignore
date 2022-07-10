@@ -8,3 +8,5 @@ dist
 /WebKitBundle
 
 joel-terminal-*.vsix
+
+xcuserdata/

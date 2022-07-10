@@ -34,7 +34,16 @@
                 [strongSelf->webView evaluateJavaScript:code completionHandler:nil];
         });
     }];
-    [self.view addSubview:webView];
+
+    NSVisualEffectView *viewWithFX = [[NSVisualEffectView alloc] initWithFrame:self.view.bounds];
+    viewWithFX.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    viewWithFX.translatesAutoresizingMaskIntoConstraints = YES;
+    viewWithFX.material = NSVisualEffectMaterialFullScreenUI; // or NSVisualEffectMaterialMenu, or ..
+    viewWithFX.blendingMode = NSVisualEffectBlendingModeBehindWindow; //NSVisualEffectBlendingModeWithinWindow
+    [viewWithFX addSubview:webView];
+
+    [self.view addSubview:viewWithFX];
+
 }
 -(void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
     NSDictionary* body = message.body;
