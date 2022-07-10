@@ -48,6 +48,7 @@ body.fullscreen-entry {
   background: rgb(0,0,0,0.5);
   z-index: 2;
   position: absolute;
+  inset: 0;
 }
 
 body.vscode-dark .fullscreen-element {
