@@ -11,6 +11,7 @@ import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 import type { Suggestion } from './autocomplete';
 import { titleThrottle } from './UIThrottle';
 import { host } from './host';
+import { AntiFlicker } from './AntiFlicker';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
@@ -52,6 +53,7 @@ export class Shell {
   private _connectionNameEvent = new JoelEvent<string>('');
   private _connectionToShellId = new WeakMap<JSConnection, number>();
   private _connectionToSSHAddress = new WeakMap<JSConnection, string>();
+  private _antiFlicker = new AntiFlicker(() => this._lockPrompt(), () => this._unlockPrompt());
 
   private _connectionNameElement = document.createElement('div');
   private constructor() {
@@ -138,7 +140,7 @@ export class Shell {
       startTerminal:({id}: {id: number}) => {
         const terminalBlock = new TerminalBlock(this._size, shellId, async data => {
           await notify('input', { data, id});
-        });
+        }, this._antiFlicker);
         const onFullScreen = (value: boolean) => {
           if (value)
             this.fullscreenItem.dispatch(terminalBlock);

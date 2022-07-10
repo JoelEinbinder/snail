@@ -1,4 +1,5 @@
 import { Terminal, IDisposable } from "xterm";
+import type { AntiFlicker } from "./AntiFlicker";
 import { host } from "./host";
 import { IFrameBlock } from "./IFrameBlock";
 import { JoelEvent } from "./JoelEvent";
@@ -30,7 +31,7 @@ export class TerminalBlock implements LogItem {
   private _lastWritePromise = Promise.resolve();
   public empty = true;
   private _closed = false;
-  constructor(private _size: JoelEvent<{cols: number, rows: number}>, private _shellId: number, sendInput: (data: string) => void) {
+  constructor(private _size: JoelEvent<{cols: number, rows: number}>, private _shellId: number, sendInput: (data: string) => void, antiFlicker?: AntiFlicker) {
 
     this.element = document.createElement('div');
     this.element.style.height = '0px';
@@ -79,7 +80,7 @@ export class TerminalBlock implements LogItem {
           return false;
         }
         const hadFocus = hasFocus(this.element);
-        this._iframeBlock = new IFrameBlock(data, this._shellId, this.willResizeEvent);
+        this._iframeBlock = new IFrameBlock(data, this._shellId, this.willResizeEvent, antiFlicker);
         this.element.replaceWith(this._iframeBlock.iframe);
         if (hadFocus)
           this.focus();

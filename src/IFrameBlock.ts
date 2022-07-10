@@ -1,3 +1,4 @@
+import type { AntiFlicker } from "./AntiFlicker";
 import { host } from "./host";
 import type { JoelEvent } from "./JoelEvent";
 
@@ -18,6 +19,7 @@ export class IFrameBlock {
     data: string,
     shellId: number,
     private _willResizeEvent: JoelEvent<void>,
+    antiFlicker?: AntiFlicker,
     ) {
     this.iframe.allowFullscreen = true;
     this.iframe.style.height = '0';
@@ -25,6 +27,7 @@ export class IFrameBlock {
     this.readyPromise = new Promise(resolve => {
       readyCallback = resolve;
     });
+    const didDraw = antiFlicker.expectToDraw(500);
     iframeMessageHandler.set(this.iframe, data => {
       if (readyCallback) {
         readyCallback();
@@ -35,6 +38,8 @@ export class IFrameBlock {
         case 'setHeight': {
           this._willResizeEvent.dispatch();
           this.iframe.style.height = `${data.params.height}px`;
+          if (data.params.height > 0)
+            didDraw();
           break;
         }
       }
