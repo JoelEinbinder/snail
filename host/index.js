@@ -108,41 +108,12 @@ const handler = {
     return runResult.changes;
   },
   async urlForIFrame({shellId, filePath}) {
-    const address = await startOrGetServer();
-    const url = new URL(`http://${shellId}.localhost:${address.port}`);
+    const address = await shells.get(shellId).startOrGetServer();
+    const url = new URL(`http://localhost:${address.port}`);
     url.pathname = filePath;
     url.search = '?entry';
     return url.href;
   }
-}
-
-let addressPromise;
-async function startOrGetServer() {
-  if (addressPromise)
-    return addressPromise;
-  const http = require('http');
-  const server = http.createServer(async (req, res) => {
-    try {
-      const {hostname, pathname, search} = new URL(req.url, 'http://' + req.headers.host);
-      const shellId = parseInt(hostname);
-      const filePath = decodeURIComponent(pathname);
-      const response = await shells.get(shellId).resolveFileForIframe({filePath, search, headers: req.headers});
-      const headers = response.headers || {};
-      headers['Content-Type'] = response.mimeType;
-      res.writeHead(response.statusCode, headers);
-      res.end(response.data !== undefined ? Buffer.from(response.data, 'base64') : undefined);
-    } catch(e) {
-      console.error(e);
-      res.writeHead(500);
-      res.end();
-    }
-  });
-  addressPromise = new Promise(resolve => {
-    server.listen(undefined, '127.0.0.1', () => {
-      resolve(server.address());
-    });  
-  });
-  return addressPromise;
 }
 
 let database;

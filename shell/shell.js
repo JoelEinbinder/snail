@@ -54,6 +54,38 @@ class Shell {
 
   close() {
     this.process.kill();
+    if (this.server) {
+      this.server.close();
+      delete this.server;
+      delete this.serverAddressPromise;
+    }
+  }
+
+  async startOrGetServer() {
+    if (this.serverAddressPromise)
+      return this.serverAddressPromise;
+    const http = require('http');
+    const server = this.server = http.createServer(async (req, res) => {
+      try {
+        const {pathname, search} = new URL(String(req.url), 'http://' + req.headers.host);
+        const filePath = decodeURIComponent(pathname);
+        const response = await this.resolveFileForIframe({filePath, search, headers: req.headers});
+        const headers = response.headers || {};
+        headers['Content-Type'] = response.mimeType;
+        res.writeHead(response.statusCode, headers);
+        res.end(response.data !== undefined ? Buffer.from(response.data, 'base64') : undefined);
+      } catch(e) {
+        console.error(e);
+        res.writeHead(500);
+        res.end();
+      }
+    });
+    this.serverAddressPromise = new Promise(resolve => {
+      server.listen(undefined, '127.0.0.1', () => {
+        resolve(server.address());
+      });  
+    });
+    return this.serverAddressPromise;
   }
 }
 
