@@ -4,7 +4,7 @@
  */
 
 import { Terminal as ITerminalApi, IMarker, IDisposable, ILinkMatcherOptions, ITheme, ILocalizableStrings, ITerminalAddon, ISelectionPosition, IBufferNamespace as IBufferNamespaceApi, IParser, ILinkProvider, IUnicodeHandling, FontWeight, IModes, HTMLDelegate } from 'xterm';
-import { ITerminal } from 'browser/Types';
+import type { ITerminal } from 'browser/Types';
 import { Terminal as TerminalCore } from 'browser/Terminal';
 import * as Strings from 'browser/LocalizableStrings';
 import { IEvent } from 'common/EventEmitter';

@@ -3,13 +3,13 @@
  * @license MIT
  */
 
-import { IRenderDimensions } from 'browser/renderer/Types';
+import type { IRenderDimensions } from 'browser/renderer/Types';
 import { CharData, ICellData } from 'common/Types';
 import { GridCache } from 'browser/renderer/GridCache';
 import { BaseRenderLayer } from 'browser/renderer/BaseRenderLayer';
 import { AttributeData } from 'common/buffer/AttributeData';
 import { NULL_CELL_CODE, Content } from 'common/buffer/Constants';
-import { IColorSet } from 'browser/Types';
+import type { IColorSet } from 'browser/Types';
 import { CellData } from 'common/buffer/CellData';
 import { IOptionsService, IBufferService } from 'common/services/Services';
 import { ICharacterJoinerService } from 'browser/services/Services';

@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-import { ILinkifierEvent, ILinkMatcher, LinkMatcherHandler, ILinkMatcherOptions, ILinkifier, IMouseZoneManager, IMouseZone, IRegisteredLinkMatcher } from 'browser/Types';
+import type { ILinkifierEvent, ILinkMatcher, LinkMatcherHandler, ILinkMatcherOptions, ILinkifier, IMouseZoneManager, IMouseZone, IRegisteredLinkMatcher } from 'browser/Types';
 import { IBufferStringIteratorResult } from 'common/buffer/Types';
 import { EventEmitter, IEvent } from 'common/EventEmitter';
 import { ILogService, IBufferService, IOptionsService, IUnicodeService } from 'common/services/Services';

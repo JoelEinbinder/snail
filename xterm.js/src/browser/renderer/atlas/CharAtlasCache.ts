@@ -7,7 +7,7 @@ import { generateConfig, configEquals } from 'browser/renderer/atlas/CharAtlasUt
 import { BaseCharAtlas } from 'browser/renderer/atlas/BaseCharAtlas';
 import { DynamicCharAtlas } from 'browser/renderer/atlas/DynamicCharAtlas';
 import { ICharAtlasConfig } from 'browser/renderer/atlas/Types';
-import { IColorSet } from 'browser/Types';
+import type { IColorSet } from 'browser/Types';
 import { ITerminalOptions } from 'common/services/Services';
 
 interface ICharAtlasCacheEntry {

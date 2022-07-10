@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-import { IColor } from 'browser/Types';
+import type { IColor } from 'browser/Types';
 import { IColorRGB } from 'common/Types';
 
 /**

@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-import { IColorManager, IColor, IColorSet, IColorContrastCache } from 'browser/Types';
+import type { IColorManager, IColor, IColorSet, IColorContrastCache } from 'browser/Types';
 import { ITheme } from 'common/services/Services';
 import { channels, color, css } from 'browser/Color';
 import { ColorContrastCache } from 'browser/ColorContrastCache';

@@ -4,7 +4,7 @@
  */
 
 import * as Strings from 'browser/LocalizableStrings';
-import { ITerminal, IRenderDebouncer } from 'browser/Types';
+import type { ITerminal, IRenderDebouncer } from 'browser/Types';
 import { IBuffer } from 'common/buffer/Types';
 import { isMac } from 'common/Platform';
 import { TimeBasedDebouncer } from 'browser/TimeBasedDebouncer';

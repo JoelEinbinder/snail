@@ -7,8 +7,8 @@ import { Terminal } from 'xterm';
 import { BaseRenderLayer } from './BaseRenderLayer';
 import { ICellData } from 'common/Types';
 import { CellData } from 'common/buffer/CellData';
-import { IColorSet, ITerminal } from 'browser/Types';
-import { IRenderDimensions, IRequestRedrawEvent } from 'browser/renderer/Types';
+import type { IColorSet, ITerminal } from 'browser/Types';
+import type { IRenderDimensions, IRequestRedrawEvent } from 'browser/renderer/Types';
 import { IEventEmitter } from 'common/EventEmitter';
 
 interface ICursorState {

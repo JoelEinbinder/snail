@@ -1,5 +1,5 @@
-import { IRenderDimensions, IRenderLayer } from 'browser/renderer/Types';
-import { IColorSet } from 'browser/Types';
+import type { IRenderDimensions, IRenderLayer } from 'browser/renderer/Types';
+import type { IColorSet } from 'browser/Types';
 import { IBuffer } from 'common/buffer/Types';
 import { ITerminalOptions, Terminal } from 'xterm';
 

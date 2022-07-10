@@ -15,7 +15,7 @@ const babelPlugins = [
   require.resolve('@babel/plugin-proposal-optional-chaining'),
 ];
 const babelPresets = [
-  [require.resolve('@babel/preset-env'), { shippedProposals: true, targets: {chrome: '87'} }],
+  [require.resolve('@babel/preset-env'), { shippedProposals: true, targets: {chrome: '87'}, loose: true }],
 ];
 const typescriptPreset = [require.resolve('@babel/preset-typescript'), { onlyRemoveTypeImports: false }];
 
@@ -25,6 +25,9 @@ module.exports = {
   entry: [
     './src/index',
   ],
+  performance: {
+    maxAssetSize: 2 * 1024 * 1024,
+  },
   devServer: {
     contentBase: path.join(__dirname, './public'),
     hot: true,

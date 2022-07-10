@@ -4,7 +4,7 @@
  */
 
 import { FontWeight } from 'xterm';
-import { IColorSet } from 'browser/Types';
+import type { IColorSet } from 'browser/Types';
 
 export interface IGlyphIdentifier {
   chars: string;

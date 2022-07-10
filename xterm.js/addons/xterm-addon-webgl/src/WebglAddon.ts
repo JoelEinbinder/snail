@@ -6,7 +6,7 @@
 import { Terminal, ITerminalAddon, IEvent } from 'xterm';
 import { WebglRenderer } from './WebglRenderer';
 import { ICharacterJoinerService, IRenderService } from 'browser/services/Services';
-import { IColorSet } from 'browser/Types';
+import type { IColorSet } from 'browser/Types';
 import { EventEmitter } from 'common/EventEmitter';
 import { isSafari } from 'common/Platform';
 

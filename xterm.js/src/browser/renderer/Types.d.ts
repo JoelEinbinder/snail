@@ -4,7 +4,7 @@
  */
 
 import { IDisposable } from 'common/Types';
-import { IColorSet } from 'browser/Types';
+import type { IColorSet } from 'browser/Types';
 import { IEvent } from 'common/EventEmitter';
 
 export interface IRenderDimensions {

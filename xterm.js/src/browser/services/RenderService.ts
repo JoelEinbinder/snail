@@ -3,13 +3,13 @@
  * @license MIT
  */
 
-import { IRenderer, IRenderDimensions } from 'browser/renderer/Types';
+import type { IRenderer, IRenderDimensions } from 'browser/renderer/Types';
 import { RenderDebouncer } from 'browser/RenderDebouncer';
 import { EventEmitter, IEvent } from 'common/EventEmitter';
 import { Disposable } from 'common/Lifecycle';
 import { ScreenDprMonitor } from 'browser/ScreenDprMonitor';
 import { addDisposableDomListener } from 'browser/Lifecycle';
-import { IColorSet, IRenderDebouncer } from 'browser/Types';
+import type { IColorSet, IRenderDebouncer } from 'browser/Types';
 import { IOptionsService, IBufferService } from 'common/services/Services';
 import { ICharSizeService, IRenderService } from 'browser/services/Services';
 

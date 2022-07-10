@@ -3,13 +3,13 @@
  * @license MIT
  */
 
-import { IRenderDimensions, IRequestRedrawEvent } from 'browser/renderer/Types';
+import type { IRenderDimensions, IRequestRedrawEvent } from 'browser/renderer/Types';
 import { BaseRenderLayer } from 'browser/renderer/BaseRenderLayer';
 import { ICellData } from 'common/Types';
 import { CellData } from 'common/buffer/CellData';
-import { IColorSet } from 'browser/Types';
+import type { IColorSet } from 'browser/Types';
 import { IBufferService, IOptionsService, ICoreService } from 'common/services/Services';
-import { IEventEmitter } from 'common/EventEmitter';
+import type { IEventEmitter } from 'common/EventEmitter';
 import { ICoreBrowserService } from 'browser/services/Services';
 
 interface ICursorState {

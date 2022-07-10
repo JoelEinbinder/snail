@@ -3,11 +3,11 @@
  * @license MIT
  */
 
-import { IRenderDimensions } from 'browser/renderer/Types';
+import type { IRenderDimensions } from 'browser/renderer/Types';
 import { BaseRenderLayer } from './BaseRenderLayer';
 import { INVERTED_DEFAULT_COLOR } from 'browser/renderer/atlas/Constants';
 import { is256Color } from 'browser/renderer/atlas/CharAtlasUtils';
-import { IColorSet, ILinkifierEvent, ILinkifier, ILinkifier2 } from 'browser/Types';
+import type { IColorSet, ILinkifierEvent, ILinkifier, ILinkifier2 } from 'browser/Types';
 import { IBufferService, IOptionsService } from 'common/services/Services';
 
 export class LinkRenderLayer extends BaseRenderLayer {

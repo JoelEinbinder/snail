@@ -6,10 +6,10 @@
 import { TextRenderLayer } from 'browser/renderer/TextRenderLayer';
 import { SelectionRenderLayer } from 'browser/renderer/SelectionRenderLayer';
 import { CursorRenderLayer } from 'browser/renderer/CursorRenderLayer';
-import { IRenderLayer, IRenderer, IRenderDimensions, IRequestRedrawEvent } from 'browser/renderer/Types';
+import type { IRenderLayer, IRenderer, IRenderDimensions, IRequestRedrawEvent } from 'browser/renderer/Types';
 import { LinkRenderLayer } from 'browser/renderer/LinkRenderLayer';
 import { Disposable } from 'common/Lifecycle';
-import { IColorSet, ILinkifier, ILinkifier2 } from 'browser/Types';
+import type { IColorSet, ILinkifier, ILinkifier2 } from 'browser/Types';
 import { ICharSizeService, ICoreBrowserService } from 'browser/services/Services';
 import { IBufferService, IOptionsService, ICoreService, IInstantiationService } from 'common/services/Services';
 import { removeTerminalFromCache } from 'browser/renderer/atlas/CharAtlasCache';

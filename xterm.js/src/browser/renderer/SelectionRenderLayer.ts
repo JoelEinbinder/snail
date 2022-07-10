@@ -3,9 +3,9 @@
  * @license MIT
  */
 
-import { IRenderDimensions } from 'browser/renderer/Types';
+import type { IRenderDimensions } from 'browser/renderer/Types';
 import { BaseRenderLayer } from 'browser/renderer/BaseRenderLayer';
-import { IColorSet } from 'browser/Types';
+import type { IColorSet } from 'browser/Types';
 import { IBufferService, IOptionsService } from 'common/services/Services';
 
 interface ISelectionState {

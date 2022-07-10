@@ -9,7 +9,7 @@ import { NULL_CELL_CODE, WHITESPACE_CELL_CHAR, Attributes } from 'common/buffer/
 import { CellData } from 'common/buffer/CellData';
 import { ICoreService, IOptionsService } from 'common/services/Services';
 import { color, rgba } from 'browser/Color';
-import { IColorSet, IColor } from 'browser/Types';
+import type { IColorSet, IColor } from 'browser/Types';
 import { ICharacterJoinerService } from 'browser/services/Services';
 import { JoinedCellData } from 'browser/services/CharacterJoinerService';
 

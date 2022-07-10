@@ -6,7 +6,7 @@
 import { Disposable } from 'common/Lifecycle';
 import { addDisposableDomListener } from 'browser/Lifecycle';
 import { IMouseService, ISelectionService } from 'browser/services/Services';
-import { IMouseZoneManager, IMouseZone } from 'browser/Types';
+import type { IMouseZoneManager, IMouseZone } from 'browser/Types';
 import { IBufferService, IOptionsService } from 'common/services/Services';
 
 /**

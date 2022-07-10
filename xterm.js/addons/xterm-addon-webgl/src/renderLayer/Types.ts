@@ -4,8 +4,8 @@
  */
 
 import { IDisposable, Terminal } from 'xterm';
-import { IColorSet } from 'browser/Types';
-import { IRenderDimensions } from 'browser/renderer/Types';
+import type { IColorSet } from 'browser/Types';
+import type { IRenderDimensions } from 'browser/renderer/Types';
 
 export interface IRenderLayer extends IDisposable {
   /**

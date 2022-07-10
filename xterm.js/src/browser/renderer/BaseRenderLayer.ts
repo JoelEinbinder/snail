@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-import { IRenderDimensions, IRenderLayer } from 'browser/renderer/Types';
+import type { IRenderDimensions, IRenderLayer } from 'browser/renderer/Types';
 import { ICellData } from 'common/Types';
 import { DEFAULT_COLOR, WHITESPACE_CELL_CHAR, WHITESPACE_CELL_CODE, Attributes } from 'common/buffer/Constants';
 import { IGlyphIdentifier } from 'browser/renderer/atlas/Types';
@@ -11,7 +11,7 @@ import { DIM_OPACITY, INVERTED_DEFAULT_COLOR, TEXT_BASELINE } from 'browser/rend
 import { BaseCharAtlas } from 'browser/renderer/atlas/BaseCharAtlas';
 import { acquireCharAtlas } from 'browser/renderer/atlas/CharAtlasCache';
 import { AttributeData } from 'common/buffer/AttributeData';
-import { IColorSet, IColor } from 'browser/Types';
+import type { IColorSet, IColor } from 'browser/Types';
 import { CellData } from 'common/buffer/CellData';
 import { IBufferService, IOptionsService } from 'common/services/Services';
 import { throwIfFalsy } from 'browser/renderer/RendererUtils';

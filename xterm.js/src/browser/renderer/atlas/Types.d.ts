@@ -4,7 +4,7 @@
  */
 
 import { FontWeight } from 'common/services/Services';
-import { IPartialColorSet } from 'browser/Types';
+import type { IPartialColorSet } from 'browser/Types';
 
 export interface IGlyphIdentifier {
   chars: string;

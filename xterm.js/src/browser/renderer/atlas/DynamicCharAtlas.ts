@@ -9,7 +9,7 @@ import { BaseCharAtlas } from 'browser/renderer/atlas/BaseCharAtlas';
 import { DEFAULT_ANSI_COLORS } from 'browser/ColorManager';
 import { LRUMap } from 'browser/renderer/atlas/LRUMap';
 import { isFirefox, isSafari } from 'common/Platform';
-import { IColor } from 'browser/Types';
+import type { IColor } from 'browser/Types';
 import { throwIfFalsy } from 'browser/renderer/RendererUtils';
 import { color } from 'browser/Color';
 

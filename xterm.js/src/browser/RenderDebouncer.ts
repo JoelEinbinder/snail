@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-import { IRenderDebouncer } from 'browser/Types';
+import type { IRenderDebouncer } from 'browser/Types';
 
 /**
  * Debounces calls to render terminal rows using animation frames.

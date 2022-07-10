@@ -5,7 +5,7 @@
 
 import { ICharAtlasConfig } from 'browser/renderer/atlas/Types';
 import { DEFAULT_COLOR } from 'common/buffer/Constants';
-import { IColorSet, IPartialColorSet } from 'browser/Types';
+import type { IColorSet, IPartialColorSet } from 'browser/Types';
 import { ITerminalOptions } from 'common/services/Services';
 
 export function generateConfig(scaledCharWidth: number, scaledCharHeight: number, options: ITerminalOptions, colors: IColorSet): ICharAtlasConfig {

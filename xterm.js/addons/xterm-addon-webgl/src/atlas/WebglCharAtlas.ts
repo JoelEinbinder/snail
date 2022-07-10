@@ -8,7 +8,7 @@ import { DIM_OPACITY, TEXT_BASELINE } from 'browser/renderer/atlas/Constants';
 import { IRasterizedGlyph, IBoundingBox, IRasterizedGlyphSet } from '../Types';
 import { DEFAULT_COLOR, Attributes } from 'common/buffer/Constants';
 import { throwIfFalsy } from '../WebglUtils';
-import { IColor } from 'browser/Types';
+import type { IColor } from 'browser/Types';
 import { IDisposable } from 'xterm';
 import { AttributeData } from 'common/buffer/AttributeData';
 import { channels, rgba } from 'browser/Color';
