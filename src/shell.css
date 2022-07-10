@@ -46,6 +46,8 @@ body.fullscreen-entry {
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   background: rgb(0,0,0,0.5);
+  z-index: 2;
+  position: absolute;
 }
 
 body.vscode-dark .fullscreen-element {

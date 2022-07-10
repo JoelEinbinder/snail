@@ -24,7 +24,7 @@ function updateSize() {
   const {width, height} = measureChar();
   const padding = PADDING / window.devicePixelRatio;
   size.cols = Math.floor((window.innerWidth - padding * 2) / width);
-  size.rows = Math.floor((window.innerHeight - padding * 2) / height);
+  size.rows = Math.floor((window.devicePixelRatio * (window.innerHeight - padding * 2)) / Math.ceil(height * window.devicePixelRatio));
   for (const shell of shells)
     shell.updateSize();
 }
@@ -642,6 +642,6 @@ function measureChar() {
   document.body.appendChild(div);
   const {width, height} = div.getBoundingClientRect();
   div.remove();
-  return {width: width/10, height: height};
+  return {width: Math.floor(window.devicePixelRatio * width/10) / window.devicePixelRatio, height: Math.ceil(height)};
 }
 

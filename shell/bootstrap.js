@@ -149,6 +149,8 @@ global.bootstrap = (args) => {
       cols = size.cols;
       for (const shell of shells.values())
         shell.resize(size.cols, size.rows);
+      if (freeShell)
+        freeShell.shell.resize(size.cols, size.rows);
     }
   }
   return function respond(data) {
