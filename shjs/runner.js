@@ -38,7 +38,7 @@ const builtins = {
         if (args.length > 1 || stdout !== process.stdout || args.some(x => x.startsWith('-')))
             return 'pass';
         const path = require('path')
-        stdout.write(`\x1bL${path.join(__dirname, '..', 'apps', 'ls', 'index.js')}\x00`);
+        stdout.write(`\x1b\x1aL${path.join(__dirname, '..', 'apps', 'ls', 'index.js')}\x00`);
 
         /**
          * @param {any} data
@@ -47,7 +47,7 @@ const builtins = {
             const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
                 return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
             });
-            stdout.write(`\x1bM${str}\x00`);
+            stdout.write(`\x1b\x1aM${str}\x00`);
         }
         const fs = require('fs');
         const resolved = args.length === 1 ? path.resolve(process.cwd(), args[0]) : process.cwd();

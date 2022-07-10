@@ -12,7 +12,6 @@ let antiCache = 0;
 while (true) {
   const message = await d4.waitForMessage<{filePath: string, mimeType: string}>();
   const {filePath, mimeType} = message;
-  console.log(mimeType);
   if (mimeType.startsWith('image/')) {
     const image = document.createElement('img');
     image.src = filePath + '?' + antiCache++;
