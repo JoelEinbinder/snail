@@ -4,5 +4,6 @@ node_modules
 history.sqlite3
 /TODO
 /a.js
+dist
 
 joel-terminal-*.vsix

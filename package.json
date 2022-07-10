@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "mocha shjs"
+    "test": "mocha shjs",
+    "build": "webpack"
   },
   "workspaces": [
     "xterm.js"
@@ -43,7 +44,8 @@
     "style-loader": "^3.2.1",
     "typescript": "^4.5.5",
     "webpack": "^5.51.1",
-    "webpack-bundle-analyzer": "^4.4.2"
+    "webpack-bundle-analyzer": "^4.4.2",
+    "webpack-cli": "^4.10.0"
   },
   "dependencies": {
     "acorn": "^8.7.0",

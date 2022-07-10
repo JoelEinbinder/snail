@@ -38,11 +38,6 @@ module.exports = {
       inject: true,
       template: './public/index.html',
     }),
-    !isDevelopment && new CopyWebpackPlugin({
-      patterns: [
-        { from: 'public' }
-      ]
-    }),
     process.env.ANALYZE_BUNDLE === 'true' && new BundleAnalyzerPlugin()
   ].filter(Boolean),
   output: {
