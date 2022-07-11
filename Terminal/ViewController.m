@@ -52,7 +52,7 @@
     [viewWithFX addSubview:webView];
 
     [self.view addSubview:viewWithFX];
-
+    [webView setNextResponder:nil];
 }
 -(void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
     NSDictionary* body = message.body;

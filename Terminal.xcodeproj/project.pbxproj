@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F091DC95287B730100915D30 /* WebKitBundle in Resources */ = {isa = PBXBuildFile; fileRef = F091DC94287B730100915D30 /* WebKitBundle */; };
+		F091DC99287BBA1A00915D30 /* Window.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F091DC98287BBA1A00915D30 /* Window.storyboard */; };
 		F0EA446227EC0C4A0085A081 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA446127EC0C4A0085A081 /* AppDelegate.m */; };
 		F0EA446527EC0C4A0085A081 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA446427EC0C4A0085A081 /* ViewController.m */; };
 		F0EA446727EC0C4D0085A081 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F0EA446627EC0C4D0085A081 /* Assets.xcassets */; };
@@ -39,6 +40,7 @@
 
 /* Begin PBXFileReference section */
 		F091DC94287B730100915D30 /* WebKitBundle */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WebKitBundle; path = "../../gap-year/WebKitBundle"; sourceTree = "<group>"; };
+		F091DC98287BBA1A00915D30 /* Window.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Window.storyboard; sourceTree = "<group>"; };
 		F0EA445D27EC0C4A0085A081 /* Terminal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Terminal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0EA446027EC0C4A0085A081 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		F0EA446127EC0C4A0085A081 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -111,13 +113,14 @@
 				F0EA446027EC0C4A0085A081 /* AppDelegate.h */,
 				F0EA446127EC0C4A0085A081 /* AppDelegate.m */,
 				F0EA446327EC0C4A0085A081 /* ViewController.h */,
+				F0EA446427EC0C4A0085A081 /* ViewController.m */,
 				F0EA449027EC12740085A081 /* NSObject+KVOBlock.m */,
 				F0EA448F27EC124B0085A081 /* NSObject+KVOBlock.h */,
-				F0EA446427EC0C4A0085A081 /* ViewController.m */,
 				F0EA449227EC2C1E0085A081 /* NodeTalker.h */,
 				F0EA449327EC2C1E0085A081 /* NodeTalker.m */,
 				F0EA446627EC0C4D0085A081 /* Assets.xcassets */,
 				F0EA446827EC0C4D0085A081 /* Main.storyboard */,
+				F091DC98287BBA1A00915D30 /* Window.storyboard */,
 				F0EA446B27EC0C4D0085A081 /* main.m */,
 				F0EA446D27EC0C4D0085A081 /* Terminal.entitlements */,
 			);
@@ -244,6 +247,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F091DC99287BBA1A00915D30 /* Window.storyboard in Resources */,
 				F091DC95287B730100915D30 /* WebKitBundle in Resources */,
 				F0EA446727EC0C4D0085A081 /* Assets.xcassets in Resources */,
 				F0EA446A27EC0C4D0085A081 /* Main.storyboard in Resources */,

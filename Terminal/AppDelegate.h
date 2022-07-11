@@ -7,8 +7,12 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+@interface AppDelegate : NSObject <NSApplicationDelegate> {
+    NSMutableArray<NSWindow*>* windows;
+}
 
-
+-(IBAction)newWindowButton:(id)sender;
+-(IBAction)newWindowForTab:(id)sender;
+-(IBAction)newTab:(id)sender;
 @end
 
