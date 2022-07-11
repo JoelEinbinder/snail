@@ -17,7 +17,16 @@
     webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, 200, 200) configuration:configuration];
     [webView setUIDelegate:self];
     webView.underPageBackgroundColor = [NSColor clearColor];
-    [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://localhost/gap-year/"]]];
+    NSString* webURL = [[[NSProcessInfo processInfo] environment] valueForKey:@"TERMINAL_WEB_URL"];
+    if (webURL) {
+        [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:webURL]]];
+    } else {
+        [webView
+         loadFileURL:[NSURL
+                      fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"index" ofType:@"html" inDirectory:@"WebKitBundle/dist/"]]
+         allowingReadAccessToURL:[NSURL
+                                  fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"dist" ofType:@"" inDirectory:@"WebKitBundle"]]];
+    }
     [webView setValue:@false forKey:@"drawsBackground"];
     self.view.window.title = webView.title;
     [webView observeKeyPath:@"title" withBlock:^(WKWebView* webView, NSString * keyPath, id lastValue) {

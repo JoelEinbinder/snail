@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F091DC95287B730100915D30 /* WebKitBundle in Resources */ = {isa = PBXBuildFile; fileRef = F091DC94287B730100915D30 /* WebKitBundle */; };
 		F0EA446227EC0C4A0085A081 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA446127EC0C4A0085A081 /* AppDelegate.m */; };
 		F0EA446527EC0C4A0085A081 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA446427EC0C4A0085A081 /* ViewController.m */; };
 		F0EA446727EC0C4D0085A081 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F0EA446627EC0C4D0085A081 /* Assets.xcassets */; };
@@ -37,6 +38,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F091DC94287B730100915D30 /* WebKitBundle */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WebKitBundle; path = "../../gap-year/WebKitBundle"; sourceTree = "<group>"; };
 		F0EA445D27EC0C4A0085A081 /* Terminal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Terminal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0EA446027EC0C4A0085A081 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		F0EA446127EC0C4A0085A081 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -85,6 +87,7 @@
 		F0EA445427EC0C4A0085A081 = {
 			isa = PBXGroup;
 			children = (
+				F091DC94287B730100915D30 /* WebKitBundle */,
 				F0EA445F27EC0C4A0085A081 /* Terminal */,
 				F0EA447527EC0C4E0085A081 /* TerminalTests */,
 				F0EA447F27EC0C4E0085A081 /* TerminalUITests */,
@@ -241,6 +244,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F091DC95287B730100915D30 /* WebKitBundle in Resources */,
 				F0EA446727EC0C4D0085A081 /* Assets.xcassets in Resources */,
 				F0EA446A27EC0C4D0085A081 /* Main.storyboard in Resources */,
 			);
@@ -323,6 +327,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
@@ -381,6 +386,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";

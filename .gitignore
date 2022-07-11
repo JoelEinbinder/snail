@@ -10,3 +10,4 @@ dist
 joel-terminal-*.vsix
 
 xcuserdata/
+/CoreBundle/

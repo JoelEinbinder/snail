@@ -10,13 +10,14 @@
 @implementation NodeTalker
 -(instancetype)init {
     self = [super init];
-    NSLog(@"trying");
-//    NSTask* task = [NSTask launchedTaskWithExecutableURL:[NSURL fileURLWithPath:@"/usr/local/bin/node"] arguments:@[] error:nil terminationHandler:^(NSTask * _Nonnull task) {
-//        NSLog(@"it ended");
-//    }];
     task = [[NSTask alloc] init];
     [task setExecutableURL:[NSURL fileURLWithPath:@"/usr/local/bin/node"]];
-    [task setArguments:@[@"/Users/joeleinbinder/gap-year/node_host/"]];
+    NSString* hostPath = [[[NSProcessInfo processInfo] environment] valueForKey:@"TERMINAL_HOST_PATH"];
+
+    if (hostPath)
+        [task setArguments:@[hostPath]];
+    else
+        [task setArguments:@[[[NSBundle mainBundle] pathForResource:@"node_host" ofType:@"" inDirectory:@"WebKitBundle"]]];
     NSPipe* standardOutput = [NSPipe pipe];
     NSPipe* standardInput = [NSPipe pipe];
     NSMutableData* buffer = [[NSMutableData alloc] initWithBytes:NULL length:0];
