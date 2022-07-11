@@ -2,12 +2,12 @@
 const path = require('path');
 const fs = require('fs');
 const rimraf = require('rimraf');
-const destination = path.resolve(process.cwd(), process.argv[2]);
+const destination = path.join(__dirname, '..', 'WebKitBundle');
 rimraf.sync(destination);
 fs.mkdirSync(destination, { recursive: true });
 
 const {execSync} = require('child_process');
-execSync('npm run build', { stdio: 'inherit' });
+execSync('npm run build', { stdio: 'inherit', cwd: path.join(__dirname, '..') });
 
 const directoriesToCopy = [
   'dist',

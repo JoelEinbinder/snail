@@ -4,7 +4,8 @@
   "scripts": {
     "start": "electron .",
     "test": "mocha shjs",
-    "build": "webpack"
+    "build": "webpack",
+    "bundle": "node utils/bundle.js"
   },
   "workspaces": [
     "xterm.js"
