@@ -24,6 +24,7 @@ import { ICharacterJoinerService } from 'browser/services/Services';
 import { CharData, ICellData } from 'common/Types';
 import { AttributeData } from 'common/buffer/AttributeData';
 import { HTMLRenderLayer } from 'browser/renderer/HTMLRenderLayer';
+import { realDevicePixelRatio } from 'browser/renderer/RendererUtils';
 
 export class WebglRenderer extends Disposable implements IRenderer {
   private _renderLayers: IRenderLayer[];
@@ -78,7 +79,7 @@ export class WebglRenderer extends Disposable implements IRenderer {
       actualCellWidth: 0,
       actualCellHeight: 0
     };
-    this._devicePixelRatio = window.devicePixelRatio;
+    this._devicePixelRatio = realDevicePixelRatio();
     this._updateDimensions();
 
     this._canvas = document.createElement('canvas');
@@ -138,8 +139,9 @@ export class WebglRenderer extends Disposable implements IRenderer {
   public onDevicePixelRatioChange(): void {
     // If the device pixel ratio changed, the char atlas needs to be regenerated
     // and the terminal needs to refreshed
-    if (this._devicePixelRatio !== window.devicePixelRatio) {
-      this._devicePixelRatio = window.devicePixelRatio;
+    const dpr = realDevicePixelRatio();
+    if (this._devicePixelRatio !== dpr) {
+      this._devicePixelRatio = dpr;
       this.onResize(this._terminal.cols, this._terminal.rows);
     }
   }

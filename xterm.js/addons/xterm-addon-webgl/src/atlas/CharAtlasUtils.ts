@@ -7,6 +7,7 @@ import { ICharAtlasConfig } from './Types';
 import { Attributes } from 'common/buffer/Constants';
 import { Terminal, FontWeight } from 'xterm';
 import type { IColorSet, IColor } from 'browser/Types';
+import { realDevicePixelRatio } from 'browser/renderer/RendererUtils';
 
 const NULL_COLOR: IColor = {
   css: '',
@@ -29,7 +30,7 @@ export function generateConfig(scaledCellWidth: number, scaledCellHeight: number
   };
   return {
     customGlyphs: terminal.getOption('customGlyphs'),
-    devicePixelRatio: window.devicePixelRatio,
+    devicePixelRatio: realDevicePixelRatio(),
     letterSpacing: terminal.getOption('letterSpacing'),
     lineHeight: terminal.getOption('lineHeight'),
     scaledCellWidth,

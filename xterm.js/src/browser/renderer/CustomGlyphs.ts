@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-import { throwIfFalsy } from 'browser/renderer/RendererUtils';
+import { realDevicePixelRatio, throwIfFalsy } from 'browser/renderer/RendererUtils';
 
 interface IBlockVector {
   x: number;
@@ -491,7 +491,7 @@ function drawBoxDrawingChar(
   ctx.strokeStyle = ctx.fillStyle;
   for (const [fontWeight, instructions] of Object.entries(charDefinition)) {
     ctx.beginPath();
-    ctx.lineWidth = window.devicePixelRatio * Number.parseInt(fontWeight);
+    ctx.lineWidth = realDevicePixelRatio() * Number.parseInt(fontWeight);
     let actualInstructions: string;
     if (typeof instructions === 'function') {
       const xp = .15;

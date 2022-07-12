@@ -15,6 +15,7 @@ import { IBufferService, IOptionsService, ICoreService, IInstantiationService } 
 import { removeTerminalFromCache } from 'browser/renderer/atlas/CharAtlasCache';
 import { EventEmitter, IEvent } from 'common/EventEmitter';
 import { HTMLRenderLayer } from 'browser/renderer/HTMLRenderLayer';
+import { realDevicePixelRatio } from './RendererUtils';
 
 let nextRendererId = 1;
 
@@ -62,7 +63,7 @@ export class Renderer extends Disposable implements IRenderer {
       actualCellWidth: 0,
       actualCellHeight: 0
     };
-    this._devicePixelRatio = window.devicePixelRatio;
+    this._devicePixelRatio = realDevicePixelRatio();
     this._updateDimensions();
     this.onOptionsChanged();
   }
@@ -78,8 +79,9 @@ export class Renderer extends Disposable implements IRenderer {
   public onDevicePixelRatioChange(): void {
     // If the device pixel ratio changed, the char atlas needs to be regenerated
     // and the terminal needs to refreshed
-    if (this._devicePixelRatio !== window.devicePixelRatio) {
-      this._devicePixelRatio = window.devicePixelRatio;
+    const dpr = realDevicePixelRatio();
+    if (this._devicePixelRatio !== dpr) {
+      this._devicePixelRatio = dpr;
       this.onResize(this._bufferService.cols, this._bufferService.rows);
     }
   }
@@ -165,16 +167,17 @@ export class Renderer extends Disposable implements IRenderer {
       return;
     }
 
+    const dpr = realDevicePixelRatio();
     // Calculate the scaled character width. Width is floored as it must be
     // drawn to an integer grid in order for the CharAtlas "stamps" to not be
     // blurry. When text is drawn to the grid not using the CharAtlas, it is
     // clipped to ensure there is no overlap with the next cell.
-    this.dimensions.scaledCharWidth = Math.floor(this._charSizeService.width * window.devicePixelRatio);
+    this.dimensions.scaledCharWidth = Math.floor(this._charSizeService.width * dpr);
 
     // Calculate the scaled character height. Height is ceiled in case
     // devicePixelRatio is a floating point number in order to ensure there is
     // enough space to draw the character to the cell.
-    this.dimensions.scaledCharHeight = Math.ceil(this._charSizeService.height * window.devicePixelRatio);
+    this.dimensions.scaledCharHeight = Math.ceil(this._charSizeService.height * dpr);
 
     // Calculate the scaled cell height, if lineHeight is not 1 then the value
     // will be floored because since lineHeight can never be lower then 1, there
@@ -200,15 +203,15 @@ export class Renderer extends Disposable implements IRenderer {
 
     // The the size of the canvas on the page. It's very important that this
     // rounds to nearest integer and not ceils as browsers often set
-    // window.devicePixelRatio as something like 1.100000023841858, when it's
+    // dpr as something like 1.100000023841858, when it's
     // actually 1.1. Ceiling causes blurriness as the backing canvas image is 1
     // pixel too large for the canvas element size.
-    this.dimensions.canvasHeight = Math.round(this.dimensions.scaledCanvasHeight / window.devicePixelRatio);
-    this.dimensions.canvasWidth = Math.round(this.dimensions.scaledCanvasWidth / window.devicePixelRatio);
+    this.dimensions.canvasHeight = Math.round(this.dimensions.scaledCanvasHeight / dpr);
+    this.dimensions.canvasWidth = Math.round(this.dimensions.scaledCanvasWidth / dpr);
 
     // Get the _actual_ dimensions of an individual cell. This needs to be
     // derived from the canvasWidth/Height calculated above which takes into
-    // account window.devicePixelRatio. ICharSizeService.width/height by itself
+    // account dpr. ICharSizeService.width/height by itself
     // is insufficient when the page is not at 100% zoom level as it's measured
     // in CSS pixels, but the actual char size on the canvas can differ.
     this.dimensions.actualCellHeight = this.dimensions.canvasHeight / this._bufferService.rows;

@@ -14,7 +14,7 @@ import { AttributeData } from 'common/buffer/AttributeData';
 import type { IColorSet, IColor } from 'browser/Types';
 import { CellData } from 'common/buffer/CellData';
 import { IBufferService, IOptionsService } from 'common/services/Services';
-import { throwIfFalsy } from 'browser/renderer/RendererUtils';
+import { realDevicePixelRatio, throwIfFalsy } from 'browser/renderer/RendererUtils';
 import { channels, color, rgba } from 'browser/Color';
 import { removeElementFromParent } from 'browser/Dom';
 import { tryDrawCustomChar } from 'browser/renderer/CustomGlyphs';
@@ -165,11 +165,12 @@ export abstract class BaseRenderLayer implements IRenderLayer {
      */
   protected _fillMiddleLineAtCells(x: number, y: number, width: number = 1): void {
     const cellOffset = Math.ceil(this._scaledCellHeight * 0.5);
+    const dpr = realDevicePixelRatio();
     this._ctx.fillRect(
       x * this._scaledCellWidth,
-      (y + 1) * this._scaledCellHeight - cellOffset - window.devicePixelRatio,
+      (y + 1) * this._scaledCellHeight - cellOffset - dpr,
       width * this._scaledCellWidth,
-      window.devicePixelRatio);
+      dpr);
   }
 
   /**
@@ -179,11 +180,12 @@ export abstract class BaseRenderLayer implements IRenderLayer {
    * @param y The row to fill.
    */
   protected _fillBottomLineAtCells(x: number, y: number, width: number = 1): void {
+    const dpr = realDevicePixelRatio();
     this._ctx.fillRect(
       x * this._scaledCellWidth,
-      (y + 1) * this._scaledCellHeight - window.devicePixelRatio - 1 /* Ensure it's drawn within the cell */,
+      (y + 1) * this._scaledCellHeight - dpr - 1 /* Ensure it's drawn within the cell */,
       width * this._scaledCellWidth,
-      window.devicePixelRatio);
+      dpr);
   }
 
   /**
@@ -196,7 +198,7 @@ export abstract class BaseRenderLayer implements IRenderLayer {
     this._ctx.fillRect(
       x * this._scaledCellWidth,
       y * this._scaledCellHeight,
-      window.devicePixelRatio * width,
+      realDevicePixelRatio() * width,
       this._scaledCellHeight);
   }
 
@@ -207,12 +209,13 @@ export abstract class BaseRenderLayer implements IRenderLayer {
    * @param y The row to fill.
    */
   protected _strokeRectAtCell(x: number, y: number, width: number, height: number): void {
-    this._ctx.lineWidth = window.devicePixelRatio;
+    const dpr = realDevicePixelRatio();
+    this._ctx.lineWidth = dpr;
     this._ctx.strokeRect(
-      x * this._scaledCellWidth + window.devicePixelRatio / 2,
-      y * this._scaledCellHeight + (window.devicePixelRatio / 2),
-      width * this._scaledCellWidth - window.devicePixelRatio,
-      (height * this._scaledCellHeight) - window.devicePixelRatio);
+      x * this._scaledCellWidth + dpr / 2,
+      y * this._scaledCellHeight + (dpr / 2),
+      width * this._scaledCellWidth - dpr,
+      (height * this._scaledCellHeight) - dpr);
   }
 
   /**
@@ -424,7 +427,7 @@ export abstract class BaseRenderLayer implements IRenderLayer {
     const fontWeight = isBold ? this._optionsService.options.fontWeightBold : this._optionsService.options.fontWeight;
     const fontStyle = isItalic ? 'italic' : '';
 
-    return `${fontStyle} ${fontWeight} ${this._optionsService.options.fontSize * window.devicePixelRatio}px ${this._optionsService.options.fontFamily}`;
+    return `${fontStyle} ${fontWeight} ${this._optionsService.options.fontSize * realDevicePixelRatio()}px ${this._optionsService.options.fontFamily}`;
   }
 
   private _getContrastColor(cell: CellData): IColor | undefined {

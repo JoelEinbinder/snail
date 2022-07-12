@@ -11,6 +11,7 @@ import type { IColorSet } from 'browser/Types';
 import { IBufferService, IOptionsService, ICoreService } from 'common/services/Services';
 import type { IEventEmitter } from 'common/EventEmitter';
 import { ICoreBrowserService } from 'browser/services/Services';
+import { realDevicePixelRatio } from './RendererUtils';
 
 interface ICursorState {
   x: number;
@@ -195,7 +196,7 @@ export class CursorRenderLayer extends BaseRenderLayer {
   private _clearCursor(): void {
     if (this._state) {
       // Avoid potential rounding errors when device pixel ratio is less than 1
-      if (window.devicePixelRatio < 1) {
+      if (realDevicePixelRatio() < 1) {
         this._clearAll();
       } else {
         this._clearCells(this._state.x, this._state.y, this._state.width, 1);

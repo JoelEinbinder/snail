@@ -12,6 +12,7 @@ import type { IRenderDimensions } from 'browser/renderer/Types';
 import { CellData } from 'common/buffer/CellData';
 import { WebglCharAtlas } from 'atlas/WebglCharAtlas';
 import { throwIfFalsy } from '../WebglUtils';
+import { realDevicePixelRatio } from 'browser/renderer/RendererUtils';
 
 export abstract class BaseRenderLayer implements IRenderLayer {
   private _canvas: HTMLCanvasElement;
@@ -141,11 +142,12 @@ export abstract class BaseRenderLayer implements IRenderLayer {
    * @param y The row to fill.
    */
   protected _fillBottomLineAtCells(x: number, y: number, width: number = 1): void {
+    const dpr = realDevicePixelRatio();
     this._ctx.fillRect(
       x * this._scaledCellWidth,
-      (y + 1) * this._scaledCellHeight - window.devicePixelRatio - 1 /* Ensure it's drawn within the cell */,
+      (y + 1) * this._scaledCellHeight - dpr - 1 /* Ensure it's drawn within the cell */,
       width * this._scaledCellWidth,
-      window.devicePixelRatio);
+      dpr);
   }
 
   /**
@@ -158,7 +160,7 @@ export abstract class BaseRenderLayer implements IRenderLayer {
     this._ctx.fillRect(
       x * this._scaledCellWidth,
       y * this._scaledCellHeight,
-      window.devicePixelRatio * width,
+      realDevicePixelRatio() * width,
       this._scaledCellHeight);
   }
 
@@ -169,12 +171,13 @@ export abstract class BaseRenderLayer implements IRenderLayer {
    * @param y The row to fill.
    */
   protected _strokeRectAtCell(x: number, y: number, width: number, height: number): void {
-    this._ctx.lineWidth = window.devicePixelRatio;
+    const dpr = realDevicePixelRatio();
+    this._ctx.lineWidth = dpr;
     this._ctx.strokeRect(
-      x * this._scaledCellWidth + window.devicePixelRatio / 2,
-      y * this._scaledCellHeight + (window.devicePixelRatio / 2),
-      width * this._scaledCellWidth - window.devicePixelRatio,
-      (height * this._scaledCellHeight) - window.devicePixelRatio);
+      x * this._scaledCellWidth + dpr / 2,
+      y * this._scaledCellHeight + (dpr / 2),
+      width * this._scaledCellWidth - dpr,
+      (height * this._scaledCellHeight) - dpr);
   }
 
   /**
@@ -257,7 +260,7 @@ export abstract class BaseRenderLayer implements IRenderLayer {
     const fontWeight = isBold ? terminal.getOption('fontWeightBold') : terminal.getOption('fontWeight');
     const fontStyle = isItalic ? 'italic' : '';
 
-    return `${fontStyle} ${fontWeight} ${terminal.getOption('fontSize') * window.devicePixelRatio}px ${terminal.getOption('fontFamily')}`;
+    return `${fontStyle} ${fontWeight} ${terminal.getOption('fontSize') * realDevicePixelRatio()}px ${terminal.getOption('fontFamily')}`;
   }
 }
 

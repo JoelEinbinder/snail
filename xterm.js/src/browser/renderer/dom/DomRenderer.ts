@@ -13,6 +13,7 @@ import { IOptionsService, IBufferService, IInstantiationService } from 'common/s
 import { EventEmitter, IEvent } from 'common/EventEmitter';
 import { color } from 'browser/Color';
 import { removeElementFromParent } from 'browser/Dom';
+import { realDevicePixelRatio } from '../RendererUtils';
 
 const TERMINAL_CLASS_PREFIX = 'xterm-dom-renderer-owner-';
 const ROW_CONTAINER_CLASS = 'xterm-rows';
@@ -105,16 +106,17 @@ export class DomRenderer extends Disposable implements IRenderer {
   }
 
   private _updateDimensions(): void {
-    this.dimensions.scaledCharWidth = this._charSizeService.width * window.devicePixelRatio;
-    this.dimensions.scaledCharHeight = Math.ceil(this._charSizeService.height * window.devicePixelRatio);
+    const dpr = realDevicePixelRatio();
+    this.dimensions.scaledCharWidth = this._charSizeService.width * dpr;
+    this.dimensions.scaledCharHeight = Math.ceil(this._charSizeService.height * dpr);
     this.dimensions.scaledCellWidth = this.dimensions.scaledCharWidth + Math.round(this._optionsService.options.letterSpacing);
     this.dimensions.scaledCellHeight = Math.floor(this.dimensions.scaledCharHeight * this._optionsService.options.lineHeight);
     this.dimensions.scaledCharLeft = 0;
     this.dimensions.scaledCharTop = 0;
     this.dimensions.scaledCanvasWidth = this.dimensions.scaledCellWidth * this._bufferService.cols;
     this.dimensions.scaledCanvasHeight = this.dimensions.scaledCellHeight * this._bufferService.rows;
-    this.dimensions.canvasWidth = Math.round(this.dimensions.scaledCanvasWidth / window.devicePixelRatio);
-    this.dimensions.canvasHeight = Math.round(this.dimensions.scaledCanvasHeight / window.devicePixelRatio);
+    this.dimensions.canvasWidth = Math.round(this.dimensions.scaledCanvasWidth / dpr);
+    this.dimensions.canvasHeight = Math.round(this.dimensions.scaledCanvasHeight / dpr);
     this.dimensions.actualCellWidth = this.dimensions.canvasWidth / this._bufferService.cols;
     this.dimensions.actualCellHeight = this.dimensions.canvasHeight / this._bufferService.rows;
 

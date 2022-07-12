@@ -37,8 +37,9 @@ export class HTMLBlock implements IHTMLBlock {
       this._div.remove();
       return;
     }
-    cellHeight /= window.devicePixelRatio;
-    cellWidth /= window.devicePixelRatio;
+    const dpr = realDevicePixelRatio();
+    cellHeight /= dpr;
+    cellWidth /= dpr;
     const left = this.x * cellWidth;
     this._div.style.top = (this.y - top) * cellHeight + 'px';
     this._div.style.left = left + 'px';
@@ -76,4 +77,21 @@ export class HTMLBlock implements IHTMLBlock {
   public hide(): void {
     this._div.remove();
   }
+}
+
+const isWebKit = /WebKit/.test(navigator.userAgent);
+const isChrome = /Chrome/.test(navigator.userAgent);
+export function realDevicePixelRatio() {
+  if (isChrome)
+    return window.devicePixelRatio;
+  if (isWebKit) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('version', '1.1');
+    document.body.appendChild(svg);
+    const dpr = svg.currentScale * window.devicePixelRatio;
+    svg.remove();
+    return dpr;
+  }
+  return window.devicePixelRatio;
 }

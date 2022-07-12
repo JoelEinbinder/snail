@@ -63,12 +63,13 @@ export class Renderer extends Emitter {
       lineCount = this._model.lineCount();
     });
 
-    var lastDpr = window.devicePixelRatio;
+    var lastDpr = getDPR();
     window.addEventListener(
       'resize',
       event => {
-        if (lastDpr === window.devicePixelRatio) return;
-        lastDpr = window.devicePixelRatio;
+        const dpr = getDPR();
+        if (lastDpr === dpr) return;
+        lastDpr = dpr;
         this.layout();
       },
       false
@@ -252,9 +253,10 @@ export class Renderer extends Emitter {
   }
 
   _onScroll() {
-    this._scrollTop = Math.round(this._scrollingElement.scrollTop * window.devicePixelRatio) / window.devicePixelRatio;
+    const dpr = getDPR();
+    this._scrollTop = Math.round(this._scrollingElement.scrollTop * dpr) / dpr;
     this._scrollLeft =
-      Math.round(this._scrollingElement.scrollLeft * window.devicePixelRatio) / window.devicePixelRatio;
+      Math.round(this._scrollingElement.scrollLeft * dpr) / dpr;
     var rects = [];
     var deltaX = this.scrollLeft - this._lastScrollOffset.left;
     var deltaY = this.scrollTop - this._lastScrollOffset.top;
@@ -617,7 +619,7 @@ class Layer {
   }
 
   layout(width, height) {
-    var dpr = window.devicePixelRatio;
+    var dpr = getDPR();
     this.canvas.width = width * dpr;
     this.canvas.height = height * dpr;
     this._width = width;
@@ -778,4 +780,21 @@ function hasFocus(element) {
       active = active.parentElement;
   }
   return false;
+}
+
+const isWebKit = /WebKit/.test(navigator.userAgent);
+const isChrome = /Chrome/.test(navigator.userAgent);
+function getDPR() {
+  if (isChrome)
+    return window.devicePixelRatio;
+  if (isWebKit) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('version', '1.1');
+    document.body.appendChild(svg);
+    const dpr = svg.currentScale * window.devicePixelRatio;
+    svg.remove();
+    return dpr;
+  }
+  return window.devicePixelRatio;
 }

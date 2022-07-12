@@ -7,6 +7,7 @@ import { ICharAtlasConfig } from 'browser/renderer/atlas/Types';
 import { DEFAULT_COLOR } from 'common/buffer/Constants';
 import type { IColorSet, IPartialColorSet } from 'browser/Types';
 import { ITerminalOptions } from 'common/services/Services';
+import { realDevicePixelRatio } from '../RendererUtils';
 
 export function generateConfig(scaledCharWidth: number, scaledCharHeight: number, options: ITerminalOptions, colors: IColorSet): ICharAtlasConfig {
   // null out some fields that don't matter
@@ -19,7 +20,7 @@ export function generateConfig(scaledCharWidth: number, scaledCharHeight: number
     ansi: [...colors.ansi]
   };
   return {
-    devicePixelRatio: window.devicePixelRatio,
+    devicePixelRatio: realDevicePixelRatio(),
     scaledCharWidth,
     scaledCharHeight,
     fontFamily: options.fontFamily,

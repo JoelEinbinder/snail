@@ -10,6 +10,7 @@ import { ICharSizeService, IRenderService } from 'browser/services/Services';
 import { IBufferService, IOptionsService } from 'common/services/Services';
 import { IBuffer } from 'common/buffer/Types';
 import type { IRenderDimensions } from 'browser/renderer/Types';
+import { realDevicePixelRatio } from './renderer/RendererUtils';
 
 const FALLBACK_SCROLL_BAR_WIDTH = 15;
 
@@ -90,7 +91,7 @@ export class Viewport extends Disposable implements IViewport {
 
   private _innerRefresh(): void {
     if (this._charSizeService.height > 0) {
-      this._currentRowHeight = this._renderService.dimensions.scaledCellHeight / window.devicePixelRatio;
+      this._currentRowHeight = this._renderService.dimensions.scaledCellHeight / realDevicePixelRatio();
       this._currentScaledCellHeight = this._renderService.dimensions.scaledCellHeight;
       this._lastRecordedViewportHeight = this._viewportElement.offsetHeight;
       const newBufferHeight = Math.round(this._currentRowHeight * this._lastRecordedBufferLength) + (this._lastRecordedViewportHeight - this._renderService.dimensions.canvasHeight);
