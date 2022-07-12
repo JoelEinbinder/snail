@@ -8,10 +8,12 @@
 #import <Cocoa/Cocoa.h>
 #import <WebKit/WebKit.h>
 #import "NodeTalker.h"
+#include "D4WebPanel.h"
 
-@interface ViewController : NSViewController<WKUIDelegate, WKScriptMessageHandler> {
+@interface ViewController : NSViewController<WKUIDelegate, WKScriptMessageHandler, NSWindowDelegate> {
     WKWebView* webView;
     NodeTalker* nodeTalker;
+    D4WebPanel* panel;
 }
 -(IBAction)reloadWindow:(id)sender;
 @end

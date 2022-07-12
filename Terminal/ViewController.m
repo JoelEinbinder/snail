@@ -8,6 +8,7 @@
 #import "ViewController.h"
 #import "NSObject+KVOBlock.h"
 #import "AppDelegate.h"
+#import "D4WebPanel.h"
 
 @implementation ViewController
 - (void)viewDidLoad {
@@ -54,6 +55,7 @@
 
     [self.view addSubview:viewWithFX];
     [webView setNextResponder:nil];
+    panel = nil;
 }
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(AppDelegate*)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     [webView setPageZoom:object.zoom];
@@ -62,16 +64,40 @@
     AppDelegate* delegate = [[NSApplication sharedApplication] delegate];
     [delegate addObserver:self forKeyPath:@"zoom" options:NSKeyValueObservingOptionNew context:nil];
     [webView setPageZoom:delegate.zoom];
+    [[webView window] setDelegate:self];
 }
 -(void)viewDidDisappear {
     AppDelegate* delegate = [[NSApplication sharedApplication] delegate];
     [delegate removeObserver:self forKeyPath:@"zoom" context:nil];
+    if (panel) {
+        [panel close];
+        panel = nil;
+    }
+    [[webView window] setDelegate:nil];
 }
 -(void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
     NSDictionary* body = message.body;
+    NSDictionary* params = body[@"params"];
     if ([@"beep" isEqualTo:body[@"method"]]) {
-        NSLog(@"beep !");
         [[[NSSound soundNamed:@"Tink.aiff"] copy] play];
+    } else if ([@"positionPanel" isEqual:body[@"method"]]) {
+        NSPoint pointInCSSTop = { [params[@"x"] floatValue], [params[@"top"] floatValue] };
+        NSPoint pointInWindowTop = [webView convertPoint:pointInCSSTop toView:nil];
+        NSPoint pointInScreenTop = [webView.window convertPointToScreen:pointInWindowTop];
+        NSPoint pointInCSSBottom = { [params[@"x"] floatValue], [params[@"bottom"] floatValue] };
+        NSPoint pointInWindowBottom = [webView convertPoint:pointInCSSBottom toView:nil];
+        NSPoint pointInScreenBottom = [webView.window convertPointToScreen:pointInWindowBottom];
+
+        [panel positionWithinTop:pointInScreenTop bottom:pointInScreenBottom];
+    } else if ([@"resizePanel" isEqual:body[@"method"]]) {
+        float width = [params[@"width"] floatValue];
+        float height = [params[@"height"] floatValue];
+        [self resizePanel:CGSizeMake(width, height)];
+    } else if ([@"closeAllPopups" isEqual:body[@"method"]]) {
+        if (panel) {
+            [panel close];
+            panel = nil;
+        }
     } else {
         [nodeTalker sendMessage:body];
     }
@@ -85,5 +111,45 @@
 
 -(IBAction)reloadWindow:(id)sender {
     [webView reload];
+}
+-(void)closePanel {
+    if (!panel)
+        return;
+    [panel close];
+    panel = nil;
+}
+-(WKWebView*)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures {
+    if (![[navigationAction sourceFrame] isMainFrame])
+        return nil;
+    [self closePanel];
+    panel = [[D4WebPanel alloc] initWithWithConfiguration:configuration forNavigationAction:navigationAction windowFeatures:windowFeatures screen:webView.window.screen];
+    float width = [[windowFeatures width] floatValue];
+    float height = [[windowFeatures height] floatValue];
+    [self resizePanel:CGSizeMake(width, height)];
+    return panel.webView;
+}
+-(void)resizePanel:(CGSize) size {
+    float width = size.width;
+    float height = size.height;
+    [panel resize:CGSizeMake(width, height)];
+
+}
+- (void)windowWillMove:(NSNotification *)notification {
+    [self closePanel];
+}
+- (void)windowDidMove:(NSNotification *)notification {
+    [self closePanel];
+}
+- (void)windowWillStartLiveResize:(NSNotification *)notification {
+    [self closePanel];
+}
+- (void)windowWillMiniaturize:(NSNotification *)notification {
+    [self closePanel];
+}
+-(void)windowDidChangeScreen:(NSNotification *)notification {
+    [self closePanel];
+}
+-(void)windowDidResize:(NSNotification *)notification {
+    [self closePanel];
 }
 @end

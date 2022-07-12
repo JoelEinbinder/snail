@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		F091DC95287B730100915D30 /* WebKitBundle in Resources */ = {isa = PBXBuildFile; fileRef = F091DC94287B730100915D30 /* WebKitBundle */; };
 		F091DC99287BBA1A00915D30 /* Window.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F091DC98287BBA1A00915D30 /* Window.storyboard */; };
+		F091DCC1287D268E00915D30 /* D4WebPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = F091DCC0287D268E00915D30 /* D4WebPanel.m */; };
 		F0EA446227EC0C4A0085A081 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA446127EC0C4A0085A081 /* AppDelegate.m */; };
 		F0EA446527EC0C4A0085A081 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F0EA446427EC0C4A0085A081 /* ViewController.m */; };
 		F0EA446727EC0C4D0085A081 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F0EA446627EC0C4D0085A081 /* Assets.xcassets */; };
@@ -41,6 +42,8 @@
 /* Begin PBXFileReference section */
 		F091DC94287B730100915D30 /* WebKitBundle */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WebKitBundle; path = "../../gap-year/WebKitBundle"; sourceTree = "<group>"; };
 		F091DC98287BBA1A00915D30 /* Window.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Window.storyboard; sourceTree = "<group>"; };
+		F091DCBF287D268E00915D30 /* D4WebPanel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = D4WebPanel.h; sourceTree = "<group>"; };
+		F091DCC0287D268E00915D30 /* D4WebPanel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = D4WebPanel.m; sourceTree = "<group>"; };
 		F0EA445D27EC0C4A0085A081 /* Terminal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Terminal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0EA446027EC0C4A0085A081 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		F0EA446127EC0C4A0085A081 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -112,6 +115,8 @@
 			children = (
 				F0EA446027EC0C4A0085A081 /* AppDelegate.h */,
 				F0EA446127EC0C4A0085A081 /* AppDelegate.m */,
+				F091DCBF287D268E00915D30 /* D4WebPanel.h */,
+				F091DCC0287D268E00915D30 /* D4WebPanel.m */,
 				F0EA446327EC0C4A0085A081 /* ViewController.h */,
 				F0EA446427EC0C4A0085A081 /* ViewController.m */,
 				F0EA449027EC12740085A081 /* NSObject+KVOBlock.m */,
@@ -278,6 +283,7 @@
 				F0EA449427EC2C1E0085A081 /* NodeTalker.m in Sources */,
 				F0EA449127EC12740085A081 /* NSObject+KVOBlock.m in Sources */,
 				F0EA446527EC0C4A0085A081 /* ViewController.m in Sources */,
+				F091DCC1287D268E00915D30 /* D4WebPanel.m in Sources */,
 				F0EA446C27EC0C4D0085A081 /* main.m in Sources */,
 				F0EA446227EC0C4A0085A081 /* AppDelegate.m in Sources */,
 			);
