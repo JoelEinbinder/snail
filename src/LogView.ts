@@ -1,6 +1,7 @@
 import type { JoelEvent } from './JoelEvent';
 import type { Shell } from './Shell';
 import './shell.css';
+import './logView.css';
 
 export class LogView {
   private _element = document.createElement('div');
@@ -25,11 +26,7 @@ export class LogView {
         return;
       this._promptElement.focus();
     })
-    this._element.style.overflowY = 'auto';
-    this._element.style.overflowX = 'hidden';
-    this._element.style.position = 'absolute';
-    this._element.style.inset = '0';
-    this._element.style.padding = '4px';
+    this._container.classList.toggle('log-view-container', true);
     this._repopulate();
     this._shell.activeItem.on(item => {
       if (item)
@@ -51,6 +48,7 @@ export class LogView {
     this._shell.clearEvent.on(() => {
       this._repopulate();
     });
+    this._element.classList.add('content');
   }
 
   _repopulate() {
@@ -110,12 +108,12 @@ export class LogView {
   async _lockScroll() {
     if (this._lockingScroll)
       return;
-    const scrollBottom = this._element.scrollHeight - this._element.scrollTop - this._element.offsetHeight;
+    const scrollBottom = this._container.scrollHeight - this._container.scrollTop - this._container.offsetHeight;
     
     this._lockingScroll = true;
     await Promise.resolve();
     this._lockingScroll = false;
-    this._element.scrollTop = this._element.scrollHeight - this._element.offsetHeight - scrollBottom;
+    this._container.scrollTop = this._container.scrollHeight - this._container.offsetHeight - scrollBottom;
   }
 
   _addPrompt() {
