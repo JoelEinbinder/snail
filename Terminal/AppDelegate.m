@@ -13,8 +13,12 @@
 @end
 
 @implementation AppDelegate
+float _zoomLevels[] = {
+    1.0, 1.1, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0, 5.0};
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    _zoomIndex = 0;
+    [self setZoom:_zoomLevels[_zoomIndex]];
     [self makeAndShowWindow];
 }
 
@@ -66,5 +70,21 @@
 }
 
 
+-(IBAction)zoomIn:(id)sender {
+    _zoomIndex++;
+    if (_zoomIndex >= sizeof(_zoomLevels) / sizeof(float))
+        _zoomIndex = sizeof(_zoomLevels) / sizeof(float) - 1;
+    [self setZoom:_zoomLevels[_zoomIndex]];
+}
+-(IBAction)zoomOut:(id)sender {
+    _zoomIndex --;
+    if (_zoomIndex < 0)
+        _zoomIndex = 0;
+    [self setZoom:_zoomLevels[_zoomIndex]];
+}
+-(IBAction)resetZoom:(id)sender {
+    _zoomIndex = 0;
+    [self setZoom: _zoomLevels[_zoomIndex]];
+}
 
 @end

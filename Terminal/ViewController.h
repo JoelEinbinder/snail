@@ -13,6 +13,6 @@
     WKWebView* webView;
     NodeTalker* nodeTalker;
 }
-
+-(IBAction)reloadWindow:(id)sender;
 @end
 

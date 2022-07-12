@@ -7,6 +7,7 @@
 
 #import "ViewController.h"
 #import "NSObject+KVOBlock.h"
+#import "AppDelegate.h"
 
 @implementation ViewController
 - (void)viewDidLoad {
@@ -54,6 +55,18 @@
     [self.view addSubview:viewWithFX];
     [webView setNextResponder:nil];
 }
+-(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(AppDelegate*)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    [webView setPageZoom:object.zoom];
+}
+-(void)viewDidAppear {
+    AppDelegate* delegate = [[NSApplication sharedApplication] delegate];
+    [delegate addObserver:self forKeyPath:@"zoom" options:NSKeyValueObservingOptionNew context:nil];
+    [webView setPageZoom:delegate.zoom];
+}
+-(void)viewDidDisappear {
+    AppDelegate* delegate = [[NSApplication sharedApplication] delegate];
+    [delegate removeObserver:self forKeyPath:@"zoom" context:nil];
+}
 -(void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
     NSDictionary* body = message.body;
     if ([@"beep" isEqualTo:body[@"method"]]) {
@@ -70,5 +83,7 @@
     // Update the view, if already loaded.
 }
 
-
+-(IBAction)reloadWindow:(id)sender {
+    [webView reload];
+}
 @end
