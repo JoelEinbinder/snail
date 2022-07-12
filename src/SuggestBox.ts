@@ -106,14 +106,7 @@ export class SuggestBox {
         this._glassPane.hide();
     }
     fit(x: number, top: number, bottom: number) {
-        const availableRect = this._glassPane.availableRect();
         this._glassPane.show();
-        const rect = this.element.getBoundingClientRect();
-        const overflowTop = availableRect.top - (top - rect.height);
-        const overflowBottom = (bottom + rect.height) - availableRect.bottom + availableRect.top;
-        if (overflowBottom <= 0 || (overflowBottom < overflowTop))
-            this._glassPane.position(x, bottom);
-        else
-            this._glassPane.position(x, top - rect.height);
+        this._glassPane.position(x, top, bottom);
     }
 }

@@ -5,6 +5,7 @@ const nativeDPI = 2;
 class ExternalGlassPane {
   window?: Window;
   observer: ResizeObserver;
+  onBlur = () => this.hide();
   constructor(public element: HTMLElement) {
     // MacOS will crash if try to make a new window while maximized.
     if (screenY === 0) {
@@ -19,11 +20,18 @@ class ExternalGlassPane {
     if (!this.showing())
       return;
     const rect = this.element.getBoundingClientRect();
-    this.window.resizeTo(rect.width * window.devicePixelRatio / nativeDPI, rect.height * window.devicePixelRatio / nativeDPI);
+    host.sendMessage({
+      method: 'resizePanel',
+      params: {
+        width: rect.width,
+        height: rect.height
+      }
+    });
   }
   show() {
     if (this.window)
       return;
+    window.addEventListener('blur', this.onBlur);
     this.window = window.open('', '', 'width=10,height=10');
     this.observer.observe(this.element);
     for (const sheet of window.document.styleSheets)
@@ -43,6 +51,7 @@ class ExternalGlassPane {
       return false;
     if (this.window.closed) {
       delete this.window;
+      window.removeEventListener('blur', this.onBlur);
       return false;
     }
     return true;
@@ -51,30 +60,22 @@ class ExternalGlassPane {
     if (!this.showing())
       return;
     delete this.window;
+    window.removeEventListener('blur', this.onBlur);
     this.observer.unobserve(this.element);
     host.sendMessage({
       method: 'closeAllPopups',
       params: {}
     })
   }
-  position(x: number, y: number) {
-    const origin = this.origin();
-    this.window.moveTo((x + origin.x ) * window.devicePixelRatio / nativeDPI, (y + origin.y) * window.devicePixelRatio / nativeDPI);
-  }
-  origin() {
-    return {
-      x: screenLeft * nativeDPI / window.devicePixelRatio,
-      y: screenTop * nativeDPI / window.devicePixelRatio - window.innerHeight + window.outerHeight * nativeDPI / window.devicePixelRatio
-    }
-  }
-  availableRect() {
-    const origin = this.origin();
-    return {
-      top: -origin.y,
-      left: -origin.x,
-      right: screen.width * nativeDPI / window.devicePixelRatio - origin.x,
-      bottom: screen.height * nativeDPI / window.devicePixelRatio - origin.y
-    };
+  position(x: number, top: number, bottom: number) {
+    host.sendMessage({
+      method: 'positionPanel',
+      params: {
+        x,
+        top,
+        bottom,        
+      }
+    });
   }
 }
 
@@ -95,20 +96,17 @@ class InPageGlassPane {
   hide() {
       this.element.remove();
   }
-  position(x: number, y: number) {
-      this.element.style.top = y + 'px';
-      this.element.style.left = x + 'px';
-  }
-  availableRect() {
-      return {
-          top: 0,
-          left: 0,
-          right: window.innerWidth,
-          bottom: window.innerHeight
-      };
+  position(x: number, top: number, bottom: number) {
+    const rect = this.element.getBoundingClientRect();
+    const overflowTop = rect.height - top;
+    const overflowBottom = (bottom + rect.height) - window.innerHeight;
+    const y =  (overflowBottom <= 0 || (overflowBottom < overflowTop)) ? bottom : top - rect.height;
+
+    this.element.style.left = x + 'px';
+    this.element.style.top = y + 'px';
   }
 }
 
-// export const GlassPlane = 'electronAPI' in window ? ExternalGlassPane : InPageGlassPane;
-export const GlassPlane = InPageGlassPane;
+export const GlassPlane = 'webkit' in window ? ExternalGlassPane : InPageGlassPane;
+// export const GlassPlane = InPageGlassPane;
 export type GlassPlane = ExternalGlassPane | InPageGlassPane;

@@ -1,5 +1,5 @@
 .suggestions {
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     border-radius: 3px;
@@ -19,11 +19,6 @@
 body.vscode-dark .suggestions {
     backdrop-filter: initial;
     -webkit-backdrop-filter: initial;
-}
-body.glass-pane .suggestions {
-    background: rgba(0, 0, 0);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
 }
 .suggestion {
     padding: 0 2px;
