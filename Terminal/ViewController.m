@@ -59,7 +59,7 @@
 }
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(AppDelegate*)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     [webView setPageZoom:object.zoom];
-    [panel close];
+    [self closePanel];
 }
 -(void)viewDidAppear {
     AppDelegate* delegate = [[NSApplication sharedApplication] delegate];
