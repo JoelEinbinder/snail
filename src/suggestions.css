@@ -1,7 +1,10 @@
+.description,
 .suggestions {
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+}
+.suggestions {
     border-radius: 3px;
     border: 1px solid var(--ansi-237);
     padding: 0;
@@ -16,6 +19,7 @@
     text-overflow: ellipsis;
     height: fit-content;
 }
+body.vscode-dark .description,
 body.vscode-dark .suggestions {
     backdrop-filter: initial;
     -webkit-backdrop-filter: initial;
@@ -44,7 +48,6 @@ body.vscode-dark .suggestions {
 }
 .description {
     width: 160px;
-    background: black;
     flex: 1;
     border-radius: 3px;
     border: 1px solid var(--ansi-237);
