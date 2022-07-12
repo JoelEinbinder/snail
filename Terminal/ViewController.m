@@ -59,6 +59,7 @@
 }
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(AppDelegate*)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     [webView setPageZoom:object.zoom];
+    [panel close];
 }
 -(void)viewDidAppear {
     AppDelegate* delegate = [[NSApplication sharedApplication] delegate];
@@ -81,10 +82,10 @@
     if ([@"beep" isEqualTo:body[@"method"]]) {
         [[[NSSound soundNamed:@"Tink.aiff"] copy] play];
     } else if ([@"positionPanel" isEqual:body[@"method"]]) {
-        NSPoint pointInCSSTop = { [params[@"x"] floatValue], [params[@"top"] floatValue] };
+        NSPoint pointInCSSTop = { [params[@"x"] floatValue] * webView.pageZoom, [params[@"top"] floatValue] * webView.pageZoom};
         NSPoint pointInWindowTop = [webView convertPoint:pointInCSSTop toView:nil];
         NSPoint pointInScreenTop = [webView.window convertPointToScreen:pointInWindowTop];
-        NSPoint pointInCSSBottom = { [params[@"x"] floatValue], [params[@"bottom"] floatValue] };
+        NSPoint pointInCSSBottom = { [params[@"x"] floatValue] * webView.pageZoom, [params[@"bottom"] floatValue]  * webView.pageZoom};
         NSPoint pointInWindowBottom = [webView convertPoint:pointInCSSBottom toView:nil];
         NSPoint pointInScreenBottom = [webView.window convertPointToScreen:pointInWindowBottom];
 
@@ -126,11 +127,12 @@
     float width = [[windowFeatures width] floatValue];
     float height = [[windowFeatures height] floatValue];
     [self resizePanel:CGSizeMake(width, height)];
+    [panel.webView setPageZoom:webView.pageZoom];
     return panel.webView;
 }
 -(void)resizePanel:(CGSize) size {
-    float width = size.width;
-    float height = size.height;
+    float width = size.width * panel.webView.pageZoom;
+    float height = size.height * panel.webView.pageZoom;
     [panel resize:CGSizeMake(width, height)];
 
 }
