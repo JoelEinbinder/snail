@@ -1,6 +1,7 @@
 import { Editor, TextRange } from "../editor/js/editor";
 import { JoelEvent } from "./JoelEvent";
 import { LogItem } from "./LogView";
+import { setSelection } from "./selection";
 import type { Shell } from './Shell';
 
 export class CommandBlock implements LogItem {
@@ -24,6 +25,9 @@ export class CommandBlock implements LogItem {
         selectionBackground: '#525252',
       },
       readOnly: true,
+    });
+    this._editor.on('selectionChanged', () => {
+      setSelection(() => this._editor.selections.map(s => this._editor.text(s)).join('\n'));
     });
     this._editor.value = this.command;
     this._exitCode.classList.add('exit-code');
