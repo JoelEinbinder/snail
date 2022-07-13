@@ -52,7 +52,18 @@
     viewWithFX.translatesAutoresizingMaskIntoConstraints = YES;
     viewWithFX.material = NSVisualEffectMaterialFullScreenUI; // or NSVisualEffectMaterialMenu, or ..
     viewWithFX.blendingMode = NSVisualEffectBlendingModeBehindWindow; //NSVisualEffectBlendingModeWithinWindow
+    
+    NSView* antiFlasher = [[NSView alloc] initWithFrame:CGRectMake(0,0,200,200)];
+    antiFlasher.frame = self.view.bounds;
+    [antiFlasher setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    antiFlasher.wantsLayer = true;
+    [[antiFlasher layer] setBackgroundColor:CGColorCreateSRGB(0.0, 0.0, 0.0, 1.0)];
+    [[antiFlasher layer] setOpacity:0.7];
+    [viewWithFX addSubview:antiFlasher];
+
     [viewWithFX addSubview:webView];
+    [[webView layer] setOpacity:0.01];
+    containerView = viewWithFX;
 
     [self.view addSubview:viewWithFX];
     [webView setNextResponder:nil];
@@ -80,6 +91,14 @@
 -(void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
     NSDictionary* body = message.body;
     NSDictionary* params = body[@"params"];
+    // on first message show the webview
+    if ([[containerView subviews] count] == 2) {
+        for (NSView* view in [[containerView subviews] copy]) {
+            if (view != webView)
+                [view removeFromSuperview];
+        }
+        [[webView layer] setOpacity:1.0];
+    }
     if ([@"beep" isEqualTo:body[@"method"]]) {
         [[[NSSound soundNamed:@"Tink.aiff"] copy] play];
     } else if ([@"positionPanel" isEqual:body[@"method"]]) {

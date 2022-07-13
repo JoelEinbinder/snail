@@ -14,6 +14,7 @@
     WKWebView* webView;
     NodeTalker* nodeTalker;
     D4WebPanel* panel;
+    NSView* containerView;
 }
 -(IBAction)reloadWindow:(id)sender;
 @end
