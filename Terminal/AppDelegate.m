@@ -40,7 +40,7 @@ float _zoomLevels[] = {
     NSWindow* window = [self makeWindow];
     [window setIsVisible:YES];
     [window makeKeyWindow];
-    [window setTitle:@"foo"];
+    [window setTitle:@"Terminal"];
 }
 -(IBAction)newWindowButton:(id)sender {
     [self makeAndShowWindow];
