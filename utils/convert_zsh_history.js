@@ -32,7 +32,7 @@ for (const line of lines) {
 console.time('require');
 const sqlite3 = require('sqlite3');
 console.timeEnd('require');
-const database = new sqlite3.Database(path.join(__dirname, '..', 'history.sqlite3'), async () => {
+const database = new sqlite3.Database(path.join(require('os').homedir(), '.terminal-history.sqlite3'), async () => {
   const y = await new Promise(x => database.run(`CREATE TABLE IF NOT EXISTS history (
     command_id INTEGER PRIMARY KEY AUTOINCREMENT,
     start INTEGER,
