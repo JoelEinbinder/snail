@@ -11,7 +11,7 @@
 -(instancetype)init {
     self = [super init];
     task = [[NSTask alloc] init];
-    [task setExecutableURL:[NSURL fileURLWithPath:@"/usr/local/bin/node"]];
+    [task setExecutableURL:[[NSBundle mainBundle] URLForResource:@"node" withExtension:@"" subdirectory:@"node-v16.16.0-darwin-arm64/bin/"]];
     NSString* hostPath = [[[NSProcessInfo processInfo] environment] valueForKey:@"TERMINAL_HOST_PATH"];
 
     if (hostPath)

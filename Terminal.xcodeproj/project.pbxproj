@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F00D686A287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 in Resources */ = {isa = PBXBuildFile; fileRef = F00D6869287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 */; };
 		F091DC95287B730100915D30 /* WebKitBundle in Resources */ = {isa = PBXBuildFile; fileRef = F091DC94287B730100915D30 /* WebKitBundle */; };
 		F091DC99287BBA1A00915D30 /* Window.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F091DC98287BBA1A00915D30 /* Window.storyboard */; };
 		F091DCC1287D268E00915D30 /* D4WebPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = F091DCC0287D268E00915D30 /* D4WebPanel.m */; };
@@ -40,6 +41,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F00D6869287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "node-v16.16.0-darwin-arm64"; path = "../../Downloads/node-v16.16.0-darwin-arm64"; sourceTree = "<group>"; };
 		F091DC94287B730100915D30 /* WebKitBundle */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WebKitBundle; path = "../../gap-year/WebKitBundle"; sourceTree = "<group>"; };
 		F091DC98287BBA1A00915D30 /* Window.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Window.storyboard; sourceTree = "<group>"; };
 		F091DCBF287D268E00915D30 /* D4WebPanel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = D4WebPanel.h; sourceTree = "<group>"; };
@@ -92,6 +94,7 @@
 		F0EA445427EC0C4A0085A081 = {
 			isa = PBXGroup;
 			children = (
+				F00D6869287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 */,
 				F091DC94287B730100915D30 /* WebKitBundle */,
 				F0EA445F27EC0C4A0085A081 /* Terminal */,
 				F0EA447527EC0C4E0085A081 /* TerminalTests */,
@@ -252,6 +255,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F00D686A287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 in Resources */,
 				F091DC99287BBA1A00915D30 /* Window.storyboard in Resources */,
 				F091DC95287B730100915D30 /* WebKitBundle in Resources */,
 				F0EA446727EC0C4D0085A081 /* Assets.xcassets in Resources */,

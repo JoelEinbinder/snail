@@ -16,6 +16,7 @@
     nodeTalker = [[NodeTalker alloc] init];
     WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
     [configuration.userContentController addScriptMessageHandler:self contentWorld:[WKContentWorld pageWorld] name:@"wkMessage"];
+    [configuration.preferences setValue:@YES forKey:@"developerExtrasEnabled"];
     webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, 200, 200) configuration:configuration];
     [webView setUIDelegate:self];
     webView.underPageBackgroundColor = [NSColor clearColor];
