@@ -32,7 +32,13 @@ export function isUnexpectedEndOfInput(code: string) {
     parse(code);
     return false;
   } catch(e) {
+    // v8 error messages
     if (e.message.startsWith('SyntaxError: Unexpected end of input') || e.message.startsWith('SyntaxError: Unterminated template literal'))
+      return true;
+    // JavaScriptCore error messages
+    if (e.name === 'SyntaxError' && e.message === 'Unexpected end of script')
+      return true;
+    if (e.name === 'SyntaxError' && e.message === 'Unexpected EOF')
       return true;
     try {
       // TODO: UH OH DONT DO THIS!
