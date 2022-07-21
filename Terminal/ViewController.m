@@ -69,6 +69,54 @@
     [webView setNextResponder:nil];
     panel = nil;
 }
+
+// Copyright (c) 2013 GitHub, Inc.
+// Use of this source code is governed by the MIT license that can be
+// found in the LICENSE file.
+
+-(void)setProgressBar:(double)progress {
+  NSDockTile* dock_tile = [NSApp dockTile];
+
+  // Sometimes macOS would install a default contentView for dock, we must
+  // verify whether NSProgressIndicator has been installed.
+  bool first_time = !dock_tile.contentView ||
+                    [[dock_tile.contentView subviews] count] == 0 ||
+                    ![[[dock_tile.contentView subviews] lastObject]
+                        isKindOfClass:[NSProgressIndicator class]];
+
+  // For the first time API invoked, we need to create a ContentView in
+  // DockTile.
+  if (first_time) {
+    NSImageView* image_view = [[NSImageView alloc] init];
+    [image_view setImage:[NSApp applicationIconImage]];
+    [dock_tile setContentView:image_view];
+
+      float inset = 20.0;
+    NSRect frame = NSMakeRect(inset, 0.0f, dock_tile.size.width - inset * 2, 15.0);
+    NSProgressIndicator* progress_indicator =
+        [[NSProgressIndicator alloc] initWithFrame:frame];
+    [progress_indicator setStyle:NSProgressIndicatorStyleBar];
+    [progress_indicator setIndeterminate:NO];
+    [progress_indicator setBezeled:YES];
+    [progress_indicator setMinValue:0];
+    [progress_indicator setMaxValue:1];
+    [progress_indicator setHidden:NO];
+    [dock_tile.contentView addSubview:progress_indicator];
+  }
+
+  NSProgressIndicator* progress_indicator = [[[dock_tile contentView] subviews] lastObject];
+  if (progress < 0) {
+    [progress_indicator setHidden:YES];
+  } else if (progress > 1) {
+    [progress_indicator setHidden:NO];
+    [progress_indicator setIndeterminate:YES];
+    [progress_indicator setDoubleValue:1];
+  } else {
+    [progress_indicator setHidden:NO];
+    [progress_indicator setDoubleValue:progress];
+  }
+  [dock_tile display];
+}
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(AppDelegate*)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     [webView setPageZoom:object.zoom];
     [self closePanel];
@@ -119,6 +167,8 @@
             [panel close];
             panel = nil;
         }
+    } else if ([@"setProgress" isEqual:body[@"method"]]) {
+        [self setProgressBar:[params[@"progress"] doubleValue]];
     } else {
         [nodeTalker sendMessage:body];
     }
