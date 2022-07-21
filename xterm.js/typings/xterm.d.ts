@@ -1763,6 +1763,7 @@ declare module 'xterm' {
   export type HTMLDelegate = {
     start(data: string): void;
     message(data: string): void;
+    setProgress(progress: number | {progress: number, leftLabel?: string, rightLabel?: string}): void;
     end(): void;
   };
 }

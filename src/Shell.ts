@@ -12,6 +12,7 @@ import type { Suggestion } from './autocomplete';
 import { titleThrottle } from './UIThrottle';
 import { host } from './host';
 import { AntiFlicker } from './AntiFlicker';
+import { ProgressBlock } from './ProgressBlock';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
@@ -138,9 +139,16 @@ export class Shell {
         }
       },
       startTerminal:({id}: {id: number}) => {
-        const terminalBlock = new TerminalBlock(this._size, shellId, async data => {
-          await notify('input', { data, id});
-        }, this._antiFlicker);
+        const progressBlock = new ProgressBlock();
+        const terminalBlock = new TerminalBlock({
+          async sendInput(data) {
+              await notify('input', { data, id});
+          },
+          shellId,
+          size: this._size,
+          antiFlicker: this._antiFlicker,
+          progressBlock,
+        });
         const onFullScreen = (value: boolean) => {
           if (value)
             this.fullscreenItem.dispatch(terminalBlock);
@@ -161,6 +169,7 @@ export class Shell {
           terminalBlock.fullscreenEvent.off(onFullScreen);
           terminalBlock.clearEvent.off(onClear);
         }});
+        this.addItem(progressBlock);
         this.addItem(terminalBlock);
         this._lockPrompt();
         this.activeItem.dispatch(terminalBlock);

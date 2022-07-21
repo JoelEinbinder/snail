@@ -160,6 +160,9 @@ const overrides = {
     for (const popup of popups)
       popup.destroy();
     popups.clear();
+  },
+  setProgress({progress}, client, sender) {
+    BrowserWindow.fromWebContents(sender).setProgressBar(progress);
   }
 };
 
@@ -168,7 +171,7 @@ ipcMain.handle('message', async (event, ...args) => {
   const {method, params, id} = args[0];
   if (!overrides.hasOwnProperty(method))
     throw new Error('command not found');
-  const result = await overrides[method](params, clientForSender(event.sender));
+  const result = await overrides[method](params, clientForSender(event.sender), event.sender);
   if (id)
     event.sender.send('message', {result, id});
 });

@@ -1,0 +1,33 @@
+.progress-block:not(.visible) {
+  display: none;
+}
+
+.progress-block {
+  display: flex;
+  width: auto;
+  align-items: center;
+}
+.progress-block > div {
+  margin: 0 4px;
+  text-align: center;
+  white-space: pre;
+  min-height: 13.5px;
+}
+.progress-block > progress {
+  display: block;
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 40px;
+  height: 6px;
+  overflow: hidden;
+  /* force webkit to size this properly */
+  position: relative;
+}
+
+.progress-block > progress::-webkit-progress-bar {
+  background: var(--ansi-237);
+}
+.progress-block > progress::-webkit-progress-value {
+  background: var(--color-text);
+}

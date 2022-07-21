@@ -4,6 +4,7 @@ import { host } from "./host";
 import { IFrameBlock } from "./IFrameBlock";
 import { JoelEvent } from "./JoelEvent";
 import type { LogItem } from "./LogView";
+import type { ProgressBlock } from "./ProgressBlock";
 import { setSelection } from './selection';
 import { titleThrottle } from "./UIThrottle";
 
@@ -13,6 +14,14 @@ host.onEvent('data', ({shellId, data}) => {
   if (lastTerminalBlock)
     lastTerminalBlock.addData(data);
 });
+
+export type TerminalBlockDelegate = {
+  size: JoelEvent<{cols: number, rows: number}>;
+  shellId: number;
+  sendInput: (data: string) => void;
+  antiFlicker?: AntiFlicker;
+  progressBlock: ProgressBlock;
+}
 
 export class TerminalBlock implements LogItem {
   public willResizeEvent = new JoelEvent<void>(undefined);
@@ -29,17 +38,19 @@ export class TerminalBlock implements LogItem {
   private _data: (string|Uint8Array)[] = [];
   private _trailingNewline = false;
   private _lastWritePromise = Promise.resolve();
+  private _delegate: TerminalBlockDelegate;
   public empty = true;
   private _closed = false;
-  constructor(private _size: JoelEvent<{cols: number, rows: number}>, private _shellId: number, sendInput: (data: string) => void, antiFlicker?: AntiFlicker) {
+  constructor(delegate: TerminalBlockDelegate) {
+    this._delegate = delegate;
 
     this.element = document.createElement('div');
     this.element.style.height = '0px';
     this.element.style.overflow = 'hidden';
     this._terminal = new Terminal({
       fontFamily: 'monaco',
-      cols: this._size.current.cols,
-      rows: this._size.current.rows,
+      cols: delegate.size.current.cols,
+      rows: delegate.size.current.rows,
       fontSize: 10,
       delegatesScrolling: true,
       theme: {
@@ -80,7 +91,7 @@ export class TerminalBlock implements LogItem {
           return false;
         }
         const hadFocus = hasFocus(this.element);
-        this._iframeBlock = new IFrameBlock(data, this._shellId, this.willResizeEvent, antiFlicker);
+        this._iframeBlock = new IFrameBlock(data, delegate.shellId, this.willResizeEvent, delegate.antiFlicker);
         this.element.replaceWith(this._iframeBlock.iframe);
         if (hadFocus)
           this.focus();
@@ -91,12 +102,15 @@ export class TerminalBlock implements LogItem {
       },
       message: (data: string) => {
         this._iframeBlock.message(data);
+      },
+      setProgress: (progress) => {
+        delegate.progressBlock.setProgress(progress);
       }
     })
     this._terminal.open(this.element);
     
     this._listeners.push(this._terminal.onData(data => {
-      sendInput(data);
+      delegate.sendInput(data);
     }));
     this._listeners.push(this._terminal.buffer.onBufferChange(() => {
       this._willResize();
@@ -119,7 +133,7 @@ export class TerminalBlock implements LogItem {
     this._terminal.onRender(() => {
       if (firstRender) {
         firstRender = false;
-        windowResize(this._size.current);
+        windowResize(delegate.size.current);
       }
       this._willResize();
     });
@@ -127,9 +141,9 @@ export class TerminalBlock implements LogItem {
     const windowResize = (size: {rows: number, cols: number}) => {
       this._terminal.resize(size.cols, size.rows);
     };
-    this._size.on(windowResize);
+    delegate.size.on(windowResize);
     this.dispose = () => {
-      this._size.off(windowResize);
+      delegate.size.off(windowResize);
     }
     lastTerminalBlock = this;
   }
@@ -168,18 +182,23 @@ export class TerminalBlock implements LogItem {
 
   async close() {
     await this._lastWritePromise;
+    this._delegate.progressBlock.deactivate();
+
     for (const listeners of this._listeners)
       listeners.dispose();
     if (this._trailingNewline) {
       this._terminal.deleteLastLine();
       
     } else {
-      if (this._terminal.buffer.active === this._terminal.buffer.normal &&
-        this._terminal.buffer.active.length === 1 &&
-        this._terminal.buffer.active.getLine(0).translateToString(true) === '') {
+      const buffer = this._terminal.buffer.active;
+      if (buffer === this._terminal.buffer.normal &&
+        buffer.length === 1 &&
+        buffer.getLine(0).translateToString(true) === '') {
         this.element.style.display = 'none';
         this.element.remove();
         this.empty = true;
+      } else if (buffer === this._terminal.buffer.normal && buffer.getLine(buffer.length - 1).translateToString(true) === '') {
+        this._terminal.deleteLastLine();
       }
       // TODO write some extra '%' character to show there was no trailing newline?
     }

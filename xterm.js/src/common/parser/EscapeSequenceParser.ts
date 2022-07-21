@@ -244,7 +244,7 @@ export class EscapeSequenceParser extends Disposable {
   protected _params: Params;
   protected _collect: number;
   protected _html: string|null = null;
-  private _htmlType: 'legacy'|'start'|'message'|'end'|null = null;
+  private _htmlType: 'legacy'|'start'|'message'|'progress'|'end'|null = null;
 
   // handler lookup containers
   protected _printHandler: PrintHandlerType;
@@ -831,6 +831,8 @@ export class EscapeSequenceParser extends Disposable {
               this._htmlType = 'start';
             else if (code === 0x4d)
               this._htmlType = 'message';
+            else if (code === 0x4e)
+              this._htmlType = 'progress';
             else if (code === 0)
               this._htmlDelegate?.end();
           } else if (code === 0) {
@@ -841,6 +843,8 @@ export class EscapeSequenceParser extends Disposable {
               this._htmlDelegate?.start(this._html);
             } else if (this._htmlType === 'message') {
               this._htmlDelegate?.message(this._html);
+            } else if (this._htmlType === 'progress') {
+              this._htmlDelegate?.setProgress(JSON.parse(this._html));
             }
             this._html = null;
           } else {
