@@ -5,6 +5,53 @@ const vscode = require('vscode');
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
+class ProgressBar {
+	constructor() {
+	}
+
+	show() {
+		if (this.resolve)
+			return;
+		this.lastProgress = 0;
+		vscode.window.withProgress({
+			location: vscode.ProgressLocation.Window,
+			title: '1d4 Terminal',
+			cancellable: false,
+		}, (progress, token) => {
+			this.progress = progress;
+			this.token = token;
+			return new Promise((resolve) => {
+				this.resolve = resolve;
+			});
+		});
+	}
+
+	hide() {
+		if (!this.resolve)
+			return;
+		this.resolve();
+		delete this.resolve;
+		delete this.token;
+		delete this.progress;
+		delete this.lastProgress;
+	}
+
+	setProgress(progress) {
+		if (progress < 0) {
+			this.hide();
+			return;
+		}
+		this.show();
+		const increment = 100 * (progress - this.lastProgress);
+		this.lastProgress = progress;
+		this.progress.report({ increment, message: Intl.NumberFormat(undefined, {
+			maximumFractionDigits: 0,
+			unit: 'percent',
+			style: 'unit',
+		}).format(progress * 100) });
+	}
+}
+
 /**
  * @param {vscode.ExtensionContext} context
  */
@@ -24,7 +71,7 @@ function activate(context) {
 			const {PipeTransport} = require(path.join(os.homedir(), '/gap-year/protocol/pipeTransport'));
 			let ready = false;
 			let buffer = [];
-			const child = spawn('node', [require.resolve(path.join(os.homedir(), '/gap-year/node_host/'))], {
+			const child = spawn('/usr/local/bin/node', [require.resolve(path.join(os.homedir(), '/gap-year/node_host/'))], {
 				env: {},
 				stdio: ['pipe', 'pipe', 'inherit'],
 			});
@@ -39,9 +86,14 @@ function activate(context) {
 				<body>
 					<script src="http://localhost/gap-year/main.bundle.js"></script>
 				</body>`;
+			const progressBar = new ProgressBar();
 			webview.webview.onDidReceiveMessage(message => {
 				if (message.method === 'beep')
 					return;
+				if (message.method === 'setProgress') {
+					progressBar.setProgress(message.params.progress);
+					return;
+				}
 				if (ready)
 					pipe.send(message);
 				else

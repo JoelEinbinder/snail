@@ -377,7 +377,7 @@ function processWord(word) {
  */
 function computeReplacement(replacement) {
     if (replacement === '~')
-        return process.env.HOME;
+        return process.env.HOME || require('os').homedir();
     if (replacement.startsWith('$')) {
         const key = replacement.substring(1);
         return key in process.env ? process.env[key] : '';
