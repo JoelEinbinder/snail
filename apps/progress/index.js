@@ -34,7 +34,7 @@ const throttle = new ThrottleProgress();
   let total = 100;
   console.time();
   for (let i = 0; i <= total; i++) {
-    // await new Promise(x => setTimeout(x, 10));
+    await new Promise(x => setTimeout(x, 10));
     throttle.update(() => { return {
       progress: i / total,
       leftText: 'hi',
