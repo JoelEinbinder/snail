@@ -25,9 +25,13 @@ sh.passThrough = function(strings, values) {
  * @param {...any} values
  */
 function parseTemplate(strings, ...values) {
-  if (strings.length !== 1)
-    throw new Error('replacements unimplemented');
-  return parse(tokenize(strings[0]).tokens);
+  let built = '';
+  for (let i = 0; i < strings.length; i++) {
+    built += strings[i];
+    if (i < values.length)
+      built += values[i];
+  }
+  return parse(tokenize(built).tokens);
 }
 
 function executeAndGetLines(expression) {
