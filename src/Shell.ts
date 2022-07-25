@@ -530,6 +530,16 @@ export class Shell {
         this.clearEvent.dispatch();
         event.preventDefault();
         event.stopImmediatePropagation();
+      } else if (event.code === 'KeyC' && event.ctrlKey) {
+        const commandBlock = new CommandBlock(editor.value, this._connectionNameEvent.current, {...this.env}, this.cwd, this.sshAddress);
+        commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
+        commandBlock.wasCanceled = true;
+        this.addItem(commandBlock);
+        editor.value = '';
+        editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
       }
     }, false);
     editorLine.appendChild(editorWrapper);

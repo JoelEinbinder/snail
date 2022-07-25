@@ -7,6 +7,7 @@ import type { Shell } from './Shell';
 export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
   willResizeEvent = new JoelEvent<void>(undefined);
+  public wasCanceled = false;
   private _editor: Editor;
   private _exitCode = document.createElement('div');
   constructor(public command: string,
@@ -45,6 +46,7 @@ export class CommandBlock implements LogItem {
   render(): Element {
     const command = document.createElement('div');
     command.classList.add('command');
+    command.classList.toggle('canceled', this.wasCanceled);
     command.append(CommandPrefix(this));
     const editorWrapper = document.createElement('div');
     editorWrapper.style.position = 'relative';

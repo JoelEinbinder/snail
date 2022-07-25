@@ -15,6 +15,10 @@
   display: flex;
 }
 
+.command.canceled {
+  filter: grayscale(100%);
+}
+
 .command:not(:first-child),
 .prompt:not(:first-child) {
   border-top: 1px solid var(--ansi-237);
