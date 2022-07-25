@@ -91,7 +91,7 @@ export class TerminalBlock implements LogItem {
           return false;
         }
         const hadFocus = hasFocus(this.element);
-        this._iframeBlock = new IFrameBlock(data, delegate.shellId, this.willResizeEvent, delegate.antiFlicker);
+        this._iframeBlock = new IFrameBlock(data, delegate, this.willResizeEvent);
         this.element.replaceWith(this._iframeBlock.iframe);
         if (hadFocus)
           this.focus();
@@ -203,6 +203,8 @@ export class TerminalBlock implements LogItem {
       // TODO write some extra '%' character to show there was no trailing newline?
     }
     this._closed = true;
+    if (this._iframeBlock)
+      this._iframeBlock.didClose();
     this._terminal.blur();
     this._terminal.disable();
   }
