@@ -37,36 +37,7 @@ const builtins = {
     ls: (args, stdout, stderr) => {
         if (args.length > 1 || stdout !== process.stdout || args.some(x => x.startsWith('-')))
             return 'pass';
-        const path = require('path')
-        stdout.write(`\x1b\x1aL${path.join(__dirname, '..', 'apps', 'ls', 'index.js')}\x00`);
-
-        /**
-         * @param {any} data
-         */
-        function send(data) {
-            const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
-                return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
-            });
-            stdout.write(`\x1b\x1aM${str}\x00`);
-        }
-        const fs = require('fs');
-        const resolved = args.length === 1 ? path.resolve(process.cwd(), args[0]) : process.cwd();
-        const isDirectory = fs.statSync(resolved).isDirectory();
-        if (!isDirectory) {
-            send({
-                dirs: [path.basename(resolved)],
-                cwd: path.dirname(resolved),
-                showHidden: true,
-            })
-        } else {
-            const dirs = fs.readdirSync(resolved);
-            send({
-                dirs,
-                cwd: resolved,
-                showHidden: false,
-            });
-        }
-        return Promise.resolve(0);
+        return require('../apps/ls/lib').run(args, stdout, stderr).then(() => 0);
     },
     export: async (args, stdout, stderr) => {
         for (const arg of args) {

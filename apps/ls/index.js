@@ -1,10 +1,11 @@
 import './index.css';
-
+import {iconPathForPath} from './material-icons';
 const {dirs, cwd, showHidden} = await d4.waitForMessage();
 document.body.style.visibility = 'hidden';
 const imageLoadPromises = [];
 let count = 0;
-for (const dir of dirs) {
+for (const info of dirs) {
+  const {dir} = info;
   if (!showHidden && dir.startsWith('.'))
     continue;
   const div = document.createElement('div');
@@ -14,10 +15,12 @@ for (const dir of dirs) {
     image.onload = x;
     image.onerror = x;
   }));
-  image.src = `${fullPath}?thumbnail`;
+  image.src = iconPathForPath(fullPath, info);
   image.width = image.height = 16;
   div.append(image, dir);
   div.title = fullPath;
+  if (info.link)
+    div.title += ' -> ' + info.link;
   document.body.append(div);
   count++;
 }

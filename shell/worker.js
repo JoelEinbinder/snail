@@ -45,7 +45,7 @@ const rpc = RPC(transport, {
       'cache-control': 'no-cache',
     };
     if (searchParams.has('thumbnail')) {
-      responseHeaders.etag = fs.statSync(filePath).ctimeMs.toString();
+      responseHeaders.etag = fs.lstatSync(filePath, {}).ctimeMs.toString();
       if (headers['if-none-match'] === responseHeaders.etag) {
         return {
           statusCode: 304,
@@ -67,6 +67,14 @@ const rpc = RPC(transport, {
           statusCode: 404,
           data: '404',
           mimeType: 'text/plain',
+        }
+      }
+      responseHeaders.etag = fs.lstatSync(resolved, {}).ctimeMs.toString();
+      if (headers['if-none-match'] === responseHeaders.etag) {
+        return {
+          statusCode: 304,
+          mimeType: 'application/javascript',
+          headers: responseHeaders,
         }
       }
       if (resolved.endsWith('.css')) {
