@@ -54,17 +54,8 @@ export class IFrameBlock {
           }
           break;
         }
-        case 'keydown': {
-
-          const ev = data.params;
-          if (!ev.ctrlKey || ev.shiftKey || ev.altKey || ev.metaKey)
-            break;
-          const codeMap = {
-            'KeyC': '\x03',
-            'KeyD': '\x04',
-          }
-          if (ev.code in codeMap)
-            delegate.sendInput(codeMap[ev.code]);
+        case 'sendInput': {
+          delegate.sendInput(data.params);
           break;
         }
       }

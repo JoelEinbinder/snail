@@ -24,20 +24,27 @@ window.addEventListener('message', event => {
 
 window.addEventListener('keydown', event => {
   if (event.defaultPrevented)
+    return;  
+  if (!event.ctrlKey || event.shiftKey || event.altKey || event.metaKey)
     return;
-  window.parent.postMessage({method: 'keydown', params: {
-    key: event.key,
-    code: event.code,
-    ctrlKey: event.ctrlKey,
-    shiftKey: event.shiftKey,
-    altKey: event.altKey,
-    metaKey: event.metaKey,
-    repeat: event.repeat,
-  }}, '*')
-})
+  const codeMap = {
+    'KeyC': '\x03',
+    'KeyD': '\x04',
+  }
+  if (event.code in codeMap) {
+    event.preventDefault();
+    sendInput(codeMap[event.code]);
+  }
+});
+
+function sendInput(data) {
+  window.parent.postMessage({method: 'sendInput', params: data}, '*');
+}
+
 window.d4 = {
   waitForMessage,
   setHeight,
   setIsFullscreen,
+  sendInput,
 }
 window.parent.postMessage('ready', '*')
