@@ -2,23 +2,35 @@ import { Emitter } from './emitter';
 import { isSelectionCollapsed } from './model.js';
 import { getMode } from './modeRegistry.js';
 
-/**
- * @typedef {Object} Token
- * @property {number} length
- * @property {string=} color
- * @property {string=} background
- */
+type Token = {
+  length: number;
+  color?: string;
+  background?: string;
+};
 
-export class Highlighter extends Emitter {
-  /**
-   * @param {import('./model').Model} model
-   * @param {string} language
-   * @param {function(number,  string):Array<Token>} underlay
-   * @param {{selectionBackground?: string}=} colors
-   */
-  constructor(model, language = 'js', underlay = null, colors = {}) {
+export type Mode<State> = {
+  startState(): State;
+  blankLine?: (state: State) => void;
+  token(stream: StringStream, state: State): string|null;
+  indent(state: State, textAfter: string): number;
+};
+const MAX_TOKENS = 1000;
+export class Highlighter extends Emitter<{
+  'highlight': {from: number, to: number};
+}> {
+  private _selectionColors: {color?: string, background?: string};
+  private _mode: Mode<any>;
+  private _lineInfo = new WeakMap<import('./model').Line, {state: Object, tokens: Array<Token>}>();
+  private _currentLineNumber = 0;
+  private _requestLineNumber = 0;
+  private _tokenizeTimeout = 0;
+  private _colors: [string, string][];
+  constructor(
+    private _model: import('./model').Model,
+    language: string = 'js',
+    private _underlay: (arg0: number, arg1: string) => Array<Token> = null,
+    colors: { selectionBackground?: string; } | undefined = {}) {
     super();
-    this._model = model;
     this._model.on('selectionChanged', ({ selections, previousSelections }) => {
       for (var selection of selections)
         this.emit('highlight', {
@@ -35,7 +47,7 @@ export class Highlighter extends Emitter {
       this._findCurrentLineNumber(range.start.line);
       this.emit('highlight', {
         from: range.start.line,
-        to: model.lineCount() - 1
+        to: this._model.lineCount() - 1
       });
     });
     if (colors.selectionBackground) {
@@ -54,13 +66,7 @@ export class Highlighter extends Emitter {
     }
       
     this._mode = getMode(language)?.({ indentUnit: 2 }, {});
-    this._underlay = underlay;
-    /** @type {WeakMap<import('./model').Line, {state: Object, tokens: Array<Token>}>} */
-    this._lineInfo = new WeakMap();
-    this._currentLineNumber = 0;
-    this._requestLineNumber = 0;
-    this._tokenizeTimeout = 0;
-    this.MAX_TOKENS = 1000;
+
     this._colors =
       language === 'js'
         ? [
@@ -91,10 +97,7 @@ export class Highlighter extends Emitter {
           ];
   }
 
-  /**
-   * @param {number} from
-   */
-  _findCurrentLineNumber(from) {
+  _findCurrentLineNumber(from: number) {
     this._currentLineNumber = Math.min(this._currentLineNumber, from);
     while (this._currentLineNumber) {
       var lineinfo = this._lineInfo.get(this._model.line(this._currentLineNumber - 1));
@@ -117,12 +120,7 @@ export class Highlighter extends Emitter {
     this._tokenizeTimeout = window['requestIdleCallback'] ? window['requestIdleCallback'](fn) : setTimeout(fn, 100);
   }
 
-  /**
-   * @param {number} lineNumber
-   * @param {number=} max
-   * @param {number=} timeLimit
-   */
-  _tokenizeUpTo(lineNumber, max, timeLimit) {
+  _tokenizeUpTo(lineNumber: number, max?: number, timeLimit?: number) {
     if (!this._mode) return;
     if (this._currentLineNumber > lineNumber) return;
     if (
@@ -154,7 +152,7 @@ export class Highlighter extends Emitter {
         }
         tokens.push({ length: stream.pos - stream.start, color });
         stream.start = stream.pos;
-        if (tokens.length > this.MAX_TOKENS) {
+        if (tokens.length > MAX_TOKENS) {
           state = this._mode.startState();
           tokens.push({
             length: stream.string.length - stream.start,
@@ -168,10 +166,7 @@ export class Highlighter extends Emitter {
     if (line) this._lineInfo.get(line).state = this._copyState(state);
   }
 
-  /**
-   * @param {number} lineNumber
-   */
-  indentation(lineNumber) {
+  indentation(lineNumber: number) {
     const line = this._model.line(lineNumber);
     if (!this._lineInfo.has(line))
       return;
@@ -183,16 +178,10 @@ export class Highlighter extends Emitter {
     return this._mode.indent(copy, '');
   }
 
-  /**
-   * @template T
-   * @param {T} state
-   * @param {number=} depth
-   * @return {T}
-   */
-  _copyState(state, depth = 1) {
-    if (Array.isArray(state)) return /** @type {T & any[]} */ (state.slice(0));
+  _copyState<T>(state: T, depth = 1): T {
+    if (Array.isArray(state)) return state.slice(0) as T & any[];
     if (depth && typeof state === 'object' && state !== null) {
-      var copy = /** @type {T} */({});
+      const copy = {} as T;
       for (var i in state) {
         copy[i] = this._copyState(state[i], depth - 1);
       }
@@ -202,17 +191,8 @@ export class Highlighter extends Emitter {
     return state;
   }
 
-  /**
-   * @param {number} lineNumber
-   * @return {Array<Token>}
-   */
-  tokensForLine(lineNumber) {
-    /**
-     * @param {Array<Token>} a
-     * @param {Array<Token>} b
-     * @return {Array<Token>}
-     */
-    const mergeTokens = (a, b) => {
+  tokensForLine(lineNumber: number): Array<Token> {
+    const mergeTokens = (a: Array<Token>, b: Array<Token>): Array<Token> => {
       var tokens = [];
       var line = this._model.line(lineNumber);
       var length = 0;
@@ -266,11 +246,7 @@ export class Highlighter extends Emitter {
     return mergedTokens;
   }
 
-  /**
-   * @param {number} lineNumber
-   * @return {Array<Token>}
-   */
-  _selectionTokens(lineNumber) {
+  _selectionTokens(lineNumber: number): Array<Token> {
     var ranges = [];
     var tokens = [];
     var { length } = this._model.line(lineNumber);
@@ -305,142 +281,139 @@ export class Highlighter extends Emitter {
 
 // Fed to the mode parsers, provides helper functions to make
 // parsers more succinct.
+class StringStream {
+  pos = 0;
+  start = 0;
+  lineStart = 0;
+  lastColumnPos = 0;
+  lastColumnValue = 0;
+  constructor(
+    public string: string,
+    public tabSize: number = 2,
+    public lineOracle?: any) {
+  }
+  eol() {
+    return this.pos >= this.string.length;
+  }
 
-/**
- *
- * @param {string} string
- * @param {number=} tabSize
- * @param {any=} lineOracle
- */
-var StringStream = function(string, tabSize, lineOracle) {
-  this.pos = this.start = 0;
-  this.string = string;
-  this.tabSize = tabSize || 2;
-  this.lastColumnPos = this.lastColumnValue = 0;
-  this.lineStart = 0;
-  this.lineOracle = lineOracle;
-};
+  sol() {
+    return this.pos == this.lineStart;
+  }
+  peek() {
+    return this.string.charAt(this.pos) || undefined;
+  }
+  next() {
+    if (this.pos < this.string.length) {
+      return this.string.charAt(this.pos++);
+    }
+  }
+  eat(match) {
+    var ch = this.string.charAt(this.pos);
+    var ok;
+    if (typeof match == 'string') {
+      ok = ch == match;
+    } else {
+      ok = ch && (match.test ? match.test(ch) : match(ch));
+    }
+    if (ok) {
+      ++this.pos;
+      return ch;
+    }
+  }
+  eatWhile(match) {
+    var start = this.pos;
+    while (this.eat(match)) { }
+    return this.pos > start;
+  }
+  eatSpace() {
+    var this$1 = this;
 
-StringStream.prototype.eol = function() {
-  return this.pos >= this.string.length;
-};
-StringStream.prototype.sol = function() {
-  return this.pos == this.lineStart;
-};
-StringStream.prototype.peek = function() {
-  return this.string.charAt(this.pos) || undefined;
-};
-StringStream.prototype.next = function() {
-  if (this.pos < this.string.length) {
-    return this.string.charAt(this.pos++);
+    var start = this.pos;
+    while (/[\s\u00a0]/.test(this.string.charAt(this.pos))) {
+      ++this$1.pos;
+    }
+    return this.pos > start;
   }
-};
-StringStream.prototype.eat = function(match) {
-  var ch = this.string.charAt(this.pos);
-  var ok;
-  if (typeof match == 'string') {
-    ok = ch == match;
-  } else {
-    ok = ch && (match.test ? match.test(ch) : match(ch));
+  skipToEnd() {
+    this.pos = this.string.length;
   }
-  if (ok) {
-    ++this.pos;
-    return ch;
-  }
-};
-StringStream.prototype.eatWhile = function(match) {
-  var start = this.pos;
-  while (this.eat(match)) {}
-  return this.pos > start;
-};
-StringStream.prototype.eatSpace = function() {
-  var this$1 = this;
-
-  var start = this.pos;
-  while (/[\s\u00a0]/.test(this.string.charAt(this.pos))) {
-    ++this$1.pos;
-  }
-  return this.pos > start;
-};
-StringStream.prototype.skipToEnd = function() {
-  this.pos = this.string.length;
-};
-StringStream.prototype.skipTo = function(ch) {
-  var found = this.string.indexOf(ch, this.pos);
-  if (found > -1) {
-    this.pos = found;
-    return true;
-  }
-};
-StringStream.prototype.backUp = function(n) {
-  this.pos -= n;
-};
-StringStream.prototype.column = function() {
-  if (this.lastColumnPos < this.start) {
-    this.lastColumnValue = countColumn(this.string, this.start, this.tabSize, this.lastColumnPos, this.lastColumnValue);
-    this.lastColumnPos = this.start;
-  }
-  return this.lastColumnValue - (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0);
-};
-StringStream.prototype.indentation = function() {
-  return (
-    countColumn(this.string, null, this.tabSize) -
-    (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0)
-  );
-};
-StringStream.prototype.match = function(pattern, consume, caseInsensitive) {
-  if (typeof pattern == 'string') {
-    var cased = function(str) {
-      return caseInsensitive ? str.toLowerCase() : str;
-    };
-    var substr = this.string.substr(this.pos, pattern.length);
-    if (cased(substr) == cased(pattern)) {
-      if (consume !== false) {
-        this.pos += pattern.length;
-      }
+  skipTo(ch) {
+    var found = this.string.indexOf(ch, this.pos);
+    if (found > -1) {
+      this.pos = found;
       return true;
     }
-  } else {
-    var match = this.string.slice(this.pos).match(pattern);
-    if (match && match.index > 0) {
-      return null;
-    }
-    if (match && consume !== false) {
-      this.pos += match[0].length;
-    }
-    return match;
   }
-};
-StringStream.prototype.current = function() {
-  return this.string.slice(this.start, this.pos);
-};
-StringStream.prototype.hideFirstChars = function(n, inner) {
-  this.lineStart += n;
-  try {
-    return inner();
-  } finally {
-    this.lineStart -= n;
+  backUp(n) {
+    this.pos -= n;
   }
-};
-StringStream.prototype.lookAhead = function(n) {
-  var oracle = this.lineOracle;
-  return oracle && oracle.lookAhead(n);
-};
-StringStream.prototype.baseToken = function() {
-  var oracle = this.lineOracle;
-  return oracle && oracle.baseToken(this.pos);
-};
+  column() {
+    if (this.lastColumnPos < this.start) {
+      this.lastColumnValue = countColumn(this.string, this.start, this.tabSize, this.lastColumnPos, this.lastColumnValue);
+      this.lastColumnPos = this.start;
+    }
+    return this.lastColumnValue - (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0);
+  }
+  indentation() {
+    return (
+      countColumn(this.string, null, this.tabSize) -
+      (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0)
+    );
+  }
+  match(pattern, consume, caseInsensitive) {
+    if (typeof pattern == 'string') {
+      var cased = function (str) {
+        return caseInsensitive ? str.toLowerCase() : str;
+      };
+      var substr = this.string.substr(this.pos, pattern.length);
+      if (cased(substr) == cased(pattern)) {
+        if (consume !== false) {
+          this.pos += pattern.length;
+        }
+        return true;
+      }
+    } else {
+      var match = this.string.slice(this.pos).match(pattern);
+      if (match && match.index > 0) {
+        return null;
+      }
+      if (match && consume !== false) {
+        this.pos += match[0].length;
+      }
+      return match;
+    }
+  }
+  current() {
+    return this.string.slice(this.start, this.pos);
+  }
+  hideFirstChars(n, inner) {
+    this.lineStart += n;
+    try {
+      return inner();
+    } finally {
+      this.lineStart -= n;
+    }
+  }
+  lookAhead(n) {
+    var oracle = this.lineOracle;
+    return oracle && oracle.lookAhead(n);
+  }
+  baseToken() {
+    var oracle = this.lineOracle;
+    return oracle && oracle.baseToken(this.pos);
+  }
+}
 
 // Counts the column offset in a string, taking tabs into account.
 // Used mostly to find indentation.
-function countColumn(string, end, tabSize, startIndex, startValue) {
+function countColumn(string: string, end: number|null, tabSize: number, startIndex = 0, startValue = 0) {
   if (end == null) {
     end = string.search(/[^\s\u00a0]/);
     if (end == -1) {
       end = string.length;
     }
   }
-  for (var i = startIndex || 0, n = startValue || 0; ; ) {
+  for (var i = startIndex, n = startValue; ;) {
     var nextTab = string.indexOf('\t', i);
     if (nextTab < 0 || nextTab >= end) {
       return n + (end - i);
