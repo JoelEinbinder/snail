@@ -496,35 +496,41 @@ export class Shell {
     editorWrapper.style.flex = '1';
     editorWrapper.style.minHeight = '14px';
     editorWrapper.addEventListener('keydown', async event => {
-      if (event.key !== 'Enter' || event.shiftKey)
-        return;
-      event.preventDefault();
-      event.stopPropagation();
-      if (!event.ctrlKey && !editor.somethingSelected()) {
-        const start = editor.selections[0].start;
-        if (start.line !== editor.lastLine) {
-          if (start.column === editor.line(start.line).length) {
-            willResize();
-            editor.smartEnter();
-            return;
-          }
-        } else {
-          if (start.column === editor.line(start.line).length) {
-            const code = await this._transformCode(editor.text());
-            if (isUnexpectedEndOfInput(code)) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (!event.ctrlKey && !editor.somethingSelected()) {
+          const start = editor.selections[0].start;
+          if (start.line !== editor.lastLine) {
+            if (start.column === editor.line(start.line).length) {
               willResize();
               editor.smartEnter();
               return;
             }
+          } else {
+            if (start.column === editor.line(start.line).length) {
+              const code = await this._transformCode(editor.text());
+              if (isUnexpectedEndOfInput(code)) {
+                willResize();
+                editor.smartEnter();
+                return;
+              }
+            }
           }
         }
+        const command = editor.value;
+        editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
+        editor.value = '';
+        this.runCommand(command);
+      } else if (event.code === 'KeyL' && event.ctrlKey) {
+        for (const item of this.log) {
+            item.dispose();
+        }
+        this.log = [];
+        this.clearEvent.dispatch();
+        event.preventDefault();
+        event.stopImmediatePropagation();
       }
-      const command = editor.value;
-      editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
-      editor.value = '';
-      this.runCommand(command);
-      event.stopPropagation();
-      event.preventDefault();
     }, false);
     editorLine.appendChild(editorWrapper);
     const {editor, autocomplete} = makePromptEditor(this);
