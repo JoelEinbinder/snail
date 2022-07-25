@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs');
+const os = require('os');
 
 async function run(args, stdout, stderr) {
   stdout.write(`\x1b\x1aL${path.join(__dirname, 'index.js')}\x00`);
@@ -15,11 +16,13 @@ async function run(args, stdout, stderr) {
   }
   const resolved = args.length === 1 ? path.resolve(process.cwd(), args[0]) : process.cwd();
   const isDirectory = fs.statSync(resolved).isDirectory();
+  const platform = os.platform();
   if (!isDirectory) {
       send({
           dirs: await buildDirInfos(path.dirname(resolved), [path.basename(resolved)]),
           cwd: path.dirname(resolved),
           showHidden: true,
+          platform,
       })
   } else {
       const dirs = fs.readdirSync(resolved);
@@ -27,6 +30,7 @@ async function run(args, stdout, stderr) {
           dirs: await buildDirInfos(resolved, dirs),
           cwd: resolved,
           showHidden: false,
+          platform,
       });
   }
 }

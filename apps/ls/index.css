@@ -18,3 +18,7 @@ div {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+div.executable {
+  color: var(--brightGreen);
+}
