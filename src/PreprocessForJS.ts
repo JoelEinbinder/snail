@@ -42,10 +42,13 @@ export function isUnexpectedEndOfInput(code: string) {
       return true;
     try {
       // TODO: UH OH DONT DO THIS!
+      // We are doing this because the `new Function` function gives us bad error messages about unexpected '}';
       eval(code);
       console.error('THIS WENT BAD WE EXECUTED SOME SHIT');
     } catch (e) {
-      return e.toString().startsWith('SyntaxError: Unexpected end of input') || e.toString().startsWith('SyntaxError: Unterminated template literal');
+      return e.toString().startsWith('SyntaxError: Unexpected end of input') ||
+        e.toString().startsWith('SyntaxError: Unterminated template literal') ||
+        e.toString().startsWith('SyntaxError: Unexpected end of script');
     }
   }
 }
