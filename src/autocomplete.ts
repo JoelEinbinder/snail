@@ -127,10 +127,18 @@ export class Autocomplete {
         this._abortController = abortController;
         const textBeforeCursor = this._editor.text({ start: { line: location.line, column: 0 }, end: location });
         this._refreshingSuggestions = true;
-        const {anchor, suggestions} = await this._completer(textBeforeCursor, abortController.signal);
+        const completions = await this._completer(textBeforeCursor, abortController.signal);
         this._refreshingSuggestions = false;
         if (abortController.signal.aborted)
             return;
+        if (!completions) {
+            this._suggestBox?.hide();
+            this._suggestBox = null;
+            this._wantsSuggestBoxShown = false;
+            this.suggestionChanged.dispatch();
+            return;
+        }
+        const {anchor, suggestions} = completions;
 
         const prefix = textBeforeCursor.slice(anchor);
         const filtered = filterAndSortSuggestions(suggestions, prefix);

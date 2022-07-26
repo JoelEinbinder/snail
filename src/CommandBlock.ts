@@ -14,11 +14,12 @@ export class CommandBlock implements LogItem {
     private _connectionName: string,
     public env: {[key: string]: string},
     public cwd: string,
+    globalVars?: Set<string>,
     private _sshAddress?: string) {
     this._editor = new Editor('', {
       inline: true,
       lineNumbers: false,
-      language: 'js',
+      language: 'shjs',
       padding: 0,
       colors: {
         cursorColor: '#f4f4f4',
@@ -27,6 +28,8 @@ export class CommandBlock implements LogItem {
       },
       readOnly: true,
     });
+    if (globalVars)
+      this._editor.setModeOptions({globalVars});
     this._editor.on('selectionChanged', () => {
       setSelection(() => this._editor.selections.map(s => this._editor.text(s)).join('\n'));
     });

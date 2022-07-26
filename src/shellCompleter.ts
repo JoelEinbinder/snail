@@ -25,7 +25,7 @@ export function makeShellCompleter(shell: Shell): Completer {
     const prefix = getAutocompletePrefix(line, await shell.globalVars());
     let result: {anchor: number, suggestions: Suggestion[]};
     if (prefix === null)
-      return {anchor: 0, suggestions: []};
+      return null;
     if (prefix === '' || (typeof prefix !== 'string' && !prefix.shPrefix.includes(' '))) {
       if (line.includes('/'))
         result = await fileCompleter(shell, line, true);
@@ -99,7 +99,7 @@ async function commandCompleter(shell: Shell, line: string) {
     'switch', 'typeof', 'instanceof',
     'true', 'false', 'null',
     'undefined', 'NaN', 'Infinity',
-    'this', 'class', 'await'];
+    'this', 'class', 'await', 'async'];
   for (const text of keywords)
     addItem({text});
   function addItem(item: Suggestion) {

@@ -42,8 +42,8 @@ const MyParser = Parser.extend(
             return null;
         }
         if (firstToken.type === tokTypes.name) {
-          // let is special cause its not a keyword
-          if (firstToken.value === 'let' || firstToken.value === 'await')
+          // let/await/async are special cause they are not keywords
+          if (firstToken.value === 'let' || firstToken.value === 'await' || firstToken.value === 'async')
             return null;
           if (gv.has(firstToken.value))
             return null;
@@ -130,5 +130,21 @@ function getAutocompletePrefix(code, globalVars = new Set()) {
   return found;
 }
 
+/**
+ * @param {string} code
+ * @return {import('acorn').Token[]}
+ */
+function parseCodeIntoTokens(code, globalVars = new Set()) {
+  /** @type {import('acorn').Token[]} */
+  const tokens = [];
+  let before = gv;
+  gv = globalVars;
+  try {
+    MyParser.parse(code, {ecmaVersion: 'latest', allowAwaitOutsideFunction: true, onToken: t => tokens.push(t)});
+  } catch(error) {
+  }
+  gv = before;
+  return tokens;
+}
 
-module.exports = {transformCode, getAutocompletePrefix};
+module.exports = {transformCode, getAutocompletePrefix, parseCodeIntoTokens};

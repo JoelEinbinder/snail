@@ -1,6 +1,6 @@
 import { Emitter } from './emitter';
 import { isSelectionCollapsed } from './model.js';
-import { getMode } from './modeRegistry.js';
+import { getMode } from './modeRegistry';
 
 type Token = {
   length: number;
@@ -8,7 +8,7 @@ type Token = {
   background?: string;
 };
 
-export type Mode<State> = {
+export interface Mode<State> {
   startState(): State;
   blankLine?: (state: State) => void;
   token(stream: StringStream, state: State): string|null;
@@ -27,7 +27,7 @@ export class Highlighter extends Emitter<{
   private _colors: [string, string][];
   constructor(
     private _model: import('./model').Model,
-    language: string = 'js',
+    private _language: string = 'js',
     private _underlay: (arg0: number, arg1: string) => Array<Token> = null,
     colors: { selectionBackground?: string; } | undefined = {}) {
     super();
@@ -65,24 +65,27 @@ export class Highlighter extends Emitter<{
         };
     }
       
-    this._mode = getMode(language)?.({ indentUnit: 2 }, {});
+    this._mode = getMode(_language)?.({ indentUnit: 2 }, {});
 
     this._colors =
-      language === 'js'
+      (_language === 'js' || _language === 'shjs')
         ? [
             ['keyword', '#af5fff'],
             ['number', '#999900'],
             ['comment', '#666666'],
             ['string', '#00A600'],
-            ['string-2', '#F4F4F4'],
+            ['string-2', '#00A600'],
             // ['atom', '#F4F4F4'],
             // ['def', '#F4F4F4'],
             // ['operator', '#F4F4F4'],
             // ['meta', '#F4F4F4'],
-            // ['variable', '#F4F4F4'],
+            ['variable', '#afd7ff'],
+            ['property', '#afd7ff'],
+            ['def', '#afd7ff'],
+            ['sh', '#f4f4f4'],
           ]
         : [
-            ['keyword ', 'rgb(7, 144, 154)'],
+            ['keyword', 'rgb(7, 144, 154)'],
             ['number', 'rgb(50, 0, 255)'],
             ['comment', 'rgb(0, 116, 0)'],
             ['def', 'rgb(200, 0, 0)'],
@@ -178,7 +181,16 @@ export class Highlighter extends Emitter<{
     return this._mode.indent(copy, '');
   }
 
-  _copyState<T>(state: T, depth = 1): T {
+  setModeOptions(options: any) {
+    this._mode = getMode(this._language)?.({ indentUnit: 2, ...options }, {});
+    this._currentLineNumber = 0;
+    this.emit('highlight', {
+      from: 0,
+      to: this._model.lineCount() - 1
+    });
+  }
+
+  _copyState<T>(state: T, depth = 2): T {
     if (Array.isArray(state)) return state.slice(0) as T & any[];
     if (depth && typeof state === 'object' && state !== null) {
       const copy = {} as T;
@@ -281,7 +293,7 @@ export class Highlighter extends Emitter<{
 
 // Fed to the mode parsers, provides helper functions to make
 // parsers more succinct.
-class StringStream {
+export class StringStream {
   pos = 0;
   start = 0;
   lineStart = 0;

@@ -365,7 +365,7 @@ export class Shell {
   }
 
   async runCommand(command: string) {
-    const commandBlock = new CommandBlock(command, this._connectionNameEvent.current, {...this.env}, this.cwd, this.sshAddress);
+    const commandBlock = new CommandBlock(command, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)
@@ -531,7 +531,7 @@ export class Shell {
         event.preventDefault();
         event.stopImmediatePropagation();
       } else if (event.code === 'KeyC' && event.ctrlKey) {
-        const commandBlock = new CommandBlock(editor.value, this._connectionNameEvent.current, {...this.env}, this.cwd, this.sshAddress);
+        const commandBlock = new CommandBlock(editor.value, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
         commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
         commandBlock.wasCanceled = true;
         this.addItem(commandBlock);

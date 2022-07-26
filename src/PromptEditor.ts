@@ -1,7 +1,7 @@
 import { Editor } from "../editor/js/editor";
 import { Autocomplete } from "./autocomplete";
 import type { Shell } from "./Shell";
-import '../editor/modes/javascript'
+import '../shjs/editorMode';
 import { makeShellCompleter } from "./shellCompleter";
 import './completions/git';
 import './completions/npx';
@@ -15,7 +15,7 @@ export function makePromptEditor(shell: Shell) {
   const editor = new Editor('', {
     inline: true,
     lineNumbers: false,
-    language: 'js',
+    language: 'shjs',
     padding: 0,
     colors: {
       cursorColor: '#f4f4f4',
@@ -23,6 +23,9 @@ export function makePromptEditor(shell: Shell) {
       selectionBackground: '#525252',
     }
   });
+  shell.globalVars().then(globalVars => {
+    editor.setModeOptions({globalVars});
+  })
   const autocomplete = new Autocomplete(editor, makeShellCompleter(shell), ' /.');
   let historyIndex = 0;
   let currentValue = '';

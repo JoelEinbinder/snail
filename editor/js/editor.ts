@@ -96,6 +96,10 @@ export class Editor extends Emitter<EditorEvents> {
     }
     return false;
   }
+
+  setModeOptions(options: any) {
+    this._highlighter.setModeOptions(options);
+  }
 }
 
 type EditorEvents = {
@@ -107,6 +111,7 @@ export type EditorOptions = {
   padBottom?: boolean;
   lineNumbers?: boolean;
   language?: string;
+  modeOptions?: any;
   inline?: boolean;
   readOnly?: boolean;
   highlightWordOccurrences?: boolean;

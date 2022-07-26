@@ -1,6 +1,6 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: https://codemirror.net/LICENSE
-import { registerMode } from '../js/modeRegistry.js';
+import { registerMode } from '../js/modeRegistry';
 registerMode('sh', shellMode);
 
 function shellMode() {
