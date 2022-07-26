@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "mocha shjs",
+    "test": "cd shjs; mocha .",
     "build": "webpack",
     "bundle": "node utils/bundle.js"
   },
