@@ -341,6 +341,10 @@ await sh("bar foo")`);
         const code = `if (true) echo 123`;
         expect(transformCode(code)).toEqual(`if (true) await sh("echo 123")`);
     });
+    it('should transform one-line if with condition', () => {
+        const code = `if (Math.random() < 0.5) echo 123`;
+        expect(transformCode(code)).toEqual(`if (Math.random() < 0.5) await sh("echo 123")`);
+    });
     it('should get autocomplete prefix', () => {
         expect(getAutocompletePrefix('this.')).toEqual(`this`);
         expect(getAutocompletePrefix('this.bar.baz.')).toEqual(`this.bar.baz`);

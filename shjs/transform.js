@@ -21,7 +21,13 @@ const MyParser = Parser.extend(
           return null;
         const textBetween = this.input.slice(this.lastTokEnd, this.start);
         if (this.type.label !== ';' && this.type.label !== 'eof') {
-          if (!textBetween.includes('\n') && (this.type !== tokTypes.parenR || this.input[this.start] === '.'))
+          if (!textBetween.includes('\n')) {
+            if (this.type !== tokTypes.parenR)
+              return null;
+            if (this.input[this.start] === '.')
+              return null;
+          } 
+          if (this.context[this.context.length - 1].token === '(')
             return null;
           if (this.type.label.length === 1 && ',=+-:('.includes(this.type.label))
             return null;
