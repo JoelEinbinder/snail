@@ -48,6 +48,10 @@ class Shell {
     return this.rpc.send('env', env);
   }
 
+  async aliases(aliases) {
+    return this.rpc.send('aliases', aliases);
+  }
+
   async resolveFileForIframe({filePath, search, headers}) {
     return this.rpc.send('resolveFileForIframe', {filePath, search, headers});
   }

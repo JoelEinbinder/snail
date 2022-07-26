@@ -25,6 +25,9 @@ const handler = {
   async env({shellId, env}) {
     return shells.get(shellId).env(env);
   },
+  async aliases({shellId, aliases}) {
+    return shells.get(shellId).aliases(aliases);
+  },
   /**
    * @param {Client} sender
    */

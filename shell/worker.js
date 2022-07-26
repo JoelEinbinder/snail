@@ -19,6 +19,11 @@ const rpc = RPC(transport, {
     for (const [key, value] of Object.entries(env))
       process.env[key] = value;
   },
+  async aliases(aliases) {
+    for (const [key, value] of Object.entries(aliases)) {
+      require('../shjs/index').setAlias(key, value);
+    }
+  },
   async resolveFileForIframe({filePath, headers, search}) {
     const searchParams = new URLSearchParams(search);
     if (searchParams.has('entry')) {

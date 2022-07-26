@@ -186,7 +186,15 @@ export class Shell {
           },
         });
       },
-      aliases: () => {},
+      aliases: (aliases) => {
+        host.sendMessage({
+          method: 'aliases',
+          params: {
+            shellId,
+            aliases,
+          },
+        });
+      },
       env: (env: {[key: string]: string}) => {
         for (const [key, value] of Object.entries(env))
           connection.env[key] = value;
