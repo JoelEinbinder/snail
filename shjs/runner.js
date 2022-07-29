@@ -2,6 +2,7 @@ const {spawn, spawnSync} = require('child_process');
 const {Writable, Readable} = require('stream');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 /**
  * @type {{
@@ -20,7 +21,8 @@ let changes = null;
 const builtins = {
     cd: async (args, stdout, stderr) => {
         try {
-            process.chdir(args[0]);
+            const [dir = os.homedir()] = args;
+            process.chdir(dir);
             if (!changes)
                 changes = {};
             changes.cwd = process.cwd();
