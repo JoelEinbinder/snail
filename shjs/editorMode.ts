@@ -26,11 +26,9 @@ class ShjsMode implements Mode<State> {
     const newStuff = stream.string.slice(stream.pos);
     const fullText = state.textBefore + newStuff;
     if (!state.tokens.length)
-      state.tokens = parseCodeIntoTokens(fullText, this.options.globalVars);
+      state.tokens = parseCodeIntoTokens(fullText, this.options.globalVars).filter(x => x.start !== x.end);
     while (state.tokens.length) {
       const token = state.tokens.shift();
-      if (token.start === token.end)
-        continue;
       if (token.start > state.textBefore.length) {
         state.tokens.unshift(token);
         break;
@@ -40,6 +38,8 @@ class ShjsMode implements Mode<State> {
           const tokenText = fullText.slice(token.start, token.end);
           state.textBefore += tokenText;
           stream.pos += tokenText.length;
+          if (stream.eol())
+            state.textBefore += '\n';
           return 'sh';
         }
       } else {
