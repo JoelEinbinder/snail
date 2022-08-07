@@ -77,6 +77,48 @@ export class SelectionManger extends Emitter {
       'extendLineEnd',
       'Shift+End'
     );
+    this._commandManager.addCommand(
+      () => {
+        const selection = this._model.selections[0];
+        if (!isSelectionCollapsed(selection)) {
+          this._model.replaceRange('', selection);
+          this.moveCursor(selection.start);
+          return true;
+        }
+        this._model.replaceRange('', {
+          start: selection.start,
+          end: {
+            line: selection.start.line,
+            column: Infinity
+          }
+        });
+        return true;
+      },
+      'deleteToEndOfLine',
+      'Ctrl+K',
+    );
+    this._commandManager.addCommand(
+      () => {
+        const selection = this._model.selections[0];
+        if (!isSelectionCollapsed(selection)) {
+          this._model.replaceRange('', selection);
+          this.moveCursor(selection.start);
+          return true;
+        }
+        const start = {
+          line: selection.start.line,
+          column: 0
+        };
+        this._model.replaceRange('', {
+          start,
+          end: selection.start,
+        });
+        this.moveCursor(start);
+        return true;
+      },
+      'deleteToStartOfLine',
+      'Ctrl+U',
+    );
 
     this._commandManager.addCommand(() => {
       var selection = this._model.selections[0];
