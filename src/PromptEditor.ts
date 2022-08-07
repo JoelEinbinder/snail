@@ -42,6 +42,10 @@ export function makePromptEditor(shell: Shell) {
       moveHistory(-1);
     } else if (event.key === 'ArrowUp' && editor.selections[0].start.line === 0) {
       moveHistory(1);      
+    } else if (event.code === 'KeyN' && event.ctrlKey) {
+      moveHistory(-1);
+    } else if (event.code === 'KeyP' && event.ctrlKey) {
+      moveHistory(1);
     } else {
       return;
     }

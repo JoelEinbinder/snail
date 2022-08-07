@@ -504,7 +504,7 @@ export class Shell {
     editorWrapper.style.flex = '1';
     editorWrapper.style.minHeight = '14px';
     editorWrapper.addEventListener('keydown', async event => {
-      if (event.key === 'Enter' && !event.shiftKey) {
+      if ((event.key === 'Enter' && !event.shiftKey) || (event.code === 'KeyM' && event.ctrlKey)) {
         event.preventDefault();
         event.stopImmediatePropagation();
         if (!event.ctrlKey && !editor.somethingSelected()) {
