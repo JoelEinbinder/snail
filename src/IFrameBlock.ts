@@ -1,6 +1,6 @@
-import type { AntiFlicker } from "./AntiFlicker";
 import { host } from "./host";
-import type { JoelEvent } from "./JoelEvent";
+import { JoelEvent } from "./JoelEvent";
+import { LogItem } from "./LogView";
 import type { TerminalBlockDelegate } from "./TerminalBlock";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
@@ -13,14 +13,14 @@ window.addEventListener('message', event => {
   }
 });
 
-export class IFrameBlock {
+export class IFrameBlock implements LogItem {
   public iframe: HTMLIFrameElement|null = document.createElement('iframe');
   private readyPromise: Promise<void>;
   private _closed = false;
+  public willResizeEvent = new JoelEvent<void>(undefined);
   constructor(
     data: string,
     delegate: TerminalBlockDelegate,
-    private _willResizeEvent: JoelEvent<void>,
     ) {
     this.iframe.allowFullscreen = true;
     this.iframe.style.height = '0';
@@ -37,7 +37,7 @@ export class IFrameBlock {
       }
       switch(data.method) {
         case 'setHeight': {
-          this._willResizeEvent.dispatch();
+          this.willResizeEvent.dispatch();
           this.iframe.style.height = `${data.params.height}px`;
           if (data.params.height > 0)
             didDraw();
@@ -70,6 +70,15 @@ export class IFrameBlock {
       this.iframe.src = url;
     });
   }
+  render(): Element {
+    return this.iframe;
+  }
+  focus(): void {
+    this.iframe.focus();
+  }
+  dispose(): void {
+    iframeMessageHandler.delete(this.iframe);
+  }
   async message(data: string) {
     await this.readyPromise;
     this.iframe.contentWindow.postMessage(JSON.parse(data), '*');
@@ -80,7 +89,7 @@ export class IFrameBlock {
       return;
     this._closed = true;
     if (this.iframe.classList.contains('fullscreen')) {
-      this._willResizeEvent.dispatch();
+      this.willResizeEvent.dispatch();
       this.iframe.classList.toggle('fullscreen', false);
     }
 

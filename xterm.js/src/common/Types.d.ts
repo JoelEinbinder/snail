@@ -9,7 +9,6 @@ import { IDeleteEvent, IInsertEvent } from 'common/CircularList';
 import { IParams } from 'common/parser/Types';
 import { ICoreMouseService, ICoreService, IOptionsService, IUnicodeService } from 'common/services/Services';
 import { IBufferSet } from 'common/buffer/Types';
-import { HTMLDelegate } from 'xterm';
 export interface ICoreTerminal {
   coreMouseService: ICoreMouseService;
   coreService: ICoreService;

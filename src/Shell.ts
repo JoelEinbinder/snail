@@ -13,6 +13,9 @@ import { titleThrottle } from './UIThrottle';
 import { host } from './host';
 import { AntiFlicker } from './AntiFlicker';
 import { ProgressBlock } from './ProgressBlock';
+import { TerminalDataProcessor } from './TerminalDataProcessor';
+import { TaskQueue } from './TaskQueue';
+import { IFrameBlock } from './IFrameBlock';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
@@ -119,60 +122,143 @@ export class Shell {
         if (message.executionContextId === 1)
           destroy();
     });
-    const terminals = new Map<number, {block: TerminalBlock, cleanup: () => void}>();
+    const terminals = new Map<number, {processor: TerminalDataProcessor, cleanup: () => Promise<void>}>();
     const handler = {
       data: ({data, id}: {data: string, id: number}) => {
-        terminals.get(id).block.addData(data);
+        terminals.get(id).processor.processRawData(data);
       },
       endTerminal:async ({id}: {id: number}) => {
-        const {block, cleanup} = terminals.get(id);
+        const {cleanup} = terminals.get(id);
         terminals.delete(id);
         this.activeItem.dispatch(null);
+        await cleanup();
         this._unlockPrompt();
-        await block.close();
         titleThrottle.update('');
-        cleanup();
-        if (block.cleared && block.empty) {
-          block.dispose();
-          this.log.splice(this.log.indexOf(block), 1);
-          this.clearEvent.dispatch();
-        }
       },
       startTerminal:({id}: {id: number}) => {
         const progressBlock = new ProgressBlock();
-        const terminalBlock = new TerminalBlock({
-          async sendInput(data) {
-              await notify('input', { data, id});
-          },
-          shellId,
-          size: this._size,
-          antiFlicker: this._antiFlicker,
-          progressBlock,
-        });
-        const onFullScreen = (value: boolean) => {
-          if (value)
-            this.fullscreenItem.dispatch(terminalBlock);
-          else if (this.fullscreenItem.current === terminalBlock)
-            this.fullscreenItem.dispatch(null);
-        };
-        const onClear = () => {
-          for (const item of this.log) {
-            if (item !== terminalBlock)
-              item.dispose();
-          }
-          this.log = [terminalBlock];
-          this.clearEvent.dispatch();
-        };    
-        terminalBlock.fullscreenEvent.on(onFullScreen);
-        terminalBlock.clearEvent.on(onClear);
-        terminals.set(id, {block: terminalBlock, cleanup: () => {
-          terminalBlock.fullscreenEvent.off(onFullScreen);
-          terminalBlock.clearEvent.off(onClear);
-        }});
         this.addItem(progressBlock);
-        this.addItem(terminalBlock);
         this._lockPrompt();
-        this.activeItem.dispatch(terminalBlock);
+        let activeTerminalBlock: TerminalBlock = null;
+        let activeIframeBlock: IFrameBlock = null;
+        const terminalTaskQueue = new TaskQueue();
+        const processor = new TerminalDataProcessor({
+          htmlTerminalMessage: data => {
+            switch(data[0]) {
+              case 75:
+                // legacy unimplemented
+                // lets try to do everything the new way
+                break;
+              case 76: {
+                // normal
+                terminalTaskQueue.queue(async () => {
+                  await closeActiveTerminalBlock();
+                  if (activeIframeBlock) {
+                    activeIframeBlock.didClose();
+                    activeIframeBlock = null;
+                  }
+                  const dataStr = new TextDecoder().decode(data.slice(1));
+                  const iframeBlock = new IFrameBlock(dataStr, {
+                    async sendInput(data) {
+                        await notify('input', { data, id});
+                    },
+                    shellId,
+                    size: this._size,
+                    antiFlicker: this._antiFlicker,
+                  });
+                  activeIframeBlock = iframeBlock;
+                  this.addItem(iframeBlock);
+                  this.activeItem.dispatch(iframeBlock);
+                });
+                break;
+              }
+              case 77:
+                // message
+                terminalTaskQueue.queue(async () => {
+                  const dataStr = new TextDecoder().decode(data.slice(1));
+                  if (!activeIframeBlock) {
+                    console.error('parse error, sending message without iframe');
+                    return;
+                  }
+                  activeIframeBlock.message(dataStr);
+                });
+                break;
+              case 78:
+                // progress
+                const dataStr = new TextDecoder().decode(data.slice(1));
+                progressBlock.setProgress(JSON.parse(dataStr));
+                break;
+              case 79:
+                // end
+                terminalTaskQueue.queue(async () => {
+                  if (activeIframeBlock) {
+                    activeIframeBlock.didClose();
+                    activeIframeBlock = null;
+                  }
+                  if (!activeTerminalBlock)
+                    await addTerminalBlock();
+                });
+                break;
+              }
+          },
+          plainTerminalData: data => {
+            terminalTaskQueue.queue(async () => {
+              if (!activeTerminalBlock)
+                await addTerminalBlock();
+              activeTerminalBlock.addData(data);
+            })
+          },
+        });
+        terminals.set(id, {
+          processor,
+          cleanup: async () => {
+            await terminalTaskQueue.queue(() => {
+              progressBlock.deactivate();
+              return closeActiveTerminalBlock();
+            });
+        }});
+        const closeActiveTerminalBlock = async () => {
+          if (!activeTerminalBlock)
+            return;
+          await activeTerminalBlock.close();
+          if (activeTerminalBlock.cleared && activeTerminalBlock.empty) {
+            activeTerminalBlock.dispose();
+            this.log.splice(this.log.indexOf(activeTerminalBlock), 1);
+            this.clearEvent.dispatch();
+          }
+          activeTerminalBlock = null;
+        }
+        const addTerminalBlock = async () => {
+          await closeActiveTerminalBlock();
+          const terminalBlock = new TerminalBlock({
+            async sendInput(data) {
+                await notify('input', { data, id});
+            },
+            shellId,
+            size: this._size,
+            antiFlicker: this._antiFlicker,
+          });
+          activeTerminalBlock = terminalBlock;
+          const onFullScreen = (value: boolean) => {
+            if (value)
+              this.fullscreenItem.dispatch(terminalBlock);
+            else if (this.fullscreenItem.current === terminalBlock)
+              this.fullscreenItem.dispatch(null);
+          };
+          const onClear = () => {
+            for (const item of this.log) {
+              if (item !== terminalBlock)
+                item.dispose();
+            }
+            this.log = [terminalBlock];
+            this.clearEvent.dispatch();
+          };    
+          terminalBlock.fullscreenEvent.on(onFullScreen);
+          terminalBlock.clearEvent.on(onClear);
+          this.addItem(terminalBlock);
+          this.activeItem.dispatch(terminalBlock);
+        };
+        terminalTaskQueue.queue(() => addTerminalBlock());
       },
       cwd: cwd => {
         connection.cwd = cwd;

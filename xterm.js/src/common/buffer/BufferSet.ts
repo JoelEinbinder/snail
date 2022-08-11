@@ -100,9 +100,6 @@ export class BufferSet extends Disposable implements IBufferSet {
     if (this._activeBuffer === this._alt) {
       return;
     }
-    for (const html of this._activeBuffer.htmls) {
-      html.hide();
-    }
     // Since the alt buffer is always cleared when the normal buffer is
     // activated, we want to fill it when switching to it.
     this._alt.fillViewportRows(fillAttr);

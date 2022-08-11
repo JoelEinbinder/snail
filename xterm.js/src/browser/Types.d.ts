@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-import { HTMLDelegate, IDisposable, IMarker, ISelectionPosition } from 'xterm';
+import { IDisposable, IMarker, ISelectionPosition } from 'xterm';
 import { IEvent } from 'common/EventEmitter';
 import { ICoreTerminal, CharData, ITerminalOptions } from 'common/Types';
 import { IMouseService, IRenderService } from './services/Services';
@@ -28,7 +28,6 @@ export interface ITerminal extends IPublicTerminal, ICoreTerminal {
 
   cancel(ev: Event, force?: boolean): boolean | void;
   disable(): void;
-  setHTMLDelegate(delegate: HTMLDelegate): void;
 }
 
 // Portions of the public API that are required by the internal Terminal

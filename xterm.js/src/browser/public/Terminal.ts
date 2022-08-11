@@ -44,10 +44,6 @@ export class Terminal implements ITerminalApi {
     }
   }
 
-  setHTMLDelegate(delegate: HTMLDelegate): void {
-    this._core.setHTMLDelegate(delegate);
-  }
-
   private _checkReadonlyOptions(propName: string): void {
     // Throw an error if any constructor only option is modified
     // from terminal.options

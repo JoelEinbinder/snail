@@ -22,8 +22,6 @@ import { OscHandler } from 'common/parser/OscParser';
 import { DcsHandler } from 'common/parser/DcsParser';
 import { IBuffer } from 'common/buffer/Types';
 import { parseColor } from 'common/input/XParseColor';
-import { HTMLBlock } from 'common/buffer/HTMLBlock';
-import { HTMLDelegate } from 'xterm';
 
 /**
  * Map collect to glevel. Used in `selectCharset`.
@@ -322,7 +320,6 @@ export class InputHandler extends Disposable {
      * print handler
      */
     this._parser.setPrintHandler((data, start, end) => this.print(data, start, end));
-    this._parser.setHTMLHandler((height, html) => this.html(height, html));
 
     /**
      * CSI handler
@@ -741,23 +738,6 @@ export class InputHandler extends Disposable {
     }
 
     this._dirtyRowService.markDirty(this._activeBuffer.y);
-  }
-
-  public html(height: number, html: string): void {
-    const buffer = this._bufferService.buffer;
-    this._dirtyRowService.markDirty(buffer.y);
-    const marker = buffer.addMarker(buffer.y);
-    const block = new HTMLBlock(buffer.x, buffer.y + buffer.ybase, height, html);
-    buffer.htmls.push(block);
-    marker.onDispose(() => {
-      block.dispose();
-      buffer.htmls.splice(buffer.htmls.indexOf(block), 1);
-    });
-    this._dirtyRowService.markDirty(buffer.y);
-    buffer.x = 0;
-    for (let i = 0; i < height - 1; i++) {
-      this.lineFeed();
-    }
   }
 
   /**
@@ -1252,10 +1232,6 @@ export class InputHandler extends Disposable {
    */
   private _resetBufferLine(y: number): void {
     const line = this._activeBuffer.lines.get(this._activeBuffer.ybase + y)!;
-    for (const html of this._bufferService.buffer.htmls.filter(x => x.y === y)) {
-      html.dispose();
-      this._bufferService.buffer.htmls.splice(this._bufferService.buffer.htmls.indexOf(html), 1);
-    }
     line.fill(this._activeBuffer.getNullCell(this._eraseAttrData()));
     line.isWrapped = false;
   }
@@ -1317,11 +1293,6 @@ export class InputHandler extends Disposable {
         while (j--) {
           this._resetBufferLine(j);
         }
-        // this is buggy, just kill all htmls
-        for (const html of this._bufferService.buffer.htmls) {
-          html.dispose();
-        }
-        this._bufferService.buffer.htmls.length = 0;
 
         this._dirtyRowService.markDirty(0);
         if (this._bufferService.buffers.active === this._bufferService.buffers.normal)
@@ -3262,9 +3233,5 @@ export class InputHandler extends Disposable {
     this._dirtyRowService.markAllDirty();
     this._setCursor(0, 0);
     return true;
-  }
-
-  public setHTMLDelegate(delegate: HTMLDelegate) {
-    this._parser.setHTMLDelegate(delegate);
   }
 }

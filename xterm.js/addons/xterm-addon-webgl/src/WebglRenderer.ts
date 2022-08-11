@@ -23,7 +23,6 @@ import { addDisposableDomListener } from 'browser/Lifecycle';
 import { ICharacterJoinerService } from 'browser/services/Services';
 import { CharData, ICellData } from 'common/Types';
 import { AttributeData } from 'common/buffer/AttributeData';
-import { HTMLRenderLayer } from 'browser/renderer/HTMLRenderLayer';
 import { realDevicePixelRatio } from 'browser/renderer/RendererUtils';
 
 export class WebglRenderer extends Disposable implements IRenderer {
@@ -63,7 +62,6 @@ export class WebglRenderer extends Disposable implements IRenderer {
     this._renderLayers = [
       new LinkRenderLayer(this._core.screenElement!, 2, this._colors, this._core),
       new CursorRenderLayer(_terminal, this._core.screenElement!, 3, this._colors, this._core, this._onRequestRedraw),
-      new HTMLRenderLayerWrapper(new HTMLRenderLayer(this._core.screenElement!, this._colors, () => this._core.buffer, () => this._core.options, () => this._core.rows))
     ];
     this.dimensions = {
       scaledCharWidth: 0,
@@ -529,41 +527,5 @@ export class JoinedCellData extends AttributeData implements ICellData {
 
   public getAsCharData(): CharData {
     return [this.fg, this.getChars(), this.getWidth(), this.getCode()];
-  }
-}
-
-class HTMLRenderLayerWrapper implements IRenderLayer {
-  constructor(
-    private _htmlRenderLayer: HTMLRenderLayer
-  ) { }
-  public onBlur(terminal: Terminal): void {
-    return this._htmlRenderLayer.onBlur();
-  }
-  public onFocus(terminal: Terminal): void {
-    return this._htmlRenderLayer.onFocus();
-  }
-  public onCursorMove(terminal: Terminal): void {
-    return this._htmlRenderLayer.onCursorMove();
-  }
-  public onOptionsChanged(terminal: Terminal): void {
-    return this._htmlRenderLayer.onOptionsChanged();
-  }
-  public setColors(terminal: Terminal, colorSet: IColorSet): void {
-    return this._htmlRenderLayer.setColors(colorSet);
-  }
-  public onGridChanged(terminal: Terminal, startRow: number, endRow: number): void {
-    return this._htmlRenderLayer.onGridChanged(startRow, endRow);
-  }
-  public onSelectionChanged(terminal: Terminal, start: [number, number] | undefined, end: [number, number] | undefined, columnSelectMode: boolean): void {
-    return this._htmlRenderLayer.onSelectionChanged(start, end, columnSelectMode);
-  }
-  public resize(terminal: Terminal, dim: IRenderDimensions): void {
-    return this._htmlRenderLayer.resize(dim);
-  }
-  public reset(terminal: Terminal): void {
-    return this._htmlRenderLayer.reset();
-  }
-  public dispose(): void {
-    return this._htmlRenderLayer.dispose();
   }
 }

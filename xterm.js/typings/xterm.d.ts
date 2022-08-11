@@ -410,16 +410,6 @@ declare module 'xterm' {
     onDispose: IEvent<void>;
   }
 
-  export interface IHTMLBlock {
-    x: number;
-    y: number;
-    height: number;
-    html: string;
-    render(top: number, bottom: number, cellWidth: number, cellHeight: number, font: string, colors: any, container: HTMLElement): void;
-    hide(): void;
-    dispose(): void;
-  }
-
   /**
    * The set of localizable strings.
    */
@@ -1137,8 +1127,6 @@ declare module 'xterm' {
      * Removes the last line from the terminal and shrinks the viewport.
      */
     deleteLastLine(): void;
-
-    setHTMLDelegate(delegate: HTMLDelegate): void;
   }
 
   /**
@@ -1759,11 +1747,4 @@ declare module 'xterm' {
      */
     readonly wraparoundMode: boolean
   }
-
-  export type HTMLDelegate = {
-    start(data: string): void;
-    message(data: string): void;
-    setProgress(progress: number | {progress: number, leftLabel?: string, rightLabel?: string}): void;
-    end(): void;
-  };
 }

@@ -11,7 +11,6 @@ import { fill } from 'common/TypedArrayUtils';
 import { Params } from 'common/parser/Params';
 import { OscParser } from 'common/parser/OscParser';
 import { DcsParser } from 'common/parser/DcsParser';
-import { HTMLDelegate } from 'xterm';
 
 /**
  * Table values are generated like this:
@@ -162,11 +161,6 @@ export const VT500_TRANSITION_TABLE = (function (): TransitionTable {
   table.addMany([0x59, 0x5a, 0x5c], ParserState.ESCAPE, ParserAction.ESC_DISPATCH, ParserState.GROUND);
   table.addMany(r(0x60, 0x7f), ParserState.ESCAPE, ParserAction.ESC_DISPATCH, ParserState.GROUND);
 
-  table.add(0x1a, ParserState.ESCAPE, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
-  table.add(0x0, ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.GROUND);
-  table.addMany([...PRINTABLES, 0x0A, 0x0D, 0x09], ParserState.HTML_BLOCK, ParserAction.HTML_BLOCK, ParserState.HTML_BLOCK);
-
-
   // dcs entry
   table.add(0x50, ParserState.ESCAPE, ParserAction.CLEAR, ParserState.DCS_ENTRY);
   table.addMany(EXECUTABLES, ParserState.DCS_ENTRY, ParserAction.IGNORE, ParserState.DCS_ENTRY);
@@ -243,12 +237,9 @@ export class EscapeSequenceParser extends Disposable {
   // buffers over several parse calls
   protected _params: Params;
   protected _collect: number;
-  protected _html: string|null = null;
-  private _htmlType: 'legacy'|'start'|'message'|'progress'|'end'|null = null;
 
   // handler lookup containers
   protected _printHandler: PrintHandlerType;
-  protected _htmlHandler: (height: number, html: string) => void;
   protected _executeHandlers: { [flag: number]: ExecuteHandlerType };
   protected _csiHandlers: IHandlerCollection<CsiHandlerType>;
   protected _escHandlers: IHandlerCollection<EscHandlerType>;
@@ -256,11 +247,8 @@ export class EscapeSequenceParser extends Disposable {
   protected _dcsParser: IDcsParser;
   protected _errorHandler: (state: IParsingState) => IParsingState;
 
-  protected _htmlDelegate: HTMLDelegate|null = null;
-
   // fallback handlers
   protected _printHandlerFb: PrintFallbackHandlerType;
-  protected _htmlHandlerFb: (height: number, html: string) => void;
   protected _executeHandlerFb: ExecuteFallbackHandlerType;
   protected _csiHandlerFb: CsiFallbackHandlerType;
   protected _escHandlerFb: EscFallbackHandlerType;
@@ -289,13 +277,11 @@ export class EscapeSequenceParser extends Disposable {
 
     // set default fallback handlers and handler lookup containers
     this._printHandlerFb = (data, start, end): void => { };
-    this._htmlHandlerFb = (html): void => { };
     this._executeHandlerFb = (code: number): void => { };
     this._csiHandlerFb = (ident: number, params: IParams): void => { };
     this._escHandlerFb = (ident: number): void => { };
     this._errorHandlerFb = (state: IParsingState): IParsingState => state;
     this._printHandler = this._printHandlerFb;
-    this._htmlHandler = this._htmlHandlerFb;
     this._executeHandlers = Object.create(null);
     this._csiHandlers = Object.create(null);
     this._escHandlers = Object.create(null);
@@ -366,22 +352,6 @@ export class EscapeSequenceParser extends Disposable {
   }
   public clearPrintHandler(): void {
     this._printHandler = this._printHandlerFb;
-  }
-
-  public setHTMLHandler(handler: (height: number, html: string) => void): void {
-    this._htmlHandler = handler;
-  }
-
-  public setHTMLDelegate(delegate: HTMLDelegate): void {
-    this._htmlDelegate = delegate;
-  }
-
-  public clearHTMLHandler(): void {
-    this._htmlHandler = this._htmlHandlerFb;
-  }
-
-  public clearHTMLDelegate(): void {
-    this._htmlDelegate = null;
   }
 
   public registerEscHandler(id: IFunctionIdentifier, handler: EscHandlerType): IDisposable {
@@ -819,37 +789,6 @@ export class EscapeSequenceParser extends Disposable {
           this._params.addParam(0); // ZDM
           this._collect = 0;
           this.precedingCodepoint = 0;
-          break;
-        case ParserAction.HTML_BLOCK:
-          if (this._html === null) {
-            this._html = '';
-            this._htmlType = null;
-          } else if (this._htmlType === null) {
-            if (code === 0x4b)
-              this._htmlType = 'legacy';
-            else if (code === 0x4c)
-              this._htmlType = 'start';
-            else if (code === 0x4d)
-              this._htmlType = 'message';
-            else if (code === 0x4e)
-              this._htmlType = 'progress';
-            else if (code === 0)
-              this._htmlDelegate?.end();
-          } else if (code === 0) {
-            if (this._htmlType === 'legacy') {
-              const height = /^\d*/.exec(this._html)![0];
-              this._htmlHandler(parseInt(height), this._html.slice(height?.length));
-            } else if (this._htmlType === 'start') {
-              this._htmlDelegate?.start(this._html);
-            } else if (this._htmlType === 'message') {
-              this._htmlDelegate?.message(this._html);
-            } else if (this._htmlType === 'progress') {
-              this._htmlDelegate?.setProgress(JSON.parse(this._html));
-            }
-            this._html = null;
-          } else {
-            this._html += String.fromCharCode(code);
-          }
           break;
       }
       this.currentState = transition & TableAccess.TRANSITION_STATE_MASK;

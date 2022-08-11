@@ -1,26 +1,15 @@
 import { Terminal, IDisposable } from "xterm";
 import type { AntiFlicker } from "./AntiFlicker";
-import { host } from "./host";
-import { IFrameBlock } from "./IFrameBlock";
 import { JoelEvent } from "./JoelEvent";
 import type { LogItem } from "./LogView";
-import type { ProgressBlock } from "./ProgressBlock";
 import { setSelection } from './selection';
 import { titleThrottle } from "./UIThrottle";
-
-let lastTerminalBlock: TerminalBlock = null;
-host.onEvent('data', ({shellId, data}) => {
-  // TODO have this say block ID, not shell ID. and then find the correct one.
-  if (lastTerminalBlock)
-    lastTerminalBlock.addData(data);
-});
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
   shellId: number;
   sendInput: (data: string) => void;
   antiFlicker?: AntiFlicker;
-  progressBlock: ProgressBlock;
 }
 
 export class TerminalBlock implements LogItem {
@@ -33,16 +22,13 @@ export class TerminalBlock implements LogItem {
 
   private _terminal: Terminal;
   private element: HTMLDivElement;
-  private _iframeBlock: IFrameBlock = null;
   private _listeners: IDisposable[] = [];
   private _data: (string|Uint8Array)[] = [];
   private _trailingNewline = false;
   private _lastWritePromise = Promise.resolve();
-  private _delegate: TerminalBlockDelegate;
   public empty = true;
   private _closed = false;
   constructor(delegate: TerminalBlockDelegate) {
-    this._delegate = delegate;
 
     this.element = document.createElement('div');
     this.element.style.height = '0px';
@@ -79,34 +65,6 @@ export class TerminalBlock implements LogItem {
       allowTransparency: true,
       rendererType: 'canvas',
     });
-    this._terminal.setHTMLDelegate({
-      start: (data: string) => {
-        function hasFocus(element: Element) {
-          let active = document.activeElement;
-          while (active) {
-            if (active === element)
-              return true;
-              active = active.parentElement;
-          }
-          return false;
-        }
-        const hadFocus = hasFocus(this.element);
-        this._iframeBlock = new IFrameBlock(data, delegate, this.willResizeEvent);
-        this.element.replaceWith(this._iframeBlock.iframe);
-        if (hadFocus)
-          this.focus();
-      },
-      end: () =>{
-        this._iframeBlock.iframe.replaceWith(this.element);
-        this._iframeBlock = null;
-      },
-      message: (data: string) => {
-        this._iframeBlock.message(data);
-      },
-      setProgress: (progress) => {
-        delegate.progressBlock.setProgress(progress);
-      }
-    })
     this._terminal.open(this.element);
     
     this._listeners.push(this._terminal.onData(data => {
@@ -145,19 +103,13 @@ export class TerminalBlock implements LogItem {
     this.dispose = () => {
       delegate.size.off(windowResize);
     }
-    lastTerminalBlock = this;
   }
   focus(): void {
-    if (this._iframeBlock)
-      this._iframeBlock.iframe.focus();
-    else
-      this._terminal.focus();
+    this._terminal.focus();
   }
   render(): Element {
     if (this.empty && this._closed)
       return null;
-    if (this._iframeBlock)
-      return this._iframeBlock.iframe;
     return this.element;
   }
 
@@ -182,7 +134,6 @@ export class TerminalBlock implements LogItem {
 
   async close() {
     await this._lastWritePromise;
-    this._delegate.progressBlock.deactivate();
 
     for (const listeners of this._listeners)
       listeners.dispose();
@@ -203,8 +154,6 @@ export class TerminalBlock implements LogItem {
       // TODO write some extra '%' character to show there was no trailing newline?
     }
     this._closed = true;
-    if (this._iframeBlock)
-      this._iframeBlock.didClose();
     this._terminal.blur();
     this._terminal.disable();
   }

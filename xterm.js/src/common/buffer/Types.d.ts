@@ -5,7 +5,6 @@
 
 import { IAttributeData, ICircularList, IBufferLine, ICellData, IMarker, ICharset, IDisposable } from 'common/Types';
 import { IEvent } from 'common/EventEmitter';
-import { IHTMLBlock } from 'xterm';
 
 // BufferIndex denotes a position in the buffer: [rowIndex, colIndex]
 export type BufferIndex = [number, number];
@@ -36,7 +35,6 @@ export interface IBuffer {
   savedCurAttrData: IAttributeData;
   isCursorInViewport: boolean;
   markers: IMarker[];
-  htmls: IHTMLBlock[];
   delegatesScrolling: boolean;
   rows: number;
   translateBufferLineToString(lineIndex: number, trimRight: boolean, startCol?: number, endCol?: number): string;
