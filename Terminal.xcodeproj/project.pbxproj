@@ -41,8 +41,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		F00D6869287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "node-v16.16.0-darwin-arm64"; path = "../../Downloads/node-v16.16.0-darwin-arm64"; sourceTree = "<group>"; };
-		F091DC94287B730100915D30 /* WebKitBundle */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WebKitBundle; path = "../../gap-year/WebKitBundle"; sourceTree = "<group>"; };
+		F00D6869287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "node-v16.16.0-darwin-arm64"; path = "../Downloads/node-v16.16.0-darwin-arm64"; sourceTree = "<group>"; };
+		F091DC94287B730100915D30 /* WebKitBundle */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WebKitBundle; sourceTree = "<group>"; };
 		F091DC98287BBA1A00915D30 /* Window.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Window.storyboard; sourceTree = "<group>"; };
 		F091DCBF287D268E00915D30 /* D4WebPanel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = D4WebPanel.h; sourceTree = "<group>"; };
 		F091DCC0287D268E00915D30 /* D4WebPanel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = D4WebPanel.m; sourceTree = "<group>"; };
