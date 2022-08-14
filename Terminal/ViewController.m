@@ -167,6 +167,14 @@
             [panel close];
             panel = nil;
         }
+//    } else if ([@"contextMenu" isEqual:body[@"method"]]) {
+//        NSMenu* menu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
+//        NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"first" action:nil keyEquivalent:@"first"];
+//        [item setState:NSControlStateValueOn];
+//        [menu addItem:item];
+//        [menu addItemWithTitle:@"foo" action:nil keyEquivalent:@"foo"];
+//        NSEvent* event = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown location:[NSEvent mouseLocation] modifierFlags:0 timestamp:NSTimeIntervalSince1970 windowNumber:self.view.window.windowNumber context:[NSGraphicsContext currentContext] eventNumber:0 clickCount:1 pressure:1.0];
+//        [NSMenu popUpContextMenu:menu withEvent:event forView:webView];
     } else if ([@"setProgress" isEqual:body[@"method"]]) {
         [self setProgressBar:[params[@"progress"] doubleValue]];
     } else {
