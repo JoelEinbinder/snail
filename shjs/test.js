@@ -129,77 +129,94 @@ describe('tokenizer', () => {
     const {tokenize} = require('./tokenizer');
     it('should split arguments', () => {
         expect(tokenize('foo bar  baz').tokens).toEqual([
-            {type: 'word', value: 'foo'},
-            {type: 'space', value: ' '},
-            {type: 'word', value: 'bar'},
-            {type: 'space', value: '  '},
-            {type: 'word', value: 'baz'},
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: 'bar', raw: 'bar'},
+            {type: 'space', value: '  ', raw: '  '},
+            {type: 'word', value: 'baz', raw: 'baz'},
         ]);
     });
     it('should detect a pipe', () => {
         expect(tokenize('foo | bar').tokens).toEqual([
-            {type: 'word', value: 'foo'},
-            {type: 'space', value: ' '},
-            {type: 'operator', value: '|'},
-            {type: 'space', value: ' '},
-            {type: 'word', value: 'bar'},
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'operator', value: '|', raw: '|'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: 'bar', raw: 'bar'},
         ]);
     });
     it('should handle double qoutes', () => {
         expect(tokenize('foo "bar baz"').tokens).toEqual([
-            {type: 'word', value: 'foo'},
-            {type: 'space', value: ' '},
-            {type: 'word', value: 'bar baz'},
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: 'bar baz', raw: '"bar baz"', isQuoted: true},
         ]);
     });
     it('should handle single qoutes', () => {
         expect(tokenize('foo \'bar baz\'').tokens).toEqual([
-            {type: 'word', value: 'foo'},
-            {type: 'space', value: ' '},
-            {type: 'word', value: 'bar baz'},
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: 'bar baz', raw: '\'bar baz\'', isQuoted: true},
         ]);
     });
     it('should handle escaped qoutes', () => {
         expect(tokenize(`foo "bar \\'baz\\'"`).tokens).toEqual([
-            {type: 'word', value: 'foo'},
-            {type: 'space', value: ' '},
-            {type: 'word', value: `bar 'baz'`},
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: `bar 'baz'`, raw: `"bar \\'baz\\'"`, isQuoted: true},
         ]);
     });
     it('should handle escaped qoutes 2', () => {
         expect(tokenize(`foo 'bar \\"baz\\"'"`).tokens).toEqual([
-            {type: 'word', value: 'foo'},
-            {type: 'space', value: ' '},
-            {type: 'word', value: `bar \\"baz\\"`},
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: `bar \\"baz\\"`, raw: `\'bar \\"baz\\"\'`, isQuoted: true },
+            {type: 'word', value: ``, raw: `\"`, isQuoted: true },
         ]);
     });
     it('should handle empty qoutes', () => {
         expect(tokenize(`foo '' "" 'a'`).tokens).toEqual([
-            {type: 'word', value: 'foo'},
-            {type: 'space', value: ' '},
-            {type: 'word', value: ''},
-            {type: 'space', value: ' '},
-            {type: 'word', value: ''},
-            {type: 'space', value: ' '},
-            {type: 'word', value: 'a'},
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: '', raw: '\'\'', isQuoted: true},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: '', raw: '""', isQuoted: true},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: 'a', raw: '\'a\'', isQuoted: true},
         ]);
     });
     it('return correct raw', () => {
         const {raw, tokens} = tokenize(`foo bar`);
         expect(raw).toEqual('foo bar');
         expect(tokens).toEqual([
-            {type: 'word', value: 'foo'},
-            {type: 'space', value: ' '},
-            {type: 'word', value: 'bar'},
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: 'bar', raw: 'bar'},
         ]);
     });
     it('should semi colons in quotes but not out of quotes', () => {
         const {raw, tokens} = tokenize(`foo "1;"; 2; 3;`);
         expect(raw).toEqual('foo "1;"');
         expect(tokens).toEqual([
-            {type: 'word', value: 'foo'},
-            {type: 'space', value: ' '},
-            {type: 'word', value: '1;'},
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: '1;', raw: '"1;"', isQuoted: true},
+        ]);
+    });
+    it('should handle operators', () => {
+        const {raw, tokens} = tokenize(`foo bar baz && man "woo"`);
+        expect(tokens).toEqual([
+            { type: 'word', value: 'foo', raw: 'foo' },
+            { type: 'space', value: ' ', raw: ' ' },
+            { type: 'word', value: 'bar', raw: 'bar' },
+            { type: 'space', value: ' ', raw: ' ' },
+            { type: 'word', value: 'baz', raw: 'baz' },
+            { type: 'space', value: ' ', raw: ' ' },
+            { type: 'operator', value: '&&', raw: '&&' },
+            { type: 'space', value: ' ', raw: ' ' },
+            { type: 'word', value: 'man', raw: 'man' },
+            { type: 'space', value: ' ', raw: ' ' },
+            { type: 'word', value: 'woo', raw: '"woo"', isQuoted: true }
         ]);
     });
 });
@@ -354,7 +371,11 @@ await sh("bar foo")`);
         expect(getAutocompletePrefix('const x = "')).toEqual(null);
         expect(getAutocompletePrefix('git st')).toEqual({shPrefix: 'git st'});
         expect(getAutocompletePrefix('if (true) echo')).toEqual({shPrefix: 'echo'});
-    })
+    });
+    it('should transform template parameters', () => {
+        const code = 'echo foo${123}';
+        expect(transformCode(code)).toEqual('await sh(`echo foo${123}`)');
+    });
     function shouldBeLeftAlone(code) {
         expect(transformCode(code)).toEqual(code);
     }

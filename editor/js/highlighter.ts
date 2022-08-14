@@ -83,6 +83,9 @@ export class Highlighter extends Emitter<{
             ['property', '#afd7ff'],
             ['def', '#afd7ff'],
             ['sh', '#f4f4f4'],
+            ['sh-replacement', '#E5E500'],
+            ['sh-template', '#00A6B2'],
+            ['sh-string', '#999900'],
           ]
         : [
             ['keyword', 'rgb(7, 144, 154)'],

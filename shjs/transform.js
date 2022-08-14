@@ -10,7 +10,7 @@ const MyParser = Parser.extend(
       readToken(code) {
         const shExpression = this.shExpression();
         if (shExpression) {
-          this.pos = this.start + shExpression.length;
+          this.pos = this.start + shExpression.raw.length;
           this.finishToken(shTokenType, shExpression);
           return;
         }
@@ -32,14 +32,16 @@ const MyParser = Parser.extend(
           if (this.type.label.length === 1 && ',=+-:('.includes(this.type.label))
             return null;
         }
-        const {tokens, raw} = tokenize(this.input.slice(this.start));
+        const {tokens, raw} = tokenize(this.input.slice(this.start), code => {
+          return code.substring(0, code.indexOf('}'));
+        });
         const candidate = raw;
         if (candidate.startsWith('/')) {
           // TODO allow regex
-          return candidate;
+          return makeReturnValue();
         }
         if (candidate.startsWith('.'))
-          return candidate;
+          return makeReturnValue();
         const firstToken = Parser.tokenizer(candidate, this.options).getToken();
         if (!firstToken.value)
           return null;
@@ -64,7 +66,22 @@ const MyParser = Parser.extend(
         }
         if (firstToken.type == tokTypes.num)
           return null;
-        return candidate;
+        return makeReturnValue();
+        function makeReturnValue() {
+          const hasTemplate = tokens.some(t => t.type === 'template');
+          const transformed = hasTemplate ? ('`' + tokens.map(t => {
+            if (t.type === 'template') {
+              return t.raw;
+            }
+            const stringified = JSON.stringify(t.raw);
+            return stringified.substring(1, stringified.length - 1).replace(/`/g, '\\`');
+          }).join('') + '`') : JSON.stringify(tokens.map(t => t.raw).join(''));
+          return {
+            transformed,
+            raw,
+            tokens,
+          }
+        }
       }
       parseStatement(context, topLevel, exports) {
         if (this.type !== shTokenType)
@@ -103,7 +120,7 @@ function transformCode(code, fnName = 'sh', globalVars = new Set()) {
   for (const token of tokens.reverse()) {
     if (token.type !== shTokenType)
       continue;
-    newCode = newCode.substring(0, token.start) + `await ${fnName}(${JSON.stringify(token.value)})` + newCode.substring(token.end);
+    newCode = newCode.substring(0, token.start) + `await ${fnName}(${token.value.transformed})` + newCode.substring(token.end);
   }
   return newCode;
 }

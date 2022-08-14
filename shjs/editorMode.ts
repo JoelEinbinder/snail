@@ -7,6 +7,7 @@ type State = {
   textBefore: string;
   innerState: any;
   tokens: import('acorn').Token[];
+  shTokens: import('../shjs/tokenizer').Token[];
 };
 class ShjsMode implements Mode<State> {
   innerMode: Mode<any>;
@@ -20,7 +21,7 @@ class ShjsMode implements Mode<State> {
     return this.innerMode.indent(state.innerState, textAfter);
   }
   startState(): State {
-      return { textBefore: '', tokens: [], innerState: this.innerMode.startState() };
+      return { textBefore: '', tokens: [], innerState: this.innerMode.startState(), shTokens: [] };
   }
   token(stream: StringStream, state: State): string {
     const newStuff = stream.string.slice(stream.pos);
@@ -35,15 +36,24 @@ class ShjsMode implements Mode<State> {
       }
       if (token.start >= state.textBefore.length) {
         if (token.type.label === 'sh') {
-          const tokenText = fullText.slice(token.start, token.end);
-          state.textBefore += tokenText;
-          stream.pos += tokenText.length;
-          if (stream.eol())
-            state.textBefore += '\n';
-          return 'sh';
+          state.shTokens = [...token.value.tokens];
         }
       } else {
       }
+    }
+    if (state.shTokens.length) {
+      const token = state.shTokens.shift();
+      state.textBefore += token.raw;
+      stream.pos += token.raw.length;
+      if (stream.eol())
+        state.textBefore += '\n';
+      if (token.type === 'replacement')
+        return 'sh-replacement';
+      if (token.type === 'template')
+        return 'sh-template';
+      if (token.isQuoted)
+        return 'sh-string';
+      return 'sh';
     }
 
     const posBefore = stream.pos;
