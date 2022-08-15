@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F00D686A287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 in Resources */ = {isa = PBXBuildFile; fileRef = F00D6869287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 */; };
+		F020A6EB28AAFE0700F2FF07 /* D4ContextMenu.m in Sources */ = {isa = PBXBuildFile; fileRef = F020A6EA28AAFE0700F2FF07 /* D4ContextMenu.m */; };
 		F091DC95287B730100915D30 /* WebKitBundle in Resources */ = {isa = PBXBuildFile; fileRef = F091DC94287B730100915D30 /* WebKitBundle */; };
 		F091DC99287BBA1A00915D30 /* Window.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F091DC98287BBA1A00915D30 /* Window.storyboard */; };
 		F091DCC1287D268E00915D30 /* D4WebPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = F091DCC0287D268E00915D30 /* D4WebPanel.m */; };
@@ -42,6 +43,8 @@
 
 /* Begin PBXFileReference section */
 		F00D6869287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "node-v16.16.0-darwin-arm64"; path = "../Downloads/node-v16.16.0-darwin-arm64"; sourceTree = "<group>"; };
+		F020A6E928AAFE0700F2FF07 /* D4ContextMenu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = D4ContextMenu.h; sourceTree = "<group>"; };
+		F020A6EA28AAFE0700F2FF07 /* D4ContextMenu.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = D4ContextMenu.m; sourceTree = "<group>"; };
 		F091DC94287B730100915D30 /* WebKitBundle */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WebKitBundle; sourceTree = "<group>"; };
 		F091DC98287BBA1A00915D30 /* Window.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Window.storyboard; sourceTree = "<group>"; };
 		F091DCBF287D268E00915D30 /* D4WebPanel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = D4WebPanel.h; sourceTree = "<group>"; };
@@ -122,6 +125,8 @@
 				F091DCC0287D268E00915D30 /* D4WebPanel.m */,
 				F0EA446327EC0C4A0085A081 /* ViewController.h */,
 				F0EA446427EC0C4A0085A081 /* ViewController.m */,
+				F020A6E928AAFE0700F2FF07 /* D4ContextMenu.h */,
+				F020A6EA28AAFE0700F2FF07 /* D4ContextMenu.m */,
 				F0EA449027EC12740085A081 /* NSObject+KVOBlock.m */,
 				F0EA448F27EC124B0085A081 /* NSObject+KVOBlock.h */,
 				F0EA449227EC2C1E0085A081 /* NodeTalker.h */,
@@ -288,6 +293,7 @@
 				F0EA449127EC12740085A081 /* NSObject+KVOBlock.m in Sources */,
 				F0EA446527EC0C4A0085A081 /* ViewController.m in Sources */,
 				F091DCC1287D268E00915D30 /* D4WebPanel.m in Sources */,
+				F020A6EB28AAFE0700F2FF07 /* D4ContextMenu.m in Sources */,
 				F0EA446C27EC0C4D0085A081 /* main.m in Sources */,
 				F0EA446227EC0C4A0085A081 /* AppDelegate.m in Sources */,
 			);

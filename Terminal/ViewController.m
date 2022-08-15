@@ -9,6 +9,25 @@
 #import "NSObject+KVOBlock.h"
 #import "AppDelegate.h"
 #import "D4WebPanel.h"
+#import "D4ContextMenu.h"
+
+@implementation D4WebView
+
+- (void)willOpenMenu:(NSMenu *)menu withEvent:(NSEvent *)event {
+//    NSLog(@"will open menu");
+////    for (NSMenuItem* item in [menu itemArray]) {
+////        NSLog(@"item %@ %@ %@ %d", [item title], NSStringFromSelector([item action]), [item target], [item tag]);
+////
+////    }
+//    // 57 is ContextMenuItemTagInspectElement in webkit/Source/WebCore/platform/ContextMenuItem.h
+//    NSMenuItem* inspectItem = [menu itemWithTag:57];
+//    [menu removeAllItems];
+//    if (inspectItem)
+//        [menu addItem:inspectItem];
+    [super willOpenMenu:menu withEvent:event];
+}
+
+@end
 
 @implementation ViewController
 - (void)viewDidLoad {
@@ -17,7 +36,7 @@
     WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
     [configuration.userContentController addScriptMessageHandler:self contentWorld:[WKContentWorld pageWorld] name:@"wkMessage"];
     [configuration.preferences setValue:@YES forKey:@"developerExtrasEnabled"];
-    webView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, 200, 200) configuration:configuration];
+    webView = [[D4WebView alloc] initWithFrame:CGRectMake(0, 0, 200, 200) configuration:configuration];
     [webView setUIDelegate:self];
     webView.underPageBackgroundColor = [NSColor clearColor];
     NSString* webURL = [[[NSProcessInfo processInfo] environment] valueForKey:@"TERMINAL_WEB_URL"];
@@ -68,6 +87,7 @@
     [self.view addSubview:viewWithFX];
     [webView setNextResponder:nil];
     panel = nil;
+//    [[webView _inspector] showConsole];
 }
 
 // Copyright (c) 2013 GitHub, Inc.
@@ -167,14 +187,22 @@
             [panel close];
             panel = nil;
         }
-//    } else if ([@"contextMenu" isEqual:body[@"method"]]) {
-//        NSMenu* menu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
-//        NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"first" action:nil keyEquivalent:@"first"];
-//        [item setState:NSControlStateValueOn];
-//        [menu addItem:item];
-//        [menu addItemWithTitle:@"foo" action:nil keyEquivalent:@"foo"];
-//        NSEvent* event = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown location:[NSEvent mouseLocation] modifierFlags:0 timestamp:NSTimeIntervalSince1970 windowNumber:self.view.window.windowNumber context:[NSGraphicsContext currentContext] eventNumber:0 clickCount:1 pressure:1.0];
-//        [NSMenu popUpContextMenu:menu withEvent:event forView:webView];
+    } else if ([@"contextMenu" isEqual:body[@"method"]]) {
+        NSMenu* menu = [[NSMenu alloc] initWithTitle:@"Contextual Menu"];
+        D4ContextMenu* contextMenu __unused = [[D4ContextMenu alloc] initWithDescriptor:body[@"params"] menu:menu callback:^(NSInteger number) {
+            NSDictionary* response = @{
+                @"id": body[@"id"],
+                @"result": @{
+                    @"id": [NSNumber numberWithInteger:number],
+                },
+            };
+            NSData* jsonData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+            [self->nodeTalker onMessage]([[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]);
+        }];
+
+        NSPoint location = [self.view.window convertPointFromScreen:[NSEvent mouseLocation]];
+        NSEvent* event = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown location:location modifierFlags:0 timestamp:NSTimeIntervalSince1970 windowNumber:self.view.window.windowNumber context:[NSGraphicsContext currentContext] eventNumber:0 clickCount:1 pressure:1.0];
+        [NSMenu popUpContextMenu:menu withEvent:event forView:webView];
     } else if ([@"setProgress" isEqual:body[@"method"]]) {
         [self setProgressBar:[params[@"progress"] doubleValue]];
     } else {

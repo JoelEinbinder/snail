@@ -9,9 +9,14 @@
 #import <WebKit/WebKit.h>
 #import "NodeTalker.h"
 #include "D4WebPanel.h"
-
+@interface _WKInspector
+-(void)showConsole;
+@end
+@interface D4WebView : WKWebView
+-(id)_inspector;
+@end
 @interface ViewController : NSViewController<WKUIDelegate, WKScriptMessageHandler, NSWindowDelegate> {
-    WKWebView* webView;
+    D4WebView* webView;
     NodeTalker* nodeTalker;
     D4WebPanel* panel;
     NSView* containerView;

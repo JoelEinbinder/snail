@@ -27,6 +27,23 @@ for (const info of dirs) {
     div.title += ' -> ' + info.link;
   if (info.mode & 0o111 && !info.isDirectory)
     div.classList.add('executable');
+  div.addEventListener('contextmenu', event => {
+    d4.createContextMenu([{
+      title: 'Copy',
+      submenu: [{
+        title: 'Copy absolute path',
+        callback: () => {
+          navigator.clipboard.writeText(fullPath);
+        }
+      }, {
+        title: 'Copy path item',
+        callback: () => {
+          navigator.clipboard.writeText(dir);
+        }
+      }]
+    }])
+    event.preventDefault();
+  });
   document.body.append(div);
   count++;
 }

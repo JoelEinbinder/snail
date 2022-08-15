@@ -15,11 +15,19 @@ function setIsFullscreen(isFullscreen) {
 }
 
 window.addEventListener('message', event => {
-  if (callbacks.length) {
-    callbacks.shift()(event.data);
-    return;
+  const {method, params} = event.data;
+    if (method === 'message') {
+    if (callbacks.length) {
+      callbacks.shift()(params);
+      return;
+    }
+    messages.push(params);
+  } else if (method === 'contextMenuCallback') {
+    const callback = contextMenuCallbacks.get(params.id);
+    if (callback)
+      callback(params.data);
+    contextMenuCallbacks.clear();
   }
-  messages.push(event.data);
 });
 
 window.addEventListener('keydown', event => {
@@ -37,6 +45,34 @@ window.addEventListener('keydown', event => {
   }
 });
 
+const contextMenuCallbacks = new Map();
+let lastCallback = 0;
+/**
+ * @param {import('./types').MenuItem[]} menuItems
+ */
+function serializeMenuItems(menuItems) {
+  return menuItems.map(item => {
+    const serialized = {
+      ...item,
+    };
+    if (item.callback) {
+      const id = ++lastCallback;
+      contextMenuCallbacks.set(id, item.callback);
+      serialized.callback = id;
+    }
+    if (item.submenu)
+      serialized.submenu = serializeMenuItems(item.submenu);
+    return serialized;
+  });
+}
+/**
+ * @param {import('./types').MenuItem[]} menuItems
+ */
+function createContextMenu(descriptor) {
+  contextMenuCallbacks.clear();
+  const params =  {menuItems: serializeMenuItems(descriptor)};
+  window.parent.postMessage({method: 'contextMenu', params}, '*');
+}
 function sendInput(data) {
   window.parent.postMessage({method: 'sendInput', params: data}, '*');
 }
@@ -46,5 +82,6 @@ window.d4 = {
   setHeight,
   setIsFullscreen,
   sendInput,
+  createContextMenu,
 }
 window.parent.postMessage('ready', '*')

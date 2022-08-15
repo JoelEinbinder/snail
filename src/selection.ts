@@ -1,3 +1,5 @@
+import { host } from "./host";
+
 let selection: string | (() => string) = '';
 document.addEventListener('copy', event => {
   const str = typeof selection === 'string' ? selection : selection();
@@ -14,3 +16,7 @@ document.addEventListener('selectionchange', event => {
 export function setSelection(sel: string | (() => string)) {
   selection = sel;
 }
+
+window.addEventListener('contextmenu', () => {
+  host.sendMessage({method: 'contextMenu'});
+});

@@ -58,8 +58,16 @@ export class IFrameBlock implements LogItem {
           delegate.sendInput(data.params);
           break;
         }
+        case 'contextMenu': {
+          host.sendMessage({method: 'contextMenu', params: data.params}).then(response => {
+            this.iframe.contentWindow.postMessage({
+              method: 'contextMenuCallback',
+              params: response,
+            }, '*');
+          });
+        }
       }
-    })
+    });
     host.sendMessage({
       method: 'urlForIFrame',
       params: {
@@ -81,7 +89,10 @@ export class IFrameBlock implements LogItem {
   }
   async message(data: string) {
     await this.readyPromise;
-    this.iframe.contentWindow.postMessage(JSON.parse(data), '*');
+    this.iframe.contentWindow.postMessage({
+      method: 'message',
+      params: JSON.parse(data),
+    }, '*');
   }
 
   didClose() {
