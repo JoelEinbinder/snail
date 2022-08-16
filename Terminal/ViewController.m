@@ -202,6 +202,7 @@
 
         NSPoint location = [self.view.window convertPointFromScreen:[NSEvent mouseLocation]];
         NSEvent* event = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown location:location modifierFlags:0 timestamp:NSTimeIntervalSince1970 windowNumber:self.view.window.windowNumber context:[NSGraphicsContext currentContext] eventNumber:0 clickCount:1 pressure:1.0];
+        [menu setAllowsContextMenuPlugIns:NO];
         [NSMenu popUpContextMenu:menu withEvent:event forView:webView];
     } else if ([@"setProgress" isEqual:body[@"method"]]) {
         [self setProgressBar:[params[@"progress"] doubleValue]];

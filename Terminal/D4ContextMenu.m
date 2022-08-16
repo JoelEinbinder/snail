@@ -20,7 +20,7 @@
     return self;
 }
 -(NSMenuItem*)buildItem: (NSDictionary*) descriptor {
-    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:descriptor[@"title"] action:nil keyEquivalent:@""];
+    NSMenuItem* item = descriptor[@"title"] ? [[NSMenuItem alloc] initWithTitle:descriptor[@"title"] action:nil keyEquivalent:@""] : [NSMenuItem separatorItem];
     if (descriptor[@"callback"]) {
         [item setAction:@selector(menuItemPressed:)];
         [item setTarget:self];
