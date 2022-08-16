@@ -228,7 +228,7 @@
 }
 -(WKWebView*)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures {
     NSURL* url = [[navigationAction request] URL];
-    if (![[navigationAction sourceFrame] isMainFrame] || url) {
+    if (![[navigationAction sourceFrame] isMainFrame] || ![[url absoluteString] isEqualToString:@""]) {
         [[NSWorkspace sharedWorkspace] openURL:url];
         return nil;
     }
