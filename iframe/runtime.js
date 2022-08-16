@@ -1,3 +1,4 @@
+/// <reference path="./types.d.ts" />
 const messages = [];
 const callbacks = [];
 async function waitForMessage() {
@@ -48,7 +49,7 @@ window.addEventListener('keydown', event => {
 const contextMenuCallbacks = new Map();
 let lastCallback = 0;
 /**
- * @param {import('./types').MenuItem[]} menuItems
+ * @param {MenuItem[]} menuItems
  */
 function serializeMenuItems(menuItems) {
   return menuItems.map(item => {
@@ -66,7 +67,7 @@ function serializeMenuItems(menuItems) {
   });
 }
 /**
- * @param {import('./types').MenuItem[]} menuItems
+ * @param {MenuItem[]} menuItems
  */
 function createContextMenu(descriptor) {
   contextMenuCallbacks.clear();

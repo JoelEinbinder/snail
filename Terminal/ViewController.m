@@ -227,8 +227,11 @@
     panel = nil;
 }
 -(WKWebView*)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures {
-    if (![[navigationAction sourceFrame] isMainFrame])
+    NSURL* url = [[navigationAction request] URL];
+    if (![[navigationAction sourceFrame] isMainFrame] || url) {
+        [[NSWorkspace sharedWorkspace] openURL:url];
         return nil;
+    }
     [self closePanel];
     panel = [[D4WebPanel alloc] initWithWithConfiguration:configuration forNavigationAction:navigationAction windowFeatures:windowFeatures screen:webView.window.screen];
     float width = [[windowFeatures width] floatValue];
