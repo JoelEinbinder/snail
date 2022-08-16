@@ -32,6 +32,7 @@ const rpc = RPC(transport, {
         data: toBuffer(`<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <link rel="stylesheet" href="${require.resolve('../iframe/iframe.css')}">
   <script src="${require.resolve('../iframe/runtime.js')}" type="module"></script>
 </head>

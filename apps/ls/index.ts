@@ -25,7 +25,7 @@ const {dirs, cwd, showHidden, platform, args} = await d4.waitForMessage<{
 }>();
 
 const useTable = args.some(a => a.startsWith('-') && a.includes('l'));
-
+const now = new Date(Date.now());
 function renderTable() {
   const dataGrid = new DataGrid<Entry>([{
     title: 'Permissions',
@@ -38,6 +38,9 @@ function renderTable() {
       }
       mode.textContent = str;
       return mode;
+    },
+    compare(a, b) {
+      return a.mode - b.mode;
     }
   }, {
     title: 'Hard Links',
@@ -45,44 +48,79 @@ function renderTable() {
       const span = document.createElement('span');
       span.textContent = String(item.nlink);
       return span;
+    },
+    compare(a, b) {
+      return a.nlink - b.nlink;
     }
   }, {
     title: 'User',
     render(item) {
       const span = document.createElement('span');
-      span.textContent = String(item.username);
+      span.textContent = item.username;
       return span;
+    },
+    compare(a, b) {
+      return a.username.localeCompare(b.username);
     }
   }, {
     title: 'Group',
     render(item) {
       const span = document.createElement('span');
-      span.textContent = String(item.groupname);
+      span.textContent = item.groupname;
       return span;
+    },
+    compare(a, b) {
+      return a.groupname.localeCompare(b.groupname);
     }
   }, {
     title: 'Size',
     render(item) {
       const span = document.createElement('span');
-      span.textContent = String(item.size);
+      span.textContent = item.size.toLocaleString(undefined, {
+        unit: 'byte',
+        notation: 'compact',
+      })
       return span;
+    },
+    compare(a, b) {
+      return a.size - b.size;
     }
   }, {
     title: 'Date Modified',
     render(item) {
       const span = document.createElement('span');
-      span.textContent = new Date(item.time).toLocaleString(undefined, {
-        dateStyle: 'long',
-        timeStyle: 'short'
+      span.style.whiteSpace = 'pre';
+      const date = new Date(item.time);
+      const month = date.toLocaleDateString(undefined, {
+        month: 'short',
       });
+      const day = date.toLocaleDateString(undefined, {
+        day: 'numeric',
+      });
+      const year = date.toLocaleDateString(undefined, {
+        year: 'numeric',
+      });
+      const time = date.toLocaleTimeString(undefined, {
+        timeStyle: 'short',
+      });
+      const isSameYear = now.getFullYear() === date.getFullYear();
+      span.textContent = `${month} ${day.padStart(2, ' ')} ${isSameYear ? time : year}`;
       return span;
+    },
+    compare(a, b) {
+      return new Date(a.time).valueOf() - new Date(b.time).valueOf();
     }
   }, {
     title: 'Name',
     render(item) {
+      const fullPath = `${cwd === '/' ? '' : cwd}/${item.dir}`;
+      const image = makeImageForPath(fullPath, item);
       const div = document.createElement('div');
-      div.textContent = item.dir;
+      div.append(image, item.dir);
       return div;
+    },
+    compare(a, b) {
+      return a.dir.localeCompare(b.dir);
     }
   }]);
   dataGrid.setItems(dirs.filter(x => !showHidden || !x.dir.startsWith('.')));
@@ -103,18 +141,12 @@ function inlineMode() {
     if (!showHidden && dir.startsWith('.'))
       continue;
     const div = document.createElement('div');
-    const image = document.createElement('img');
     const fullPath = `${cwd === '/' ? '' : cwd}/${dir}`;
+    const image = makeImageForPath(fullPath, info);
     imageLoadPromises.push(new Promise(x => {
       image.onload = x;
       image.onerror = x;
     }));
-    if (platform === 'darwin') {
-      image.src = `${fullPath}?thumbnail`;
-    } else {
-      image.src = iconPathForPath(fullPath, info);
-    }
-    image.width = image.height = 16;
     div.append(image, dir);
     div.title = fullPath;
     if (info.link)
@@ -138,7 +170,10 @@ function inlineMode() {
     document.body.append(div);
     count++;
   }
-  Promise.all(imageLoadPromises).then(() => {
+  Promise.race([
+    new Promise(x => setTimeout(x, 250)),
+    Promise.all(imageLoadPromises),
+  ]).then(() => {
     document.body.style.visibility = 'visible';
     updateSize();
   })
@@ -150,4 +185,15 @@ function inlineMode() {
     document.body.style.setProperty('--cols', String(cols));
     d4.setHeight(document.body.offsetHeight);
   }
+}
+
+function makeImageForPath(fullPath: string, info: Entry) {
+  const image = document.createElement('img');
+  if (platform === 'darwin') {
+    image.src = `${fullPath}?thumbnail`;
+  } else {
+    image.src = iconPathForPath(fullPath, info);
+  }
+  image.width = image.height = 16;
+  return image;
 }
