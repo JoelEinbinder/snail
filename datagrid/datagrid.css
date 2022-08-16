@@ -1,0 +1,21 @@
+td {
+  border: none;
+  padding: 0 4px;
+}
+th {
+  padding: 0 4px;
+  font-weight: normal;
+  text-align: left;
+  text-decoration: underline;
+  border: none;
+}
+tr {
+  border: none;
+  padding: 0;
+}
+
+table {
+  width: 100%;
+  border: none;
+  border-collapse:collapse;
+}

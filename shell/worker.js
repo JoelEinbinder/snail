@@ -86,10 +86,9 @@ const rpc = RPC(transport, {
         return {
           statusCode: 200,
           mimeType: 'application/javascript',
-          data: toBuffer(`const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = ${JSON.stringify(resolved)};
-  document.head.append(link);`),
+          data: toBuffer(`const style = document.createElement('style');
+  style.innerHTML = ${JSON.stringify(fs.readFileSync(resolved, 'utf8'))};
+  document.head.append(style);`),
         }
       }
       return {

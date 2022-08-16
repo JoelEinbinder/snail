@@ -1,9 +1,9 @@
 const path = require('path')
 const fs = require('fs');
 const os = require('os');
-
+const userid = require('userid');
 async function run(args, stdout, stderr) {
-  stdout.write(`\x1b\x1aL${path.join(__dirname, 'index.js')}\x00`);
+  stdout.write(`\x1b\x1aL${path.join(__dirname, 'index.ts')}\x00`);
 
   /**
    * @param {any} data
@@ -14,11 +14,13 @@ async function run(args, stdout, stderr) {
       });
       stdout.write(`\x1b\x1aM${str}\x00`);
   }
-  const resolved = args.length === 1 ? path.resolve(process.cwd(), args[0]) : process.cwd();
+  const directoryArgs = args.filter(arg => !arg.startsWith('-'));
+  const resolved = directoryArgs.length === 1 ? path.resolve(process.cwd(), directoryArgs[0]) : process.cwd();
   const isDirectory = fs.statSync(resolved).isDirectory();
   const platform = os.platform();
   if (!isDirectory) {
       send({
+          args,
           dirs: await buildDirInfos(path.dirname(resolved), [path.basename(resolved)]),
           cwd: path.dirname(resolved),
           showHidden: true,
@@ -27,6 +29,7 @@ async function run(args, stdout, stderr) {
   } else {
       const dirs = fs.readdirSync(resolved);
       send({
+          args,
           dirs: await buildDirInfos(resolved, dirs),
           cwd: resolved,
           showHidden: false,
@@ -50,6 +53,12 @@ async function buildDirInfos(cwd, dirs) {
     return {
       dir,
       link,
+      nlink: stat.nlink,
+      uid: stat.uid,
+      gid: stat.gid,
+      username: userid.username(stat.uid),
+      groupname: userid.groupname(stat.gid),
+      time: stat.ctime.toJSON(),
       mode: stat.mode,
       size: stat.size,
       isSymbolicLink: stat.isSymbolicLink(),

@@ -37,7 +37,7 @@ const builtins = {
         return 0;
     },
     ls: (args, stdout, stderr) => {
-        if (args.length > 1 || stdout !== process.stdout || args.some(x => x.startsWith('-')))
+        if (args.length > 1 || stdout !== process.stdout || args.some(x => x.startsWith('-') && x !== '-l'))
             return 'pass';
         return require('../apps/ls/lib').run(args, stdout, stderr).then(() => 0);
     },

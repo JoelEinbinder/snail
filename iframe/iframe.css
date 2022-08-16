@@ -27,5 +27,5 @@ body {
   margin: 0;
 }
 ::selection {
-  background: var(--selection);
+  background: rgba(82,82,82,0.99);
 }
