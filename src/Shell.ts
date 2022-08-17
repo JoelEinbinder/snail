@@ -163,7 +163,6 @@ export class Shell {
                         await notify('input', { data, id});
                     },
                     shellId,
-                    size: this._size,
                     antiFlicker: this._antiFlicker,
                   });
                   activeIframeBlock = iframeBlock;

@@ -1,7 +1,7 @@
+import { AntiFlicker } from "./AntiFlicker";
 import { host } from "./host";
 import { JoelEvent } from "./JoelEvent";
 import { LogItem } from "./LogView";
-import type { TerminalBlockDelegate } from "./TerminalBlock";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -13,6 +13,12 @@ window.addEventListener('message', event => {
   }
 });
 
+export type IFrameBlockDelegate = {
+  shellId: number;
+  sendInput: (data: string) => void;
+  antiFlicker?: AntiFlicker;
+}
+
 export class IFrameBlock implements LogItem {
   public iframe: HTMLIFrameElement|null = document.createElement('iframe');
   private readyPromise: Promise<void>;
@@ -20,7 +26,7 @@ export class IFrameBlock implements LogItem {
   public willResizeEvent = new JoelEvent<void>(undefined);
   constructor(
     data: string,
-    delegate: TerminalBlockDelegate,
+    delegate: IFrameBlockDelegate,
     ) {
     this.iframe.allowFullscreen = true;
     this.iframe.style.height = '0';
@@ -65,6 +71,20 @@ export class IFrameBlock implements LogItem {
               params: response,
             }, '*');
           });
+          break;
+        }
+        case 'keyPressed': {
+          // emit fake key press to get handled
+          const event = new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            ...data.params,
+          });
+          this.iframe.dispatchEvent(event);
+          if (!event.defaultPrevented && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            document.execCommand('insertText', false, data.params.key);
+          }
+          break;
         }
       }
     });

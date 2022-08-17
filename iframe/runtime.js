@@ -33,18 +33,38 @@ window.addEventListener('message', event => {
 
 window.addEventListener('keydown', event => {
   if (event.defaultPrevented)
-    return;  
-  if (!event.ctrlKey || event.shiftKey || event.altKey || event.metaKey)
     return;
-  const codeMap = {
-    'KeyC': '\x03',
-    'KeyD': '\x04',
-  }
-  if (event.code in codeMap) {
+  if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
+    const codeMap = {
+      'KeyC': '\x03',
+      'KeyD': '\x04',
+    }
+    if (event.code in codeMap) {
+      event.preventDefault();
+      sendInput(codeMap[event.code]);
+    }
+  } else if (!event.ctrlKey && !event.altKey && !event.metaKey && event.key.length === 1 && !isEditing(event.target)) {
     event.preventDefault();
-    sendInput(codeMap[event.code]);
+    window.parent.postMessage({method: 'keyPressed', params: {
+      key: event.key,
+      code: event.code,
+      shiftKey: event.shiftKey,
+    }}, '*');
   }
 });
+
+/**
+ * @param {HTMLElement} target
+ */
+function isEditing(target) {
+  if (!target)
+    return false;
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
+    return true;
+  if (target.isContentEditable)
+    return true;
+  return false;
+}
 
 const contextMenuCallbacks = new Map();
 let lastCallback = 0;
