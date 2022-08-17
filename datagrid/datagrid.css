@@ -26,6 +26,9 @@ th.sorted::after {
 th.sorted.sort-asc::after {
   content: '▲';
 }
+th:active {
+  color: var(--white);
+}
 
 tr {
   border: none;

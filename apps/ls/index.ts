@@ -43,7 +43,7 @@ function renderTable() {
       return a.mode - b.mode;
     }
   }, {
-    title: 'Hard Links',
+    title: 'Links',
     render(item) {
       const span = document.createElement('span');
       span.textContent = String(item.nlink);
