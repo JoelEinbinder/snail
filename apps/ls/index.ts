@@ -123,7 +123,7 @@ function renderTable() {
       return a.dir.localeCompare(b.dir);
     }
   }]);
-  dataGrid.setItems(dirs.filter(x => !showHidden || !x.dir.startsWith('.')));
+  dataGrid.setItems(dirs.filter(x => showHidden || !x.dir.startsWith('.')));
   document.body.append(dataGrid.element);
   console.log((document.head.children[3] as HTMLLinkElement).sheet);
   d4.setHeight(document.body.offsetHeight);
