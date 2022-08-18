@@ -32,7 +32,7 @@ async function run(args, stdout, stderr) {
           args,
           dirs: await buildDirInfos(resolved, dirs),
           cwd: resolved,
-          showHidden: false,
+          showHidden: args.some(a => a.startsWith('-') && a.includes('a')),
           platform,
       });
   }
