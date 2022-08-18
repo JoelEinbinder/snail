@@ -26,6 +26,8 @@
         [item setTarget:self];
         [item setTag:[descriptor[@"callback"] integerValue]];
     }
+    if (descriptor[@"checked"] && [descriptor[@"checked"] boolValue])
+        [item setState:NSControlStateValueOn];
     NSArray<NSDictionary*>* submenuDescriptor = descriptor[@"submenu"];
     if (submenuDescriptor) {
         NSMenu* submenu = [[NSMenu alloc] initWithTitle:descriptor[@"title"]];

@@ -1,3 +1,4 @@
+/// <reference path="../iframe/types.d.ts" />
 import './datagrid.css';
 
 export interface ColumnDelegate<T extends object> {
@@ -6,16 +7,22 @@ export interface ColumnDelegate<T extends object> {
   title: string;
 }
 
+class Column<T extends object> {
+  shown = true;
+  constructor(public delegate: ColumnDelegate<T>) {}
+}
 export class DataGrid<T extends object> {
   element = document.createElement('div');
   private table = document.createElement('table');
   private _items: DataGridItem<T>[] = [];
-  private _sortedColumn: ColumnDelegate<T> | null = null;
+  private _sortedColumn: Column<T> | null = null;
   private _sortDirection = -1;
-  private _columnToHeaderCell = new WeakMap<ColumnDelegate<T>, HTMLTableCellElement>();
-  constructor(private _columns: ColumnDelegate<T>[]) {
+  private _columns: Column<T>[] = [];
+  private _columnToHeaderCell = new WeakMap<Column<T>, HTMLTableCellElement>();
+  constructor(columnDelegates: ColumnDelegate<T>[]) {
     this.element.classList.add('datagrid');
     this.element.append(this.table);
+    this._columns = columnDelegates.map(delegate => new Column(delegate));
     this.render();
   }
   
@@ -30,11 +37,11 @@ export class DataGrid<T extends object> {
     const headerRow = document.createElement('tr');
     header.append(headerRow);
     this._columnToHeaderCell = new WeakMap();
-    for (const column of this._columns) {
+    for (const column of this._columns.filter(x => x.shown)) {
       const headerCell = document.createElement('th');
-      headerCell.textContent = column.title;
+      headerCell.textContent = column.delegate.title;
       headerRow.append(headerCell);
-      if (column.compare) {
+      if (column.delegate.compare) {
         headerCell.onclick = () => {
           if (this._sortedColumn === column)
             this._sortDirection = -this._sortDirection;
@@ -43,6 +50,19 @@ export class DataGrid<T extends object> {
           this._sortedColumn = column;
           this.render();
         };
+        if (typeof d4 !== 'undefined') {
+          headerCell.oncontextmenu = event => {
+            d4.createContextMenu(this._columns.map(column => ({
+              title: column.delegate.title,
+              checked: column.shown,
+              callback: () => {
+                column.shown = !column.shown;
+                this.render();
+              }
+            })))
+            event.preventDefault();
+          };
+        }
       }
       this._columnToHeaderCell.set(column, headerCell);
     }
@@ -51,14 +71,14 @@ export class DataGrid<T extends object> {
     const sortedItems = [...this._items];
     if (this._sortedColumn) {
       sortedItems.sort((a, b) => {
-        return this._sortDirection * this._sortedColumn!.compare!(a.value, b.value);
+        return this._sortDirection * this._sortedColumn!.delegate.compare!(a.value, b.value);
       })
     }
     for (const item of sortedItems) {
       item.element.textContent = '';
-      for (const column of this._columns) {
+      for (const column of this._columns.filter(x => x.shown)) {
         const cell = document.createElement('td');
-        cell.append(column.render(item.value));
+        cell.append(column.delegate.render(item.value));
         item.element.append(cell);
       }
       body.append(item.element);
