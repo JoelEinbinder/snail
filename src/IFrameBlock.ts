@@ -87,7 +87,6 @@ export class IFrameBlock implements LogItem {
           break;
         }
         case 'loadItem': {
-          console.log('loadItem', data.params);
           host.sendMessage({method: 'loadItem', params: data.params}).then(result => {
             this.iframe.contentWindow.postMessage({
               result,
@@ -97,7 +96,6 @@ export class IFrameBlock implements LogItem {
           break;
         }
         case 'saveItem': {
-          console.log('save item from iframe', data.params);
           host.sendMessage({method: 'saveItem', params: data.params});
           break;
         }

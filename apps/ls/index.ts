@@ -9,7 +9,10 @@ type Entry = {
   gid: number,
   username: string;
   groupname: string;
-  time: string,
+  mtime: string,
+  ctime: string;
+  atime: string;
+  birthtime: string;
   link?: string,
   mode: number,
   size: number,
@@ -90,7 +93,7 @@ async function renderTable() {
     render(item) {
       const span = document.createElement('span');
       span.style.whiteSpace = 'pre';
-      const date = new Date(item.time);
+      const date = new Date(item.mtime);
       const month = date.toLocaleDateString(undefined, {
         month: 'short',
       });
@@ -108,8 +111,64 @@ async function renderTable() {
       return span;
     },
     compare(a, b) {
-      return new Date(a.time).valueOf() - new Date(b.time).valueOf();
-    }
+      return new Date(a.mtime).valueOf() - new Date(b.mtime).valueOf();
+    },
+  }, {
+    title: 'Date Created',
+    render(item) {
+      const span = document.createElement('span');
+      span.style.whiteSpace = 'pre';
+      const date = new Date(item.birthtime);
+      const month = date.toLocaleDateString(undefined, {
+        month: 'short',
+      });
+      const day = date.toLocaleDateString(undefined, {
+        day: 'numeric',
+      });
+      const year = date.toLocaleDateString(undefined, {
+        year: 'numeric',
+      });
+      const time = date.toLocaleTimeString(undefined, {
+        timeStyle: 'short',
+      });
+      const isSameYear = now.getFullYear() === date.getFullYear();
+      span.textContent = `${month} ${day.padStart(2, ' ')} ${isSameYear ? time : year}`;
+      return span;
+    },
+    compare(a, b) {
+      return new Date(a.birthtime).valueOf() - new Date(b.birthtime).valueOf();
+    },
+    defaultHidden: true,
+  }, {
+    title: 'Date Last Opened',
+    render(item) {
+      const span = document.createElement('span');
+      span.style.whiteSpace = 'pre';
+      const date = new Date(item.atime);
+      if (new Date(item.atime).valueOf() - new Date(item.mtime).valueOf() < 60_000) {
+        span.textContent = '--';
+        return span;
+      }
+      const month = date.toLocaleDateString(undefined, {
+        month: 'short',
+      });
+      const day = date.toLocaleDateString(undefined, {
+        day: 'numeric',
+      });
+      const year = date.toLocaleDateString(undefined, {
+        year: 'numeric',
+      });
+      const time = date.toLocaleTimeString(undefined, {
+        timeStyle: 'short',
+      });
+      const isSameYear = now.getFullYear() === date.getFullYear();
+      span.textContent = `${month} ${day.padStart(2, ' ')} ${isSameYear ? time : year}`;
+      return span;
+    },
+    compare(a, b) {
+      return new Date(a.atime).valueOf() - new Date(b.atime).valueOf();
+    },
+    defaultHidden: true,
   }, {
     title: 'Name',
     render(item) {
