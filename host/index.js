@@ -116,6 +116,36 @@ const handler = {
     url.pathname = filePath;
     url.search = '?entry';
     return url.href;
+  },
+  async saveItem({key, value}) {
+    const database = await getDatabase();
+    const runResult = await new Promise((res, rej) => {
+      database.run(`INSERT INTO
+        preferences(key, value)
+        VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET
+          value=excluded.value`, [key, JSON.stringify(value)], function(err) {
+        if (err)
+          rej(err);
+        else
+          res(this);
+      });
+    });
+    return runResult.changes;
+  },
+  async loadItem({key}) {
+    const database = await getDatabase();
+    const getResult = await new Promise((res, rej) => {
+      database.get(`SELECT value FROM preferences WHERE key = ?`, key, function(err, row) {
+        if (err)
+          rej(err);
+        else
+          res(row);
+      });
+    });
+    if (!getResult || !getResult.value)
+      return undefined;
+    return JSON.parse(getResult.value);
   }
 }
 
@@ -142,6 +172,10 @@ async function getDatabase() {
     username TEXT,
     hostname TEXT,
     exit_code INTEGER
+  )`, x));
+  await new Promise(x => database.run(`CREATE TABLE IF NOT EXISTS preferences (
+    key TEXT PRIMARY KEY,
+    value TEXT
   )`, x));
   return database;
 }

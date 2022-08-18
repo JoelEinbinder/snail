@@ -26,7 +26,7 @@ const {dirs, cwd, showHidden, platform, args} = await d4.waitForMessage<{
 
 const useTable = args.some(a => a.startsWith('-') && a.includes('l'));
 const now = new Date(Date.now());
-function renderTable() {
+async function renderTable() {
   const dataGrid = new DataGrid<Entry>([{
     title: 'Permissions',
     render(item) {
@@ -121,11 +121,19 @@ function renderTable() {
     },
     compare(a, b) {
       return a.dir.localeCompare(b.dir);
+    },
+    alwaysVisible: true,
+  }], {
+    async loadItem(item) {
+      return d4.loadItem(`ls.${item}`);
+    },
+    async saveItem(item, value) {
+      return d4.saveItem(`ls.${item}`, value);
     }
-  }]);
+  });
+  await dataGrid.loadAllData();
   dataGrid.setItems(dirs.filter(x => showHidden || !x.dir.startsWith('.')));
   document.body.append(dataGrid.element);
-  console.log((document.head.children[3] as HTMLLinkElement).sheet);
   d4.setHeight(document.body.offsetHeight);
 }
 if (useTable)

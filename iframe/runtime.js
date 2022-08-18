@@ -1,6 +1,8 @@
 /// <reference path="./types.d.ts" />
 const messages = [];
 const callbacks = [];
+let lastMessageId = 0;
+const messasgeCallbacks = new Map();
 async function waitForMessage() {
   if (messages.length)
     return messages.shift();
@@ -16,18 +18,27 @@ function setIsFullscreen(isFullscreen) {
 }
 
 window.addEventListener('message', event => {
-  const {method, params} = event.data;
+  if ('method' in event.data) {
+    const {method, params} = event.data;
     if (method === 'message') {
-    if (callbacks.length) {
-      callbacks.shift()(params);
-      return;
+      if (callbacks.length) {
+        callbacks.shift()(params);
+        return;
+      }
+      messages.push(params);
+    } else if (method === 'contextMenuCallback') {
+      const callback = contextMenuCallbacks.get(params.id);
+      if (callback)
+        callback(params.data);
+      contextMenuCallbacks.clear();
     }
-    messages.push(params);
-  } else if (method === 'contextMenuCallback') {
-    const callback = contextMenuCallbacks.get(params.id);
-    if (callback)
-      callback(params.data);
-    contextMenuCallbacks.clear();
+  } else {
+    const {id, result} = event.data;
+    const callback = messasgeCallbacks.get(id);
+    if (callback) {
+      callback(result);
+      messasgeCallbacks.delete(id);
+    }
   }
 });
 
@@ -98,11 +109,31 @@ function sendInput(data) {
   window.parent.postMessage({method: 'sendInput', params: data}, '*');
 }
 
+/**
+ * @param {string} key
+ * @param {any} value
+ */
+function saveItem(key, value) {
+  window.parent.postMessage({method: 'saveItem', params: {key, value}}, '*');
+}
+/**
+ * @param {string} key
+ * @return {Promise<any>}
+ */
+async function loadItem(key) {
+  const id = ++lastMessageId;
+  window.parent.postMessage({method: 'loadItem', params: {key}, id}, '*');
+  return new Promise(x => messasgeCallbacks.set(id, x));
+}
+
+
 window.d4 = {
   waitForMessage,
   setHeight,
   setIsFullscreen,
   sendInput,
   createContextMenu,
+  saveItem,
+  loadItem,
 }
 window.parent.postMessage('ready', '*')

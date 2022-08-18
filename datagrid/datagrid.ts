@@ -5,12 +5,22 @@ export interface ColumnDelegate<T extends object> {
   render(item: T): Element;
   compare?(a: T, b: T): number;
   title: string;
+  defaultHidden?: boolean;
+  alwaysVisible?: boolean;
 }
 
 class Column<T extends object> {
-  shown = true;
-  constructor(public delegate: ColumnDelegate<T>) {}
+  shown: boolean;
+  constructor(public delegate: ColumnDelegate<T>) {
+    this.shown = !delegate.defaultHidden || !!delegate.alwaysVisible;
+  }
 }
+
+export interface DataGridDelegate {
+  saveItem(key: string, value: any): void;
+  loadItem(key: string): Promise<any>;
+}
+
 export class DataGrid<T extends object> {
   element = document.createElement('div');
   private table = document.createElement('table');
@@ -19,10 +29,21 @@ export class DataGrid<T extends object> {
   private _sortDirection = -1;
   private _columns: Column<T>[] = [];
   private _columnToHeaderCell = new WeakMap<Column<T>, HTMLTableCellElement>();
-  constructor(columnDelegates: ColumnDelegate<T>[]) {
+  constructor(columnDelegates: ColumnDelegate<T>[], private _delegate: DataGridDelegate) {
     this.element.classList.add('datagrid');
     this.element.append(this.table);
     this._columns = columnDelegates.map(delegate => new Column(delegate));
+  }
+
+  async loadAllData() {
+    await Promise.all(this._columns.map(async column => {
+      if (column.delegate.alwaysVisible)
+        return;
+      const hidden = await this._delegate.loadItem(`datagrid.column.hidden.${column.delegate.title}`);
+      if (hidden === undefined)
+        return;
+      column.shown = !hidden;
+    }));
     this.render();
   }
   
@@ -55,8 +76,9 @@ export class DataGrid<T extends object> {
             d4.createContextMenu(this._columns.map(column => ({
               title: column.delegate.title,
               checked: column.shown,
-              callback: () => {
+              callback: column.delegate.alwaysVisible ? undefined : () => {
                 column.shown = !column.shown;
+                this._delegate.saveItem(`datagrid.column.hidden.${column.delegate.title}`, !column.shown);
                 this.render();
               }
             })))

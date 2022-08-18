@@ -11,4 +11,6 @@ declare var d4: {
   setIsFullscreen(isFullscreen: boolean): void;
   sendInput(input: string): void;
   createContextMenu(items: MenuItem[]): void;
+  saveItem(key: string, value: any): void;
+  loadItem(key: string): Promise<any>;
 };
