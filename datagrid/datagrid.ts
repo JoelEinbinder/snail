@@ -7,6 +7,7 @@ export interface ColumnDelegate<T extends object> {
   title: string;
   defaultHidden?: boolean;
   alwaysVisible?: boolean;
+  defaultSortDirection?: number;
 }
 
 class Column<T extends object> {
@@ -33,17 +34,34 @@ export class DataGrid<T extends object> {
     this.element.classList.add('datagrid');
     this.element.append(this.table);
     this._columns = columnDelegates.map(delegate => new Column(delegate));
+    for (const column of this._columns) {
+      if (!column.delegate.defaultSortDirection)
+        continue;
+      this._sortedColumn = column;
+      this._sortDirection = column.delegate.defaultSortDirection;
+      break;
+    }
   }
 
   async loadAllData() {
-    await Promise.all(this._columns.map(async column => {
+    await Promise.all([...this._columns.map(async column => {
       if (column.delegate.alwaysVisible)
         return;
       const hidden = await this._delegate.loadItem(`datagrid.column.hidden.${column.delegate.title}`);
       if (hidden === undefined)
         return;
       column.shown = !hidden;
-    }));
+    }),
+    this._delegate.loadItem(`datagrid.sort.column`).then(sort => {
+      if (!sort)
+        return;
+      const {title, direction} = sort;
+      const column = this._columns.find(x => x.delegate.title === title);
+      if (!column)
+        return;
+      this._sortedColumn = column;
+      this._sortDirection = direction;
+    })]);
     this.render();
   }
   
@@ -69,6 +87,7 @@ export class DataGrid<T extends object> {
           else
             this._sortDirection = -1;
           this._sortedColumn = column;
+          this._delegate.saveItem(`datagrid.sort.column`, {title: column.delegate.title, direction: this._sortDirection});
           this.render();
         };
         if (typeof d4 !== 'undefined') {

@@ -179,8 +179,9 @@ async function renderTable() {
       return div;
     },
     compare(a, b) {
-      return a.dir.localeCompare(b.dir);
+      return b.dir.localeCompare(a.dir);
     },
+    defaultSortDirection: -1,
     alwaysVisible: true,
   }], {
     async loadItem(item) {
