@@ -286,6 +286,10 @@ function setAlias(name, value) {
     aliases[name] = value;
 }
 
+function getAliases() {
+    return JSON.stringify(aliases);
+}
+
 /**
  * @param {string} executable
  */
@@ -462,4 +466,4 @@ function getAndResetChanges() {
     return c;
 }
 
-module.exports = {execute, getResult, getAndResetChanges, setAlias};
+module.exports = {execute, getResult, getAndResetChanges, setAlias, getAliases};

@@ -25,6 +25,7 @@ global.bootstrap = (args) => {
   delete global.magic_binding;
   delete global.bootstrap;
   const {sh} = require('../shjs/jsapi');
+  const {setAlias, getAliases} = require('../shjs/index');
   global.sh = sh;
   function notify(method, params) {
     binding(JSON.stringify({method, params}));
@@ -45,7 +46,7 @@ global.bootstrap = (args) => {
     const url = await getServerUrl();
     /** @type {Promise<WebSocket>|WebSocket} */
     const conncectionPromise = freeShell ? freeShell.connection : new Promise(x => resolveShellConnection.set(id, x));
-    const shell = freeShell ? freeShell.shell : require('node-pty').spawn(process.execPath, [require('path').join(__dirname, '..', 'shjs', 'wrapper.js'), url, id], {
+    const shell = freeShell ? freeShell.shell : require('node-pty').spawn(process.execPath, [require('path').join(__dirname, '..', 'shjs', 'wrapper.js'), url, id, getAliases()], {
       env,
       rows,
       cols,
@@ -119,7 +120,6 @@ global.bootstrap = (args) => {
         notify('env', changes.env);
       }
       if (changes.aliases) {
-        const {setAlias} = require('../shjs/index');
         notify('aliases', changes.aliases);
         for (const key of Object.keys(changes.aliases)) {
           setAlias(key, changes.aliases[key]);

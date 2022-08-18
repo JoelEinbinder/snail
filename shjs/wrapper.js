@@ -1,5 +1,8 @@
 const {execute, getAndResetChanges, setAlias} = require('./index');
 const {WebSocket} = require('ws');
+const aliases = JSON.parse(process.argv[4]);
+for (const key in aliases)
+  setAlias(key, aliases[key]);
 listenToWebSocket()
 
 async function listenToWebSocket() {
