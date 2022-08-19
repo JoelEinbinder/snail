@@ -2,7 +2,7 @@
 body.fullscreen-entry {
   overflow: hidden;
 }
-.log-view-container {
+.log-view-scroller {
   position: absolute;
   top: 0;
   left: 0;

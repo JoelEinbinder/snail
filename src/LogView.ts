@@ -26,7 +26,7 @@ export class LogView {
         return;
       this._promptElement.focus();
     })
-    this._container.classList.toggle('log-view-container', true);
+    this._scroller.classList.toggle('log-view-scroller', true);
     this._repopulate();
     this._shell.activeItem.on(item => {
       if (item)
@@ -105,15 +105,21 @@ export class LogView {
       logItem.focus();
   }
 
+  private get _scroller() {
+    // vscode needs this to be the element for scroll locking to work
+    // webkit needs this to be the body for scrollbars to be white
+    return navigator.userAgent.includes('Chrome') ? this._element : this._container;
+  }
+
   async _lockScroll() {
     if (this._lockingScroll)
       return;
-    const scrollBottom = this._container.scrollHeight - this._container.scrollTop - this._container.offsetHeight;
+    const scrollBottom = this._scroller.scrollHeight - this._scroller.scrollTop - this._scroller.offsetHeight;
     
     this._lockingScroll = true;
     await Promise.resolve();
     this._lockingScroll = false;
-    this._container.scrollTop = this._container.scrollHeight - this._container.offsetHeight - scrollBottom;
+    this._scroller.scrollTop = this._scroller.scrollHeight - this._scroller.offsetHeight - scrollBottom;
   }
 
   _addPrompt() {
