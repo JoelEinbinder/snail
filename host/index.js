@@ -89,7 +89,7 @@ const handler = {
   async addHistory(item) {
     const database = await getDatabase();
     const runResult = await new Promise((res, rej) => {
-      database.run(`INSERT INTO history (command, start) VALUES (?, ?)`, [item.command, item.start], function (err) {
+      database.run(`INSERT INTO history (command, start, pwd) VALUES (?, ?, ?)`, [item.command, item.start, item.pwd], function (err) {
         if (err)
           rej(err)
         else
@@ -97,6 +97,18 @@ const handler = {
       });
     });
     return runResult.lastID;;
+  },
+  async queryDatabase({sql, params}) {
+    const database = await getDatabase();
+    const result = await new Promise((res, rej) => {
+      database.all(sql, params, function(err, rows) {
+        if (err)
+          rej(err)
+        else
+          res(rows);
+      })
+    });
+    return result;
   },
   async updateHistory({id, col, value}) {
     const database = await getDatabase();

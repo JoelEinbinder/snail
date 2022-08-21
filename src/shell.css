@@ -7,6 +7,11 @@
 .editor-line > .prefix {
   white-space: pre;
 }
+.editor-line > .prefix.clickable-dir-name {
+  cursor: pointer;
+  user-select: none;
+}
+
 .terminal {
   position: relative;
   top: -2px;

@@ -42,4 +42,11 @@
     _callback([item tag]);
     _callback = NULL;
 }
+-(void)dealloc {
+    if (!_callback)
+        return;
+    _callback(0);
+    _callback = NULL;
+    
+}
 @end

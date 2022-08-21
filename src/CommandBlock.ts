@@ -50,7 +50,9 @@ export class CommandBlock implements LogItem {
     const command = document.createElement('div');
     command.classList.add('command');
     command.classList.toggle('canceled', this.wasCanceled);
-    command.append(CommandPrefix(this));
+    const commandPrefix = new CommandPrefix(this);
+    command.append(commandPrefix.element);
+    commandPrefix.render();
     const editorWrapper = document.createElement('div');
     editorWrapper.style.position = 'relative';
     editorWrapper.style.flex = '1';
@@ -89,27 +91,33 @@ export class CommandBlock implements LogItem {
   }
 }
 
-export function CommandPrefix(shellOrCommand: Shell|CommandBlock, onReady = () => {}) {
-  const div = document.createElement('div');
-  div.className = 'prefix';
-  go();
-  return div;
-  async function go() {
+export class CommandPrefix {
+  element = document.createElement('div');
+  constructor(private _shellOrCommand: Shell|CommandBlock, private _onClick?: (event: MouseEvent) => void) {
+    this.element.classList.add('prefix');
+  }
+  async render() {
     const [revName, dirtyState] = await Promise.all([
-      shellOrCommand.cachedEvaluation('__git_ref_name'),
-      shellOrCommand.cachedEvaluation('__is_git_dirty'),
+      this._shellOrCommand.cachedEvaluation('__git_ref_name'),
+      this._shellOrCommand.cachedEvaluation('__is_git_dirty'),
     ]);
-    const prettyName = computePrettyDirName(shellOrCommand, shellOrCommand.cwd);
-    const sshAddress = shellOrCommand.sshAddress;
+    const sshAddress = this._shellOrCommand.sshAddress;
     const colors = {
       path: sshAddress? 112 : 32,
       arrow: sshAddress ? 106 : 105,
       paren: sshAddress ? 119 : 75,
       gitName: sshAddress? 119 : 78,
     };
+    const dir = Ansi(colors.path, computePrettyDirName(this._shellOrCommand, this._shellOrCommand.cwd));
+    dir.classList.add('dir')
+    if (this._onClick) {
+      this.element.classList.add('clickable-dir-name');
+      this.element.addEventListener('click', this._onClick);
+      this.element.addEventListener('contextmenu', this._onClick);
+    }
     const GitStatus = revName ? Ansi(colors.paren,"(", Ansi(colors.gitName, revName), Ansi(214, dirtyState ? '*' : ''), ")") : '';
-    div.append(Ansi(colors.path, prettyName), GitStatus, makeVenvBadge(shellOrCommand) || ' ', Ansi(colors.arrow, '»'), ' ');
-    onReady();
+    this.element.textContent = '';
+    this.element.append(dir, GitStatus, makeVenvBadge(this._shellOrCommand) || ' ', Ansi(colors.arrow, '»'), ' ');
   }
 }
 

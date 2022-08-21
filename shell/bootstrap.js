@@ -37,11 +37,26 @@ global.bootstrap = (args) => {
   let cols = 80;
   /** @type {{shell: import('node-pty').IPty, connection: WebSocket}} */
   let freeShell = null;
+
+  const origChangeDir = process.chdir;
+
+  process.chdir = function(path) {
+    const before = process.cwd();
+    const returnValue = origChangeDir.apply(this, arguments);
+    const after = process.cwd();
+    if (before !== after) {
+      if (freeShell)
+        freeShell.connection.send(JSON.stringify({changes: {cwd: after}}));
+      notify('cwd', after);
+    }
+
+    return returnValue;
+  }
+
   global.pty = async function(command) {
     const magicToken = String(Math.random());
     const magicString = `\x1B[JOELMAGIC${magicToken}]\r\n`;
     let env = {...process.env};
-    let cwd = process.cwd();
     const id = ++shellId;
     const url = await getServerUrl();
     /** @type {Promise<WebSocket>|WebSocket} */
@@ -50,7 +65,7 @@ global.bootstrap = (args) => {
       env,
       rows,
       cols,
-      cwd,
+      cwd: process.cwd(),
       name: 'xterm-256color',
       handleFlowControl: true,
       encoding: null,
@@ -108,8 +123,7 @@ global.bootstrap = (args) => {
     if (returnValue.changes) {
       const changes = returnValue.changes;
       if (changes.cwd) {
-        cwd = changes.cwd;
-        process.chdir(cwd);
+        origChangeDir(changes.cwd);
         notify('cwd', changes.cwd);
       }
       if (changes.env) {

@@ -16,6 +16,7 @@ import { ProgressBlock } from './ProgressBlock';
 import { TerminalDataProcessor } from './TerminalDataProcessor';
 import { TaskQueue } from './TaskQueue';
 import { IFrameBlock } from './IFrameBlock';
+import { showContextMenu } from './contextMenu';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
@@ -450,7 +451,7 @@ export class Shell {
     return jsCode;
   }
 
-  async _clearCache() {
+  _clearCache() {
     this._cachedEvaluationResult = new Map();
     delete this._cachedGlobalVars;
     this._cachedSuggestions = new Map();
@@ -575,13 +576,40 @@ export class Shell {
     const editorLine = document.createElement('div');
     editorLine.classList.add('editor-line');
     element.appendChild(editorLine);
-    const isReady = new Promise<void>(resolve => {
-      editorLine.append(CommandPrefix(this, resolve));
+    const commandPrefix = new CommandPrefix(this, async event => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const rows: {pwd: string}[] = await host.sendMessage({
+        method: 'queryDatabase',
+        params: {
+          sql: `SELECT DISTINCT pwd FROM history WHERE ${this.sshAddress ? 'hostname = ?' : 'hostname IS NULL'} AND pwd IS NOT NULL ORDER BY command_id DESC LIMIT 6`,
+          params: this.sshAddress ? [this.sshAddress] : undefined,
+        }
+      });
+      
+      const currentPwd = await this.cachedEvaluation('pwd');
+      
+      await showContextMenu(rows.map(({pwd}) => {
+        return {
+          title: computePrettyDirName(this, pwd),
+          checked: pwd === currentPwd,
+          callback: currentPwd === pwd ? () => {} : async () => {
+            await this.connection.send('Runtime.evaluate', {
+              expression: `process.chdir(${JSON.stringify(pwd)})`,
+              returnByValue: true,
+            });
+            this._clearCache();
+            commandPrefix.render();
+          }
+        }
+      }));
     });
+    editorLine.append(commandPrefix.element);
+    
     const prettyName = computePrettyDirName(this, this.cwd);
     const title =  [this._connectionToName.get(this.connection), prettyName].filter(Boolean).join(' ');
     titleThrottle.update(title);
-    Promise.race([isReady, new Promise(x => setTimeout(x, 100))]).then(() => {
+    Promise.race([commandPrefix.render(), new Promise(x => setTimeout(x, 100))]).then(() => {
       element.style.removeProperty('opacity');
     });
     const editorWrapper = document.createElement('div');
@@ -704,6 +732,7 @@ export class Shell {
       updateHistory(historyId, 'git_branch', revName),
       updateHistory(historyId, 'git_dirty', dirtyState),
       updateHistory(historyId, 'git_hash', hash),
+      this.sshAddress && updateHistory(historyId, 'hostname', this.sshAddress),
     ]);
     return historyId;
   }

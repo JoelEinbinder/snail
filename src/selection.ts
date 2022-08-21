@@ -17,6 +17,3 @@ export function setSelection(sel: string | (() => string)) {
   selection = sel;
 }
 
-window.addEventListener('contextmenu', () => {
-  host.sendMessage({method: 'contextMenu'});
-});
