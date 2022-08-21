@@ -264,4 +264,12 @@
 -(void)windowDidResize:(NSNotification *)notification {
     [self closePanel];
 }
+- (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler {
+    NSAlert* alert = [[NSAlert alloc] init];
+    [alert setMessageText:message];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    [alert beginSheetModalForWindow:webView.window completionHandler:^(NSModalResponse returnCode) {
+        completionHandler();
+    }];
+}
 @end

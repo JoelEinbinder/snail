@@ -16,7 +16,7 @@ import { ProgressBlock } from './ProgressBlock';
 import { TerminalDataProcessor } from './TerminalDataProcessor';
 import { TaskQueue } from './TaskQueue';
 import { IFrameBlock } from './IFrameBlock';
-import { showContextMenu } from './contextMenu';
+import { MenuItem, showContextMenu } from './contextMenu';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
@@ -598,9 +598,10 @@ export class Shell {
       }
       
       const currentPwd = await this.cachedEvaluation('pwd');
-
-      await showContextMenu(recentCwd.map((pwd) => {
-        return {
+      const items: MenuItem[] = [];
+      const currentBranch = await this.cachedEvaluation('__git_ref_name');
+      for (const pwd of recentCwd) {
+        items.push({
           title: computePrettyDirName(this, pwd),
           checked: pwd === currentPwd,
           callback: currentPwd === pwd ? () => {} : async () => {
@@ -611,8 +612,29 @@ export class Shell {
             this._clearCache();
             commandPrefix.render();
           }
-        }
-      }));
+        });
+      }
+      if (currentBranch) {
+        const branches = (await this.cachedEvaluation(`git for-each-ref --sort=-committerdate refs/heads/ '--format=%(refname:short)'`)).split('\n').filter(x => x);
+        items.push({});
+        items.push({
+          title: 'Switch Branch',
+          submenu: branches.map(branch => {
+            return {
+              title: branch,
+              checked: branch === currentBranch,
+              callback: currentBranch === branch ? () => {} : async () => {
+                const evaluated = await this.evaluate(`git checkout ${JSON.stringify(branch)} || echo "could not checkout"`);
+                if (evaluated.trim() === 'could not checkout')
+                  alert(`Could not checkout the branch ${JSON.stringify(branch)}.\n\nYou may need to commit or stash your changes first.`);
+                this._clearCache();
+                commandPrefix.render();
+              }
+            };
+          })
+        });
+      }
+      await showContextMenu(items);
     });
     editorLine.append(commandPrefix.element);
     

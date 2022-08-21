@@ -1,5 +1,5 @@
 import { host } from "./host";
-type MenuItem = {
+export type MenuItem = {
   title?: string;
   enabled?: boolean;
   checked?: boolean;
@@ -20,8 +20,9 @@ export async function showContextMenu(items: MenuItem[]) {
         callbacks.set(callback, item.callback);
       return {
         ...item,
+        submenu: item.submenu ? convertMenuItems(item.submenu) : undefined,
         value: undefined,
-        callback  
+        callback,
       };
     });
   }

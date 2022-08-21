@@ -112,7 +112,7 @@ export class CommandPrefix {
     dir.classList.add('dir')
     if (this._onClick) {
       this.element.classList.add('clickable-dir-name');
-      this.element.addEventListener('click', this._onClick);
+      this.element.addEventListener('mousedown', this._onClick);
       this.element.addEventListener('contextmenu', this._onClick);
     }
     const GitStatus = revName ? Ansi(colors.paren,"(", Ansi(colors.gitName, revName), Ansi(214, dirtyState ? '*' : ''), ")") : '';
