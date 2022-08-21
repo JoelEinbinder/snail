@@ -3,7 +3,8 @@ export class JSConnection {
   private _id = 0;
   private _callbacks = new Map();
   private _listeners = new Map<string, Set<Function>>();
-  public cwd: string;
+  private  _cwd: string;
+  private _cwdHistory: string[] = [];
   public env: {[key: string]: string} = {};
   constructor(private _transport: Transport) {
     this._transport.listen(data => {
@@ -44,6 +45,29 @@ export class JSConnection {
     if (data.error)
       throw new Error(method + ': ' + data.error.message);
     return data.result;
+  }
+
+  get cwd(): string {
+    return this._cwd;
+  }
+
+  set cwd(value: string) {
+    this._cwd = value;
+    this._cwdHistory.push(value);
+  }
+
+  getRecentCwd() {
+    const seen = new Set<string>();
+    const recentCwd = [];
+    for (const cwd of this._cwdHistory.reverse()) {
+      if (recentCwd.length >= 6)
+        break;
+      if (seen.has(cwd))
+        continue;
+      seen.add(cwd);
+      recentCwd.push(cwd);
+    }
+    return recentCwd;
   }
 }
 

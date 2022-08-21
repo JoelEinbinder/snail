@@ -579,17 +579,27 @@ export class Shell {
     const commandPrefix = new CommandPrefix(this, async event => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      const rows: {pwd: string}[] = await host.sendMessage({
-        method: 'queryDatabase',
-        params: {
-          sql: `SELECT DISTINCT pwd FROM history WHERE ${this.sshAddress ? 'hostname = ?' : 'hostname IS NULL'} AND pwd IS NOT NULL ORDER BY command_id DESC LIMIT 6`,
-          params: this.sshAddress ? [this.sshAddress] : undefined,
+      const recentCwd = this.connection.getRecentCwd();
+      if (recentCwd.length < 6) {
+        const rows: {pwd: string}[] = await host.sendMessage({
+          method: 'queryDatabase',
+          params: {
+            sql: `SELECT DISTINCT pwd FROM history WHERE ${this.sshAddress ? 'hostname = ?' : 'hostname IS NULL'} AND pwd IS NOT NULL ORDER BY command_id DESC LIMIT 6`,
+            params: this.sshAddress ? [this.sshAddress] : undefined,
+          }
+        });
+        for (const row of rows) {
+          if (recentCwd.includes(row.pwd))
+            continue;
+          recentCwd.push(row.pwd);
+          if (recentCwd.length >= 6)
+            break;
         }
-      });
+      }
       
       const currentPwd = await this.cachedEvaluation('pwd');
-      
-      await showContextMenu(rows.map(({pwd}) => {
+
+      await showContextMenu(recentCwd.map((pwd) => {
         return {
           title: computePrettyDirName(this, pwd),
           checked: pwd === currentPwd,
