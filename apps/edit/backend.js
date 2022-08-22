@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const path = require('path');
 const {RPC} = require('../../protocol/rpc');
 const fs = require('fs');
