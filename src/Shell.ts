@@ -213,6 +213,8 @@ export class Shell {
           processor,
           cleanup: async () => {
             await terminalTaskQueue.queue(() => {
+              if (activeIframeBlock)
+                activeIframeBlock.didClose();
               progressBlock.deactivate();
               return closeActiveTerminalBlock();
             });

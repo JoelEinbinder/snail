@@ -1,0 +1,47 @@
+.editor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  /* font-family: Menlo, Monaco, "Courier New", monospace; */
+  /* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
+  /* font-size: 12px; */
+  line-height: 14px;
+  letter-spacing: 0;
+  cursor: text;
+}
+::-webkit-scrollbar {
+  background: var(--black);
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+}
+::-webkit-scrollbar-thumb {
+  background: var(--brightBlack);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  inset: 0;
+}
+.header {
+  padding: 0 2px;
+  overflow: hidden;
+  color: #d4d4d4;
+  background: #1e1e1e;
+  flex: 0 1 auto;
+  user-select: none;
+  -webkit-user-select: none;
+  text-align: center;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+.editor-container {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}

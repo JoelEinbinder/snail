@@ -23,6 +23,7 @@ export class IFrameBlock implements LogItem {
   public iframe: HTMLIFrameElement|null = document.createElement('iframe');
   private readyPromise: Promise<void>;
   private _closed = false;
+  private _isFullscreen = false;
   public willResizeEvent = new JoelEvent<void>(undefined);
   constructor(
     data: string,
@@ -34,6 +35,11 @@ export class IFrameBlock implements LogItem {
     this.readyPromise = new Promise(resolve => {
       readyCallback = resolve;
     });
+    this.iframe.addEventListener('scroll', event => {
+      if (this._isFullscreen)
+        return;
+      event.preventDefault();
+    }, { passive: false });
     const didDraw = delegate.antiFlicker.expectToDraw(500);
     iframeMessageHandler.set(this.iframe, data => {
       if (readyCallback) {
@@ -53,7 +59,7 @@ export class IFrameBlock implements LogItem {
           if (this._closed)
             return;
           const {isFullscreen} = data.params;
-          this.iframe.classList.toggle('fullscreen', isFullscreen);
+          this.setIsFullscreen(isFullscreen);
           if (isFullscreen) {
             didDraw();
             this.iframe.focus();
@@ -111,6 +117,11 @@ export class IFrameBlock implements LogItem {
       this.iframe.src = url;
     });
   }
+  private setIsFullscreen(isFullscreen: boolean) {
+    this._isFullscreen = isFullscreen;
+    this.willResizeEvent.dispatch();
+    this.iframe.classList.toggle('fullscreen', isFullscreen);
+  }
   render(): Element {
     return this.iframe;
   }
@@ -132,10 +143,8 @@ export class IFrameBlock implements LogItem {
     if (this._closed)
       return;
     this._closed = true;
-    if (this.iframe.classList.contains('fullscreen')) {
-      this.willResizeEvent.dispatch();
-      this.iframe.classList.toggle('fullscreen', false);
-    }
+    if (this._isFullscreen)
+      this.setIsFullscreen(false);
 
   }
 }

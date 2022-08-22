@@ -1,7 +1,20 @@
 
-
 /**
- * @param {import('./pipeTransport').PipeTransport} transport
+ * @typedef {Object} ProtocolRequest
+ * @property {number=} id
+ * @property {string} method
+ * @property {any=} params
+ */
+/**
+ * @typedef {Object} ProtocolResponse
+ * @property {number} id
+ * @property {any=} result
+ */
+/**
+ * @param {{
+ *  send: (message: ProtocolResponse|ProtocolRequest) => void,
+ *  onmessage?: ((message: ProtocolResponse|ProtocolRequest) => void),
+ * }} transport
  * @param {any} reciever
  */
 function RPC(transport, reciever) {

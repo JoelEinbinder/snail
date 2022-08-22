@@ -37,7 +37,7 @@ WHERE
 /**
  * @param {any} data
  */
-  function send(data) {
+function send(data) {
   const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
       return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
   });
