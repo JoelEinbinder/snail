@@ -153,6 +153,8 @@ export class TerminalBlock implements LogItem {
       }
       // TODO write some extra '%' character to show there was no trailing newline?
     }
+    if (this._terminal.buffer.active === this._terminal.buffer.alternate)
+      this.fullscreenEvent.dispatch(false);
     this._closed = true;
     this._terminal.blur();
     this._terminal.disable();
