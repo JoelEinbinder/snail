@@ -141,7 +141,7 @@ export class Autocomplete {
         const {anchor, suggestions, exact} = completions;
 
         const prefix = textBeforeCursor.slice(anchor);
-        const filtered = filterAndSortSuggestions(suggestions, prefix);
+        const filtered = filterAndSortSuggestionsSubstringMode(suggestions, prefix);
         if (!filtered.length) {
             this._suggestBox?.hide();
             this._suggestBox = null;
@@ -193,14 +193,23 @@ function filterAndSortSuggestions(suggestions: Suggestion[], prefix: string) {
     return filtered;
 }
 
-function filterAndSortSuggestionsSubstringMode(suggestions: string[], prefix: string) {
-    const filtered = suggestions.filter(s => s.includes(prefix));
+function filterAndSortSuggestionsSubstringMode(suggestions: Suggestion[], prefix: string) {
+    const lowerPrefix = prefix.toLowerCase();
+    const filtered = suggestions.filter(s => s.text.toLowerCase().includes(lowerPrefix));
     filtered.sort((a, b) => {
-        const aStart = a.startsWith(prefix);
-        const bStart = b.startsWith(prefix);
-        if (aStart === bStart)
-            return a.localeCompare(b);        
-        return aStart ? -1 : 1;
+        const aStart = a.text.startsWith(prefix);
+        const bStart = b.text.startsWith(prefix);
+        if (aStart != bStart)
+            return aStart ? -1 : 1;
+        const aStartLowerCase = a.text.toLowerCase().startsWith(lowerPrefix);
+        const bStartLowerCase = b.text.toLowerCase().startsWith(lowerPrefix);
+        if (aStartLowerCase != bStartLowerCase)
+            return aStartLowerCase ? -1 : 1;
+        const aContainsCorrectCase = a.text.includes(prefix);
+        const bContainsCorrectCase = b.text.includes(prefix);
+        if (aContainsCorrectCase != bContainsCorrectCase)
+            return aContainsCorrectCase ? -1 : 1;
+        return a.text.localeCompare(b.text);        
     });
     return filtered;
 }

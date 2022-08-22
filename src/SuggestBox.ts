@@ -54,13 +54,26 @@ export class SuggestBox {
         suggestionDiv.classList.toggle('psuedo', !!suggestion.psuedo);
         suggestionDiv.addEventListener('mousedown', () => this._onPick(suggestion));
 
-        const prefixSpan = document.createElement('span');
-        prefixSpan.classList.add('prefix');
-        prefixSpan.textContent = prefix;
+        const parts = suggestion.text.toLowerCase().split(prefix.toLowerCase());
+        let i = 0;
+        for (const part of parts) {
+            if (part.length) {
+                suggestionDiv.append(suggestion.text.slice(i, i + part.length));
+                i += part.length;
+            }
+            if (prefix.length) {
+                const prefixSpan = document.createElement('span');
+                prefixSpan.classList.add('prefix');
+                prefixSpan.textContent = suggestion.text.slice(i, i + prefix.length);
+                suggestionDiv.append(prefixSpan);
+                i += prefix.length;
+            }
+        }
+
         const suffixSpan = document.createElement('span');
         suffixSpan.classList.add('suffix');
         suffixSpan.textContent = suggestion.suffix;
-        suggestionDiv.append(prefixSpan, suggestion.text.substring(prefix.length), suffixSpan);
+        suggestionDiv.append(suffixSpan);
         return suggestionDiv;
     }
     onKeyDown(event: KeyboardEvent): boolean {
