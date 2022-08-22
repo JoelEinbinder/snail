@@ -67,10 +67,21 @@ if (pathArg) {
   absolutePath = path.resolve(pathArg);
   relativePath = path.relative(process.cwd(), absolutePath);
 }
+let content = '';
+let newFile = true;
+try {
+  if (pathArg) {
+    content = fs.readFileSync(absolutePath, 'utf8');
+    newFile = false;
+  }
+} catch {
+
+}
 rpc.notify('setContent', {
-  content: pathArg ? fs.readFileSync(absolutePath, 'utf8') : '',
+  content: content,
   absolutePath,
-  relativePath, 
+  relativePath,
+  newFile, 
 });
 process.stdin.setRawMode(true);
 // process.exit(0);
