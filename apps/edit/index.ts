@@ -88,9 +88,12 @@ while (true){
         header.setModified(lastSavedVersion !== editor.getModel()!.getAlternativeVersionId());
       });
       window.onresize = () => editor.layout();
+      header.setTitle(params.relativePath || 'New Buffer');
       editor.layout();
       editor.focus();
-      header.setTitle(params.relativePath || 'New Buffer');
+      setTimeout(() => {
+        editor.setScrollTop(0, monaco.editor.ScrollType.Immediate);
+      }, 0);
       break;
     }
   }
