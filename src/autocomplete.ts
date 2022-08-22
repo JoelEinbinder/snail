@@ -138,7 +138,7 @@ export class Autocomplete {
             this.suggestionChanged.dispatch();
             return;
         }
-        const {anchor, suggestions} = completions;
+        const {anchor, suggestions, exact} = completions;
 
         const prefix = textBeforeCursor.slice(anchor);
         const filtered = filterAndSortSuggestions(suggestions, prefix);
@@ -155,6 +155,12 @@ export class Autocomplete {
         this._anchor = anchor;
         if (!this._suggestBox)
             this._suggestBox = new SuggestBox(this._onPick.bind(this), () => this.suggestionChanged.dispatch());
+        if (filtered[0].text !== prefix) {
+            filtered.unshift({
+                text: prefix,
+                psuedo: true,
+            });
+        }
         this._suggestBox.setSuggestions(prefix, filtered);
         const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
         const rect = this._editor.element.getBoundingClientRect();
@@ -166,10 +172,11 @@ export class Autocomplete {
     }
 }
 
-export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, suggestions: Suggestion[]}>;
+export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, suggestions: Suggestion[], exact?: boolean}>;
 export type Suggestion = {
     text: string,
     suffix?: string,
+    psuedo?: boolean,
     description?: () => Promise<string>,
     activations?: {[key: string]: string},
 }

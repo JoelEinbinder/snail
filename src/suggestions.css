@@ -61,11 +61,15 @@ body.vscode-dark .suggestions {
 .description:empty {
     visibility: hidden;
 }
-.suggestion > .prefix {
+.suggestion:not(.psuedo) > .prefix {
     text-shadow: 0.5px 0 0 currentColor;
     color: #FFF;
     line-height: 14px;
 }
 .suggestion > .suffix {
     color: var(--ansi-246)
+}
+
+.suggestion.psuedo {
+    font-style: italic;
 }

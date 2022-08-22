@@ -51,6 +51,7 @@ export class SuggestBox {
         suggestionDiv.classList.add('suggestion');
         suggestionDiv.classList.toggle('selected', isSelected);
         suggestionDiv.title = suggestion.text;
+        suggestionDiv.classList.toggle('psuedo', !!suggestion.psuedo);
         suggestionDiv.addEventListener('mousedown', () => this._onPick(suggestion));
 
         const prefixSpan = document.createElement('span');
@@ -78,7 +79,10 @@ export class SuggestBox {
             case 'Enter':
                 return this._onPick(suggestion);
             case 'Tab':
-                this._onPick(suggestion);
+                if (suggestion.psuedo)
+                    this._onPick(this._suggestions[1]);
+                else
+                    this._onPick(suggestion);
                 return true;
         }
         return false;
