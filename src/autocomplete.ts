@@ -155,7 +155,7 @@ export class Autocomplete {
         this._anchor = anchor;
         if (!this._suggestBox)
             this._suggestBox = new SuggestBox(this._onPick.bind(this), () => this.suggestionChanged.dispatch());
-        if (filtered[0].text !== prefix) {
+        if (!exact && filtered[0].text !== prefix) {
             filtered.unshift({
                 text: prefix,
                 psuedo: true,
@@ -172,7 +172,8 @@ export class Autocomplete {
     }
 }
 
-export type Completer = (line: string, abortSignal: AbortSignal) => Promise<{anchor: number, suggestions: Suggestion[], exact?: boolean}>;
+export type CompletionResult = {anchor: number, suggestions: Suggestion[], exact?: boolean};
+export type Completer = (line: string, abortSignal: AbortSignal) => Promise<CompletionResult>;
 export type Suggestion = {
     text: string,
     suffix?: string,

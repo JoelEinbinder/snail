@@ -14,6 +14,7 @@ registerCompleter('npm', async (shell, line, abortSignal) => {
     return;
   return {
     anchor,
-    suggestions
+    suggestions,
+    exact: true,
   };
 });

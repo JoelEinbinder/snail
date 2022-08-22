@@ -1,4 +1,4 @@
-import type { Completer, Suggestion } from "./autocomplete";
+import type { Completer, CompletionResult, Suggestion } from "./autocomplete";
 import type { Shell } from "./Shell";
 
 export type ShellCompleter = (shell: Shell, line: string, abortSignal: AbortSignal) => ReturnType<Completer>|null;
@@ -23,7 +23,7 @@ export function makeShellCompleter(shell: Shell): Completer {
   return async (line: string, abortSignal: AbortSignal) => {
     const {getAutocompletePrefix} = await import('../shjs/transform');
     const prefix = getAutocompletePrefix(line, await shell.globalVars());
-    let result: {anchor: number, suggestions: Suggestion[]};
+    let result: CompletionResult;
     if (prefix === null)
       return null;
     if (prefix === '' || (typeof prefix !== 'string' && !prefix.shPrefix.includes(' '))) {
@@ -35,6 +35,7 @@ export function makeShellCompleter(shell: Shell): Completer {
       return {
         anchor: result.anchor + line.length - offset,
         suggestions: result.suggestions,
+        exact: result.exact,
       }
     }
     if (typeof prefix === 'string') {
@@ -43,6 +44,7 @@ export function makeShellCompleter(shell: Shell): Completer {
       return {
         anchor,
         suggestions: suggestions,
+        exact: true,
       }
     }
     const offset = line.lastIndexOf(prefix.shPrefix);
@@ -55,11 +57,12 @@ export function makeShellCompleter(shell: Shell): Completer {
     return {
       anchor: offset + result.anchor,
       suggestions: result.suggestions,
+      exact: result.exact,
     };
   };
 }
 
-async function envCompleter(shell: Shell, line: string): Promise<{anchor: number, suggestions: Suggestion[]}> {
+async function envCompleter(shell: Shell, line: string): Promise<CompletionResult> {
   const anchor = line.lastIndexOf('$');
   if (anchor === -1)
     return null;
@@ -72,6 +75,7 @@ async function envCompleter(shell: Shell, line: string): Promise<{anchor: number
       text: '$' + key,
       description: async () => value,
     })),
+    exact: true,
   }
 }
 
@@ -111,10 +115,11 @@ async function commandCompleter(shell: Shell, line: string) {
   return {
     anchor: 0,
     suggestions,
+    exact: true,
   }
 }
 
-async function fileCompleter(shell: Shell, line: string, executablesOnly: boolean) {
+async function fileCompleter(shell: Shell, line: string, executablesOnly: boolean): ReturnType<Completer> {
   const pathStart = lastIndexIgnoringEscapes(line, ' ') + 1;
   const path = line.substring(pathStart);
   const anchor = path.lastIndexOf('/') + 1 + pathStart;
