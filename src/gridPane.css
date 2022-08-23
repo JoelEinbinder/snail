@@ -3,3 +3,15 @@
   inset: 0;
   overflow: hidden;
 }
+.divider {
+  background-color: #333;
+  position: absolute;
+}
+.divider.horizontal {
+  width: 1px;
+  margin-left: -0.5px;
+}
+.divider.vertical {
+  height: 1px;
+  margin-top: -0.5px;
+}

@@ -36,7 +36,7 @@ class RootBlock {
           this.setBlock(null);
         },
         split: (newBlock, direction) => {
-          const splitBlock = new SplitBlock([block, newBlock], direction);
+          const splitBlock = new SplitBlock([block, newBlock], direction, this.element);
           this.setBlock(splitBlock);
         },
         replaceWith: newBlock => {
@@ -56,9 +56,13 @@ export const rootBlock = new RootBlock();
 class SplitBlock implements Block {
   public blockDelegate?: BlockDelegate;
   private _rect?: Rect;
-  constructor(private _blocks: [Block, Block], private _type: 'horizontal' | 'vertical') {
+  private _dividerElement = document.createElement('div');
+  constructor(private _blocks: [Block, Block], private _type: 'horizontal' | 'vertical', private _rootElement: HTMLElement) {
     for (let i = 0; i < this._blocks.length; i++)
       this.setBlock(i, this._blocks[i]);
+    this._dividerElement.classList.add('divider');
+    this._dividerElement.classList.add(this._type);
+    this._rootElement.append(this._dividerElement);
   }
 
   setBlock(index: number, block: Block) {
@@ -66,9 +70,10 @@ class SplitBlock implements Block {
     block.blockDelegate = {
       close: () => {
         this.blockDelegate!.replaceWith(this._blocks[1-index]);
+        this._dispose();
       },
       split: (newBlock, direction) => {
-        this.setBlock(index, new SplitBlock([block, newBlock], direction));
+        this.setBlock(index, new SplitBlock([block, newBlock], direction, this._rootElement));
       },
       replaceWith: newBlock => {
         this.setBlock(index, newBlock);
@@ -80,6 +85,10 @@ class SplitBlock implements Block {
   updatePosition(rect: Rect): void {
     this._rect = rect;
     this._layout();
+  }
+
+  private _dispose() {
+    this._dividerElement.remove();
   }
 
   private _layout() {
@@ -99,6 +108,9 @@ class SplitBlock implements Block {
         width: rect.width / 2,
         height: rect.height
       });
+      this._dividerElement.style.left = (rect.x + rect.width / 2) + 'px';
+      this._dividerElement.style.top = rect.y + 'px';
+      this._dividerElement.style.height = rect.height + 'px';
     } else {
       this._blocks[0].updatePosition({
         x: rect.x,
@@ -112,6 +124,9 @@ class SplitBlock implements Block {
         width: rect.width,
         height: rect.height / 2
       });
+      this._dividerElement.style.top = (rect.y + rect.height / 2) + 'px';
+      this._dividerElement.style.left = rect.x + 'px';
+      this._dividerElement.style.width = rect.width + 'px';
     }
   }
 }
