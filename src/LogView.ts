@@ -98,7 +98,7 @@ export class LogView implements Block {
   }
 
   async _doSplit(direction: 'horizontal' | 'vertical') {
-    const shell = await (await import('./Shell')).Shell.create(this._shell.sshAddress);
+    const shell = await (await import('./Shell')).Shell.create();
     this.blockDelegate.split(new LogView(shell, this._container), direction);
   }
 
