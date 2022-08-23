@@ -27,6 +27,7 @@ body {
   flex-direction: column;
   position: absolute;
   inset: 0;
+  font-family: Menlo, Monaco, "Courier New", monospace;
 }
 .header {
   padding: 0 2px;

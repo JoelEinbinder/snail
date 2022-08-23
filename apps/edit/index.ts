@@ -16,6 +16,40 @@ async function loadScript(path) {
 await new Promise(x => (require as any)(['vs/editor/editor.main'], x));
 monaco.editor.setTheme('vs-dark');
 
+monaco.languages.register({
+  id: 'git-commit',
+  filenames: ['COMMIT_EDITMSG'],
+  
+});
+monaco.languages.setMonarchTokensProvider('git-commit', {
+	defaultToken: '',
+
+	keywords: [],
+
+	brackets: [
+		{ open: '{', close: '}', token: 'delimiter.curly' },
+		{ open: '[', close: ']', token: 'delimiter.bracket' },
+		{ open: '(', close: ')', token: 'delimiter.parenthesis' }
+	],
+
+	tokenizer: {
+		root: [
+			[/^#.*$/, 'comment'],
+		],
+  }
+});
+monaco.languages.setLanguageConfiguration('git-commit', {
+	"comments": {
+		"lineComment": "#",
+		"blockComment": [ "#", " " ]
+	},
+	"brackets": [
+		["{", "}"],
+		["[", "]"],
+		["(", ")"]
+	]
+});
+
 class Header {
   element = document.createElement('div');
   private title = '';
@@ -58,15 +92,15 @@ while (true){
   const {method, params, id} = await d4.waitForMessage();
   switch(method) {
     case 'setContent': {
-      const extension = '.' + params.absolutePath.split('.').pop();
       monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
         noSemanticValidation: true,
         noSuggestionDiagnostics: true,
       });
+      const language = getLanguage(params.absolutePath);
+      console.log(language);
       const editor = monaco.editor.create(editorContainer, {
         value: params.content,
-        language: monaco.languages.getLanguages().find(a => a.extensions?.includes(extension))?.id,
-        fontFamily: 'monaco',
+        language,
         fontSize: 10,
         minimap: {
           enabled: false, 
@@ -100,4 +134,11 @@ while (true){
 }
 } catch (e) {
   console.error(e);
+}
+function getLanguage(filePath: string) {
+  const extension = '.' + filePath.split('.').pop();
+  const file = filePath.split('/').pop();
+  return monaco.languages.getLanguages().find(a => {
+    return a.filenames?.includes(file!) || a.extensions?.includes(extension)
+  })?.id;
 }
