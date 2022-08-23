@@ -1,14 +1,11 @@
 .log-view {
   position: fixed;
+  display: flex;
 }
 .log-view-scroller {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   overflow: hidden auto;
   padding: 4px;
+  flex: 1;
 }
 .fullscreen-element {
   backdrop-filter: blur(15px);

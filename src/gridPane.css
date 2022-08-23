@@ -4,14 +4,18 @@
   overflow: hidden;
 }
 .divider {
-  background-color: #333;
+  background-color: #555;
   position: absolute;
+  --divier-thickness: 1.5px;
+  z-index: 99999;
 }
 .divider.horizontal {
-  width: 1px;
-  margin-left: -0.5px;
+  width: var(--divier-thickness);
+  margin-left: calc(-1 * var(--divier-thickness) / 2);
+  cursor: col-resize;
 }
 .divider.vertical {
-  height: 1px;
-  margin-top: -0.5px;
+  height: var(--divier-thickness);
+  margin-top: calc(-1 * var(--divier-thickness) / 2);
+  cursor: row-resize;
 }
