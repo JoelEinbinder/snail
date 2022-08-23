@@ -105,7 +105,6 @@ while (true){
         noSuggestionDiagnostics: true,
       });
       const language = getLanguage(params.absolutePath);
-      console.log(language);
       const editor = monaco.editor.create(editorContainer, {
         value: params.content,
         language,

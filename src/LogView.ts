@@ -24,7 +24,6 @@ export class LogView implements Block {
       document.body.removeEventListener('keydown', keyDownListener, false);
     };
     const keyDownListener = (event: KeyboardEvent) => {
-      console.log('keyDownListener');
       if (!this._promptElement)
         return;
       if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey)
@@ -51,7 +50,6 @@ export class LogView implements Block {
         return;
       } else {
         if (event.key !== 'Shift' && event.key !== 'Control' && event.key !== 'Alt' && event.key !== 'Meta') {
-          console.log('stop chording');
           chording = false;
         }
         if (event.key === '%') {

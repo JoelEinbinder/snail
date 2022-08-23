@@ -68,7 +68,7 @@ function renderRemoteObject(object: Protocol.Runtime.RemoteObject, connection: J
     case 'function':
       return renderObjectRemoteObject(object, connection, willResize, charBudget);
     default:
-      console.log('unknown', object);
+      console.error('unknown', object);
       return document.createElement('div');
   }
 }
