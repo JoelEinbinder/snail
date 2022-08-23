@@ -103,6 +103,7 @@ export class LogView implements Block {
   }
 
   updatePosition(rect: { x: number; y: number; width: number; height: number; }): void {
+    this._lockScroll();
     this._element.style.left = rect.x + 'px';
     this._element.style.top = rect.y + 'px';
     this._element.style.width = rect.width + 'px';

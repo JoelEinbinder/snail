@@ -87,6 +87,7 @@
 
     [self.view addSubview:viewWithFX];
     [webView setNextResponder:nil];
+    [self.view.window makeFirstResponder:webView];
     panel = nil;
 //    [[webView _inspector] showConsole];
 }
@@ -270,10 +271,13 @@
 -(void)windowWillEnterFullScreen:(NSNotification *)notification {
     [containerView removeFromSuperview];
     [self.view addSubview:webView];
+    [self.view.window makeFirstResponder:webView];
 }
 -(void)windowDidExitFullScreen:(NSNotification *)notification {
     [self.view addSubview:containerView];
     [containerView addSubview:webView];
+    [self.view.window makeFirstResponder:webView];
+
 }
 - (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler {
     NSAlert* alert = [[NSAlert alloc] init];
