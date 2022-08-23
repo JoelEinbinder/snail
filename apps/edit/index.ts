@@ -1,6 +1,7 @@
 /// <reference path="../../iframe/types.d.ts" />
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 import './index.css';
+try {
 await loadScript("../../node_modules/monaco-editor/min/vs/loader.js");
 async function loadScript(path) {
   const script = document.createElement('script');
@@ -14,7 +15,15 @@ async function loadScript(path) {
 
 (require as any).config({ paths: { vs: '../../node_modules/monaco-editor/min/vs' } });
 await new Promise(x => (require as any)(['vs/editor/editor.main'], x));
-monaco.editor.setTheme('vs-dark');
+monaco.editor.defineTheme('my-dark', {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [],
+  colors: {
+    'editor.background': '#00000000'
+  }
+})
+monaco.editor.setTheme('my-dark');
 
 monaco.languages.register({
   id: 'git-commit',
@@ -87,7 +96,6 @@ document.addEventListener('keydown', event => {
 
 })
 let lastSavedVersion;
-try {
 while (true){
   const {method, params, id} = await d4.waitForMessage();
   switch(method) {
