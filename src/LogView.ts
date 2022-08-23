@@ -1,5 +1,5 @@
 import type { JoelEvent } from './JoelEvent';
-import { Shell } from './Shell';
+import type { Shell } from './Shell';
 import './shell.css';
 import './logView.css';
 import { Block, BlockDelegate } from './GridPane';
