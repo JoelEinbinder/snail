@@ -19,7 +19,7 @@ body {
   padding: 2px 2px;
   overflow: hidden;
   color: #d4d4d4;
-  background: transparent;
+  background: #111111;
   flex: 0 1 auto;
   user-select: none;
   -webkit-user-select: none;
