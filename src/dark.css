@@ -1,6 +1,3 @@
-:root {
-  color-scheme: dark;
-}
 
 body {
   --color-0: #3E3E3E;
@@ -289,10 +286,12 @@ body {
   font-family: Monaco;
   font-size: 10px;
   margin: 0;
+  color-scheme: dark;
 }
 body.vscode-dark {
   background: none;
   padding: 0;
+  color-scheme: normal;
 }
 body.glass-pane {
   padding: 0;

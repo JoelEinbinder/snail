@@ -39,6 +39,7 @@
     webView = [[D4WebView alloc] initWithFrame:CGRectMake(0, 0, 200, 200) configuration:configuration];
     [webView setUIDelegate:self];
     webView.underPageBackgroundColor = [NSColor clearColor];
+    [[self.view layer] setBackgroundColor:[NSColor redColor].CGColor];
     NSString* webURL = [[[NSProcessInfo processInfo] environment] valueForKey:@"TERMINAL_WEB_URL"];
     if (webURL) {
         [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:webURL]]];
@@ -146,6 +147,7 @@
     [delegate addObserver:self forKeyPath:@"zoom" options:NSKeyValueObservingOptionNew context:nil];
     [webView setPageZoom:delegate.zoom];
     [[webView window] setDelegate:self];
+    [[webView window] setBackgroundColor:[NSColor blackColor]];
 }
 -(void)viewDidDisappear {
     AppDelegate* delegate = [[NSApplication sharedApplication] delegate];
@@ -160,13 +162,14 @@
     NSDictionary* body = message.body;
     NSDictionary* params = body[@"params"];
     // on first message show the webview
+    [[webView layer] setOpacity:1.0];
     if ([[containerView subviews] count] == 2) {
         for (NSView* view in [[containerView subviews] copy]) {
             if (view != webView)
                 [view removeFromSuperview];
         }
-        [[webView layer] setOpacity:1.0];
     }
+
     if ([@"beep" isEqualTo:body[@"method"]]) {
         [[[NSSound soundNamed:@"Tink.aiff"] copy] play];
     } else if ([@"positionPanel" isEqual:body[@"method"]]) {
@@ -263,6 +266,14 @@
 }
 -(void)windowDidResize:(NSNotification *)notification {
     [self closePanel];
+}
+-(void)windowWillEnterFullScreen:(NSNotification *)notification {
+    [containerView removeFromSuperview];
+    [self.view addSubview:webView];
+}
+-(void)windowDidExitFullScreen:(NSNotification *)notification {
+    [self.view addSubview:containerView];
+    [containerView addSubview:webView];
 }
 - (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler {
     NSAlert* alert = [[NSAlert alloc] init];

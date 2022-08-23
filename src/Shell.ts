@@ -20,25 +20,14 @@ import { MenuItem, showContextMenu } from './contextMenu';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
-const size = {
-  rows: 0,
-  cols: 0,
-}
-const PADDING = 4;
-function updateSize() {
-  const {width, height} = measureChar();
-  const padding = PADDING / window.devicePixelRatio;
-  size.cols = Math.floor((window.innerWidth - padding * 2) / width);
-  size.rows = Math.floor((window.devicePixelRatio * (window.innerHeight - padding * 2)) / Math.ceil(height * window.devicePixelRatio));
-  for (const shell of shells)
-    shell.updateSize();
-}
-window.addEventListener('resize', updateSize);
-updateSize();
 
 host.onEvent('websocket', ({socketId, message}) => {
   socketListeners.get(socketId)(message);
 });
+
+interface ShellDelegate {
+  onClose(): void;
+}
 
 export class Shell {
   log: LogItem[] = [];
@@ -49,7 +38,7 @@ export class Shell {
   public clearEvent = new JoelEvent<void>(undefined);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
   private _connections: JSConnection[] = [];
-  private _size = new JoelEvent(size);
+  private _size = new JoelEvent({cols: 0, rows: 0});
   private _cachedGlobalObjectId: string;
   private _cachedGlobalVars: Set<string>|undefined;
   private _cachedSuggestions = new Map<string, Promise<Suggestion[]>>();
@@ -59,7 +48,7 @@ export class Shell {
   private _connectionToShellId = new WeakMap<JSConnection, number>();
   private _connectionToSSHAddress = new WeakMap<JSConnection, string>();
   private _antiFlicker = new AntiFlicker(() => this._lockPrompt(), () => this._unlockPrompt());
-
+  private _delegate?: ShellDelegate;
   private _connectionNameElement = document.createElement('div');
   private constructor() {
     this._connectionNameElement.classList.add('connection-name');
@@ -68,12 +57,16 @@ export class Shell {
     });
   }
 
+  setDelegate(delegate: ShellDelegate) {
+    this._delegate = delegate;
+  }
+
   get cwd() {
-    return this.connection.cwd;
+    return this.connection?.cwd || '';
   }
 
   get env() {
-    return this.connection.env;
+    return this.connection?.env || {};
   }
 
   async _setupConnection(args: string[], sshAddress = null) {
@@ -334,7 +327,7 @@ export class Shell {
       returnByValue: false,
     });
     const resize = size => notify('resize', size);
-    notify('resize', size);
+    notify('resize', this._size.current);
     this._size.on(resize);
     this._connections.push(connection);
     this._connectionNameEvent.dispatch(this._connectionToName.get(connection));
@@ -403,7 +396,6 @@ export class Shell {
     const shell = new Shell();
     shells.add(shell);
     await shell._setupConnection([], sshAddress);
-    await shell.updateSize();
     await host.sendMessage({
       method: 'chdir',
       params: {
@@ -488,6 +480,10 @@ export class Shell {
     // thes script could cause the shell to be destroyed
     if (error) {
       this._connectionToDestroy.get(connection)();
+      if (this._connections.length === 0) {
+        this._delegate?.onClose();
+        return;
+      }
       this._unlockPrompt();
       return;
     }
@@ -548,8 +544,14 @@ export class Shell {
     return result.trim();
   }
 
-  async updateSize() {
-    this._size.dispatch(size);
+  updateSize(width: number, height: number) {
+    const char = measureChar();
+    const PADDING = 4;
+    const padding = PADDING / window.devicePixelRatio;
+    const cols = Math.floor((width - padding * 2) / char.width);
+    const rows = Math.floor((window.devicePixelRatio * (height - padding * 2)) / Math.ceil(char.height * window.devicePixelRatio));
+  
+    this._size.dispatch({cols, rows});
   }
 
   async cachedEvaluation(code: string): Promise<string> {
@@ -742,7 +744,7 @@ export class Shell {
       });
       if (result.exceptionDetails)
         return;
-      belowPrompt.append(renderRemoteObjectOneLine(result.result, size.cols));
+      belowPrompt.append(renderRemoteObjectOneLine(result.result, this._size.current.cols));
     }
     editor.on('change', onChange);
     autocomplete.suggestionChanged.on(onChange);

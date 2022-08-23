@@ -1,32 +1,73 @@
 import type { JoelEvent } from './JoelEvent';
-import type { Shell } from './Shell';
+import { Shell } from './Shell';
 import './shell.css';
 import './logView.css';
+import { Block, BlockDelegate } from './GridPane';
 
-export class LogView {
+export class LogView implements Block {
   private _element = document.createElement('div');
+  private _scroller = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
   private _promptElement: HTMLElement;
   private _lockingScroll = false;
   private _undoFullscreen: () => void = null;
+  private _removeListeners: () => void;
+  blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._updateFullscreen();
     this._fullscreenElement.classList.add('fullscreen-element');
     this._shell.fullscreenItem.on(() => this._updateFullscreen());
-    this._container.appendChild(this._element);
-    this._container.addEventListener('keydown', e => {
+    this._shell.setDelegate({
+      onClose: () => this._dispose(),
+    });
+    this._removeListeners = () => {
+      document.body.removeEventListener('keydown', keyDownListener, false);
+    };
+    const keyDownListener = (event: KeyboardEvent) => {
+      console.log('keyDownListener');
       if (!this._promptElement)
         return;
-      if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey)
+      if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey)
         return;
-      const element = e.target as HTMLElement;
+      const element = event.target as HTMLElement;
       if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT' || element.isContentEditable)
         return;
-      if (e.defaultPrevented)
+      if (event.defaultPrevented)
         return;
       this._promptElement.focus();
-    })
-    this._element.classList.toggle('log-view-scroller', true);
+    };
+    this._container.appendChild(this._element);
+    document.body.addEventListener('keydown', keyDownListener, false);
+    let chording = false;
+    this._element.addEventListener('keydown', event => {
+      if (event.defaultPrevented)
+        return;
+      if (!chording) {
+        if (event.code === 'KeyA' && event.ctrlKey) {
+          chording = true;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+        return;
+      } else {
+        if (event.key !== 'Shift' && event.key !== 'Control' && event.key !== 'Alt' && event.key !== 'Meta') {
+          console.log('stop chording');
+          chording = false;
+        }
+        if (event.key === '%') {
+          this._doSplit('vertical');
+          event.preventDefault();
+        } else if (event.key === '"') {
+          this._doSplit('horizontal');
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+        return;
+      }
+    }, false);
+    this._scroller.classList.add('log-view-scroller');
+    this._element.classList.add('log-view');
+    this._element.append(this._scroller);
     this._repopulate();
     this._shell.activeItem.on(item => {
       if (item)
@@ -48,7 +89,25 @@ export class LogView {
     this._shell.clearEvent.on(() => {
       this._repopulate();
     });
-    this._element.classList.add('content');
+  }
+
+  _dispose() {
+    this._removeListeners();
+    this._element.remove();
+    this.blockDelegate.close();
+  }
+
+  async _doSplit(direction: 'horizontal' | 'vertical') {
+    const shell = await (await import('./Shell')).Shell.create(this._shell.sshAddress);
+    this.blockDelegate.split(new LogView(shell, this._container), direction);
+  }
+
+  updatePosition(rect: { x: number; y: number; width: number; height: number; }): void {
+    this._element.style.left = rect.x + 'px';
+    this._element.style.top = rect.y + 'px';
+    this._element.style.width = rect.width + 'px';
+    this._element.style.height = rect.height + 'px';
+    this._shell.updateSize(rect.width, rect.height);
   }
 
   _repopulate() {
@@ -56,7 +115,7 @@ export class LogView {
       this._promptElement.remove();
       this._promptElement = null;
     }
-    this._element.textContent = '';
+    this._scroller.textContent = '';
     for (const entry of this._shell.log)
       this._addEntry(entry);
     if (this._shell.promptLock.current === 0)
@@ -66,13 +125,13 @@ export class LogView {
   _updateFullscreen() {
     const fullScreenEntry = this._shell.fullscreenItem.current;
     if (fullScreenEntry) {
-      this._element.classList.add('inert');
+      this._scroller.classList.add('inert');
       const placeholder = document.createElement('div');
       const element = fullScreenEntry.render();
       element.parentElement.replaceChild(placeholder, element);
-      this._container.appendChild(this._fullscreenElement);
+      this._element.appendChild(this._fullscreenElement);
       this._fullscreenElement.appendChild(element);
-      document.body.classList.add('fullscreen-entry');
+      this._element.classList.add('fullscreen-entry');
       fullScreenEntry.focus();
       this._undoFullscreen = () => {
         placeholder.parentElement.replaceChild(element, placeholder);
@@ -84,8 +143,8 @@ export class LogView {
       }
       this._fullscreenElement.remove();
       this._fullscreenElement.textContent = '';
-      this._element.classList.remove('inert');
-      document.body.classList.remove('fullscreen-entry');
+      this._scroller.classList.remove('inert');
+      this._element.classList.remove('fullscreen-entry');
     }
   }
 
@@ -98,9 +157,9 @@ export class LogView {
     });
     this._lockScroll();
     if (this._promptElement)
-      this._element.insertBefore(element, this._promptElement);
+      this._scroller.insertBefore(element, this._promptElement);
     else
-      this._element.appendChild(element);
+      this._scroller.appendChild(element);
     if (logItem === this._shell.activeItem.current)
       logItem.focus();
   }
@@ -108,17 +167,17 @@ export class LogView {
   async _lockScroll() {
     if (this._lockingScroll)
       return;
-    const scrollBottom = this._element.scrollHeight - this._element.scrollTop - this._element.offsetHeight;
+    const scrollBottom = this._scroller.scrollHeight - this._scroller.scrollTop - this._scroller.offsetHeight;
     
     this._lockingScroll = true;
     await Promise.resolve();
     this._lockingScroll = false;
-    this._element.scrollTop = this._element.scrollHeight - this._element.offsetHeight - scrollBottom;
+    this._scroller.scrollTop = this._scroller.scrollHeight - this._scroller.offsetHeight - scrollBottom;
   }
 
   _addPrompt() {
     this._lockScroll();
-    this._promptElement = this._shell.addPrompt(this._element, () => this._lockScroll());
+    this._promptElement = this._shell.addPrompt(this._scroller, () => this._lockScroll());
   }
 }
 
