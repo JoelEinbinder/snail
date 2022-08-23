@@ -1,3 +1,7 @@
+:root {
+  color-scheme: dark;
+}
+
 body {
   --black: #3E3E3E;
   --red: #990000;
