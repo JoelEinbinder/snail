@@ -1,5 +1,5 @@
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
-import { StringStream } from '../../editor/js/StringStream';
+import { StringStream } from './StringStream';
 import * as bundle from './build/lib';
 const {ShjsMode} = bundle as typeof import('../../shjs/editorMode');
 

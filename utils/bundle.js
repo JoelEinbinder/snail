@@ -19,7 +19,8 @@ const directoriesToCopy = [
   'protocol',
   'shell',
   'shjs',
-  'thumbnail_generator'
+  'thumbnail_generator',
+  'datagrid',
 ];
 const filesToCopy = [
   'package.json',
