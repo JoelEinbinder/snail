@@ -1,7 +1,8 @@
 import {registerMode, getMode} from '../editor/js/modeRegistry';
-import type { Mode, StringStream } from '../editor/js/highlighter';
+import type { Mode } from '../editor/js/highlighter';
 import { parseCodeIntoTokens } from './transform';
 import '../editor/modes/javascript';
+import type { StringStream } from '../editor/js/StringStream';
 
 type State = {
   textBefore: string;
@@ -9,7 +10,7 @@ type State = {
   tokens: import('acorn').Token[];
   shTokens: import('../shjs/tokenizer').Token[];
 };
-class ShjsMode implements Mode<State> {
+export class ShjsMode implements Mode<State> {
   innerMode: Mode<any>;
   constructor(public options: {indentUnit: number, globalVars?: Set<string>}) {
     this.innerMode = getMode('js')({indentUnit: options.indentUnit}, {});

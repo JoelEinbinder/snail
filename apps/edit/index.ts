@@ -58,6 +58,17 @@ monaco.languages.setLanguageConfiguration('git-commit', {
 		["(", ")"]
 	]
 });
+monaco.languages.register({
+  id: 'shjs',
+  extensions: ['.shjs'],
+});
+
+monaco.languages.registerTokensProviderFactory('shjs', {
+  async create() {
+    const {createTokenizer} = await import('./shjsTokenizer');
+    return createTokenizer();
+  }
+})
 
 class Header {
   element = document.createElement('div');
