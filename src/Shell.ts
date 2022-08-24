@@ -422,7 +422,6 @@ export class Shell {
         accessorPropertiesOnly: false,
       });
       const globalNames = result.filter(x => !x.symbol).map(x => x.name);
-      console.log([...globalNames]);
       this._cachedGlobalVars = new Set(names.concat(globalNames));
       return this._cachedGlobalVars;
     } catch (e) {
