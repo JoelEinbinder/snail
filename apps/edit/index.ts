@@ -120,6 +120,7 @@ while (true){
         value: params.content,
         language,
         fontSize: 10,
+        wordBasedSuggestions: false,
         minimap: {
           enabled: false, 
         },
