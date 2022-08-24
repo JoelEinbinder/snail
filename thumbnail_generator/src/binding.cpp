@@ -35,7 +35,7 @@ NAPI_MODULE_INIT() {
   napi_value result;
   NAPI_CALL(env, napi_create_object(env, &result));
   node_fn("generateThumbnail", [](auto env, auto info) -> napi_value {
-    size_t argc = 1;
+    size_t argc = 2;
     napi_value argv[argc];
     napi_value thisArg;
     void * data;
@@ -49,7 +49,9 @@ NAPI_MODULE_INIT() {
     napi_value result;
     char path[4096];
     NAPI_CALL(env, napi_get_value_string_utf8(env, argv[0], path, sizeof(path), NULL));
-    const char* out = generate_thumbnail(path);
+    int size;
+    NAPI_CALL(env, napi_get_value_int32(env, argv[1], &size));
+    const char* out = generate_thumbnail(path, size);
     NAPI_CALL(env, napi_create_string_utf8(env, out, NAPI_AUTO_LENGTH, &result));
     return result;
   });

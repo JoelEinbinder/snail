@@ -13,4 +13,5 @@ declare var d4: {
   createContextMenu(items: MenuItem[]): void;
   saveItem(key: string, value: any): void;
   loadItem(key: string): Promise<any>;
+  getDevicePixelRatio(): Promise<number>;
 };

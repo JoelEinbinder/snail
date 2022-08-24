@@ -26,7 +26,7 @@ const {dirs, cwd, showHidden, platform, args} = await d4.waitForMessage<{
   platform: string;
   args: string[];
 }>();
-
+const initialDpr = await d4.getDevicePixelRatio();
 const useTable = args.some(a => a.startsWith('-') && a.includes('l'));
 const now = new Date(Date.now());
 async function renderTable() {
@@ -258,7 +258,7 @@ function inlineMode() {
 function makeImageForPath(fullPath: string, info: Entry) {
   const image = document.createElement('img');
   if (platform === 'darwin') {
-    image.src = `${fullPath}?thumbnail`;
+    image.src = `${fullPath}?thumbnail&size=${initialDpr * 16}`;
   } else {
     image.src = iconPathForPath(fullPath, info);
   }

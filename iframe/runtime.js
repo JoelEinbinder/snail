@@ -126,6 +126,17 @@ async function loadItem(key) {
   return new Promise(x => messasgeCallbacks.set(id, x));
 }
 
+let dprPromise;
+async function getDevicePixelRatio() {
+  if (dprPromise)
+    return dprPromise;
+  if (/Chrome/.test(navigator.userAgent))
+    return window.devicePixelRatio;
+  const id = ++lastMessageId;
+  dprPromise = new Promise(resolve => messasgeCallbacks.set(id, resolve));
+  window.parent.postMessage({method: 'getDevicePixelRatio', id}, '*');
+  return dprPromise;
+}
 
 window.d4 = {
   waitForMessage,
@@ -135,5 +146,6 @@ window.d4 = {
   createContextMenu,
   saveItem,
   loadItem,
+  getDevicePixelRatio,
 }
 window.parent.postMessage('ready', '*')

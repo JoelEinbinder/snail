@@ -4,10 +4,10 @@
 #include <AppKit/AppKit.h>
 #include <node_api.h>
 
-const char* generate_thumbnail(std::string path) {
+const char* generate_thumbnail(std::string path, int size) {
   NSString* path_ns = [NSString stringWithUTF8String:path.c_str()];
   NSURL *url = [NSURL fileURLWithPath:path_ns];
-  QLThumbnailGenerationRequest * request = [[QLThumbnailGenerationRequest alloc] initWithFileAtURL:url size:CGSizeMake(16, 16) scale:2.0f
+  QLThumbnailGenerationRequest * request = [[QLThumbnailGenerationRequest alloc] initWithFileAtURL:url size:CGSizeMake(size/2.0f, size/2.0f) scale:2.0f
     representationTypes:QLThumbnailGenerationRequestRepresentationTypeAll];
   [request setIconMode:YES];
   dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);

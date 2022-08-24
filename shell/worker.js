@@ -60,7 +60,7 @@ const rpc = RPC(transport, {
         }
       }
       return {
-        data: require('../thumbnail_generator/').generateThumbnail(filePath),
+        data: require('../thumbnail_generator/').generateThumbnail(filePath, parseInt(searchParams.get('size') || '16', 10)),
         mimeType: 'image/png',
         statusCode: 200,
         headers: responseHeaders,

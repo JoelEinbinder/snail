@@ -105,6 +105,12 @@ export class IFrameBlock implements LogItem {
           host.sendMessage({method: 'saveItem', params: data.params});
           break;
         }
+        case 'getDevicePixelRatio': {
+          this.iframe.contentWindow.postMessage({
+            result: getDPR(),
+            id: data.id,
+          }, '*');
+        }
       }
     });
     host.sendMessage({
@@ -147,4 +153,21 @@ export class IFrameBlock implements LogItem {
       this.setIsFullscreen(false);
 
   }
+}
+
+const isWebKit = /WebKit/.test(navigator.userAgent);
+const isChrome = /Chrome/.test(navigator.userAgent);
+function getDPR() {
+  if (isChrome)
+    return window.devicePixelRatio;
+  if (isWebKit) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('version', '1.1');
+    document.body.appendChild(svg);
+    const dpr = svg.currentScale * window.devicePixelRatio;
+    svg.remove();
+    return dpr;
+  }
+  return window.devicePixelRatio;
 }
