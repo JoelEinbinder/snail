@@ -26,6 +26,10 @@ body {
   color: var(--foreground);
   margin: 0;
 }
+body.web-host {
+  background-color: black;
+}
+
 ::selection {
   background: rgba(82,82,82,0.99);
 }

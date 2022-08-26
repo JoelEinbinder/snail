@@ -123,7 +123,7 @@ const handler = {
     return runResult.changes;
   },
   async urlForIFrame({shellId, filePath}) {
-    const address = await shells.get(shellId).startOrGetServer();
+    const address = await shells.get(shellId).startOrGetServer(false);
     const url = new URL(`http://localhost:${address.port}`);
     url.pathname = filePath;
     url.search = '?entry';
@@ -192,4 +192,4 @@ async function getDatabase() {
   return database;
 }
 
-module.exports = {handler};
+module.exports = {handler, shells};

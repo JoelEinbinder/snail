@@ -293,6 +293,11 @@ body.vscode-dark {
   padding: 0;
   color-scheme: normal;
 }
+body.web-host {
+  background: black;
+  color-scheme: dark;
+
+}
 body.glass-pane {
   padding: 0;
   background: none;

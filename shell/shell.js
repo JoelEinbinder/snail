@@ -65,7 +65,7 @@ class Shell {
     }
   }
 
-  async startOrGetServer() {
+  async startOrGetServer(allowAnyConnection) {
     if (this.serverAddressPromise)
       return this.serverAddressPromise;
     const http = require('http');
@@ -85,7 +85,7 @@ class Shell {
       }
     });
     this.serverAddressPromise = new Promise(resolve => {
-      server.listen(undefined, '127.0.0.1', () => {
+      server.listen(undefined, allowAnyConnection ? undefined : '127.0.0.1', () => {
         resolve(server.address());
       });  
     });

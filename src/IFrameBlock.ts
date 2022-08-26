@@ -119,8 +119,12 @@ export class IFrameBlock implements LogItem {
         shellId: delegate.shellId,
         filePath: data,
       }
-    }).then(url => {
-      this.iframe.src = url;
+    }).then(urlStr => {
+      const url = new URL(urlStr);
+      url.searchParams.set('class', `${host.type()}-host`);
+      if (host.type() === 'web')
+        url.host = document.location.host;
+      this.iframe.src = url.href;
     });
   }
   private setIsFullscreen(isFullscreen: boolean) {

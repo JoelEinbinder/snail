@@ -36,7 +36,7 @@ const rpc = RPC(transport, {
   <link rel="stylesheet" href="${require.resolve('../iframe/iframe.css')}">
   <script src="${require.resolve('../iframe/runtime.js')}" type="module"></script>
 </head>
-<body>
+<body class=${JSON.stringify(searchParams.get('class'))}>
 <script src="${filePath}" type="module"></script>
 </body>
 </html>`),

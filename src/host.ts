@@ -34,7 +34,7 @@ function makeHostAPI(): IHostAPI {
   });
   socket.onmessage = event => {
     callback(JSON.parse(event.data));
-  }; 
+  };
   return host;
 }
 
@@ -81,3 +81,5 @@ function hostApiHelper(type: string, postMessage: (message: any) => void) {
 }
 
 export const host = makeHostAPI();
+document.body.classList.toggle(`${host.type()}-host`, true);
+host.onEvent('log', args => console.log(...args));
