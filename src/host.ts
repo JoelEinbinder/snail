@@ -25,7 +25,17 @@ function makeHostAPI(): IHostAPI {
     });
     return host;
   }
-  return null;
+  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
+  const socket = new WebSocket(`${protocol + window.location.host + window.location.pathname}`);
+  const openPromise = new Promise(x => socket.onopen = x);
+  const {host, callback} = hostApiHelper('web', async message => {
+    await openPromise;
+    socket.send(JSON.stringify(message));
+  });
+  socket.onmessage = event => {
+    callback(JSON.parse(event.data));
+  }; 
+  return host;
 }
 
 function hostApiHelper(type: string, postMessage: (message: any) => void) {

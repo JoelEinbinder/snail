@@ -6,9 +6,6 @@ const transport = new PipeTransport(process.stdout, process.stdin);
 
 const overrides = {
   ...handler,
-  async test(params, sender) {
-    return 123;
-  }
 };
 const client = new EventEmitter();
 client.send = message => transport.send(message);
