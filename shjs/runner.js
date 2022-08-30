@@ -389,18 +389,27 @@ function execute(expression, stdout, stderr, stdin) {
         if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
             return execute({executable: 'cd', args: [executable], redirects}, stdout, stderr, stdin);
         } else {
-            /** @type {(Readable|Writable)[]} */
+            /** @type {(Readable|Writable|number|undefined)[]} */
             const stdio = [stdin, stdout, stderr];
-            let streams = [];
+            const openFds = [];
             for (const redirect of redirects || []) {
                 const file = processWord(redirect.to)[0];
-                const stream = fs.createWriteStream(file, {flags: redirect.type === 'write' ? 'w' : 'a'});
-                stdio[redirect.from] = stream;
-                streams.push(stream);
+                const fd = fs.openSync(file, redirect.type === 'write' ? 'w' : 'a');
+
+                stdio[redirect.from] = fd;
+                openFds.push(fd);
             }
             const defaultStdio = [process.stdin, process.stdout, process.stderr];
             const child = spawn(executable, args, {
-                stdio: stdio.map((stream, index) => stream === defaultStdio[index] ? 'inherit' : 'pipe'),
+                stdio: stdio.map((stream, index) => {
+                    if (typeof stream === 'number')
+                        return stream;
+                    if (!stream)
+                        return 'pipe';
+                    if (stream === defaultStdio[index])
+                        return 'inherit';
+                    return 'pipe';
+                }),
                 env,
             });
             const closePromise = new Promise(resolve => {
@@ -410,9 +419,13 @@ function execute(expression, stdout, stderr, stdin) {
                     resolve(127);
                 });
             });
+            closePromise.then(() => {
+                for (const fd of openFds)
+                    fs.close(fd);
+            });
             for (let i = 0; i < stdio.length; i++) {
                 const stream = stdio[i];
-                if (stream === defaultStdio[i] || !stream)
+                if (stream === defaultStdio[i] || typeof stream === 'number' || !stream)
                     continue;
                 if ('write' in stream)
                     child.stdio[i].pipe(stream, { end: false });

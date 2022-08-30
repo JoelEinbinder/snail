@@ -1,5 +1,6 @@
-const {it, describe} = require('mocha');
+const {it, describe, beforeEach, afterEach} = require('mocha');
 const expect = require('expect');
+const rimraf = require('rimraf');
 describe('runner', () => {
     const {getResult} = require('./runner');
     it('should pipe', async () => {
@@ -416,8 +417,23 @@ describe('glob', () => {
 
 describe('redirect', () => {
     const {sh} = require('./jsapi');
+    const fs = require('fs');
+    const path = require('path');
+    const tempDir = path.join(__dirname, 'test-temp-dir');
+    beforeEach(async () => {
+        try {
+        rimraf.sync(tempDir);
+        } catch {}
+        await fs.promises.mkdir(tempDir, {recursive: true});
+    });
     it('should do a redirect to /dev/null', async () => {
         const output = await sh`echo hello > /dev/null`;
         expect(output).toEqual([]);
+    });
+    it('should do a redirect to a text file', async () => {
+        const helloFile = path.join(tempDir, 'hello.txt');
+        const output = await sh`echo hello > ${helloFile}`;
+        expect(output).toEqual([]);
+        expect(await fs.promises.readFile(helloFile, 'utf8')).toEqual('hello\n');
     });
 })
