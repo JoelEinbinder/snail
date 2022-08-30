@@ -18,8 +18,13 @@ function parse(tokens) {
     }
 
     const {executable, assignments} = parseExecutableAndAssignments(tokens);
-    const args = parseArgs(tokens);
-    const main = {executable, args, assignments};
+    const {args, redirects} = parseArgsAndRedirects(tokens);
+    const main = {
+        executable,
+        args,
+        assignments,
+        redirects: redirects.length ? redirects : undefined,
+    };
     if (!tokens.length) {
         return main
     }
@@ -106,14 +111,29 @@ function getAssignment(word) {
 
 /**
  * @param {import('./tokenizer').Token[]} tokens
- * @return {import('./ast').Word[]}
+ * @return {{args: import('./ast').Word[], redirects?: import('./ast').Redirect[]}}
  */
-function parseArgs(tokens) {
+function parseArgsAndRedirects(tokens) {
     const args = [];
-    while (eatSpaces(tokens) && tokens[0].type !== 'operator') {
-        args.push(parseWord(tokens));
+    /** @type {import('./ast').Redirect[]} */
+    const redirects = [];
+    while (true) {
+        while (eatSpaces(tokens) && tokens[0].type !== 'operator') {
+            args.push(parseWord(tokens));
+        }
+        if (tokens.length && tokens[0].type === 'operator' && tokens[0].value === '>') {
+            tokens.shift();
+            eatSpaces(tokens);
+            redirects.push({
+                type: 'write',
+                from: 1,
+                to: parseWord(tokens),
+            });
+        } else {
+            break;
+        }
     }
-    return args;
+    return {args, redirects};
 }
 
 /**

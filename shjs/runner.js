@@ -371,6 +371,7 @@ function computeReplacement(replacement) {
  */
 function execute(expression, stdout, stderr, stdin) {
     if ('executable' in expression) {
+        const { redirects } = expression;
         const {executable, args} = processAlias(processWord(expression.executable)[0], expression.args.flatMap(processWord));
         const env = {...process.env};
         for (const {name, value} of expression.assignments || [])
@@ -386,10 +387,20 @@ function execute(expression, stdout, stderr, stdin) {
             }
         } 
         if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
-            return execute({executable: 'cd', args: [executable]}, stdout, stderr, stdin);
+            return execute({executable: 'cd', args: [executable], redirects}, stdout, stderr, stdin);
         } else {
+            /** @type {(Readable|Writable)[]} */
+            const stdio = [stdin, stdout, stderr];
+            let streams = [];
+            for (const redirect of redirects || []) {
+                const file = processWord(redirect.to)[0];
+                const stream = fs.createWriteStream(file, {flags: redirect.type === 'write' ? 'w' : 'a'});
+                stdio[redirect.from] = stream;
+                streams.push(stream);
+            }
+            const defaultStdio = [process.stdin, process.stdout, process.stderr];
             const child = spawn(executable, args, {
-                stdio: [stdin === process.stdin ? 'inherit' : 'pipe', stdout === process.stdout ? 'inherit' : 'pipe', stderr === process.stderr ? 'inherit' : 'pipe'],
+                stdio: stdio.map((stream, index) => stream === defaultStdio[index] ? 'inherit' : 'pipe'),
                 env,
             });
             const closePromise = new Promise(resolve => {
@@ -399,13 +410,16 @@ function execute(expression, stdout, stderr, stdin) {
                     resolve(127);
                 });
             });
-            if (stdin !== process.stdin && stdin)
-                stdin.pipe(child.stdin, { end: false });
-            if (stderr !== process.stderr)
-                child.stderr.pipe(stderr, { end: false });
-            if (stdout !== process.stdout)
-                child.stdout.pipe(stdout, { end: false });
-            return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
+            for (let i = 0; i < stdio.length; i++) {
+                const stream = stdio[i];
+                if (stream === defaultStdio[i] || !stream)
+                    continue;
+                if ('write' in stream)
+                    child.stdio[i].pipe(stream, { end: false });
+                else
+                    stream.pipe(/** @type {Writable} */(child.stdio[i]), { end: false });
+            }
+        return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
         }
     } else if ('pipe' in expression) {
         const pipe = execute(expression.pipe, stdout, stderr);

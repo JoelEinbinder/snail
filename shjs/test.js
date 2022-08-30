@@ -219,6 +219,15 @@ describe('tokenizer', () => {
             { type: 'word', value: 'woo', raw: '"woo"', isQuoted: true }
         ]);
     });
+    it('should detect a redirect', () => {
+        expect(tokenize('foo > bar').tokens).toEqual([
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'operator', value: '>', raw: '>'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'word', value: 'bar', raw: 'bar'},
+        ]);
+    });
 });
 
 describe('parser', () => {
@@ -289,6 +298,18 @@ describe('parser', () => {
                 executable: 'man',
                 args: ['woo']
             }
+        });
+    });
+    it('should do a redirect', () => {
+        const {tokens} = tokenize('foo bar baz > woo');
+        expect(parse(tokens)).toEqual({
+            executable: 'foo',
+            args: ['bar', 'baz'],
+            redirects: [{
+                type: 'write',
+                from: 1,
+                to: 'woo'
+            }]
         });
     });
 });
@@ -392,3 +413,11 @@ describe('glob', () => {
         expect(output).toEqual(['*']);
     });
 });
+
+describe('redirect', () => {
+    const {sh} = require('./jsapi');
+    it('should do a redirect to /dev/null', async () => {
+        const output = await sh`echo hello > /dev/null`;
+        expect(output).toEqual([]);
+    });
+})

@@ -1,9 +1,15 @@
 export type Expression = SimpleExpression | PipeExpression | CompoundExpression;
 
+export type Redirect = {
+    type: 'write'|'append';
+    from: number;
+    to: Word;
+}
 export type SimpleExpression = {
     assignments?: Assignment[];
     executable: Word;
     args: Word[];
+    redirects?: Redirect[];
 };
 
 export type PipeExpression = {
