@@ -87,6 +87,9 @@ class Header {
     this.modified = modified;
     this.render();
   }
+  isModified()  {
+    return this.modified;
+  }
   render() {
     this.element.textContent = this.title + (this.modified ? '*' : '');
   }
@@ -102,11 +105,16 @@ document.addEventListener('keydown', event => {
   if ((event.code === 'KeyX' || event.code === 'KeyC') && event.ctrlKey) {
     event.preventDefault();
     event.stopPropagation();
+    if (editor && header.isModified()) {
+      if (!confirm(`Discard unsaved changes to ${relativePath}?`))
+        return;
+    }
     d4.sendInput(JSON.stringify({method: 'close'}) + '\n');
   }
-
-})
+});
 let lastSavedVersion;
+let editor: monaco.editor.IStandaloneCodeEditor;
+let relativePath: string;
 while (true){
   const {method, params, id} = await d4.waitForMessage();
   switch(method) {
@@ -116,7 +124,8 @@ while (true){
         noSuggestionDiagnostics: true,
       });
       const language = getLanguage(params.absolutePath);
-      const editor = monaco.editor.create(editorContainer, {
+      relativePath = params.relativePath;
+      editor = monaco.editor.create(editorContainer, {
         value: params.content,
         language,
         fontSize: 10,

@@ -1,4 +1,5 @@
 import './gridPane.css';
+import { host } from './host';
 
 type Rect = {
   x: number;
@@ -43,6 +44,8 @@ class RootBlock {
           this.setBlock(newBlock);
         }
       }
+    } else {
+      host.sendMessage({ method: 'close' });
     }
     this._layout();
   }

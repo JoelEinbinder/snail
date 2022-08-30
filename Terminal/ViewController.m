@@ -208,6 +208,25 @@
         NSEvent* event = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown location:location modifierFlags:0 timestamp:NSTimeIntervalSince1970 windowNumber:self.view.window.windowNumber context:[NSGraphicsContext currentContext] eventNumber:0 clickCount:1 pressure:1.0];
         [menu setAllowsContextMenuPlugIns:NO];
         [NSMenu popUpContextMenu:menu withEvent:event forView:webView];
+    } else if ([@"alert" isEqual:body[@"method"]]) {
+        NSAlert* alert = [[NSAlert alloc] init];
+        for (NSString* title in params[@"buttons"])
+            [alert addButtonWithTitle:title];
+        [alert setMessageText:params[@"title"]];
+        [alert setInformativeText:params[@"message"]];
+        [alert setAlertStyle:NSAlertStyleCritical];
+        [alert beginSheetModalForWindow:webView.window completionHandler:^(NSModalResponse returnCode) {
+            NSDictionary* response = @{
+                @"id": body[@"id"],
+                @"result": @{
+                    @"returnCode": [NSNumber numberWithInteger:returnCode],
+                },
+            };
+            NSData* jsonData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+            [self->nodeTalker onMessage]([[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]);
+        }];
+    } else if ([@"close" isEqual:body[@"method"]]) {
+        [self.view.window close];
     } else if ([@"setProgress" isEqual:body[@"method"]]) {
         [self setProgressBar:[params[@"progress"] doubleValue]];
     } else {
@@ -286,5 +305,16 @@
     [alert beginSheetModalForWindow:webView.window completionHandler:^(NSModalResponse returnCode) {
         completionHandler();
     }];
+}
+- (void)webView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(BOOL))completionHandler {
+    NSAlert* alert = [[NSAlert alloc] init];
+    [alert setMessageText:message];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    [alert addButtonWithTitle:@"Ok"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert beginSheetModalForWindow:webView.window completionHandler:^(NSModalResponse returnCode) {
+        completionHandler(returnCode == NSAlertFirstButtonReturn);
+    }];
+
 }
 @end
