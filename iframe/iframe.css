@@ -26,6 +26,8 @@ body {
   color: var(--foreground);
   margin: 0;
 }
+/* chromium oopifs have white backgrounds */
+body.electron-host,
 body.web-host {
   background-color: black;
 }
