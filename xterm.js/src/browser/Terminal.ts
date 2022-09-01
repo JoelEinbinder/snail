@@ -841,10 +841,11 @@ export class Terminal extends CoreTerminal implements ITerminal {
     }));
 
     this.register(addDisposableDomListener(el, 'wheel', (ev: WheelEvent) => {
+      console.log("wheel event", requestedEvents.wheel);
       // do nothing, if app side handles wheel itself
       if (requestedEvents.wheel) return;
 
-      if (!this.buffer.hasScrollback) {
+      if (!this.buffer.hasScrollback && (this.buffers.active !== this.buffers.normal || !this.buffer.delegatesScrolling)) {
         // Convert wheel events into up/down events when the buffer does not have scrollback, this
         // enables scrolling in apps hosted in the alt buffer such as vim or tmux.
         const amount = this.viewport!.getLinesScrolled(ev);
