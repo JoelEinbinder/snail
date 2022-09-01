@@ -65,6 +65,11 @@ async function buildDirInfos(cwd, dirs) {
       size: stat.size,
       isSymbolicLink: stat.isSymbolicLink(),
       isDirectory: stat.isDirectory(),
+      isFIFO: stat.isFIFO(),
+      isSocket: stat.isSocket(),
+      isBlockDevice: stat.isBlockDevice(),
+      isCharacterDevice: stat.isCharacterDevice(),
+      isFile: stat.isFile(),
     }
   }
   for (const dir of dirs) {

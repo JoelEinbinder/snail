@@ -18,6 +18,11 @@ type Entry = {
   size: number,
   isSymbolicLink: boolean,
   isDirectory: boolean,
+  isFIFO: boolean,
+  isSocket: boolean,
+  isBlockDevice: boolean,
+  isCharacterDevice: boolean,
+  isFile: boolean,
 };
 const {dirs, cwd, showHidden, platform, args} = await d4.waitForMessage<{
   dirs: Entry[];
@@ -29,13 +34,49 @@ const {dirs, cwd, showHidden, platform, args} = await d4.waitForMessage<{
 const initialDpr = await d4.getDevicePixelRatio();
 const useTable = args.some(a => a.startsWith('-') && a.includes('l'));
 const now = new Date(Date.now());
+
+function shortType(item: Entry) {
+  if (item.isDirectory)
+    return 'd';
+  if (item.isSymbolicLink)
+    return 'l';
+  if (item.isFile)
+    return '-';
+  if (item.isBlockDevice)
+    return 'b';
+  if (item.isCharacterDevice)
+    return 'c';
+  if (item.isFIFO)
+    return 'p';
+  if (item.isSocket)
+    return 's';
+  return '?';
+}
+function longType(item: Entry) {
+  if (item.isDirectory)
+    return 'Directory';
+  if (item.isSymbolicLink)
+    return 'Link';
+  if (item.isFile)
+    return 'File';
+  if (item.isBlockDevice)
+    return 'Block Device';
+  if (item.isCharacterDevice)
+    return 'Character Device';
+  if (item.isFIFO)
+    return 'Fifo Pipe';
+  if (item.isSocket)
+    return 'Socket';
+  return '???';
+}
+
 async function renderTable() {
   const dataGrid = new DataGrid<Entry>([{
     title: 'Permissions',
     render(item) {
       const mode = document.createElement('span');
       const full = 'rwxrwxrwx';
-      let str = item.isDirectory ? 'd' : '-';
+      let str = shortType(item);
       for (let i = 0; i < full.length; i++) {
         str += item.mode & (1 << (full.length - i - 1)) ? full[i] : '-';
       }
@@ -45,6 +86,17 @@ async function renderTable() {
     compare(a, b) {
       return a.mode - b.mode;
     }
+  }, {
+    title: 'Type',
+    render(item) {
+      const span = document.createElement('span');
+      span.textContent = longType(item);
+      return span;
+    },
+    compare(a, b) {
+      return longType(b).localeCompare(longType(a));
+    },
+    defaultHidden: true,
   }, {
     title: 'Links',
     render(item) {
