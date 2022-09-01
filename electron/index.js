@@ -163,6 +163,31 @@ const overrides = {
   },
   setProgress({progress}, client, sender) {
     BrowserWindow.fromWebContents(sender).setProgressBar(progress);
+  },
+  async contextMenu({ menuItems }, client, sender) {
+    let resolve;
+    /**
+     * @return {Electron.MenuItemConstructorOptions}
+     */
+    function convertItem(item) {
+      if (!item.title)
+        return {type: 'separator'};
+        console.log(item.checked);
+      return {
+        label: item.title,
+        click: item.callback ? () => {
+          resolve(item.callback)
+        } : undefined,
+        submenu: item.submenu ? item.submenu.map(convertItem) : undefined,
+        checked: item.checked,
+        type: item.checked ? 'checkbox' : undefined,
+      }
+    }
+    const menu = Menu.buildFromTemplate(menuItems.map(convertItem));
+    const promise = new Promise(x => resolve = x);
+    menu.popup(BrowserWindow.fromWebContents(sender));
+    const id = await promise;
+    return {id};
   }
 };
 
