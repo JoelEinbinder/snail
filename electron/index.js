@@ -172,7 +172,6 @@ const overrides = {
     function convertItem(item) {
       if (!item.title)
         return {type: 'separator'};
-        console.log(item.checked);
       return {
         label: item.title,
         click: item.callback ? () => {
