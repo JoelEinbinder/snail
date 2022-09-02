@@ -70,19 +70,21 @@ export class Shell {
   }
 
   async _setupConnection(args: string[], sshAddress = null) {
-    const {shellId} = await host.sendMessage({
-      method: 'createShell',
-      params: {
-        sshAddress,
-      }
-    });
-    const {socketId} = await host.sendMessage({
-      method: 'createJSShell',
-      params: {
-        cwd: this.connection ? this.connection.cwd : localStorage.getItem('cwd') || '',
-        sshAddress,
-      }
-    });
+    const [{shellId}, {socketId}] = await Promise.all([
+      host.sendMessage({
+        method: 'createShell',
+        params: {
+          sshAddress,
+        }
+      }),
+      host.sendMessage({
+        method: 'createJSShell',
+        params: {
+          cwd: this.connection ? this.connection.cwd : localStorage.getItem('cwd') || '',
+          sshAddress,
+        }
+      })
+    ] as const);
     this._clearCache();
     const connection = new JSConnection({
       listen: callback => {
@@ -393,6 +395,7 @@ export class Shell {
   }
 
   static async create(sshAddress?: string): Promise<Shell> {
+    console.time('create shell');
     const shell = new Shell();
     shells.add(shell);
     await shell._setupConnection([], sshAddress);
@@ -403,6 +406,7 @@ export class Shell {
         dir: shell.cwd,
       },
     });
+    console.timeEnd('create shell');
     return shell;
   }
 
