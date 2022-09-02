@@ -1,10 +1,8 @@
-process.stdin.on('data', () => void 0);
-process.stdin.on('end', () => {
-  process.exit();
-});
-const getPort = require('get-port');
-getPort().then(port => {
-  require('inspector').open(port, undefined, false);
+const worker_threads = require('node:worker_threads');
+const worker = new worker_threads.Worker(require.resolve('./bootstrapWorker'));
+
+worker.on('exit', code => {
+  process.exit(code);
 });
 /**
  * @typedef {{

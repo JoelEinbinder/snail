@@ -1,5 +1,6 @@
 const {spawn} = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 /** @return {Promise<string>} */
 async function waitForURL(child) {
@@ -54,17 +55,53 @@ async function spawnJSProcess(cwd, sshAddress) {
 
     return {child, socket};
   }
-  if (!cwd || !require('fs').existsSync(cwd))
+  if (!cwd || !fs.existsSync(cwd))
     cwd = require('os').homedir();
+  const os = require('os');
+  const socketDir = path.join(os.tmpdir(), '1d4-sockets');
+
+  fs.mkdirSync(socketDir, {recursive: true, mode: 0o700});
+
   const nodePath = process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node';
   const child = spawn(nodePath, ['-e', `require(${JSON.stringify(path.join(__dirname, 'bootstrap.js'))})`], {
-    stdio: 'pipe',
+    stdio: 'ignore',
     detached: false,
     cwd,
   });
-  const url = await waitForURL(child);
+  const socketPath = path.join(socketDir, `${child.pid}.socket`);
+  
+  const net = require('net');
+  while (true) {
+    if (fs.existsSync(socketPath))
+      break;
+    // TODO use fs.watch on linux and fsevents on macos
+    await new Promise(x => setTimeout(x, 25));
+  }
+  /** @type {net.Socket} */
+  const unixSocket = net.connect({
+    path: socketPath,
+  });
+  
+  unixSocket.once('ready', () => {
+    socket.onopen?.();
+  });
+
+  const {PipeTransport} = require('../protocol/pipeTransport');
+  const transport = new PipeTransport(unixSocket, unixSocket);
+  transport.onmessage = message => {
+    socket?.onmessage?.({data: JSON.stringify(message)});
+  }
+  
   /** @type {{send: (message:string) => void, close: () => void, onmessage?: (event: {data: string}) => void, onopen?: () => void}} */ 
-  const socket = new (require('ws').WebSocket)(url);
+  const socket = {
+    close() {
+      unixSocket.end();
+    },
+    send(message) {
+      transport.sendString(message);
+    }
+  }
+  
   return {child, socket};
 }
 

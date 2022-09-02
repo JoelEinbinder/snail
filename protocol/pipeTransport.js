@@ -53,9 +53,16 @@ class PipeTransport {
    * @param {ProtocolResponse|ProtocolRequest} message
    */
   send(message) {
+    this.sendString(JSON.stringify(message));
+  }
+
+  /**
+   * @param {string} messageStr
+   */
+  sendString(messageStr) {
     if (this._closed)
       throw new Error('Pipe has been closed');
-    this._pipeWrite.write(JSON.stringify(message));
+    this._pipeWrite.write(messageStr);
     this._pipeWrite.write('\0');
   }
 

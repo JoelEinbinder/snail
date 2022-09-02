@@ -36,7 +36,7 @@ export class JSConnection {
       listeners.delete(listener);
   }
   async send<Method extends keyof Protocol.CommandParameters>(method: Method, params: Protocol.CommandParameters[Method]): Promise<Protocol.CommandReturnValues[Method]> {
-    const id = this._id++;
+    const id = ++this._id;
     const message = {id, method, params};
     const promise = new Promise<any>(x => this._callbacks.set(id, x));
     await this._transport.ready;
