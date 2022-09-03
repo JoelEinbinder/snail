@@ -85,17 +85,7 @@ export class ColorManager implements IColorManager {
   private _contrastCache: IColorContrastCache;
   private _restoreColors!: IRestoreColorSet;
 
-  constructor(document: Document, public allowTransparency: boolean) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1;
-    canvas.height = 1;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('Could not get rendering context');
-    }
-    this._ctx = ctx;
-    this._ctx.globalCompositeOperation = 'copy';
-    this._litmusColor = this._ctx.createLinearGradient(0, 0, 1, 1);
+  constructor(private _document: Document, public allowTransparency: boolean) {
     this._contrastCache = new ColorContrastCache();
     this.colors = {
       foreground: DEFAULT_FOREGROUND,
@@ -198,21 +188,14 @@ export class ColorManager implements IColorManager {
       return fallback;
     }
 
-    // If parsing the value results in failure, then it must be ignored, and the attribute must
-    // retain its previous value.
-    // -- https://html.spec.whatwg.org/multipage/canvas.html#fill-and-stroke-styles
-    this._ctx.fillStyle = this._litmusColor;
-    this._ctx.fillStyle = css;
-    if (typeof this._ctx.fillStyle !== 'string') {
+    const {fillStyle, data} = getOrMakeCachedColor(this._document, css);
+    if (typeof fillStyle !== 'string') {
       console.warn(`Color: ${css} is invalid using fallback ${fallback.css}`);
       return fallback;
     }
 
-    this._ctx.fillRect(0, 0, 1, 1);
-    const data = this._ctx.getImageData(0, 0, 1, 1).data;
-
     // Check if the printed color was transparent
-    if (data[3] !== 0xFF) {
+    if (data![3] !== 0xFF) {
       if (!allowTransparency) {
         // Ideally we'd just ignore the alpha channel, but...
         //
@@ -239,7 +222,7 @@ export class ColorManager implements IColorManager {
 
       // https://html.spec.whatwg.org/multipage/canvas.html#serialisation-of-a-color
       // the color value has alpha less than 1.0, and the string is the color value in the CSS rgba()
-      const [r, g, b, a] = this._ctx.fillStyle.substring(5, this._ctx.fillStyle.length - 1).split(',').map(component => Number(component));
+      const [r, g, b, a] = fillStyle.substring(5, fillStyle.length - 1).split(',').map(component => Number(component));
       const alpha = Math.round(a * 255);
       const rgba: number = channels.toRgba(r, g, b, alpha);
       return {
@@ -251,8 +234,57 @@ export class ColorManager implements IColorManager {
     return {
       // https://html.spec.whatwg.org/multipage/canvas.html#serialisation-of-a-color
       // if it has alpha equal to 1.0, then the string is a lowercase six-digit hex value, prefixed with a "#" character
-      css: this._ctx.fillStyle,
-      rgba: channels.toRgba(data[0], data[1], data[2], data[3])
+      css: fillStyle,
+      rgba: channels.toRgba(data![0], data![1], data![2], data![3])
     };
   }
+}
+
+const cacheForDocument = new WeakMap<Document, {
+  ctx: CanvasRenderingContext2D;
+  cachedColors: Map<string, CachedColor>;
+  litmusColor: CanvasGradient;
+}>();
+
+type CachedColor = {
+  fillStyle: string|CanvasGradient;
+  data?: Uint8ClampedArray;
+};
+function getOrMakeCachedColor(document: Document, css: string): CachedColor {
+  if (!cacheForDocument.has(document)) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Could not get rendering context');
+    }
+    ctx.globalCompositeOperation = 'copy';
+    const litmusColor = ctx.createLinearGradient(0, 0, 1, 1);
+    cacheForDocument.set(document, {
+      ctx,
+      litmusColor,
+      cachedColors: new Map()
+    });
+  }
+  const {ctx, litmusColor, cachedColors} = cacheForDocument.get(document)!;
+  if (!cachedColors.has(css))
+    cachedColors.set(css, makeCachedColor());
+  function makeCachedColor(): CachedColor {
+   // If parsing the value results in failure, then it must be ignored, and the attribute must
+    // retain its previous value.
+    // -- https://html.spec.whatwg.org/multipage/canvas.html#fill-and-stroke-styles
+    ctx.fillStyle = litmusColor;
+    ctx.fillStyle = css;
+    if (typeof ctx.fillStyle !== 'string') {
+      return {
+        fillStyle: ctx.fillStyle,
+      };
+    }
+
+    ctx.fillRect(0, 0, 1, 1);
+    const data = ctx.getImageData(0, 0, 1, 1).data;
+    return {data, fillStyle: ctx.fillStyle};
+  }
+  return cachedColors.get(css)!;
 }
