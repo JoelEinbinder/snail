@@ -20,9 +20,13 @@ import { MenuItem, showContextMenu } from './contextMenu';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
+const socketCloseListeners = new Map<number, () => void>();
 
 host.onEvent('websocket', ({socketId, message}) => {
   socketListeners.get(socketId)(message);
+});
+host.onEvent('websocket-closed', ({socketId}) => {
+  socketCloseListeners.get(socketId)();
 });
 
 interface ShellDelegate {
@@ -93,7 +97,11 @@ export class Shell {
       send: message => {
         host.notify({method: 'sendMessageToWebSocket', params: {socketId, message}});
       },
-      ready: Promise.resolve(),
+    });
+    socketCloseListeners.set(socketId, () => {
+      connection.didClose();
+      socketListeners.delete(socketId);
+      socketCloseListeners.delete(socketId);
     });
     this._connectionToShellId.set(connection, shellId);
     this._connectionToSSHAddress.set(connection, sshAddress);

@@ -39,7 +39,6 @@ export class JSConnection {
     const id = ++this._id;
     const message = {id, method, params};
     const promise = new Promise<any>(x => this._callbacks.set(id, x));
-    await this._transport.ready;
     this._transport.send(JSON.stringify(message));
     const data = await promise;
     if (data.error)
@@ -69,10 +68,15 @@ export class JSConnection {
     }
     return recentCwd;
   }
+
+  didClose() {
+    for (const [id, callback] of this._callbacks)
+      callback({error: {message: 'Connection closed'}});
+    this._callbacks.clear();
+  }
 }
 
 interface Transport {
   send(message: string): void;
-  ready: Promise<void>;
   listen(callback: (message: string) => void): void;
 }

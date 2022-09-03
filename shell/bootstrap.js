@@ -210,7 +210,7 @@ async function launchServer() {
   });
   process.on('exit', () => {
     server.close();
-    fs.unlinkSync(socketPath);
+    try {fs.unlinkSync(socketPath);} catch {};
   });
   const uuid = require('crypto').randomUUID();
   await new Promise(x => server.once('listening', x));

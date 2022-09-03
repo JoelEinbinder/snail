@@ -21,9 +21,19 @@ async function waitForURL(child) {
   }
 }
 
+/**
+ * @typedef {{
+ * send: (message:string) => void,
+ * close: () => void,
+ * onmessage?: (event: {data: string},
+ * onopen?: () => void) => void
+ * onclose?: () => void
+ * }} JSSocket
+ */
+
 async function spawnJSProcess(cwd, sshAddress) {
   if (sshAddress) {
-    /** @type {{send: (message:string) => void, close: () => void, onmessage?: (event: {data: string}, onopen?: () => void) => void}} */ 
+    /** @type {JSSocket} */ 
     const socket = {
       send(message) {
         rpc.notify('message', message);
@@ -31,7 +41,6 @@ async function spawnJSProcess(cwd, sshAddress) {
       close() {
         child.kill();
       },
-      onmessage: undefined
     };
     if (!cwd)
       cwd = require('os').homedir();
@@ -52,6 +61,7 @@ async function spawnJSProcess(cwd, sshAddress) {
         socket.onopen && socket.onopen();
       }
     });
+    transport.onclose = () => socket.onclose?.();
 
     return {child, socket};
   }
@@ -91,8 +101,9 @@ async function spawnJSProcess(cwd, sshAddress) {
   transport.onmessage = message => {
     socket?.onmessage?.({data: JSON.stringify(message)});
   }
+  transport.onclose = () => socket.onclose?.();
   
-  /** @type {{send: (message:string) => void, close: () => void, onmessage?: (event: {data: string}) => void, onopen?: () => void}} */ 
+  /** @type {JSSocket} */ 
   const socket = {
     close() {
       unixSocket.end();

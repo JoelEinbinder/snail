@@ -57,6 +57,8 @@ const handler = {
     function destroy() {
       killed = true;
       sender.off('destroyed', destroy);
+      socket.onmessage = null;
+      socket.onclose = null;
       websockets.delete(socketId);
       child?.kill();
     }
@@ -70,6 +72,9 @@ const handler = {
     socket.onmessage = event => {
       sender.send({ method: 'websocket', params: {socketId, message: event.data}});
     };
+    socket.onclose = () => {
+      sender.send({ method: 'websocket-closed', params: {socketId}});
+    }
     websockets.set(socketId, socket);
     await new Promise(x => socket.onopen = x);
     return { socketId };
