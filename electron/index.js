@@ -187,6 +187,9 @@ const overrides = {
     menu.popup(BrowserWindow.fromWebContents(sender));
     const id = await promise;
     return {id};
+  },
+  async close(_, client, sender) {
+    BrowserWindow.fromWebContents(sender).close();
   }
 };
 
