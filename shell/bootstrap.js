@@ -1,3 +1,4 @@
+//@ts-check
 const worker_threads = require('node:worker_threads');
 const worker = new worker_threads.Worker(require.resolve('./bootstrapWorker'));
 
@@ -15,7 +16,7 @@ worker.on('exit', code => {
  * exit?: number,
  * }} Changes
  */
-/** @type {Map<number, (s: WebSocket) => void} */
+/** @type {Map<number, (s: import('../protocol/pipeTransport').PipeTransport) => void} */
 const resolveShellConnection = new Map();
 
 global.bootstrap = (args) => {
@@ -33,9 +34,30 @@ global.bootstrap = (args) => {
   let shellId = 0;
   let rows = 24;
   let cols = 80;
-  /** @type {{shell: import('node-pty').IPty, connection: WebSocket}} */
+  /** @type {Promise<{shell: import('node-pty').IPty, connection: import('../protocol/pipeTransport').PipeTransport}>|null} */
   let freeShell = null;
-
+  function ensureFreeShell() {
+    if (freeShell)
+      return freeShell;
+    return freeShell = new Promise(async resolve => {
+      const id = ++shellId;
+      const {socketPath, uuid} = await getServerUrl();
+      /** @type {Promise<import('../protocol/pipeTransport').PipeTransport>|import('../protocol/pipeTransport').PipeTransport} */
+      const connectionPromise = new Promise(x => resolveShellConnection.set(id, x));
+      const shell = require('node-pty').spawn(process.execPath, [require('path').join(__dirname, '..', 'shjs', 'wrapper.js'), socketPath, uuid, id, getAliases()], {
+        env: process.env,
+        rows,
+        cols,
+        cwd: process.cwd(),
+        name: 'xterm-256color',
+        handleFlowControl: true,
+        encoding: null,
+      });
+      const connection = await connectionPromise;
+      resolve({shell, connection });
+    });
+  }
+  
   const origChangeDir = process.chdir;
 
   process.chdir = function(path) {
@@ -44,38 +66,32 @@ global.bootstrap = (args) => {
     const after = process.cwd();
     if (before !== after) {
       if (freeShell)
-        freeShell.connection.send(JSON.stringify({changes: {cwd: after}}));
+        freeShell.then(x => x.connection.sendString(JSON.stringify({changes: {cwd: after}})));
       notify('cwd', after);
     }
 
     return returnValue;
   }
 
+  function claimFreeShell() {
+    const myshell = ensureFreeShell();
+    freeShell = null;
+    return myshell;
+  }
+
   global.pty = async function(command) {
     const magicToken = String(Math.random());
     const magicString = `\x1B[JOELMAGIC${magicToken}]\r\n`;
-    let env = {...process.env};
-    const id = ++shellId;
-    const url = await getServerUrl();
-    /** @type {Promise<WebSocket>|WebSocket} */
-    const conncectionPromise = freeShell ? freeShell.connection : new Promise(x => resolveShellConnection.set(id, x));
-    const shell = freeShell ? freeShell.shell : require('node-pty').spawn(process.execPath, [require('path').join(__dirname, '..', 'shjs', 'wrapper.js'), url, id, getAliases()], {
-      env,
-      rows,
-      cols,
-      cwd: process.cwd(),
-      name: 'xterm-256color',
-      handleFlowControl: true,
-      encoding: null,
-    });
-    freeShell = null;
-    const connection = await conncectionPromise;
-    connection.send(JSON.stringify({command, magicToken}));
+    const {shell, connection} = await claimFreeShell();
+    
     const connectionDonePromise = new Promise(x => {
-      connection.once('message', data => {
-        x(JSON.parse(data));
-      });
+      connection.onmessage = data => {
+        delete connection.onmessage;
+        x(data);
+      };
     });
+    connection.sendString(JSON.stringify({command, magicToken}));
+    const id = ++shellId;
     notify('startTerminal', {id});
     shells.set(id, shell);
     let waitForDoneCallback;
@@ -112,11 +128,11 @@ global.bootstrap = (args) => {
     if (freeShell) {
       if (!returnValue.died)
         shell.kill();
-      if (changes)
-        freeShell.connection.send(JSON.stringify({changes}));
+      if (returnValue.changes)
+        freeShell.then(x => x.connection.sendString(JSON.stringify({changes: returnValue.changes})));
     } else if (!returnValue.died) {
       disposeDataListener.dispose();
-      freeShell = {connection, shell}
+      freeShell = Promise.resolve({connection, shell});
     }
     if (returnValue.changes) {
       const changes = returnValue.changes;
@@ -126,7 +142,6 @@ global.bootstrap = (args) => {
       }
       if (changes.env) {
         for (const key in changes.env) {
-          env[key] = changes.env[key];
           process.env[key] = changes.env[key];
         }
         notify('env', changes.env);
@@ -162,9 +177,11 @@ global.bootstrap = (args) => {
       for (const shell of shells.values())
         shell.resize(size.cols, size.rows);
       if (freeShell)
-        freeShell.shell.resize(size.cols, size.rows);
+        freeShell.then(x => x.shell.resize(size.cols, size.rows));
     }
   }
+  // i have no idea why these needs promise.resolve
+  Promise.resolve().then(() => ensureFreeShell());
   return function respond(data) {
     const {method, params} = data;
     handler[method](params);
@@ -179,18 +196,34 @@ async function getServerUrl() {
 }
 
 async function launchServer() {
-  const {Server} = require('ws');
-  const getPort = require('get-port');
-  const port = await getPort();
+  const os = require('os');
+  const path = require('path');
+  const socketDir = path.join(os.tmpdir(), '1d4-shell-sockets');
+  const socketPath = path.join(socketDir, `${process.pid}-shell.sock`);
+  const fs = require('fs');
+  fs.mkdirSync(socketDir, {recursive: true, mode: 0o700});
+  const net = require('net');
+  try {fs.unlinkSync(socketPath); } catch {}
+  const server = net.createServer();
+  server.listen({
+    path: socketPath,
+  });
+  process.on('exit', () => {
+    server.close();
+    fs.unlinkSync(socketPath);
+  });
   const uuid = require('crypto').randomUUID();
-  const server = new Server({port, path: '/' + uuid});
-  await new Promise(x => server.on('listening', x));
+  await new Promise(x => server.once('listening', x));
   server.on('connection', async connection => {
-    /** @type {WebSocket.RawData} */
-    const message = await new Promise(x => connection.once('message', x));
-    const {id} = JSON.parse(message);
-    resolveShellConnection.get(id)(connection);
+    const transport = new (require('../protocol/pipeTransport').PipeTransport)(connection, connection);
+    const message = await new Promise(x => transport.onmessage = x);
+    if (message.uuid !== uuid) {
+      console.error('invlid uuid', message.uuid, uuid);
+      return;
+    }
+    const {id} = message;
+    resolveShellConnection.get(id)(transport);
     resolveShellConnection.delete(id);
   });
-  return 'ws://localhost:' + port + '/' + uuid;
+  return {socketPath, uuid};
 }

@@ -1,16 +1,19 @@
 const {execute, getAndResetChanges, setAlias} = require('./index');
-const {WebSocket} = require('ws');
-const aliases = JSON.parse(process.argv[4]);
+const net = require('net');
+const {PipeTransport} = require('../protocol/pipeTransport');
+const [socketPath, uuid, idStr, aliasesStr] = process.argv.slice(2);
+const aliases = JSON.parse(aliasesStr);
 for (const key in aliases)
   setAlias(key, aliases[key]);
 listenToWebSocket()
 
 async function listenToWebSocket() {
-  const webSocket = new WebSocket(process.argv[2]);
-  await new Promise(x => webSocket.once('open', x));
-  webSocket.send(JSON.stringify({id: parseInt(process.argv[3])}));
+  const socket = net.createConnection({path: socketPath});
+  const transport = new PipeTransport(socket, socket);
+  await new Promise(x => socket.once('connect', x));
+  transport.sendString(JSON.stringify({id: parseInt(idStr), uuid}));
   while (true) {
-    const {command, magicToken, changes} = JSON.parse(await new Promise(x => webSocket.once('message', x)));
+    const {command, magicToken, changes} = await new Promise(x => transport.onmessage = x);
     if (changes) {
       if (changes.cwd)
         process.chdir(changes.cwd);
@@ -25,7 +28,7 @@ async function listenToWebSocket() {
       getAndResetChanges();
     } else if (command) {
       const result = await runCommand(command.toString(), magicToken);
-      webSocket.send(JSON.stringify(result));
+      transport.sendString(JSON.stringify(result));
     }
   }
 }

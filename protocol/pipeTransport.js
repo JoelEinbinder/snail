@@ -43,7 +43,7 @@ class PipeTransport {
     });
     pipeRead.on('error', e => console.error('error', e));
     pipeWrite.on('error', e => console.error('error', e));
-    /** @type {(message: ProtocolResponse|ProtocolRequest) => void} */
+    /** @type {(message: ProtocolResponse|ProtocolRequest) => void=} */
     this.onmessage = undefined;
     /** @type {() => void} */
     this.onclose = undefined;
