@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs');
 const os = require('os');
 const userid = require('userid');
+const mimeTypes = require('mime-types');
 async function run(args, stdout, stderr) {
   stdout.write(`\x1b\x1aL${path.join(__dirname, 'index.ts')}\x00`);
 
@@ -70,6 +71,7 @@ async function buildDirInfos(cwd, dirs) {
       isBlockDevice: stat.isBlockDevice(),
       isCharacterDevice: stat.isCharacterDevice(),
       isFile: stat.isFile(),
+      mimeType: mimeTypes.lookup(resolved) || '',
     }
   }
   for (const dir of dirs) {

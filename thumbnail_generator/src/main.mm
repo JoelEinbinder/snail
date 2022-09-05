@@ -9,7 +9,7 @@ const char* generate_thumbnail(std::string path, int size) {
   NSURL *url = [NSURL fileURLWithPath:path_ns];
   QLThumbnailGenerationRequest * request = [[QLThumbnailGenerationRequest alloc] initWithFileAtURL:url size:CGSizeMake(size/2.0f, size/2.0f) scale:2.0f
     representationTypes:QLThumbnailGenerationRequestRepresentationTypeAll];
-  [request setIconMode:YES];
+  [request setIconMode:NO];
   dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
   __block const char* out;
   [[QLThumbnailGenerator sharedGenerator] generateBestRepresentationForRequest:request completionHandler:^(QLThumbnailRepresentation * _Nullable thumbnail, NSError * _Nullable error) {

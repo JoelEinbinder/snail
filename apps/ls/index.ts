@@ -23,6 +23,7 @@ type Entry = {
   isBlockDevice: boolean,
   isCharacterDevice: boolean,
   isFile: boolean,
+  mimeType: string,
 };
 const {dirs, cwd, showHidden, platform, args} = await d4.waitForMessage<{
   dirs: Entry[];
@@ -222,6 +223,18 @@ async function renderTable() {
     },
     defaultHidden: true,
   }, {
+    title: 'MIME Type',
+    render(item) {
+      const span = document.createElement('span');
+      span.textContent = item.mimeType;
+      return span;
+    },
+    compare(a, b) {
+      return b.mimeType.localeCompare(a.mimeType);
+    },
+    defaultSortDirection: -1,
+    defaultHidden: true,
+  }, {
     title: 'Name',
     render(item) {
       const fullPath = `${cwd === '/' ? '' : cwd}/${item.dir}`;
@@ -309,10 +322,9 @@ function inlineMode() {
 
 function makeImageForPath(fullPath: string, info: Entry) {
   const image = document.createElement('img');
-  if (platform === 'darwin') {
+  image.src = iconPathForPath(fullPath, info);
+  if (platform === 'darwin' && (image.src.endsWith('/image.svg') || image.src.endsWith('/video.svg'))) {
     image.src = `${fullPath}?thumbnail&size=${initialDpr * 16}`;
-  } else {
-    image.src = iconPathForPath(fullPath, info);
   }
   image.width = image.height = 16;
   return image;

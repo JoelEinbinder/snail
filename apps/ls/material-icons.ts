@@ -3678,7 +3678,7 @@ const iconDefs = {
     "flv": "video",
     "vob": "video",
     "ogv": "video",
-    "ogg": "video",
+    "ogg": "audio",
     "gifv": "video",
     "avi": "video",
     "mov": "video",
