@@ -32,13 +32,13 @@
 }
 
 .editor {
-  line-height: 14px;
+  line-height: 1.4em;
   letter-spacing: 0;
   cursor: text;
 }
 .below-prompt {
-  height: 14px;
-  line-height: 14px;
+  height: 1.4em;
+  line-height: 1.4em;
   overflow: hidden;
   text-overflow: ellipsis;
   opacity: 0.6;
@@ -59,8 +59,8 @@
   mask-size: cover;
   content: '';
   display: inline-block;
-  width: 14px;
-  height: 14px;
+  width: 1.4em;
+  height: 1.4em;
   background-color: var(--ansi-0);
 }
 

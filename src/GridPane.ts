@@ -1,3 +1,4 @@
+import { font } from './font';
 import './gridPane.css';
 import { host } from './host';
 
@@ -25,6 +26,9 @@ class RootBlock {
   constructor() {
     this.element.classList.add('root-block');
     window.addEventListener('resize', () => {
+      this.block?.updatePosition(this.element.getBoundingClientRect().toJSON());
+    });
+    font.on(() => {
       this.block?.updatePosition(this.element.getBoundingClientRect().toJSON());
     });
     document.body.append(this.element);

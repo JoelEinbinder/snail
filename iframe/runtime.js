@@ -31,6 +31,9 @@ window.addEventListener('message', event => {
       if (callback)
         callback(params.data);
       contextMenuCallbacks.clear();
+    } else if (method === 'fontChanged') {
+      document.body.style.setProperty('--current-font', params);
+      window.dispatchEvent(new Event('resize'));
     }
   } else {
     const {id, result} = event.data;

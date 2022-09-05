@@ -35,6 +35,10 @@ export class CommandBlock implements LogItem {
     });
     this._editor.value = this.command;
     this._exitCode.classList.add('exit-code');
+    const observer = new ResizeObserver(() => {
+      this._editor.layout();
+    });
+    observer.observe(this._editor.element);
 
   }
 
@@ -56,7 +60,7 @@ export class CommandBlock implements LogItem {
     const editorWrapper = document.createElement('div');
     editorWrapper.style.position = 'relative';
     editorWrapper.style.flex = '1';
-    editorWrapper.style.minHeight = '14px';
+    editorWrapper.style.minHeight = '1.4em';
     command.append(editorWrapper);
     command.append(this._exitCode);
     editorWrapper.append(this._editor.element);

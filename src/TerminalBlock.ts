@@ -1,5 +1,6 @@
 import { Terminal, IDisposable } from "xterm";
 import type { AntiFlicker } from "./AntiFlicker";
+import { font } from "./font";
 import { JoelEvent } from "./JoelEvent";
 import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
@@ -34,10 +35,10 @@ export class TerminalBlock implements LogItem {
     this.element.style.height = '0px';
     this.element.style.overflow = 'hidden';
     this._terminal = new Terminal({
-      fontFamily: 'monaco',
+      fontFamily: font.current.family,
       cols: delegate.size.current.cols,
       rows: delegate.size.current.rows,
-      fontSize: 10,
+      fontSize: font.current.size,
       delegatesScrolling: true,
       theme: {
         black: '#3E3E3E',
@@ -87,6 +88,8 @@ export class TerminalBlock implements LogItem {
     this._terminal.onResize(() => {
       this._willResize();
     });
+    
+    font.on(this._fontChanged);
     let firstRender = true;
     this._terminal.onRender(() => {
       if (firstRender) {
@@ -113,6 +116,12 @@ export class TerminalBlock implements LogItem {
     return this.element;
   }
 
+  _fontChanged = () => {
+    this._willResize();
+    this._terminal.options.fontFamily = font.current.family;
+    this._terminal.options.fontSize = font.current.size;
+  }
+
   _willResize() {
     this.willResizeEvent.dispatch();
     if (this._terminal.buffer.active === this._terminal.buffer.alternate) {
@@ -137,6 +146,7 @@ export class TerminalBlock implements LogItem {
 
     for (const listeners of this._listeners)
       listeners.dispose();
+    font.off(this._fontChanged);
     if (this._trailingNewline) {
       this._terminal.deleteLastLine();
       

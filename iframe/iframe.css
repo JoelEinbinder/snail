@@ -22,7 +22,7 @@ body {
 }
 
 body {
-  font: 10px monaco;
+  font: var(--current-font);
   color: var(--foreground);
   margin: 0;
 }

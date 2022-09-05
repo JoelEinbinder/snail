@@ -2,13 +2,14 @@ import {Viewport} from './Viewport';
 import './suggestions.css';
 import { Suggestion } from './autocomplete';
 import { GlassPlane } from './GlassPane';
+import { font } from './font';
 export class SuggestBox {
     element: HTMLElement;
     private _selectedSuggestion: Suggestion|undefined;
     private _suggestions: Suggestion[] = [];
     private _prefix: string = '';
     private _glassPane: GlassPlane;
-    private _viewport = new Viewport<Suggestion>(14, 14 * 9, this._renderItem.bind(this));
+    private _viewport = new Viewport<Suggestion>(font.current.size * 1.4, 9, this._renderItem.bind(this));
     private _description = document.createElement('div');
     constructor(private _onPick: (suggestion: Suggestion) => boolean, private _onSelectionChanged: () => void) {
         this.element = document.createElement('div');

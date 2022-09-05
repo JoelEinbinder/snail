@@ -74,6 +74,10 @@ export function makePromptEditor(shell: Shell) {
       editor.value = history[history.length - historyIndex].command;
     }
   }
+  const observer = new ResizeObserver(() => {
+    editor.layout();
+  });
+  observer.observe(editor.element);
   return {editor, autocomplete};
 }
 

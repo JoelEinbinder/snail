@@ -3,7 +3,7 @@ export class Viewport<Item> {
   element: HTMLElement;
   private _wrapper: HTMLElement;
   private _items: Item[] = [];
-  constructor(private _itemHeight: number, private _maxHeight: number, private _renderItem: (item: Item) => Element) {
+  constructor(private _itemHeight: number, private _maxItems: number, private _renderItem: (item: Item) => Element) {
     this.element = document.createElement('div');
     this.element.className = 'scroller';
     this.element.style.overflowY = 'scroll';
@@ -15,6 +15,10 @@ export class Viewport<Item> {
       this._refresh();
     });
     this._refresh();
+  }
+
+  get _maxHeight() {
+    return this._maxItems * this._itemHeight;
   }
 
   _isInView(index: number) {

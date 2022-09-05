@@ -1,3 +1,4 @@
+import { fontString } from "./font";
 import { host } from "./host";
 
 // TODO use https://www.electronjs.org/docs/latest/api/structures/display
@@ -39,6 +40,7 @@ class ExternalGlassPane {
         this.window.document.head.appendChild(sheet.ownerNode.cloneNode(true));
     this.window.document.body.appendChild(this.element);
     this.window.document.body.classList.add('glass-pane');
+    this.window.document.body.style.setProperty('--current-font', fontString());
     // @ts-ignore
     this.window.document.body.style.zoom = window.devicePixelRatio / nativeDPI;
     this.window.onclose = () => {
@@ -46,12 +48,19 @@ class ExternalGlassPane {
     }
     this._resize();
   }
+
+  _cleanupWindow() {
+    if (!this.window)
+      return;
+    window.removeEventListener('blur', this.onBlur);
+    delete this.window;
+  }
+
   showing() {
     if (!this.window)
       return false;
     if (this.window.closed) {
-      delete this.window;
-      window.removeEventListener('blur', this.onBlur);
+      this._cleanupWindow();
       return false;
     }
     return true;
@@ -59,8 +68,7 @@ class ExternalGlassPane {
   hide() {
     if (!this.showing())
       return;
-    delete this.window;
-    window.removeEventListener('blur', this.onBlur);
+    this._cleanupWindow();
     this.observer.unobserve(this.element);
     host.sendMessage({
       method: 'closeAllPopups',

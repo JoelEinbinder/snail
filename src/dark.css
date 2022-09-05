@@ -283,8 +283,7 @@ body {
   background: rgba(0,0,0,0.7);
   /* background: black; */
   color: var(--color-text);
-  font-family: Monaco;
-  font-size: 10px;
+  font: var(--current-font);
   margin: 0;
   color-scheme: dark;
 }

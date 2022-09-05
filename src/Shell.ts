@@ -17,6 +17,7 @@ import { TerminalDataProcessor } from './TerminalDataProcessor';
 import { TaskQueue } from './TaskQueue';
 import { IFrameBlock } from './IFrameBlock';
 import { MenuItem, showContextMenu } from './contextMenu';
+import { fontString } from './font';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: string) => void>();
@@ -663,7 +664,7 @@ export class Shell {
     const editorWrapper = document.createElement('div');
     editorWrapper.style.position = 'relative';
     editorWrapper.style.flex = '1';
-    editorWrapper.style.minHeight = '14px';
+    editorWrapper.style.minHeight = '1.4em';
     editorWrapper.addEventListener('keydown', async event => {
       if ((event.key === 'Enter' && !event.shiftKey) || (event.code === 'KeyM' && event.ctrlKey)) {
         event.preventDefault();
@@ -827,7 +828,7 @@ export class Shell {
 
 function measureChar() {
   const div = document.createElement('div');
-  div.style.font = '10px monaco';
+  div.style.font = fontString();
   div.style.position = 'absolute';
   div.style.top = '-1000px';
   div.style.left = '-1000px';

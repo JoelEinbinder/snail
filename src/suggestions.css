@@ -10,8 +10,7 @@
     padding: 0;
     margin: 0;
     list-style: none;
-    font-size: 14px;
-    font-family: sans-serif;
+    font: var(--current-font);
     color: var(--color-text);
     overflow-y: scroll;
     overflow-x: hidden;
@@ -26,10 +25,8 @@ body.vscode-dark .suggestions {
 }
 .suggestion {
     padding: 0 2px;
-    font-family: monaco;
-    font-size: 10px;
-    height: 14px;
-    line-height: 14px;
+    height: 1.4em;
+    line-height: 1.4em;
     contain: strict;
     white-space: pre;
     overflow: hidden;
@@ -64,7 +61,7 @@ body.vscode-dark .suggestions {
 .suggestion:not(.psuedo) > .prefix {
     text-shadow: 0.5px 0 0 currentColor;
     color: #FFF;
-    line-height: 14px;
+    line-height: 1.4em;
 }
 .suggestion > .suffix {
     color: var(--ansi-246)

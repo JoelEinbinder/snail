@@ -1,4 +1,5 @@
 import { AntiFlicker } from "./AntiFlicker";
+import { font, fontString } from "./font";
 import { host } from "./host";
 import { JoelEvent } from "./JoelEvent";
 import { LogItem } from "./LogView";
@@ -40,6 +41,7 @@ export class IFrameBlock implements LogItem {
         return;
       event.preventDefault();
     }, { passive: false });
+    font.on(this._onFontChanged);
     const didDraw = delegate.antiFlicker.expectToDraw(500);
     iframeMessageHandler.set(this.iframe, data => {
       if (readyCallback) {
@@ -122,6 +124,7 @@ export class IFrameBlock implements LogItem {
     }).then(urlStr => {
       const url = new URL(urlStr);
       url.searchParams.set('class', `${host.type()}-host`);
+      url.searchParams.set('css', `--current-font: ${fontString()}`);
       if (host.type() === 'web')
         url.host = document.location.host;
       this.iframe.src = url.href;
@@ -140,6 +143,14 @@ export class IFrameBlock implements LogItem {
   }
   dispose(): void {
     iframeMessageHandler.delete(this.iframe);
+    font.off(this._onFontChanged);
+  }
+  _onFontChanged = async () => {
+    await this.readyPromise;
+    this.iframe.contentWindow?.postMessage({
+      method: 'fontChanged',
+      params: fontString(),
+    }, '*');
   }
   async message(data: string) {
     await this.readyPromise;
