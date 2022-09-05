@@ -48,7 +48,7 @@ const rpc = RPC(transport, {
     }
     const fs = require('fs');
     const responseHeaders = {
-      'cache-control': 'no-cache',
+      'cache-control': searchParams.has('cache') ? 'max-age=31536000' : 'no-cache',
     };
     if (searchParams.has('thumbnail')) {
       responseHeaders.etag = fs.lstatSync(filePath, {}).ctimeMs.toString();
@@ -133,7 +133,7 @@ function transformTs(filename) {
     ],
     // plugins: [['@babel/plugin-proposal-class-properties', {loose: true}]],
     sourceMaps: false,
-    // cwd: __dirname
+    cwd: filename
   });
   return result?.code || '';
 }

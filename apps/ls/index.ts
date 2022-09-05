@@ -1,6 +1,6 @@
 /// <reference path="../../iframe/types.d.ts" />
 import './index.css';
-import {iconPathForPath} from './material-icons';
+import {iconPathForPath, looksLikeImageOrVideo} from '../../icon_service/iconService';
 import {DataGrid} from '../../datagrid/datagrid';
 type Entry = {
   dir: string,
@@ -238,9 +238,9 @@ async function renderTable() {
     title: 'Name',
     render(item) {
       const fullPath = `${cwd === '/' ? '' : cwd}/${item.dir}`;
-      const image = makeImageForPath(fullPath, item);
+      const {element, readyPromise} = makeImageForPath(fullPath, item);
       const div = document.createElement('div');
-      div.append(image, item.dir);
+      div.append(element, item.dir);
       return div;
     },
     compare(a, b) {
@@ -275,12 +275,9 @@ function inlineMode() {
       continue;
     const div = document.createElement('div');
     const fullPath = `${cwd === '/' ? '' : cwd}/${dir}`;
-    const image = makeImageForPath(fullPath, info);
-    imageLoadPromises.push(new Promise(x => {
-      image.onload = x;
-      image.onerror = x;
-    }));
-    div.append(image, dir);
+    const {element, readyPromise} = makeImageForPath(fullPath, info);
+    imageLoadPromises.push(readyPromise);
+    div.append(element, dir);
     div.title = fullPath;
     if (info.link)
       div.title += ' -> ' + info.link;
@@ -321,11 +318,16 @@ function inlineMode() {
 }
 
 function makeImageForPath(fullPath: string, info: Entry) {
+  if (!looksLikeImageOrVideo(info) || platform !== 'darwin')
+    return iconPathForPath(fullPath, info);
   const image = document.createElement('img');
-  image.src = iconPathForPath(fullPath, info);
-  if (platform === 'darwin' && (image.src.endsWith('/image.svg') || image.src.endsWith('/video.svg'))) {
-    image.src = `${fullPath}?thumbnail&size=${initialDpr * 16}`;
-  }
+  image.src = `${fullPath}?thumbnail&size=${initialDpr * 16}`;
   image.width = image.height = 16;
-  return image;
+  return {
+    element: image,
+    readyPromise: new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = reject;
+    })
+  };
 }
