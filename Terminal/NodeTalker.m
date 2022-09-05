@@ -27,7 +27,7 @@
             return;
         [buffer appendData:data];
         size_t start = 0;
-        for (size_t i = 0; i < buffer.length; i++) {
+        for (size_t i = buffer.length - data.length; i < buffer.length; i++) {
             if (((char*)[buffer bytes])[i] == 0) {
                 if (self.onMessage) {
                     self.onMessage([[NSString alloc] initWithData:[buffer subdataWithRange:NSMakeRange(start, i - start)] encoding:NSUTF8StringEncoding]);
