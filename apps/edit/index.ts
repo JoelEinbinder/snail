@@ -128,7 +128,8 @@ while (true){
       editor = monaco.editor.create(editorContainer, {
         value: params.content,
         language,
-        fontSize: 10,
+        fontSize: parseInt(window.getComputedStyle(document.body).fontSize),
+        fontFamily: window.getComputedStyle(document.body).fontFamily,
         wordBasedSuggestions: false,
         minimap: {
           enabled: false, 

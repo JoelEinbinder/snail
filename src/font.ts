@@ -2,8 +2,8 @@ import {JoelEvent} from './JoelEvent';
 
 let measuredFontSize: number = null;
 export const font = new JoelEvent({
-  size: 10,
-  family: 'Monaco',
+  size: 12,
+  family: 'SFMono-Regular, ui-monospace, monospace',
 });
 function fontChanged() {
   document.body.style.setProperty('--current-font', fontString());
