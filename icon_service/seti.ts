@@ -471,6 +471,7 @@ const iconDefs = {
 		},
 		"_folder": {
 			"fontCharacter": "\uE032",
+			"fontColor": "#519aba"
 		},
 		"_font_light": {
 			"fontCharacter": "\uE033",
