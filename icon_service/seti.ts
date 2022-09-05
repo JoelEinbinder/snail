@@ -2725,7 +2725,7 @@ export function iconPathForPath(fullPath: string, info: {dir: string, mode: numb
   const {fontCharacter, fontColor} = iconDefs.iconDefinitions[iconName()];
   const element = document.createElement('span');
   element.classList.add('seti-icon');
-  element.style.color = fontColor || '#999';
+  element.style.color = fontColor || '#ccc';
   element.textContent = '';
   element.setAttribute('data-font-character', fontCharacter);
   return {
