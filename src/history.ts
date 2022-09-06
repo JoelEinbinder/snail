@@ -4,19 +4,52 @@ type HistoryItem = {
   command: string;
   start?: number;
 }
-export const historyPromise : Promise<HistoryItem[]> = (async() => {
-  const history = await host.sendMessage({
-    method: 'getHistory',
-  });
-  return history;
-})();
+
+export async function searchHistory(current: string, prefix: string, start: number, direction: number) {
+  const max = (await host.sendMessage({
+    method: 'queryDatabase',
+    params: {
+      sql: `SELECT MAX(command_id) FROM history`,
+      params: [],
+    }
+  }))[0]['MAX(command_id)'];
+  const escapedPrefix = prefix.replace(/[\\%_]/g, '\\$&') + '%';
+  if (direction === 1) {
+    const result = await host.sendMessage({
+      method: 'queryDatabase',
+      params: {
+        sql: `SELECT command_id, command FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id < ? AND command != ? ORDER BY command_id DESC LIMIT 1`,
+        params: [escapedPrefix, max - start + 1, current],
+      }
+    });
+    if (result.length === 0)
+      return 'end';
+    return {
+      command: result[0].command,
+      historyIndex: max - result[0].command_id + 1,
+    }
+  } else {
+    const result = await host.sendMessage({
+      method: 'queryDatabase',
+      params: {
+        sql: `SELECT command_id, command FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id > ? AND command != ? ORDER BY command_id ASC LIMIT 1`,
+        params: [escapedPrefix, max - start + 1, current],
+      }
+    });
+    if (result.length === 0)
+      return 'current';
+    return {
+      command: result[0].command,
+      historyIndex: max - result[0].command_id + 1,
+    }
+  }
+}
 
 export async function addHistory(command: string): Promise<number> {
   const item: HistoryItem = {
     command,
     start: Date.now(),
   };
-  (await historyPromise).push(item);
   const id = await host.sendMessage({
     method: 'addHistory',
     params: item,

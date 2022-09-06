@@ -7,7 +7,7 @@ import './completions/git';
 import './completions/npx';
 import './completions/npm';
 import './completions/apt';
-import { historyPromise } from "./history";
+import { searchHistory } from "./history";
 import { setSelection } from "./selection";
 import { host } from "./host";
 
@@ -56,42 +56,24 @@ export function makePromptEditor(shell: Shell) {
     if (historyIndex === 0)
       currentValue = editor.value;
     const prefix = editor.text({start: {column: 0, line: 0,}, end: editor.selections[0].start});
-    historyIndex = await searchHistory(editor.value, prefix, historyIndex, direction);
-    if (historyIndex < 0) {
-      historyIndex = 0;
-      beep();
-      return;
-    }
-    const history = await historyPromise;
-    if (historyIndex >= history.length) {
-      historyIndex = history.length - 1;
-      beep();
-      return;
-    }
-    if (historyIndex === 0) {
+    const result = await searchHistory(editor.value, prefix, historyIndex, direction);
+    if (result === 'current' && editor.value !== currentValue) {
       editor.value = currentValue;
-    } else {
-      editor.value = history[history.length - historyIndex].command;
+      historyIndex = 0;
+      return;
     }
+    if (result === 'end' || result === 'current') {
+      beep();
+      return;
+    }
+    historyIndex = result.historyIndex;
+    editor.value = result.command;
   }
   const observer = new ResizeObserver(() => {
     editor.layout();
   });
   observer.observe(editor.element);
   return {editor, autocomplete};
-}
-
-async function searchHistory(current: string, prefix: string, start: number, direction: number) {
-  const history = await historyPromise;
-  let index = start + direction;
-  for (; index >= 0 && index < history.length; index += direction) {
-    if (index === 0)
-      return index;
-    const {command} = history[history.length - index];
-    if (command.startsWith(prefix) && command !== current)
-      return index;
-  }
-  return index;
 }
 
 function beep() {

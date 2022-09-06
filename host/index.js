@@ -86,11 +86,6 @@ const handler = {
     websockets.get(socketId).close();
     websockets.delete(socketId);
   },
-  async getHistory() {
-    const util = require('util');
-    const database = await getDatabase();
-    return await util.promisify(database.all.bind(database))('SELECT command FROM history ORDER BY command_id ASC');
-  },
   async addHistory(item) {
     const database = await getDatabase();
     const runResult = await new Promise((res, rej) => {
