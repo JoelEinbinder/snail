@@ -11,6 +11,7 @@ const os = require('os');
  * cwd?: string,
  * nod?: string[],
  * ssh?: string,
+ * reconnect?: string,
  * code?: string,
  * exit?: number,
  * }}
@@ -100,6 +101,12 @@ const builtins = {
         if (!changes)
             changes = {};
         changes.ssh = args[0];
+        return Promise.resolve(0);
+    },
+    reconnect: (args, stdout, stderr) => {
+        if (!changes)
+            changes = {};
+        changes.reconnect = path.resolve(process.cwd(), args[0]);
         return Promise.resolve(0);
     },
     code: (args, stdout, stderr) => {

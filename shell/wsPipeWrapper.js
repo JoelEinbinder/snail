@@ -4,11 +4,14 @@ const {RPC} = require('../protocol/rpc');
 const {spawnJSProcess} = require('./spawnJSProcess');
 const transport = new PipeTransport(process.stdout, process.stdin);
 process.stdin.on('close', () => process.exit());
-const spawnPromise = spawnJSProcess(process.cwd(), false);
-spawnPromise.then(({child, socket: s}) => {
+const spawnPromise = spawnJSProcess({
+  cwd: process.cwd(),
+  sshAddress: false
+});
+spawnPromise.then((s) => {
   socket = s;
-  child.on('exit', code => process.exit(code));
-  process.on('exit', () => child.kill());
+  s.onclose = () => process.exit();
+  process.on('exit', () => s.close());
   socket.onmessage = event => {
     rpc.notify('message', event.data);
   };

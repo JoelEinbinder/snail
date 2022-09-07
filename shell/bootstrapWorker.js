@@ -2,15 +2,11 @@ const inspector = require('inspector');
 const net = require('net');
 const fs = require('fs');
 const {PipeTransport} = require('../protocol/pipeTransport');
-const unixSocketServer = net.createServer();
 const os = require('os');
 const path = require('path');
 const socketDir = path.join(os.tmpdir(), '1d4-sockets');
 const socketPath = path.join(socketDir, `${process.pid}.socket`);
 
-unixSocketServer.listen({
-  path: socketPath,
-});
 
 let isDaemon = false;
 const enabledTransports = new Set();
@@ -43,30 +39,38 @@ async function dispatchToHandler(message) {
 /** @type {PipeTransport|null} */
 let transport = null;
 let detached = true;
-unixSocketServer.on('connection', (s) => {
-  detached = false;
-  fs.unlinkSync(socketPath);
-  transport = new PipeTransport(s, s);
-  transport.onmessage = message => {
-    if (message.method in handler) {
-      dispatchToHandler(message);
-      return;
-    }
-    let callback = 'id' in message ? (error, result) => {
-      if (error)
-        transport?.send({id: message.id, error});
-      else
-        transport?.send({id: message.id, result});
-    } : undefined;
-    session.post(message.method, message.params, callback);
-  };
-  s.on('close', () => {
-    transport = null;
-    enabledTransports.delete(transport);
-    // TODO check if demon and keep alive
-    process.exit(0);
+function waitForConnection() {
+  const unixSocketServer = net.createServer();
+  unixSocketServer.listen({
+    path: socketPath,
   });
-});
+  unixSocketServer.on('connection', (s) => {
+    detached = false;
+    fs.unlinkSync(socketPath);
+    transport = new PipeTransport(s, s);
+    transport.onmessage = message => {
+      if (message.method in handler) {
+        dispatchToHandler(message);
+        return;
+      }
+      let callback = 'id' in message ? (error, result) => {
+        if (error)
+          transport?.send({id: message.id, error});
+        else
+          transport?.send({id: message.id, result});
+      } : undefined;
+      session.post(message.method, message.params, callback);
+    };
+    s.on('close', () => {
+      transport = null;
+      enabledTransports.delete(transport);
+      if (isDaemon)
+        waitForConnection();
+      else
+        process.exit(0);
+    });
+  });
+}
 process.on('exit', () => {
   if (detached)
     fs.unlinkSync(socketPath);
@@ -78,3 +82,4 @@ session.on('inspectorNotification', notification => {
   transport?.send(notification);
 });
 
+waitForConnection();

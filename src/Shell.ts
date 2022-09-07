@@ -75,7 +75,7 @@ export class Shell {
     return this.connection?.env || {};
   }
 
-  async _setupConnection(args: string[], sshAddress = null) {
+  async _setupConnection(args: string[], sshAddress = null, socketPath = null) {
     const [{shellId}, {socketId}] = await Promise.all([
       host.sendMessage({
         method: 'createShell',
@@ -87,6 +87,7 @@ export class Shell {
         method: 'createJSShell',
         params: {
           cwd: this.connection ? this.connection.cwd : localStorage.getItem('cwd') || '',
+          socketPath,
           sshAddress,
         }
       })
@@ -313,6 +314,11 @@ export class Shell {
       ssh: async (sshAddress: string) => {
         this._lockPrompt();
         await this._setupConnection([], sshAddress);
+        this._unlockPrompt();
+      },
+      reconnect: async (sockePath: string) => {
+        this._lockPrompt();
+        await this._setupConnection([], undefined, sockePath);
         this._unlockPrompt();
       },
       code: async (file: string) => {

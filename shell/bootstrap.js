@@ -12,6 +12,7 @@ worker.on('exit', code => {
  * cwd?: string,
  * nod?: string[],
  * ssh?: string,
+ * reconnect?: string,
  * code?: string,
  * exit?: number,
  * }} Changes
@@ -156,6 +157,8 @@ global.bootstrap = (args) => {
         notify('nod', changes.nod);
       if (changes.ssh)
         notify('ssh', changes.ssh);
+      if (changes.reconnect)
+        notify('reconnect', changes.reconnect);
       if (changes.code)
         notify('code', changes.code);
       if (changes.exit !== undefined) {

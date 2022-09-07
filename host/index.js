@@ -48,27 +48,21 @@ const handler = {
   /**
    * @param {Client} sender
    */
-  async createJSShell({cwd, sshAddress}, sender) {
-    /** @type {import('child_process').ChildProcessWithoutNullStreams} */
-    let child;
-    let killed = false;
+  async createJSShell({cwd, sshAddress, socketPath}, sender) {
     sender.on('destroyed', destroy);
 
-    function destroy() {
-      killed = true;
+    async function destroy() {
       sender.off('destroyed', destroy);
+      await socketPromise;
       socket.onmessage = null;
       socket.onclose = null;
       websockets.delete(socketId);
-      child?.kill();
+      socket.close();
     }
     const { spawnJSProcess } = require('../shell/spawnJSProcess');
-    const result = await spawnJSProcess(cwd, sshAddress);
-    child = result.child;
-    if (killed)
-      child.kill();
+    const socketPromise = spawnJSProcess({cwd, sshAddress, socketPath});
+    const socket = await socketPromise;
     const socketId = ++lastWebsocketId;
-    const socket = result.socket;
     socket.onmessage = event => {
       sender.send({ method: 'websocket', params: {socketId, message: event.data}});
     };

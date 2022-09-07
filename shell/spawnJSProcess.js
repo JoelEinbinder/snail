@@ -31,7 +31,7 @@ async function waitForURL(child) {
  * }} JSSocket
  */
 
-async function spawnJSProcess(cwd, sshAddress) {
+async function spawnJSProcess({cwd, sshAddress, socketPath}) {
   if (sshAddress) {
     /** @type {JSSocket} */ 
     const socket = {
@@ -63,30 +63,38 @@ async function spawnJSProcess(cwd, sshAddress) {
     });
     transport.onclose = () => socket.onclose?.();
 
-    return {child, socket};
+    return socket;
   }
-  if (!cwd || !fs.existsSync(cwd))
-    cwd = require('os').homedir();
-  const os = require('os');
-  const socketDir = path.join(os.tmpdir(), '1d4-sockets');
+  if (!socketPath) {
+    // launch the process if we don't have an explicit socket to connect to
+    if (!cwd || !fs.existsSync(cwd))
+      cwd = require('os').homedir();
+    const os = require('os');
+    const socketDir = path.join(os.tmpdir(), '1d4-sockets');
 
-  fs.mkdirSync(socketDir, {recursive: true, mode: 0o700});
+    fs.mkdirSync(socketDir, {recursive: true, mode: 0o700});
 
-  const nodePath = process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node';
-  const child = spawn(nodePath, ['-e', `require(${JSON.stringify(path.join(__dirname, 'bootstrap.js'))})`], {
-    stdio: 'ignore',
-    detached: false,
-    cwd,
-  });
-  const socketPath = path.join(socketDir, `${child.pid}.socket`);
-  
+    const nodePath = process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node';
+    const child = spawn(nodePath, ['-e', `require(${JSON.stringify(path.join(__dirname, 'bootstrap.js'))})`], {
+      stdio: 'ignore',
+      detached: false,
+      cwd,
+    });
+
+    socketPath = path.join(socketDir, `${child.pid}.socket`);
+    while (true) {
+      if (fs.existsSync(socketPath))
+        break;
+      // TODO use fs.watch on linux and fsevents on macos
+      await new Promise(x => setTimeout(x, 25));
+    }
+  }
+  return connectToSocket(socketPath);
+}
+
+function connectToSocket(socketPath) {
   const net = require('net');
-  while (true) {
-    if (fs.existsSync(socketPath))
-      break;
-    // TODO use fs.watch on linux and fsevents on macos
-    await new Promise(x => setTimeout(x, 25));
-  }
+
   /** @type {net.Socket} */
   const unixSocket = net.connect({
     path: socketPath,
@@ -113,7 +121,7 @@ async function spawnJSProcess(cwd, sshAddress) {
     }
   }
   
-  return {child, socket};
+  return socket;
 }
 
 module.exports = {spawnJSProcess};
