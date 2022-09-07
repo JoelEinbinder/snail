@@ -316,9 +316,9 @@ export class Shell {
         await this._setupConnection([], sshAddress);
         this._unlockPrompt();
       },
-      reconnect: async (sockePath: string) => {
+      reconnect: async (socketPath: string) => {
         this._lockPrompt();
-        await this._setupConnection([], undefined, sockePath);
+        await this._setupConnection([], this._connectionToSSHAddress.get(connection), socketPath);
         this._unlockPrompt();
       },
       code: async (file: string) => {
