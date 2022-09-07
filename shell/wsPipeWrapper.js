@@ -24,7 +24,7 @@ let socket;
 const rpc = RPC(transport, {
   /** @param {string} data */
   async message(data) {
-    const {socket} = await spawnPromise;
+    const socket = await spawnPromise;
     socket.send(data);
   }
 });
