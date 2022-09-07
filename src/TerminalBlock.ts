@@ -4,7 +4,7 @@ import { font } from "./font";
 import { JoelEvent } from "./JoelEvent";
 import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
-import { titleThrottle } from "./UIThrottle";
+import { titleThrottle } from "./title";
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;

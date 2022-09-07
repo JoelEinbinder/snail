@@ -12,6 +12,34 @@ unixSocketServer.listen({
   path: socketPath,
 });
 
+let isDaemon = false;
+const enabledTransports = new Set();
+const handler = {
+  'Shell.setIsDaemon': (params) => {
+    isDaemon = !!params.isDaemon;
+    for (const transport of enabledTransports)
+      transport.send({method: 'Shell.daemonStatus', params: {isDaemon}});
+  },
+  'Shell.enable': (params) => {
+    enabledTransports.add(transport);
+    transport.send({method: 'Shell.daemonStatus', params: {isDaemon}});
+  },
+  'Shell.disable': (params) => {
+    enabledTransports.delete(transport);
+  },
+  __proto__: null,
+};
+
+async function dispatchToHandler(message) {
+  try {
+    const result = await handler[message.method](message.params);
+    if ('id' in message)
+      transport?.send({id: message.id, result});
+  } catch(e) {
+    if ('id' in message)
+      transport?.send({id: message.id, error: {message: String(e)}});
+  }
+}
 /** @type {PipeTransport|null} */
 let transport = null;
 let detached = true;
@@ -20,6 +48,10 @@ unixSocketServer.on('connection', (s) => {
   fs.unlinkSync(socketPath);
   transport = new PipeTransport(s, s);
   transport.onmessage = message => {
+    if (message.method in handler) {
+      dispatchToHandler(message);
+      return;
+    }
     let callback = 'id' in message ? (error, result) => {
       if (error)
         transport?.send({id: message.id, error});
@@ -30,6 +62,7 @@ unixSocketServer.on('connection', (s) => {
   };
   s.on('close', () => {
     transport = null;
+    enabledTransports.delete(transport);
     // TODO check if demon and keep alive
     process.exit(0);
   });

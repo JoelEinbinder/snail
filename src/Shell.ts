@@ -9,7 +9,7 @@ import { JSConnection } from './JSConnection';
 import { JSBlock, JSLogBlock, renderRemoteObjectOneLine } from './JSBlock';
 import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 import type { Suggestion } from './autocomplete';
-import { titleThrottle } from './UIThrottle';
+import { suffixThrottle, titleThrottle } from './title';
 import { host } from './host';
 import { AntiFlicker } from './AntiFlicker';
 import { ProgressBlock } from './ProgressBlock';
@@ -55,6 +55,7 @@ export class Shell {
   private _antiFlicker = new AntiFlicker(() => this._lockPrompt(), () => this._unlockPrompt());
   private _delegate?: ShellDelegate;
   private _connectionNameElement = document.createElement('div');
+  private _connectionIsDaemon = new WeakMap<JSConnection, boolean>();
   private constructor() {
     this._connectionNameElement.classList.add('connection-name');
     this._connectionNameEvent.on(name => {
@@ -99,6 +100,12 @@ export class Shell {
         host.notify({method: 'sendMessageToWebSocket', params: {socketId, message}});
       },
     });
+    this._connectionIsDaemon.set(connection, false);
+    connection.on('Shell.daemonStatus', ({isDaemon}) => {
+      this._connectionIsDaemon.set(connection, isDaemon);
+      this._updateSuffix();
+    });
+    await connection.send('Shell.enable', undefined);
     socketCloseListeners.set(socketId, () => {
       connection.didClose();
       socketListeners.delete(socketId);
@@ -341,6 +348,7 @@ export class Shell {
     notify('resize', this._size.current);
     this._size.on(resize);
     this._connections.push(connection);
+    this._updateSuffix();
     this._connectionNameEvent.dispatch(this._connectionToName.get(connection));
     let destroyed = false;
     const destroy = () => {
@@ -355,6 +363,7 @@ export class Shell {
         this._clearCache();
       }
       this._connections.splice(this._connections.indexOf(connection), 1);
+      this._updateSuffix();
       this._connectionNameEvent.dispatch(this._connectionToName.get(this.connection));
     }
     this._connectionToDestroy.set(connection, destroy);
@@ -463,6 +472,16 @@ export class Shell {
     delete this._cachedGlobalVars;
     this._cachedSuggestions = new Map();
     delete this._cachedGlobalObjectId;
+  }
+
+  async toggleDaemon() {
+    await this.connection.send('Shell.setIsDaemon', {
+      isDaemon: !this._connectionIsDaemon.get(this.connection),
+    });
+  }
+
+  _updateSuffix() {
+    suffixThrottle.update(this._connectionIsDaemon.get(this.connection) ? ' 😈' : '');
   }
 
   async runCommand(command: string) {

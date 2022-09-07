@@ -1,4 +1,19 @@
 import {Protocol} from './protocol';
+type ExtraServerMethods = {
+  'Shell.daemonStatus': { isDaemon: boolean };
+}
+type ServerMethods = Protocol.Events & ExtraServerMethods;
+
+type ExtraClientMethods = {
+  'Shell.enable': () => void;
+  'Shell.disable': () => void;
+  'Shell.setIsDaemon': (params: {isDaemon: boolean}) => void;
+}
+
+type ClientMethods = {
+  [key in keyof Protocol.CommandParameters]: (params: Protocol.CommandParameters[key]) => Protocol.CommandReturnValues[key];
+} & ExtraClientMethods;
+
 export class JSConnection {
   private _id = 0;
   private _callbacks = new Map();
@@ -24,18 +39,18 @@ export class JSConnection {
       for (const listener of [...listeners])
         listener(params);
   }
-  on<Method extends keyof Protocol.Events>(method: Method, listener: (params: Protocol.Events[Method]) => void) {
+  on<Method extends keyof ServerMethods>(method: Method, listener: (params: ServerMethods[Method]) => void) {
     let listeners = this._listeners.get(method);
     if (!listeners)
       this._listeners.set(method, listeners = new Set());
     listeners.add(listener);
   }
-  off<Method extends keyof Protocol.Events>(method: Method, listener: (params: Protocol.Events[Method]) => void) {
+  off<Method extends keyof ServerMethods>(method: Method, listener: (params: ServerMethods[Method]) => void) {
     const listeners = this._listeners.get(method);
     if (listeners)
       listeners.delete(listener);
   }
-  async send<Method extends keyof Protocol.CommandParameters>(method: Method, params: Protocol.CommandParameters[Method]): Promise<Protocol.CommandReturnValues[Method]> {
+  async send<Method extends keyof ClientMethods>(method: Method, params: Parameters<ClientMethods[Method]>[0]): Promise<ReturnType<ClientMethods[Method]>> {
     const id = ++this._id;
     const message = {id, method, params};
     const promise = new Promise<any>(x => this._callbacks.set(id, x));

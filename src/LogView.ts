@@ -59,10 +59,14 @@ export class LogView implements Block {
           this._doSplit('horizontal');
           event.preventDefault();
           event.stopImmediatePropagation();
+        } else if (event.code === 'KeyD') {
+          this._shell.toggleDaemon();
+          event.preventDefault();
+          event.stopImmediatePropagation();
         }
         return;
       }
-    }, false);
+    }, true);
     this._scroller.classList.add('log-view-scroller');
     this._element.classList.add('log-view');
     this._element.append(this._scroller);

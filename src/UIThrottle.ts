@@ -1,4 +1,4 @@
-class UIThrottle<T> {
+export class UIThrottle<T> {
   private _timeout: number;
   private _pendingValue: T|Promise<T>;
   private _flushNumber = 0;
@@ -34,7 +34,3 @@ class UIThrottle<T> {
     delete this._timeout;
   }
 }
-
-export const titleThrottle = new UIThrottle('Loading...', value => {
-  document.title = value;
-})
