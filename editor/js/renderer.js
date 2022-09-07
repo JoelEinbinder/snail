@@ -572,6 +572,8 @@ class Layer {
   }
 
   refresh() {
+    if (this.canvas.width === 0 || this.canvas.height === 0)
+      return;
     if (this._translation.x || this._translation.y) {
       this._ctx.globalCompositeOperation = 'copy';
       this._ctx.drawImage(this.canvas, -this._translation.x, -this._translation.y);
