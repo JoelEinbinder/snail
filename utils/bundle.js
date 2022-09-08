@@ -21,6 +21,7 @@ const directoriesToCopy = [
   'shjs',
   'thumbnail_generator',
   'datagrid',
+  'icon_service',
 ];
 const filesToCopy = [
   'package.json',
