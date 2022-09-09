@@ -4,9 +4,16 @@ const fs = require('fs');
 const {PipeTransport} = require('../protocol/pipeTransport');
 const os = require('os');
 const path = require('path');
+const worker_threads = require('node:worker_threads');
 const socketDir = path.join(os.tmpdir(), '1d4-sockets');
 const socketPath = path.join(socketDir, `${process.pid}.socket`);
 
+worker_threads.parentPort.on('message', changes => {
+  if (changes.env) {
+    for (const key in changes.env)
+      process.env[key] = changes.env[key];
+  }
+});
 
 let isDaemon = false;
 const enabledTransports = new Set();

@@ -164,6 +164,7 @@ global.bootstrap = (args) => {
       if (changes.exit !== undefined) {
         process.exit(changes.exit);
       }
+      worker.postMessage(changes);
     }
     notify('endTerminal', {id, returnValue});
     return 'this is the secret secret string:' + returnValue.exitCode;
