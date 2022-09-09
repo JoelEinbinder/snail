@@ -287,6 +287,9 @@
 -(void)windowDidResize:(NSNotification *)notification {
     [self closePanel];
 }
+- (void)windowWillClose:(NSNotification *)notification {
+    [nodeTalker terminate];
+}
 -(void)windowWillEnterFullScreen:(NSNotification *)notification {
     [containerView removeFromSuperview];
     [self.view addSubview:webView];

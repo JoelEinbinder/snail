@@ -10,6 +10,7 @@
 @implementation NodeTalker
 -(instancetype)init {
     self = [super init];
+    terminated = false;
     task = [[NSTask alloc] init];
     [task setExecutableURL:[[NSBundle mainBundle] URLForResource:@"node" withExtension:@"" subdirectory:@"node-v16.16.0-darwin-arm64/bin/"]];
     NSString* hostPath = [[[NSProcessInfo processInfo] environment] valueForKey:@"TERMINAL_HOST_PATH"];
@@ -46,15 +47,22 @@
     [task setStandardInput:standardInput];
     [task setStandardError:[NSFileHandle fileHandleWithStandardError]];
     [task launch];
-//    [[standardInput fileHandleForWriting] writeData:[@"{\"id\": 5, \"method\":\"test\"}\0" dataUsingEncoding:NSUTF8StringEncoding]];
-//    [standardInput fileHandleForWriting] writeData:(nonnull NSData *)
-//    NSLog(@"stdout %@", [task standardOutput]);
     return self;
 }
 -(void)sendMessage: (NSDictionary*) message {
+    if (terminated)
+        return;
     NSData* jsonData = [NSJSONSerialization dataWithJSONObject:message options:0 error:nil];
     [[[task standardInput] fileHandleForWriting] writeData:jsonData];
     [[[task standardInput] fileHandleForWriting] writeData:[@"\0" dataUsingEncoding:NSUTF8StringEncoding]];
+}
+
+-(void)terminate {
+    if (terminated)
+        return;
+    terminated = true;
+    NSPipe* stdinput = [task standardInput];
+    [[stdinput fileHandleForWriting] closeFile];
 }
 
 @end

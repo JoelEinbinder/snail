@@ -11,10 +11,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NodeTalker : NSObject {
     NSTask* task;
+    bool terminated;
 }
 -(instancetype)init;
 -(void)sendMessage: (NSDictionary*) message;
-
+-(void)terminate;
 @property (nonatomic, copy, nullable) void (^onMessage)(NSString*);
 
 @end
