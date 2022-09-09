@@ -2,6 +2,7 @@ import { AntiFlicker } from "./AntiFlicker";
 import { font, fontString } from "./font";
 import { host } from "./host";
 import { JoelEvent } from "./JoelEvent";
+import type { JSConnection } from "./JSConnection";
 import { LogItem } from "./LogView";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
@@ -15,9 +16,10 @@ window.addEventListener('message', event => {
 });
 
 export type IFrameBlockDelegate = {
-  shellId: number;
+  connection: JSConnection;
   sendInput: (data: string) => void;
   antiFlicker?: AntiFlicker;
+  socketId: number;
 }
 
 export class IFrameBlock implements LogItem {
@@ -118,7 +120,7 @@ export class IFrameBlock implements LogItem {
     host.sendMessage({
       method: 'urlForIFrame',
       params: {
-        shellId: delegate.shellId,
+        socketId: delegate.socketId,
         filePath: data,
       }
     }).then(urlStr => {

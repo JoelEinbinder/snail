@@ -8,7 +8,6 @@ import { titleThrottle } from "./title";
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
-  shellId: number;
   sendInput: (data: string) => void;
   antiFlicker?: AntiFlicker;
 }

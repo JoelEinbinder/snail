@@ -23,6 +23,16 @@ const handler = {
   'Shell.disable': (params) => {
     enabledTransports.delete(transport);
   },
+  'Shell.evaluate': async (params) => {
+    const {code} = params;
+    const {getResult} = require('../shjs/index');
+    const {output} = await getResult(code);
+    return { result: output };
+  },
+  'Shell.resolveFileForIframe': async (params) => {
+    const response = await require('./webserver').resolveFileForIframe(params);
+    return {response};
+  },
   __proto__: null,
 };
 

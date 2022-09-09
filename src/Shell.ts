@@ -20,7 +20,7 @@ import { MenuItem, showContextMenu } from './contextMenu';
 import { fontString } from './font';
 
 const shells = new Set<Shell>();
-const socketListeners = new Map<number, (message: string) => void>();
+const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
 const socketCloseListeners = new Map<number, () => void>();
 
 host.onEvent('websocket', ({socketId, message}) => {
@@ -50,7 +50,7 @@ export class Shell {
   private _connectionToName = new WeakMap<JSConnection, string>();
   private _connectionToDestroy = new WeakMap<JSConnection, (() => void)>();
   private _connectionNameEvent = new JoelEvent<string>('');
-  private _connectionToShellId = new WeakMap<JSConnection, number>();
+  private _connectionToSocketId = new WeakMap<JSConnection, number>();
   private _connectionToSSHAddress = new WeakMap<JSConnection, string>();
   private _antiFlicker = new AntiFlicker(() => this._lockPrompt(), () => this._unlockPrompt());
   private _delegate?: ShellDelegate;
@@ -76,22 +76,14 @@ export class Shell {
   }
 
   async _setupConnection(args: string[], sshAddress = null, socketPath = null) {
-    const [{shellId}, {socketId}] = await Promise.all([
-      host.sendMessage({
-        method: 'createShell',
-        params: {
-          sshAddress,
-        }
-      }),
-      host.sendMessage({
-        method: 'createJSShell',
-        params: {
-          cwd: this.connection ? this.connection.cwd : localStorage.getItem('cwd') || '',
-          socketPath,
-          sshAddress,
-        }
-      })
-    ] as const);
+    const {socketId} = await host.sendMessage({
+      method: 'createJSShell',
+      params: {
+        cwd: this.connection ? this.connection.cwd : localStorage.getItem('cwd') || '',
+        socketPath,
+        sshAddress,
+      }
+    });
     this._clearCache();
     const connection = new JSConnection({
       listen: callback => {
@@ -112,7 +104,7 @@ export class Shell {
       socketListeners.delete(socketId);
       socketCloseListeners.delete(socketId);
     });
-    this._connectionToShellId.set(connection, shellId);
+    this._connectionToSocketId.set(connection, socketId);
     this._connectionToSSHAddress.set(connection, sshAddress);
     const filePath = args[0];
     this._connectionToName.set(connection, filePath || sshAddress);
@@ -175,7 +167,8 @@ export class Shell {
                     async sendInput(data) {
                         await notify('input', { data, id});
                     },
-                    shellId,
+                    connection,
+                    socketId: this._connectionToSocketId.get(connection),
                     antiFlicker: this._antiFlicker,
                   });
                   activeIframeBlock = iframeBlock;
@@ -248,7 +241,6 @@ export class Shell {
             async sendInput(data) {
                 await notify('input', { data, id});
             },
-            shellId,
             size: this._size,
             antiFlicker: this._antiFlicker,
           });
@@ -278,33 +270,12 @@ export class Shell {
         connection.cwd = cwd;
         if (this._connections[0] === connection)
           localStorage.setItem('cwd', cwd);
-        host.sendMessage({
-          method: 'chdir',
-          params: {
-            shellId,
-            dir: cwd,
-          },
-        });
       },
       aliases: (aliases) => {
-        host.sendMessage({
-          method: 'aliases',
-          params: {
-            shellId,
-            aliases,
-          },
-        });
       },
       env: (env: {[key: string]: string}) => {
         for (const [key, value] of Object.entries(env))
           connection.env[key] = value;
-        host.sendMessage({
-          method: 'env',
-          params: {
-            shellId,
-            env,
-          },
-        });
       },
       nod: async (args: string[]) => {
         this._lockPrompt();
@@ -327,12 +298,9 @@ export class Shell {
           code = `code --remote 'ssh-remote+${sshAddress}' '${file}'`;
         else
           code = `code '${file}'`;
-        await host.sendMessage({
-          method: 'evaluate',
-          params: {
-            shellId: this._connectionToShellId.get(this._connections[0]),
-            code,
-          },
+        // TODO this should be a host method
+        await this._connections[0].send('Shell.evaluate', {
+          code
         });
       },
     }
@@ -423,13 +391,6 @@ export class Shell {
     const shell = new Shell();
     shells.add(shell);
     await shell._setupConnection([], sshAddress);
-    await host.sendMessage({
-      method: 'chdir',
-      params: {
-        shellId: shell._connectionToShellId.get(shell.connection),
-        dir: shell.cwd,
-      },
-    });
     console.timeEnd('create shell');
     return shell;
   }
@@ -572,12 +533,8 @@ export class Shell {
   }
 
   async evaluate(code: string): Promise<string> {
-    const result = await host.sendMessage({
-      method: 'evaluate',
-      params: {
-        shellId: this._connectionToShellId.get(this.connection),
-        code,
-      },
+    const {result} = await this.connection.send('Shell.evaluate', {
+      code,
     });
     return result.trim();
   }

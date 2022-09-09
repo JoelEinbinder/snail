@@ -1,12 +1,12 @@
 import { EventEmitter } from 'events';
-import { handler, shells } from '../host/';
+import { handler, proxies } from '../host/';
 
 export function onConnect(socket: import('ws').WebSocket, request: import('http').IncomingMessage, oid: any) {
   const overrides = {
     ...handler,
     async beep(params, sender) {},
     async urlForIFrame(params: any) {
-      await shells.get(params.shellId)!.startOrGetServer(true);
+      await proxies.get(params.socketId)!.startOrGetServer(true);
       return handler.urlForIFrame(params);
     }
   };

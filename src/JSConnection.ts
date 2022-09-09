@@ -8,6 +8,7 @@ type ExtraClientMethods = {
   'Shell.enable': () => void;
   'Shell.disable': () => void;
   'Shell.setIsDaemon': (params: {isDaemon: boolean}) => void;
+  'Shell.evaluate': (params: {code: string}) => {result: string};
 }
 
 type ClientMethods = {
@@ -22,8 +23,7 @@ export class JSConnection {
   private _cwdHistory: string[] = [];
   public env: {[key: string]: string} = {};
   constructor(private _transport: Transport) {
-    this._transport.listen(data => {
-      const message = JSON.parse(data);
+    this._transport.listen(message => {
       if ('id' in message) {
         const callback = this._callbacks.get(message.id);
         callback.call(null, message);
@@ -54,7 +54,7 @@ export class JSConnection {
     const id = ++this._id;
     const message = {id, method, params};
     const promise = new Promise<any>(x => this._callbacks.set(id, x));
-    this._transport.send(JSON.stringify(message));
+    this._transport.send(message);
     const data = await promise;
     if (data.error)
       throw new Error(method + ': ' + data.error.message);
@@ -92,6 +92,6 @@ export class JSConnection {
 }
 
 interface Transport {
-  send(message: string): void;
-  listen(callback: (message: string) => void): void;
+  send(message: {method: string, params: any, id: number}): void;
+  listen(callback: (message: {method: string, params: any}|{id: number, result: any}) => void): void;
 }

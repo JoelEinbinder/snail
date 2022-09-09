@@ -2,6 +2,8 @@
 /**
  * @typedef {import('events').EventEmitter & {send: (message: any) => void}} Client
  */
+
+const { ProtocolProxy } = require('./ProtocolProxy');
 /**
  * @typedef {Object} FetchResponse
  * @property {string=} data
@@ -9,42 +11,10 @@
  * @property {number} statusCode
  * @property {Record<string, string|string[]>=} headers
  */
-let lastShellId = 0;
-/** @type {Map<number, import('../shell/shell').Shell>} */
-const shells = new Map();
 let lastWebsocketId = 0;
-/** @type {Map<number, {send: (message:string) => void, close: () => void, onmessage?: (event: {data: string}, onopen?: () => void) => void}>} */
-const websockets = new Map();
+/** @type {Map<number, ProtocolProxy>} */
+const proxies = new Map();
 const handler = {
-  async evaluate({shellId, code}) {
-    return shells.get(shellId).evaluate(code);
-  },
-  async chdir({shellId, dir}) {
-    return shells.get(shellId).chdir(dir);
-  },
-  async env({shellId, env}) {
-    return shells.get(shellId).env(env);
-  },
-  async aliases({shellId, aliases}) {
-    return shells.get(shellId).aliases(aliases);
-  },
-  /**
-   * @param {Client} sender
-   */
-  async createShell({sshAddress}, sender) {
-    const shellId = ++lastShellId;
-    const shell = new (require('../shell/shell').Shell)(sshAddress);
-    shells.set(shellId, shell);
-    sender.on('destroyed', destroy);
-
-    function destroy() {
-      sender.off('destroyed', destroy);
-      shells.get(shellId).close();
-      shells.delete(shellId);
-    }
-
-    return {shellId};
-  },
   /**
    * @param {Client} sender
    */
@@ -54,31 +24,34 @@ const handler = {
     async function destroy() {
       sender.off('destroyed', destroy);
       await socketPromise;
-      socket.onmessage = null;
       socket.onclose = null;
-      websockets.delete(socketId);
-      socket.close();
+      proxies.delete(socketId);
+      proxy.close();
     }
     const { spawnJSProcess } = require('../shell/spawnJSProcess');
     const socketPromise = spawnJSProcess({cwd, sshAddress, socketPath});
     const socket = await socketPromise;
     const socketId = ++lastWebsocketId;
-    socket.onmessage = event => {
-      sender.send({ method: 'websocket', params: {socketId, message: event.data}});
-    };
+    const proxy = new ProtocolProxy(socket, message => {
+      sender.send({ method: 'websocket', params: { socketId, message }});
+    });
     socket.onclose = () => {
       sender.send({ method: 'websocket-closed', params: {socketId}});
     }
-    websockets.set(socketId, socket);
+    proxies.set(socketId, proxy);
     await new Promise(x => socket.onopen = x);
     return { socketId };
   },
-  sendMessageToWebSocket({socketId, message}) {
-    websockets.get(socketId).send(message);
+  async sendMessageToWebSocket({socketId, message}, sender) {
+    const response = await proxies.get(socketId).send(message.method, message.params);
+    if (!message.id)
+      return;
+    response.id = message.id;
+    sender.send({ method: 'websocket', params: { socketId, message: response }});
   },
   destroyWebsocket({socketId}) {
-    websockets.get(socketId).close();
-    websockets.delete(socketId);
+    proxies.get(socketId).close();
+    proxies.delete(socketId);
   },
   async addHistory(item) {
     const database = await getDatabase();
@@ -116,8 +89,8 @@ const handler = {
     });
     return runResult.changes;
   },
-  async urlForIFrame({shellId, filePath}) {
-    const address = await shells.get(shellId).startOrGetServer(false);
+  async urlForIFrame({socketId, filePath}) {
+    const address = await proxies.get(socketId).startOrGetServer(false);
     const url = new URL(`http://localhost:${address.port}`);
     url.pathname = filePath;
     url.search = '?entry';
@@ -186,4 +159,4 @@ async function getDatabase() {
   return database;
 }
 
-module.exports = {handler, shells};
+module.exports = {handler, proxies};
