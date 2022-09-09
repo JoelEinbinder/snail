@@ -103,11 +103,21 @@ const builtins = {
         changes.ssh = args[0];
         return Promise.resolve(0);
     },
-    reconnect: (args, stdout, stderr) => {
+    reconnect: async (args, stdout, stderr) => {
         if (!changes)
             changes = {};
-        changes.reconnect = path.resolve(process.cwd(), args[0]);
-        return Promise.resolve(0);
+        if (args.length) {
+            changes.reconnect = path.resolve(process.cwd(), args[0]);
+        } else {
+            const socketDir = path.join(os.tmpdir(), '1d4-sockets');
+            const entries = (await fs.promises.readdir(socketDir)).filter(x => x.endsWith('.socket'));
+            if (entries.length === 0) {
+                stderr.write('No daemons found to reconnect to.\n');
+                return 1;
+            }
+            changes.reconnect = path.join(socketDir, entries[0]);
+        }
+        return 0;
     },
     code: (args, stdout, stderr) => {
         if (!('SSH_CONNECTION' in process.env || 'SSH_CLIENT' in process.env))
