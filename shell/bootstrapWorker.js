@@ -72,8 +72,8 @@ function waitForConnection() {
       session.post(message.method, message.params, callback);
     };
     s.on('close', () => {
-      transport = null;
       enabledTransports.delete(transport);
+      transport = null;
       if (isDaemon)
         waitForConnection();
       else
