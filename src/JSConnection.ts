@@ -10,6 +10,7 @@ type ExtraClientMethods = {
   'Shell.setIsDaemon': (params: {isDaemon: boolean}) => void;
   'Shell.evaluate': (params: {code: string}) => {result: string};
   'Shell.runCommand': (params: {command: string, expression: string}) => Protocol.CommandReturnValues['Runtime.evaluate'];
+  'Shell.restore': () => Protocol.CommandReturnValues['Runtime.evaluate']|null;
 }
 
 type ClientMethods = {

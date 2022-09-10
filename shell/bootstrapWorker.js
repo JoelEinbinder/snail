@@ -18,6 +18,8 @@ worker_threads.parentPort.on('message', changes => {
 let isDaemon = false;
 const enabledTransports = new Set();
 let objectIdPromise;
+let storedMessages = [];
+let lastCommandPromise;
 const handler = {
   'Shell.setIsDaemon': (params) => {
     isDaemon = !!params.isDaemon;
@@ -40,8 +42,17 @@ const handler = {
     const {output} = await getResult(code);
     return { result: output };
   },
+  'Shell.restore': async () => {
+    for (const message of storedMessages)
+      transport.send(message);
+    const senderTransport = transport;
+    const result = await lastCommandPromise;
+    if (transport === senderTransport)
+      clearStoredMessages();
+    return result;
+  },
   'Shell.runCommand': async ({expression, command}) => {
-    return send('Runtime.evaluate', {
+    lastCommandPromise = send('Runtime.evaluate', {
       expression,
       returnByValue: false,
       generatePreview: true,
@@ -49,6 +60,11 @@ const handler = {
       replMode: true,
       allowUnsafeEvalBlockedByCSP: true,
     });
+    const senderTransport = transport;
+    const result = await lastCommandPromise;
+    if (senderTransport === transport)
+      clearStoredMessages();
+    return result;
   },
   'Shell.resolveFileForIframe': async (params) => {
     const response = await require('./webserver').resolveFileForIframe(params);
@@ -57,14 +73,23 @@ const handler = {
   __proto__: null,
 };
 
-async function dispatchToHandler(message) {
+function clearStoredMessages() {
+  lastCommandPromise = null;
+  storedMessages = [];
+}
+
+async function dispatchToHandler(message, replyTransport) {
   try {
     const result = await handler[message.method](message.params);
+    if (replyTransport !== transport)
+      return;
     if ('id' in message)
-      transport?.send({id: message.id, result});
+      transport.send({id: message.id, result});
   } catch(e) {
+    if (replyTransport !== transport)
+      return;
     if ('id' in message)
-      transport?.send({id: message.id, error: {message: String(e.stack)}});
+      transport.send({id: message.id, error: {message: String(e.stack)}});
   }
 }
 /** @type {PipeTransport|null} */
@@ -81,7 +106,7 @@ function waitForConnection() {
     transport = new PipeTransport(s, s);
     transport.onmessage = message => {
       if (message.method in handler) {
-        dispatchToHandler(message);
+        dispatchToHandler(message, transport);
         return;
       }
       let callback = 'id' in message ? (error, result) => {
@@ -111,6 +136,7 @@ const session = new inspector.Session();
 session.connectToMainThread();
 session.on('inspectorNotification', notification => {
   transport?.send(notification);
+  storedMessages.push(notification);
 });
 
 /**

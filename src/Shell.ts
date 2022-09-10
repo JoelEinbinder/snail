@@ -18,6 +18,7 @@ import { TaskQueue } from './TaskQueue';
 import { IFrameBlock } from './IFrameBlock';
 import { MenuItem, showContextMenu } from './contextMenu';
 import { fontString } from './font';
+import { Protocol } from './protocol';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
@@ -344,7 +345,11 @@ export class Shell {
       connection.env = result.value.env;
       connection.cwd = result.value.cwd;
     }
-
+    if (socketPath) {
+      const result = await connection.send('Shell.restore', undefined);
+      if (result)
+        this._addJSBlock(result, connection);
+    }
   }
 
   static async create(sshAddress?: string): Promise<Shell> {
@@ -480,8 +485,12 @@ export class Shell {
     if (this.activeItem.current === commandBlock)
       this.activeItem.dispatch(null);
     this._unlockPrompt();
+    this._addJSBlock(result, connection, commandBlock);
+  }
+
+  _addJSBlock(result: Protocol.CommandReturnValues['Runtime.evaluate'], connection: JSConnection, commandBlock?: CommandBlock) {
     if (result.result?.type === 'string' && result.result.value.startsWith('this is the secret secret string:')) {
-      commandBlock.setExitCode(parseInt(result.result.value.substring('this is the secret secret string:'.length)));
+      commandBlock?.setExitCode(parseInt(result.result.value.substring('this is the secret secret string:'.length)));
       return;
     }
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, connection, this._size);
