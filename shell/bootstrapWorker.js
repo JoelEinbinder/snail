@@ -40,6 +40,16 @@ const handler = {
     const {output} = await getResult(code);
     return { result: output };
   },
+  'Shell.runCommand': async ({expression, command}) => {
+    return send('Runtime.evaluate', {
+      expression,
+      returnByValue: false,
+      generatePreview: true,
+      userGesture: true,
+      replMode: true,
+      allowUnsafeEvalBlockedByCSP: true,
+    });
+  },
   'Shell.resolveFileForIframe': async (params) => {
     const response = await require('./webserver').resolveFileForIframe(params);
     return {response};

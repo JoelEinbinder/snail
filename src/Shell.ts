@@ -426,13 +426,9 @@ export class Shell {
     const jsCode = await this._transformCode(command);
     let error;
     const connection = this.connection;
-    const result = await connection.send('Runtime.evaluate', {
+    const result = await connection.send('Shell.runCommand', {
       expression: preprocessForJS(jsCode),
-      returnByValue: false,
-      generatePreview: true,
-      userGesture: true,
-      replMode: true,
-      allowUnsafeEvalBlockedByCSP: true,
+      command,
     }).catch(e => {
       error = e;
       return null;
