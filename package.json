@@ -54,6 +54,7 @@
     "acorn": "^8.7.0",
     "fast-glob": "^3.2.11",
     "get-port": "^5.1.1",
+    "jsonwebtoken": "^8.5.1",
     "mime-types": "^2.1.35",
     "monaco-editor": "^0.34.0",
     "node-pty": "^0.10.1",
