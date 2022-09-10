@@ -5,7 +5,7 @@ type ExtraServerMethods = {
 type ServerMethods = Protocol.Events & ExtraServerMethods;
 
 type ExtraClientMethods = {
-  'Shell.enable': () => void;
+  'Shell.enable': (parmas: {args: string[]}) => {objectId: string};
   'Shell.disable': () => void;
   'Shell.setIsDaemon': (params: {isDaemon: boolean}) => void;
   'Shell.evaluate': (params: {code: string}) => {result: string};

@@ -43,7 +43,7 @@ export class Shell {
   public clearEvent = new JoelEvent<void>(undefined);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
   private _connections: JSConnection[] = [];
-  private _size = new JoelEvent({cols: 0, rows: 0});
+  private _size = new JoelEvent({cols: 80, rows: 24});
   private _cachedGlobalObjectId: string;
   private _cachedGlobalVars: Set<string>|undefined;
   private _cachedSuggestions = new Map<string, Promise<Suggestion[]>>();
@@ -98,7 +98,6 @@ export class Shell {
       this._connectionIsDaemon.set(connection, isDaemon);
       this._updateSuffix();
     });
-    await connection.send('Shell.enable', undefined);
     socketCloseListeners.set(socketId, () => {
       connection.didClose();
       socketListeners.delete(socketId);
@@ -310,16 +309,7 @@ export class Shell {
       const {method, params} = JSON.parse(message.payload);
       handler[method](params);
     });
-    await connection.send('Runtime.enable', {});
-    await connection.send('Runtime.addBinding', {
-      name: 'magic_binding',
-    });
-    const {result: {objectId: notifyObjectId}} = await connection.send('Runtime.evaluate', {
-      expression: `bootstrap(${JSON.stringify(args)})`,
-      returnByValue: false,
-    });
     const resize = size => notify('resize', size);
-    notify('resize', this._size.current);
     this._size.on(resize);
     this._connections.push(connection);
     this._updateSuffix();
@@ -341,40 +331,11 @@ export class Shell {
       this._connectionNameEvent.dispatch(this._connectionToName.get(this.connection));
     }
     this._connectionToDestroy.set(connection, destroy);
+    const {objectId: notifyObjectId} = await connection.send('Shell.enable', {
+      args
+    });
+    notify('resize', this._size.current);
 
-    if (args.length) {
-      const file = args[0];
-      const result = await connection.send('Runtime.evaluate', {
-        expression: `require('fs').readFileSync(${JSON.stringify(file)}, 'utf8')`,
-        returnByValue: true,
-      });
-      await connection.send('Runtime.evaluate', {
-        expression: result.result.value,
-        replMode: true,
-      }).catch(() => {
-        // it could exit
-        destroy();
-      });
-    } else {
-      const {result, exceptionDetails} = await connection.send('Runtime.evaluate', {
-        expression: `require('fs').readFileSync(require('path').join(require('os').homedir(), '.bootstrap.shjs'), 'utf8');`,
-        returnByValue: true
-      });
-      if (!exceptionDetails && result.type === 'string') {
-        const expression = await this._transformCode(result.value);
-        await connection.send('Runtime.evaluate', {
-          expression,
-          returnByValue: true,
-          generatePreview: false,
-          userGesture: false,
-          replMode: true,
-          allowUnsafeEvalBlockedByCSP: true,
-        }).catch(() => {
-          // it could exit
-          destroy();
-        });
-      }
-    }
     {
       const {result, exceptionDetails} = await connection.send('Runtime.evaluate', {
         expression: `({env: {...process.env}, cwd: process.cwd()})`,

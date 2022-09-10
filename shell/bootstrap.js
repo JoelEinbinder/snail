@@ -17,7 +17,7 @@ worker.on('exit', code => {
  * exit?: number,
  * }} Changes
  */
-/** @type {Map<number, (s: import('../protocol/pipeTransport').PipeTransport) => void} */
+/** @type {Map<number, (s: import('../protocol/pipeTransport').PipeTransport) => void>} */
 const resolveShellConnection = new Map();
 
 global.bootstrap = (args) => {
@@ -231,3 +231,7 @@ async function launchServer() {
   });
   return {socketPath, uuid};
 }
+
+process.on('unhandledRejection', e => {
+  console.error(e);
+});
