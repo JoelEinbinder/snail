@@ -16,9 +16,19 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    [application registerForRemoteNotifications];
+    NSLog(@"did finish launching %d", [application isRegisteredForRemoteNotifications]);
     return YES;
 }
 
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+    NSLog(@"didRegisterForRemoteNotificationsWithDeviceToken %@", [deviceToken base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]);
+}
+
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+    NSLog(@"didFailToRegisterForRemoteNotificationsWithError %@", error);
+
+}
 
 #pragma mark - UISceneSession lifecycle
 

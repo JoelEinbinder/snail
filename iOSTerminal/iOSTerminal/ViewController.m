@@ -7,6 +7,8 @@
 
 #import "ViewController.h"
 #import <LibSSH/libssh.h>
+#import <UserNotifications/UNUserNotificationCenter.h>
+
 NSString* show_remote_processes(ssh_session session)
 {
   ssh_channel channel;
@@ -60,41 +62,44 @@ NSString* show_remote_processes(ssh_session session)
 @end
 @implementation ViewController
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    UITextView* text = [[UITextView alloc] initWithFrame:self.view.bounds];
-    [self.view addSubview:text];
-    // Do any additional setup after loading the view.
-    ssh_session my_ssh_session = ssh_new();
-    if (my_ssh_session == NULL)
-      exit(-1);
-    int port = 22;
-    int verbosity = SSH_LOG_PROTOCOL;
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_USER, "joeleinbinder");
-
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, "192.168.1.144");
-//    ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-//    ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &port);
-    int rc = ssh_connect(my_ssh_session);
-    if (rc != SSH_OK)
-    {
-      fprintf(stderr, "Error connecting to localhost: %s\n",
-              ssh_get_error(my_ssh_session));
-      exit(-1);
-    }
-    rc = ssh_userauth_password(my_ssh_session, NULL, "macbadger");
-    if (rc != SSH_AUTH_SUCCESS)
-    {
-      fprintf(stderr, "Error authenticating with password: %s\n",
-              ssh_get_error(my_ssh_session));
-      ssh_disconnect(my_ssh_session);
-      ssh_free(my_ssh_session);
-      exit(-1);
-    }
-
-    NSString* output = show_remote_processes(my_ssh_session);
-//    ssh_free(my_ssh_session);
-    [text setText:output];
+    - (void)viewDidLoad {
+        [super viewDidLoad];
+        [[UNUserNotificationCenter currentNotificationCenter] requestAuthorizationWithOptions:UNAuthorizationOptionAlert|UNAuthorizationOptionSound|UNAuthorizationOptionBadge completionHandler:^(BOOL granted, NSError * _Nullable error) {
+            NSLog(@"got permission %d", granted);
+        }];
+        UITextView* text = [[UITextView alloc] initWithFrame:self.view.bounds];
+        [self.view addSubview:text];
+        // Do any additional setup after loading the view.
+    //    ssh_session my_ssh_session = ssh_new();
+    //    if (my_ssh_session == NULL)
+    //      exit(-1);
+    //    int port = 22;
+    //    int verbosity = SSH_LOG_PROTOCOL;
+    //    ssh_options_set(my_ssh_session, SSH_OPTIONS_USER, "joeleinbinder");
+    //
+    //    ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, "192.168.1.144");
+    ////    ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+    ////    ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &port);
+    //    int rc = ssh_connect(my_ssh_session);
+    //    if (rc != SSH_OK)
+    //    {
+    //      fprintf(stderr, "Error connecting to localhost: %s\n",
+    //              ssh_get_error(my_ssh_session));
+    //      exit(-1);
+    //    }
+    //    rc = ssh_userauth_password(my_ssh_session, NULL, "macbadger");
+    //    if (rc != SSH_AUTH_SUCCESS)
+    //    {
+    //      fprintf(stderr, "Error authenticating with password: %s\n",
+    //              ssh_get_error(my_ssh_session));
+    //      ssh_disconnect(my_ssh_session);
+    //      ssh_free(my_ssh_session);
+    //      exit(-1);
+//    }
+//
+//    NSString* output = show_remote_processes(my_ssh_session);
+////    ssh_free(my_ssh_session);
+//    [text setText:output];
 }
 
 
