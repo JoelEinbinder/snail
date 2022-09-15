@@ -44,6 +44,7 @@
     if (webURL) {
         [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:webURL]]];
     } else {
+        [webView.configuration.preferences setValue: @true forKey:@"allowFileAccessFromFileURLs"];
         [webView
          loadFileURL:[NSURL
                       fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"index" ofType:@"html" inDirectory:@"WebKitBundle/dist/"]]
