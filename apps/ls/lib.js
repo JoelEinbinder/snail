@@ -15,44 +15,40 @@ async function run(args, stdout, stderr) {
       });
       stdout.write(`\x1b\x1aM${str}\x00`);
   }
-  const directoryArgs = args.filter(arg => !arg.startsWith('-'));
-  const resolved = directoryArgs.length === 1 ? path.resolve(process.cwd(), directoryArgs[0]) : process.cwd();
-  const isDirectory = fs.statSync(resolved).isDirectory();
+  let directoryArgs = args.filter(arg => !arg.startsWith('-'));
+  if (directoryArgs.length === 0)
+    directoryArgs = ['.'];
+  const cwd = directoryArgs.length === 1 ? path.resolve(process.cwd(), directoryArgs[0]) : process.cwd();
+  if (directoryArgs.length === 1)
+    directoryArgs = ['.']
   const platform = os.platform();
-  if (!isDirectory) {
-      send({
-          args,
-          dirs: await buildDirInfos(path.dirname(resolved), [path.basename(resolved)]),
-          cwd: path.dirname(resolved),
-          showHidden: true,
-          platform,
-      })
-  } else {
-      const dirs = fs.readdirSync(resolved);
-      send({
-          args,
-          dirs: await buildDirInfos(resolved, dirs),
-          cwd: resolved,
-          showHidden: args.some(a => a.startsWith('-') && a.includes('a')),
-          platform,
-      });
-  }
+  send({
+      args,
+      dirs: await Promise.all(directoryArgs.map(dir => {
+        return buildItemInfo(cwd, path.resolve(cwd, dir), 1);
+      })),
+      cwd,
+      showHidden: args.some(a => a.startsWith('-') && a.includes('a')),
+      platform,
+  });
 }
-async function buildDirInfos(cwd, dirs) {
-  const promises = [];
-  async function readDir(dir, link) {
-    const resolved = link ? link : path.join(cwd, dir);
+
+async function buildItemInfo(parentDir, filePath, depth) {
+  async function readDir(link) {
+    const resolved = link ? link : filePath;
     const stat = await fs.promises.lstat(resolved);
     if (stat.isSymbolicLink()) {
       const link = path.resolve(path.dirname(resolved), await fs.promises.readlink(resolved));
       try {
-        return await readDir(dir, link)
+        return await readDir(link);
       } catch {
         // intentional fallthrough
       }
     }
+    const isDirectory = stat.isDirectory();
     return {
-      dir,
+      dir: resolved === parentDir ? path.basename(resolved) : path.relative(parentDir, resolved),
+      fullPath: resolved,
       link,
       nlink: stat.nlink,
       uid: stat.uid,
@@ -65,18 +61,24 @@ async function buildDirInfos(cwd, dirs) {
       mode: stat.mode,
       size: stat.size,
       isSymbolicLink: stat.isSymbolicLink(),
-      isDirectory: stat.isDirectory(),
+      isDirectory,
       isFIFO: stat.isFIFO(),
       isSocket: stat.isSocket(),
       isBlockDevice: stat.isBlockDevice(),
       isCharacterDevice: stat.isCharacterDevice(),
       isFile: stat.isFile(),
       mimeType: mimeTypes.lookup(resolved) || '',
+      children: isDirectory ? await makeChildrenForDirectory() : undefined,
     }
   }
-  for (const dir of dirs) {
-    promises.push(readDir(dir));
+  async function makeChildrenForDirectory() {
+    if (depth === 0)
+      return undefined;
+    const items = await fs.promises.readdir(filePath);
+    return Promise.all(items.map(item => {
+      return buildItemInfo(filePath, path.join(filePath, item), depth - 1);
+    }));
   }
-  return Promise.all(promises);
+  return readDir();
 }
 module.exports = {run};

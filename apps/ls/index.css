@@ -4,7 +4,7 @@ img {
   user-select: none;
 }
 
-body {
+.grid-container {
   --rows: 1;
   --columns: 1;
   display: grid;
@@ -13,12 +13,23 @@ body {
 }
 
 div {
-  max-width: 100vw / var(--columns);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.grid-container > div {
+  max-width: 100vw / var(--columns);
+}
+
 div.executable {
   color: var(--brightGreen);
+}
+
+div.has-children::after {
+  content: ':'
+}
+
+.grid-container:not(:empty):not(:last-child) {
+  margin-bottom: 20px;
 }

@@ -24,6 +24,8 @@ type Entry = {
   isCharacterDevice: boolean,
   isFile: boolean,
   mimeType: string,
+  fullPath: string,
+  children?: Entry[],
 };
 const {dirs, cwd, showHidden, platform, args} = await d4.waitForMessage<{
   dirs: Entry[];
@@ -237,8 +239,7 @@ async function renderTable() {
   }, {
     title: 'Name',
     render(item) {
-      const fullPath = `${cwd === '/' ? '' : cwd}/${item.dir}`;
-      const {element, readyPromise} = makeImageForPath(fullPath, item);
+      const {element, readyPromise} = makeImageForPath(item.fullPath, item);
       const div = document.createElement('div');
       div.append(element, item.dir);
       return div;
@@ -265,17 +266,33 @@ if (useTable)
   renderTable();
 else
   inlineMode();
+
 function inlineMode() {
+  class GridContainer {
+    element = document.createElement('div');
+    count = 0;
+    constructor() {
+      this.element.classList.add('grid-container');
+      document.body.append(this.element);
+      gridContainers.push(this);
+    }
+  }
   document.body.style.visibility = 'hidden';
+  const gridContainers: GridContainer[] = [];
   const imageLoadPromises: Promise<any>[] = [];
-  let count = 0;
-  for (const info of dirs) {
-    const {dir} = info;
-    if (!showHidden && dir.startsWith('.'))
-      continue;
+  let activeGridContainer = new GridContainer();
+  if (dirs.length === 1 && dirs[0].children) {
+    for (const info of dirs[0].children)
+      processDir(info, false);
+  } else for (const info of dirs) {
+    processDir(info, true);
+  }
+  function processDir(info: Entry, topLevel: boolean) {
+    const {dir, fullPath} = info;
+    if (!topLevel && !showHidden && dir.startsWith('.'))
+      return;
     const div = document.createElement('div');
-    const fullPath = `${cwd === '/' ? '' : cwd}/${dir}`;
-    const {element, readyPromise} = makeImageForPath(fullPath, info);
+    const {element, readyPromise} = makeImageForPath(info.fullPath, info);
     imageLoadPromises.push(readyPromise);
     div.append(element, dir);
     div.title = fullPath;
@@ -297,8 +314,21 @@ function inlineMode() {
       }])
       event.preventDefault();
     });
-    document.body.append(div);
-    count++;
+    if (info.children) {
+      div.classList.add('has-children');
+      document.body.append(div);
+      activeGridContainer = new GridContainer();
+      for (const child of info.children)
+        processDir(child, false);
+      activeGridContainer = new GridContainer();
+    } else {
+      activeGridContainer.element.append(div);
+      activeGridContainer.count++; 
+    }
+  }
+  for (const container of gridContainers) {
+    if (container.count === 0)
+      container.element.remove();
   }
   Promise.race([
     new Promise(x => setTimeout(x, 250)),
@@ -309,10 +339,12 @@ function inlineMode() {
   })
   window.onresize = updateSize;
   function updateSize() {
-    const cols = Math.floor(window.innerWidth / 200) || 1;
-    const rows = Math.ceil(count / cols);
-    document.body.style.setProperty('--rows', String(rows));
-    document.body.style.setProperty('--cols', String(cols));
+    for (const container of gridContainers) {
+      const cols = Math.floor(window.innerWidth / 200) || 1;
+      const rows = Math.ceil(container.count / cols);
+      container.element.style.setProperty('--rows', String(rows));
+      container.element.style.setProperty('--cols', String(cols));
+    }
     d4.setHeight(document.body.offsetHeight);
   }
 }
