@@ -60,6 +60,10 @@ async function spawnJSProcess({cwd, sshAddress, socketPath}) {
       stdio: 'inherit',
       detached: false,
       cwd,
+      env: {
+        ...process.env,
+        PATH: `${process.env.PATH}:${path.join(__dirname, '..', 'include', 'bin')}`,
+      }
     });
 
     socketPath = path.join(socketDir, `${child.pid}.socket`);

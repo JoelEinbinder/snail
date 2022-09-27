@@ -1,0 +1,2 @@
+#!/usr/bin/env node
+require('../../apps/edit/backend.js');

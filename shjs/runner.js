@@ -18,7 +18,7 @@ const os = require('os');
  */
 let changes = null;
 
-/** @type {Object<string, (args: string[], stdout: Writable, stderr: Writable) => Promise<number>|'pass'>} */
+/** @type {Object<string, (args: string[], stdout: Writable, stderr: Writable, stdin: Readable) => Promise<number>|'pass'>} */
 const builtins = {
     cd: async (args, stdout, stderr) => {
         try {
@@ -281,8 +281,10 @@ const builtins = {
     },
     __command_description: async (args, stdout, stderr) => {
         const name = processAlias(args[0], []).executable;
-        if (name in builtins)
+        if (name in builtins) {
+            stdout.write('built in shell command');
             return 0;
+        }
         const {descriptionOfCommand} = require('../manpage_reader');
         const description = descriptionOfCommand(name);
         if (description)
@@ -394,7 +396,7 @@ function execute(expression, stdout, stderr, stdin) {
         for (const {name, value} of expression.assignments || [])
             env[name] = processWord(value)[0];
         if (executable in builtins) {
-            const closePromise = builtins[executable](args, stdout, stderr);
+            const closePromise = builtins[executable](args, stdout, stderr, stdin);
             if (closePromise !== 'pass') {
                 return {
                     closePromise,
