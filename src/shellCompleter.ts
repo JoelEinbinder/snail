@@ -130,12 +130,13 @@ async function fileCompleter(shell: Shell, line: string, executablesOnly: boolea
   if (!path || path === '.')
     files.push('.');
   for (const file of files) {
+    const escaped = file.replace(/\\/g, '\\\\').replace(/ /g, '\\ ');
       if (directories.has(file) && file !== '..')
-        suggestions.push({ text: file, suffix: '/', activations: {
-          '/': file + '/'
+        suggestions.push({ text: escaped, suffix: '/', activations: {
+          '/': escaped + '/'
         } });
       else
-        suggestions.push({ text: file.replace(/\\/g, '\\\\').replace(/ /g, '\\ ') });
+        suggestions.push({ text: escaped });
   }
   return {
     anchor,
