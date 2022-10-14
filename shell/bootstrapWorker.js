@@ -137,6 +137,9 @@ session.connectToMainThread();
 session.on('inspectorNotification', notification => {
   transport?.send(notification);
   storedMessages.push(notification);
+  // TODO better message compression
+  if (storedMessages.length > 10000)
+    storedMessages = storedMessages.slice(-5000);
 });
 
 /**
