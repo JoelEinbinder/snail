@@ -50,7 +50,11 @@ export class Autocomplete {
                 if (this._editor.somethingSelected())
                     return;
                 if (event.code === 'Tab' && !event.shiftKey && !event.ctrlKey) {
-                    if (selections[0].start.column === 0)
+                    const text = this._editor.text({
+                        start: { line: selections[0].start.line, column: 0 },
+                        end: this._editor.selections[0].end
+                    });
+                    if (/^\s*$/.test(text))
                         return;
                     this.showSuggestBox(true);
                 } else if (this._activationChars.includes(event.key) && !event.ctrlKey && !event.altKey && !event.metaKey) {

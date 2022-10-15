@@ -36,6 +36,7 @@ export class Input extends Emitter {
     this._overrideBigSurDoubleSpacePeriod();
     this._textarea.addEventListener('input', this.update.bind(this), false);
     this._textarea.readOnly = !this._editable;
+    this._textarea.disabled = !this._editable;
     this._textarea.spellcheck = false;
     this._textarea.setAttribute('autocomplete', 'off');
     this._textarea.setAttribute('autocorrect', 'off');
