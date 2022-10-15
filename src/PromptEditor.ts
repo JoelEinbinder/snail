@@ -10,6 +10,7 @@ import './completions/apt';
 import { searchHistory } from "./history";
 import { setSelection } from "./selection";
 import { host } from "./host";
+import { makeHistoryCompleter } from "./historyCompleter";
 
 export function makePromptEditor(shell: Shell) {
   const editor = new Editor('', {
@@ -26,7 +27,9 @@ export function makePromptEditor(shell: Shell) {
   shell.globalVars().then(globalVars => {
     editor.setModeOptions({globalVars});
   })
-  const autocomplete = new Autocomplete(editor, makeShellCompleter(shell), ' /.');
+  const autocomplete = new Autocomplete(editor, makeShellCompleter(shell), ' /.', {
+    'KeyR': makeHistoryCompleter(shell),
+  });
   let historyIndex = 0;
   let currentValue = '';
   editor.on('selectionChanged', () => {

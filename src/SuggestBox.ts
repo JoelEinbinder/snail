@@ -31,7 +31,7 @@ export class SuggestBox {
         return this._selectedSuggestion ? this._selectedSuggestion : this._suggestions[0];
     }
 
-    setSuggestions(prefix: string, suggestions: Suggestion[]) {
+    setSuggestions(prefix: string, suggestions: Suggestion[], cssTag?: string) {
         if (!suggestions.includes(this._selectedSuggestion))
             delete this._selectedSuggestion;
         this._suggestions = suggestions;
@@ -39,6 +39,10 @@ export class SuggestBox {
         this._viewport.setItems(suggestions);
         if (!this._viewport.isItemFullyVisible(this._selectedSuggestion || this._suggestions[0]))
             this._viewport.showItem(this._selectedSuggestion || this._suggestions[0], 'up');
+        if (cssTag)
+            this.element.setAttribute('data-css-tag', cssTag);
+        else
+            this.element.removeAttribute('data-css-tag');
         this._refreshDescription();
         this._onSelectionChanged();
     }

@@ -8,8 +8,9 @@ export class Autocomplete {
     private _wantsSuggestBoxShown = false;
     private _anchor = 0;
     private _refreshingSuggestions = false;
+    private _activationCode = null;
     public suggestionChanged = new JoelEvent<void>(undefined);
-    constructor(private _editor: Editor, private _completer: Completer, private _activationChars: string) {
+    constructor(private _editor: Editor, private _defaultCompleter: Completer, private _activationChars: string, private _specialCompleters: { [key: string]: Completer }) {
         this._editor.on('selectionChanged', event => {
             this._abortController?.abort();
             delete this._abortController;
@@ -23,7 +24,15 @@ export class Autocomplete {
         });
         this._editor.element.addEventListener('keydown', event => {
             const legalChars = /[A-Za-z0-9_\$]/;
-            if (this._suggestBox?.showing) {
+
+            if (event.code in this._specialCompleters && event.ctrlKey) {
+                this.hideSuggestBox();
+                this._activationCode = event.code;
+                this.showSuggestBox();
+            } else if (event.key === ' ' && event.ctrlKey) {
+                this.hideSuggestBox();
+                this.showSuggestBox();
+            } else if (this._suggestBox?.showing) {
                 if (event.key === 'Escape') {
                     this.hideSuggestBox();
                 } else if (event.key === 'ArrowUp' && this._suggestBox.selectedIndex <= 0) {
@@ -40,9 +49,7 @@ export class Autocomplete {
                     return;
                 if (this._editor.somethingSelected())
                     return;
-                if (event.key === ' ' && event.ctrlKey) {
-                    this.showSuggestBox();
-                } else if (event.code === 'Tab' && !event.shiftKey && !event.ctrlKey) {
+                if (event.code === 'Tab' && !event.shiftKey && !event.ctrlKey) {
                     if (selections[0].start.column === 0)
                         return;
                     this.showSuggestBox(true);
@@ -113,6 +120,7 @@ export class Autocomplete {
         this._wantsSuggestBoxShown = false;
         this._suggestBox?.hide();
         this._suggestBox = null;
+        this._activationCode = null;
         this._abortController?.abort();
         delete this._abortController;
         this.suggestionChanged.dispatch();
@@ -127,7 +135,8 @@ export class Autocomplete {
         this._abortController = abortController;
         const textBeforeCursor = this._editor.text({ start: { line: location.line, column: 0 }, end: location });
         this._refreshingSuggestions = true;
-        const completions = await this._completer(textBeforeCursor, abortController.signal);
+        const completer = this._activationCode ? this._specialCompleters[this._activationCode] : this._defaultCompleter;
+        const completions = await completer(textBeforeCursor, abortController.signal);
         this._refreshingSuggestions = false;
         if (abortController.signal.aborted)
             return;
@@ -138,10 +147,9 @@ export class Autocomplete {
             this.suggestionChanged.dispatch();
             return;
         }
-        const {anchor, suggestions, exact} = completions;
-
+        const {anchor, suggestions, exact, preFiltered, cssTag} = completions;
         const prefix = textBeforeCursor.slice(anchor);
-        const filtered = filterAndSortSuggestionsSubstringMode(suggestions, prefix);
+        const filtered = preFiltered ? suggestions : filterAndSortSuggestionsSubstringMode(suggestions, prefix);
         if (!filtered.length) {
             this._suggestBox?.hide();
             this._suggestBox = null;
@@ -161,7 +169,7 @@ export class Autocomplete {
                 psuedo: true,
             });
         }
-        this._suggestBox.setSuggestions(prefix, filtered);
+        this._suggestBox.setSuggestions(prefix, filtered, cssTag);
         const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
         const rect = this._editor.element.getBoundingClientRect();
         const top = point.y + rect.top;
@@ -172,7 +180,13 @@ export class Autocomplete {
     }
 }
 
-export type CompletionResult = {anchor: number, suggestions: Suggestion[], exact?: boolean};
+export type CompletionResult = {
+    anchor: number,
+    suggestions: Suggestion[],
+    exact?: boolean,
+    preFiltered?: boolean,
+    cssTag?: string,
+};
 export type Completer = (line: string, abortSignal: AbortSignal) => Promise<CompletionResult>;
 export type Suggestion = {
     text: string,

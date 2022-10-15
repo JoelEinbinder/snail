@@ -1,6 +1,6 @@
 .description,
 .suggestions {
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--suggest-background);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
 }
@@ -14,7 +14,7 @@
     color: var(--color-text);
     overflow-y: scroll;
     overflow-x: hidden;
-    width: 160px;
+    width: var(--suggest-width);
     text-overflow: ellipsis;
     height: fit-content;
 }
@@ -37,11 +37,19 @@ body.vscode-dark .suggestions {
     background: rgba(128, 128, 128, 0.1);
 }
 .suggestion.selected {
-    background: var(--ansi-0);
+    background: var(--suggest-selected);
 }
 .suggest-popup {
     display: flex;
-    width: calc(160px + 160px + 2px + 2px + 2px);
+    --suggest-width: 160px;
+    --suggest-background: rgba(0, 0, 0, 0.7);
+    --suggest-selected: var(--ansi-0);
+    width: calc(var(--suggest-width) + 160px + 2px + 2px + 2px);
+}
+.suggest-popup[data-css-tag="history"] {
+    --suggest-width: 320px;
+    --suggest-background: rgba(30, 0, 30, 0.7);
+    --suggest-selected: hsl(300, 8%, 20%);
 }
 .description {
     width: 160px;
@@ -54,6 +62,7 @@ body.vscode-dark .suggestions {
     padding: 2px;
     font-size: 1.1em;
     color: var(--ansi-242);
+    white-space: pre-wrap;
 }
 .description:empty {
     visibility: hidden;
