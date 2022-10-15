@@ -344,7 +344,6 @@ export class Input extends Emitter {
     for (const selection of this._model.selections) {
       for (let i = selection.start.line; i < selection.end.line + 1; i++)
         lines.add(i);
-      selection.start.column--;
     }
     const movedLines = new Set();
     for (const lineNumber of lines) {
@@ -354,6 +353,10 @@ export class Input extends Emitter {
           start: { line: lineNumber, column: 0 },
           end: { line: lineNumber, column: 1 }
         });
+        for (const selection of this._model.selections) {
+          if (selection.start.line === lineNumber)
+            selection.start.column = Math.max(0, selection.start.column - 1);
+        }
         movedLines.add(lineNumber);
       }
     }
