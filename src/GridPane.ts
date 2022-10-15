@@ -17,6 +17,8 @@ export interface BlockDelegate {
 
 export interface Block {
   updatePosition(rect: Rect): void;
+  focus(): void;
+  hasFocus(): boolean;
   blockDelegate?: BlockDelegate;
 }
 
@@ -34,6 +36,7 @@ class RootBlock {
     document.body.append(this.element);
   }
   setBlock(block: Block) {
+    const hadFocus = this.block?.hasFocus();
     this.block = block;
     if (block) {
       block.blockDelegate = {
@@ -52,6 +55,8 @@ class RootBlock {
       host.sendMessage({ method: 'close' });
     }
     this._layout();
+    if (hadFocus)
+      block.focus();
   }
   private _layout() {
     this.block?.updatePosition(this.element.getBoundingClientRect());
@@ -99,10 +104,21 @@ class SplitBlock implements Block {
         this.setBlock(index, new SplitBlock([block, newBlock], direction, this._rootElement));
       },
       replaceWith: newBlock => {
+        const hadFocus = block.hasFocus();
         this.setBlock(index, newBlock);
+        if (hadFocus)
+          newBlock.focus();
       }
     }
     this._layout();
+  }
+
+  hasFocus(): boolean {
+      return this._blocks.some(x => x.hasFocus());
+  }
+
+  focus(): void {
+    this._blocks[0].focus();
   }
 
   updatePosition(rect: Rect): void {

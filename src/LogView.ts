@@ -92,11 +92,20 @@ export class LogView implements Block {
       this._repopulate();
     });
   }
+  focus(): void {
+    if (this._promptElement)
+      this._promptElement.focus();
+    else if (this._shell.activeItem.current)
+      this._shell.activeItem.current.focus();
+  }
+  hasFocus(): boolean {
+    return this._element.contains(document.activeElement);
+  }
 
   _dispose() {
     this._removeListeners();
-    this._element.remove();
     this.blockDelegate.close();
+    this._element.remove();
   }
 
   async _doSplit(direction: 'horizontal' | 'vertical') {
