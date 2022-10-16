@@ -80,7 +80,9 @@ export class Shell {
     const {socketId} = await host.sendMessage({
       method: 'createJSShell',
       params: {
-        cwd: this.connection ? this.connection.cwd : localStorage.getItem('cwd') || '',
+        // cwd comes from the top level because it has to match the host.
+        // TODO get this directly form the host?
+        cwd: this._connections[0] ? this._connections[0].cwd : localStorage.getItem('cwd') || '',
         socketPath,
         sshAddress,
       }
@@ -130,6 +132,11 @@ export class Shell {
     const terminals = new Map<number, {processor: TerminalDataProcessor, cleanup: () => Promise<void>}>();
     const handler = {
       data: ({data, id}: {data: string, id: number}) => {
+        // we might have lost the terminal creation due to data smooshing
+        // make it anyway to be nice
+        // TODO check if it has already ended?
+        if (!terminals.has(id))
+          handler.startTerminal({id});
         terminals.get(id).processor.processRawData(data);
       },
       endTerminal:async ({id}: {id: number}) => {
