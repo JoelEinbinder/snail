@@ -68,13 +68,15 @@ module.exports = {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: {
-          loader: require.resolve('babel-loader'),
+          loader: require.resolve('swc-loader'),
           options: {
-            presets: [
-              typescriptPreset,
-              ...babelPresets
-            ],
-            plugins: babelPlugins,
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+                decorators: true,
+              },
+              target: 'es2022',
+            }
           }
         },
       },
@@ -82,10 +84,14 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          loader: require.resolve('babel-loader'),
+          loader: require.resolve('swc-loader'),
           options: {
-            presets: babelPresets,
-            plugins: babelPlugins,
+            jsc: {
+              parser: {
+                syntax: 'ecmascript',
+              },
+              target: 'es2022',
+            }
           }
         },
       },

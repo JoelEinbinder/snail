@@ -98,15 +98,18 @@ function toBuffer(text) {
 }
 
 function transformTs(filename) {
-  const babel = require('@babel/core');
-  const result = babel.transformFileSync(filename, {
-    presets: [
-      // ['@babel/preset-env', { targets: {node: '10.17.0'} }],
-      [require.resolve('@babel/preset-typescript'), { onlyRemoveTypeImports: false }],
-    ],
-    // plugins: [['@babel/plugin-proposal-class-properties', {loose: true}]],
+  const swc = require("@swc/core");
+  const result = swc.transformFileSync(filename, {
     sourceMaps: false,
-    cwd: filename
+    minify: false,
+    jsc: {
+      parser: {
+        syntax: 'typescript',
+        topLevelAwait: true,
+      },
+      target: 'es2022',
+    },
+    cwd: filename,
   });
   return result?.code || '';
 }
