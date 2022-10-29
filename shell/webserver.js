@@ -8,7 +8,7 @@ async function resolveFileForIframe({filePath, headers, search}) {
   const searchParams = new URLSearchParams(search);
   if (searchParams.has('entry')) {
 
-    const resolved = path.resolve(filePath);
+    const resolved = path.resolve('/', filePath);
     let server = fileToServer.get(resolved);
     if (server) {
       for (const file of server.outputFiles)
@@ -31,14 +31,15 @@ async function resolveFileForIframe({filePath, headers, search}) {
         metafile: true,
         logLevel: 'error',
         outdir: path.dirname(resolved),
+        absWorkingDir: '/',
       });
     }
     for (const file of server.outputFiles)
       compiledFiles.set(file.path, file);
-    const entryMeta = Object.entries(server.metafile.outputs).find(x => x[1].entryPoint && (path.resolve(process.cwd(), x[1].entryPoint) === resolved));
+    const entryMeta = Object.entries(server.metafile.outputs).find(x => x[1].entryPoint && (path.resolve('/', x[1].entryPoint) === resolved));
     let cssText = '';
     if (entryMeta[1].cssBundle)
-      cssText = `<link rel="stylesheet" href="${path.resolve(process.cwd(), entryMeta[1].cssBundle)}">`;
+      cssText = `<link rel="stylesheet" href="${path.resolve('/', entryMeta[1].cssBundle)}">`;
     return {
       statusCode: 200,
       data: toBuffer(`<!DOCTYPE html>
@@ -50,7 +51,7 @@ async function resolveFileForIframe({filePath, headers, search}) {
 </head>
 <body class=${JSON.stringify(searchParams.get('class'))} style=${JSON.stringify(searchParams.get('css'))}>
 ${cssText}
-<script src="${path.resolve(process.cwd(), entryMeta[0])}" type="module"></script>
+<script src="${path.resolve('/', entryMeta[0])}" type="module"></script>
 </body>
 </html>`),
       mimeType: 'text/html',
@@ -105,17 +106,6 @@ ${cssText}
       data: '404',
       mimeType: 'text/plain',
     }
-  }
-}
-
-function resolveScript(filePath) {
-  const old = require.extensions;
-  if (!require.extensions['.ts'])
-    require.extensions['.ts'] = require.extensions['.js'];
-  try {
-    return require.resolve(filePath);
-  } catch {
-    return null;
   }
 }
 
