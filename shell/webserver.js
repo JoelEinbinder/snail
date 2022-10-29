@@ -21,6 +21,7 @@ async function resolveFileForIframe({filePath, headers, search}) {
         entryPoints: [resolved],
         loader: {
           '.woff': 'file',
+          '.svg': 'file',
         },
         assetNames: '[name]-[hash]',
         chunkNames: '[name]-[hash]',
@@ -120,23 +121,6 @@ function resolveScript(filePath) {
 
 function toBuffer(text) {
   return Buffer.from(new TextEncoder().encode(text)).toString('base64');
-}
-
-function transformTs(filename) {
-  const swc = require("@swc/core");
-  const result = swc.transformFileSync(filename, {
-    sourceMaps: false,
-    minify: false,
-    jsc: {
-      parser: {
-        syntax: 'typescript',
-        topLevelAwait: true,
-      },
-      target: 'es2022',
-    },
-    cwd: filename,
-  });
-  return result?.code || '';
 }
 
 module.exports = {resolveFileForIframe};

@@ -25,12 +25,12 @@ function RPC(transport, reciever) {
     const {method, params, id, result, error} = message;
     if (method) {
       try {
-        const result = typeof reciever === 'function' ? await reciever(params) : await reciever[method](params);
+        const result = typeof reciever === 'function' ? await reciever({method, params}) : await reciever[method](params);
         if (id)
           transport.send({id, result})
       } catch(error) {
         if (id)
-          transport.send({id, error: {message: error.message}})
+          transport.send({id, error: {message: error.message, method}})
       }
     } else {
       const callback = callbacks.get(id);

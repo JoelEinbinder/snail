@@ -18,6 +18,8 @@ function setIsFullscreen(isFullscreen) {
 }
 
 window.addEventListener('message', event => {
+  if (event.source !== window.parent)
+    return;
   if ('method' in event.data) {
     const {method, params} = event.data;
     if (method === 'message') {

@@ -1,3 +1,4 @@
+/// <reference path="../iframe/types.d.ts" />
 export interface IHostAPI {
   sendMessage: (message: {method: string, params?: any}) => Promise<any>;
   notify: (message: {method: string, params?: any}) => void;
@@ -23,6 +24,63 @@ function makeHostAPI(): IHostAPI {
         return;
       callback(event.data);
     });
+    return host;
+  }
+  if ('d4' in window) {
+    window.d4.setIsFullscreen(true);
+    const {host, callback} = hostApiHelper('d4', message => {
+      if (message.method === 'contextMenu') {
+        // async contextMenu({ menuItems }, client, sender) {
+        //   let resolve;
+        //   /**
+        //    * @return {Electron.MenuItemConstructorOptions}
+        //    */
+        //   function convertItem(item) {
+        //     if (!item.title)
+        //       return {type: 'separator'};
+        //     return {
+        //       label: item.title,
+        //       click: item.callback ? () => {
+        //         resolve(item.callback)
+        //       } : undefined,
+        //       submenu: item.submenu ? item.submenu.map(convertItem) : undefined,
+        //       checked: item.checked,
+        //       type: item.checked ? 'checkbox' : undefined,
+        //     }
+        //   }
+        //   const menu = Menu.buildFromTemplate(menuItems.map(convertItem));
+        //   const promise = new Promise(x => resolve = x);
+        //   menu.popup(BrowserWindow.fromWebContents(sender));
+        //   const id = await promise;
+        //   return {id};
+        // },
+
+        function unserializeMenuItems(menuItems) {
+          return menuItems.map(item => {
+            const unserialized = {
+              ...item,
+            };
+            if (item.callback) {
+              unserialized.callback = () => {
+                callback({id: message.id, result: {id: item.callback}});
+              };
+            }
+            if (item.submenu)
+              unserialized.submenu = unserializeMenuItems(item.submenu);
+            return unserialized;
+          });
+        }
+        d4.createContextMenu(unserializeMenuItems(message.params.menuItems));
+        return;
+      }
+      window.d4.sendInput(JSON.stringify(message) + '\n');
+    });
+    (async function() {
+      while(true) {
+        const message = await window.d4.waitForMessage();
+        callback(message);
+      }
+    })();
     return host;
   }
   const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
