@@ -2,22 +2,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const webpack = require('webpack');
 const path = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const isDevelopment = process.env.NODE_ENV === 'development';
-
-const babelPlugins = [
-  [require.resolve('@babel/plugin-proposal-decorators'), {
-    legacy: true,
-  }],
-  [require.resolve('@babel/plugin-proposal-class-properties'), {loose: true}],
-  require.resolve('babel-plugin-transform-typescript-metadata'),
-  require.resolve('@babel/plugin-proposal-optional-chaining'),
-];
-const babelPresets = [
-  [require.resolve('@babel/preset-env'), { shippedProposals: true, targets: {chrome: '87'}, loose: true }],
-];
-const typescriptPreset = [require.resolve('@babel/preset-typescript'), { onlyRemoveTypeImports: false }];
 
 /** @type {import('webpack').Configuration} */
 module.exports = {

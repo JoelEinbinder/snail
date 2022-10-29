@@ -1,19 +1,6 @@
 const path = require('path');
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-const babelPlugins = [
-  [require.resolve('@babel/plugin-proposal-decorators'), {
-    legacy: true,
-  }],
-  [require.resolve('@babel/plugin-proposal-class-properties'), {loose: true}],
-  require.resolve('babel-plugin-transform-typescript-metadata'),
-  require.resolve('@babel/plugin-proposal-optional-chaining'),
-];
-const babelPresets = [
-  // [require.resolve('@babel/preset-env'), { shippedProposals: true, targets: {chrome: '87'}, loose: true }],
-];
-const typescriptPreset = [require.resolve('@babel/preset-typescript'), { onlyRemoveTypeImports: false }];
-
 /** @type {import('webpack').Configuration} */
 module.exports = {
   mode: isDevelopment ? 'development' : 'production',
@@ -44,13 +31,15 @@ module.exports = {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: {
-          loader: require.resolve('babel-loader'),
+          loader: require.resolve('swc-loader'),
           options: {
-            presets: [
-              typescriptPreset,
-              ...babelPresets
-            ],
-            plugins: babelPlugins,
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+                decorators: true,
+              },
+              target: 'es2022',
+            }
           }
         },
       },
@@ -58,10 +47,14 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          loader: require.resolve('babel-loader'),
+          loader: require.resolve('swc-loader'),
           options: {
-            presets: babelPresets,
-            plugins: babelPlugins,
+            jsc: {
+              parser: {
+                syntax: 'ecmascript',
+              },
+              target: 'es2022',
+            }
           }
         },
       },
