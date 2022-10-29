@@ -1,3 +1,5 @@
+//@ts-ignore
+import setiWoffUrl from './seti.woff';
 const styleText = `.seti-icon::before {
   content: attr(data-font-character);
   font-family: seti;
@@ -2699,7 +2701,7 @@ const extensionToLanguage = {
   ".di": "d",
   ".nginx": "nginx"
 };
-const fontFace = new FontFace('seti', `url('${new URL('./seti.woff?cache', import.meta.url).href}')`);
+const fontFace = new FontFace('seti', `url('${setiWoffUrl}')`);
 document.fonts.add(fontFace);
 const readyPromise = document.fonts.load('16px seti');
 export function iconPathForPath(fullPath: string, info: {dir: string, mode: number, size: number, isDirectory: boolean}) {

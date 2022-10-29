@@ -1,6 +1,43 @@
+const path = require('path');
+/** @type {Map<string, import('esbuild').OutputFile>} */
+const compiledFiles = new Map();
+/** @type {Map<string, import('esbuild').BuildResult>} */
+const fileToServer = new Map();
+
 async function resolveFileForIframe({filePath, headers, search}) {
   const searchParams = new URLSearchParams(search);
   if (searchParams.has('entry')) {
+
+    const resolved = path.resolve(filePath);
+    let server = fileToServer.get(resolved);
+    if (server) {
+      for (const file of server.outputFiles)
+        compiledFiles.delete(file.path);
+      await server.rebuild();
+    } else {
+      server = await require('esbuild').build({
+        bundle: true,
+        write: false,
+        entryPoints: [resolved],
+        loader: {
+          '.woff': 'file',
+        },
+        assetNames: '[name]-[hash]',
+        chunkNames: '[name]-[hash]',
+        entryNames: '[name]-[hash]',
+        format: 'esm',
+        incremental: true,
+        metafile: true,
+        logLevel: 'error',
+        outdir: path.dirname(resolved),
+      });
+    }
+    for (const file of server.outputFiles)
+      compiledFiles.set(file.path, file);
+    const entryMeta = Object.entries(server.metafile.outputs).find(x => x[1].entryPoint && (path.resolve(process.cwd(), x[1].entryPoint) === resolved));
+    let cssText = '';
+    if (entryMeta[1].cssBundle)
+      cssText = `<link rel="stylesheet" href="${path.resolve(process.cwd(), entryMeta[1].cssBundle)}">`;
     return {
       statusCode: 200,
       data: toBuffer(`<!DOCTYPE html>
@@ -11,12 +48,13 @@ async function resolveFileForIframe({filePath, headers, search}) {
 <script src="${require.resolve('../iframe/runtime.js')}" type="module"></script>
 </head>
 <body class=${JSON.stringify(searchParams.get('class'))} style=${JSON.stringify(searchParams.get('css'))}>
-<script src="${filePath}" type="module"></script>
+${cssText}
+<script src="${path.resolve(process.cwd(), entryMeta[0])}" type="module"></script>
 </body>
 </html>`),
       mimeType: 'text/html',
       headers: {
-        'Cache-Control': 'max-age=31536000',
+        'Cache-Control': 'no-cache',
       }
     };
   }
@@ -40,46 +78,33 @@ async function resolveFileForIframe({filePath, headers, search}) {
       headers: responseHeaders,
     }
   }
-  if (headers.accept && headers.accept === '*/*') {
-    const resolved = resolveScript(filePath);
-    if (!resolved) {
-      return {
-        statusCode: 404,
-        data: '404',
-        mimeType: 'text/plain',
-      }
-    }
-    responseHeaders.etag = fs.lstatSync(resolved, {}).ctimeMs.toString();
-    if (headers['if-none-match'] === responseHeaders.etag) {
-      return {
-        statusCode: 304,
-        mimeType: 'application/javascript',
-        headers: responseHeaders,
-      }
-    }
-    if (resolved.endsWith('.css')) {
-      return {
-        statusCode: 200,
-        mimeType: 'application/javascript',
-        data: toBuffer(`const style = document.createElement('style');
-style.innerHTML = ${JSON.stringify(fs.readFileSync(resolved, 'utf8'))};
-document.head.append(style);`),
-      }
-    }
+
+  const compiledFile = compiledFiles.get(filePath);
+  if (compiledFile) {
     return {
+      data: Buffer.from(compiledFile.contents).toString('base64'),
+      mimeType: require('mime-types').lookup(filePath) || undefined,
       statusCode: 200,
-      mimeType: 'application/javascript',
-      data: resolved.endsWith('.ts') ? toBuffer(transformTs(resolved)) : fs.readFileSync(resolved).toString('base64'),
-      headers: responseHeaders,
-    }
+      headers: {
+        'Cache-Control': 'max-age=31536000',
+      }
+    };
   }
 
-  return {
-    data: fs.readFileSync(filePath).toString('base64'),
-    statusCode: 200,
-    mimeType: require('mime-types').lookup(filePath) || undefined,
-    headers: responseHeaders,
-  };
+  try {
+    return {
+      data: fs.readFileSync(filePath).toString('base64'),
+      statusCode: 200,
+      mimeType: require('mime-types').lookup(filePath) || undefined,
+      headers: responseHeaders,
+    };
+  } catch {
+    return {
+      statusCode: 404,
+      data: '404',
+      mimeType: 'text/plain',
+    }
+  }
 }
 
 function resolveScript(filePath) {
