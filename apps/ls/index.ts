@@ -258,7 +258,9 @@ async function renderTable() {
     }
   });
   await dataGrid.loadAllData();
-  dataGrid.setItems(dirs.filter(x => showHidden || !x.dir.startsWith('.')));
+  console.log();
+  const dirsToShow = (dirs.length === 1 && dirs[0].children) ? dirs[0].children : dirs;
+  dataGrid.setItems(dirsToShow.filter(x => showHidden || !x.dir.startsWith('.')));
   document.body.append(dataGrid.element);
   d4.setHeight(document.body.offsetHeight);
 }

@@ -841,7 +841,6 @@ export class Terminal extends CoreTerminal implements ITerminal {
     }));
 
     this.register(addDisposableDomListener(el, 'wheel', (ev: WheelEvent) => {
-      console.log("wheel event", requestedEvents.wheel);
       // do nothing, if app side handles wheel itself
       if (requestedEvents.wheel) return;
 
