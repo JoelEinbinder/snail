@@ -28,10 +28,13 @@ body {
 }
 /* chromium oopifs have white backgrounds */
 body.electron-host,
-/* d4 might be chromium, we don't know */
-body.d4-host,
 body.web-host {
   background-color: black;
+}
+
+/* d4 might be chromium, we don't know */
+body.d4-host {
+  background: #000030;
 }
 
 ::selection {

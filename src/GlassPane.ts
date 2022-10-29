@@ -115,6 +115,6 @@ class InPageGlassPane {
   }
 }
 
-export const GlassPlane = 'webkit' in window ? ExternalGlassPane : InPageGlassPane;
+export const GlassPlane = ('webkit' in window && !('d4' in window)) ? ExternalGlassPane : InPageGlassPane;
 // export const GlassPlane = InPageGlassPane;
 export type GlassPlane = ExternalGlassPane | InPageGlassPane;

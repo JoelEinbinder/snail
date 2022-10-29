@@ -297,6 +297,10 @@ body.web-host {
   color-scheme: dark;
 
 }
+body.d4-host {
+  background: #000030;
+  color-scheme: dark;
+}
 body.glass-pane {
   padding: 0;
   background: none;

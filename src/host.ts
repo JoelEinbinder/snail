@@ -9,11 +9,6 @@ export interface IHostAPI {
 function makeHostAPI(): IHostAPI {
   if ('electronAPI' in window)
     return window['electronAPI'];
-  if (window['webkit']) {
-    const {host, callback} = hostApiHelper('webkit', message => window['webkit'].messageHandlers.wkMessage.postMessage(message));
-    window['webkit_callback'] = callback;
-    return host;
-  }
   if ('acquireVsCodeApi' in window) {
     const api = window['acquireVsCodeApi']();
     const {host, callback} = hostApiHelper('vscode', message => {
@@ -81,6 +76,11 @@ function makeHostAPI(): IHostAPI {
         callback(message);
       }
     })();
+    return host;
+  }
+  if (window['webkit']) {
+    const {host, callback} = hostApiHelper('webkit', message => window['webkit'].messageHandlers.wkMessage.postMessage(message));
+    window['webkit_callback'] = callback;
     return host;
   }
   const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
