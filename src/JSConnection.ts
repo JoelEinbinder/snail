@@ -1,6 +1,9 @@
 import {Protocol} from './protocol';
 type ExtraServerMethods = {
   'Shell.daemonStatus': { isDaemon: boolean };
+  // TODO start typing these methods
+  'Shell.notify': { payload: any; };
+  'Shell.cwdChanged': { cwd: string; };
 }
 type ServerMethods = Protocol.Events & ExtraServerMethods;
 

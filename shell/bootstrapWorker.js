@@ -5,6 +5,7 @@ const {PipeTransport} = require('../protocol/pipeTransport');
 const os = require('os');
 const path = require('path');
 const worker_threads = require('node:worker_threads');
+const { ShellState } = require('./ShellState');
 const socketDir = path.join(os.tmpdir(), '1d4-sockets');
 const socketPath = path.join(socketDir, `${process.pid}.socket`);
 
@@ -14,11 +15,10 @@ worker_threads.parentPort.on('message', changes => {
       process.env[key] = changes.env[key];
   }
 });
-
+const shellState = new ShellState();
 let isDaemon = false;
 const enabledTransports = new Set();
 let objectIdPromise;
-let storedMessages = [];
 let lastCommandPromise;
 const handler = {
   'Shell.setIsDaemon': (params) => {
@@ -43,8 +43,7 @@ const handler = {
     return { result: output };
   },
   'Shell.restore': async () => {
-    for (const message of storedMessages)
-      transport.send(message);
+    shellState(message => transport.send(message));
     const senderTransport = transport;
     const result = await lastCommandPromise;
     if (transport === senderTransport)
@@ -75,7 +74,7 @@ const handler = {
 
 function clearStoredMessages() {
   lastCommandPromise = null;
-  storedMessages = [];
+  shellState.clear();
 }
 
 async function dispatchToHandler(message, replyTransport) {
@@ -135,11 +134,24 @@ process.on('exit', () => {
 const session = new inspector.Session();
 session.connectToMainThread();
 session.on('inspectorNotification', notification => {
+  if (notification.method === 'Runtime.bindingCalled' && notification.params.name === 'magic_binding') {
+    const {method, params} = JSON.parse(notification.params.payload);
+    if (method === 'cwd') {
+      shellState.setCwd(params, message => transport?.send(message));
+    } else {
+      const message = {
+        method: 'Shell.notify',
+        params: {
+          payload: {method, params}
+        }
+      };
+      transport?.send(message);
+      shellState.addMessage(notification);
+    }
+    return;
+  }
   transport?.send(notification);
-  storedMessages.push(notification);
-  // TODO better message compression
-  if (storedMessages.length > 10000)
-    storedMessages = storedMessages.slice(-5000);
+  shellState.addMessage(notification);
 });
 
 /**

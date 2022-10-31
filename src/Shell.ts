@@ -273,11 +273,6 @@ export class Shell {
         };
         terminalTaskQueue.queue(() => addTerminalBlock());
       },
-      cwd: cwd => {
-        connection.cwd = cwd;
-        if (this._connections[0] === connection)
-          localStorage.setItem('cwd', cwd);
-      },
       aliases: (aliases) => {
       },
       env: (env: {[key: string]: string}) => {
@@ -311,12 +306,15 @@ export class Shell {
         });
       },
     }
-    connection.on('Runtime.bindingCalled', message => {
-      if (message.name !== "magic_binding")
-        return;
-      const {method, params} = JSON.parse(message.payload);
-      handler[method](params);
+    connection.on('Shell.cwdChanged', message => {
+      connection.cwd = message.cwd;
+      if (this._connections[0] === connection)
+        localStorage.setItem('cwd', message.cwd);
     });
+    connection.on('Shell.notify', message => {
+      const {method, params} = message.payload;
+      handler[method](params);
+    })
     const resize = size => notify('resize', size);
     this._size.on(resize);
     this._connections.push(connection);

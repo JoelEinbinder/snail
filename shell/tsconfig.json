@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "target": "esnext",
+    "moduleResolution": "node",
+    "module": "CommonJS"
+  },
+  "include": [
+    "**/*.js",
+  ]
+}
