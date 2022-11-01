@@ -57,8 +57,8 @@ async function spawnJSProcess({cwd, sshAddress, socketPath}) {
 
     const nodePath = process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node';
     const child = spawn(nodePath, ['-e', `require(${JSON.stringify(path.join(__dirname, 'bootstrap.js'))})`], {
-      stdio: 'inherit',
-      detached: false,
+      stdio: 'ignore',
+      detached: true,
       cwd,
       env: {
         ...process.env,
