@@ -81,6 +81,7 @@ iframe {
   width: 100%;
 }
 
+.browser-view-dummy.fullscreen,
 iframe.fullscreen {
   position: absolute;
   top: 0;

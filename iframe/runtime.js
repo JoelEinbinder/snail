@@ -9,19 +9,34 @@ async function waitForMessage() {
   return new Promise(resolve => callbacks.push(resolve));
 }
 
+function sendMessageToParent(message) {
+  if (window.electronAPI)
+    window.electronAPI.notify(message);
+  else
+    window.parent.postMessage(message, '*');
+}
+
 function setHeight(height) {
-  window.parent.postMessage({method: 'setHeight', params: {height}}, '*')
+  sendMessageToParent({method: 'setHeight', params: {height}})
 }
 
 function setIsFullscreen(isFullscreen) {
-  window.parent.postMessage({method: 'setIsFullscreen', params: {isFullscreen}}, '*')
+  sendMessageToParent({method: 'setIsFullscreen', params: {isFullscreen}})
 }
 
-window.addEventListener('message', event => {
-  if (event.source !== window.parent)
-    return;
-  if ('method' in event.data) {
-    const {method, params} = event.data;
+if (window.electronAPI) {
+  window.electronAPI.onEvent('postMessage', onMessage);
+} else {
+  window.addEventListener('message', event => {
+    if (event.source !== window.parent)
+      return;
+    onMessage(event.data);
+  });
+}
+
+function onMessage(data) {
+  if ('method' in data) {
+    const {method, params} = data;
     if (method === 'message') {
       if (callbacks.length) {
         callbacks.shift()(params);
@@ -38,14 +53,14 @@ window.addEventListener('message', event => {
       window.dispatchEvent(new Event('resize'));
     }
   } else {
-    const {id, result} = event.data;
+    const {id, result} = data;
     const callback = messasgeCallbacks.get(id);
     if (callback) {
       callback(result);
       messasgeCallbacks.delete(id);
     }
   }
-});
+}
 
 window.addEventListener('keydown', event => {
   if (event.defaultPrevented)
@@ -61,11 +76,11 @@ window.addEventListener('keydown', event => {
     }
   } else if (!event.ctrlKey && !event.altKey && !event.metaKey && event.key.length === 1 && !isEditing(event.target)) {
     event.preventDefault();
-    window.parent.postMessage({method: 'keyPressed', params: {
+    sendMessageToParent({method: 'keyPressed', params: {
       key: event.key,
       code: event.code,
       shiftKey: event.shiftKey,
-    }}, '*');
+    }});
   }
 });
 
@@ -108,10 +123,10 @@ function serializeMenuItems(menuItems) {
 function createContextMenu(descriptor) {
   contextMenuCallbacks.clear();
   const params =  {menuItems: serializeMenuItems(descriptor)};
-  window.parent.postMessage({method: 'contextMenu', params}, '*');
+  sendMessageToParent({method: 'contextMenu', params});
 }
 function sendInput(data) {
-  window.parent.postMessage({method: 'sendInput', params: data}, '*');
+  sendMessageToParent({method: 'sendInput', params: data});
 }
 
 /**
@@ -119,7 +134,7 @@ function sendInput(data) {
  * @param {any} value
  */
 function saveItem(key, value) {
-  window.parent.postMessage({method: 'saveItem', params: {key, value}}, '*');
+  sendMessageToParent({method: 'saveItem', params: {key, value}});
 }
 /**
  * @param {string} key
@@ -127,7 +142,7 @@ function saveItem(key, value) {
  */
 async function loadItem(key) {
   const id = ++lastMessageId;
-  window.parent.postMessage({method: 'loadItem', params: {key}, id}, '*');
+  sendMessageToParent({method: 'loadItem', params: {key}, id});
   return new Promise(x => messasgeCallbacks.set(id, x));
 }
 
@@ -139,7 +154,7 @@ async function getDevicePixelRatio() {
     return window.devicePixelRatio;
   const id = ++lastMessageId;
   dprPromise = new Promise(resolve => messasgeCallbacks.set(id, resolve));
-  window.parent.postMessage({method: 'getDevicePixelRatio', id}, '*');
+  sendMessageToParent({method: 'getDevicePixelRatio', id});
   return dprPromise;
 }
 
@@ -153,4 +168,4 @@ window.d4 = {
   loadItem,
   getDevicePixelRatio,
 }
-window.parent.postMessage('ready', '*')
+sendMessageToParent('ready')

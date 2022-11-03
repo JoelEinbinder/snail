@@ -1,5 +1,5 @@
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
-const { app, BrowserWindow, ipcMain, Menu, MenuItem } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView } = require('electron');
 const { handler } = require('../host');
 let windowNumber = 0;
 app.setName('Terminal');
@@ -150,7 +150,10 @@ app.on('new-window-for-tab', () => {
   makeWindow();
 });
 
-
+/** @type {WeakMap<import('electron').WebContents, Map<string, BrowserView>>} */
+const browserViews = new WeakMap();
+/** @type {WeakMap<import('electron').WebContents, {uuid: string, parent: import('electron').WebContents}>} */
+const browserViewContentsToParentContents = new WeakMap();
 const overrides = {
   ...handler,
   async beep() {
@@ -190,7 +193,48 @@ const overrides = {
   },
   async close(_, client, sender) {
     BrowserWindow.fromWebContents(sender).close();
-  }
+  },
+
+  // BrowserView api
+  createBrowserView(uuid, client, sender) {
+    const window = BrowserWindow.fromWebContents(sender);
+    const browserView = new BrowserView({
+      webPreferences: {
+        preload: __dirname + '/browserView-preload.js',
+      },
+    });
+    window.addBrowserView(browserView);
+    if (!browserViews.has(sender))
+      browserViews.set(sender, new Map());
+    const views = browserViews.get(sender);
+    browserViewContentsToParentContents.set(browserView.webContents, {uuid, parent: sender});
+    // TODO are we leaking browserViews when the sender is destroyed?
+    views.set(uuid, browserView);
+  },
+  focusBrowserView({uuid}, client, sender) {
+    browserViews.get(sender)?.get(uuid)?.webContents.focus();
+  },
+  destroyBrowserView({uuid}, client, sender) {
+    const views = browserViews.get(sender);
+    const window = BrowserWindow.fromWebContents(sender);
+    window.removeBrowserView(views.get(uuid));
+    browserViewContentsToParentContents.delete(views.get(uuid));
+    views.delete(uuid);
+  },
+  postBrowserViewMessage({uuid, message}, client, sender) {
+    browserViews.get(sender)?.get(uuid)?.webContents.send('postMessage', message);
+  },
+  setBrowserViewRect({uuid, rect}, client, sender) {
+    browserViews.get(sender)?.get(uuid)?.setBounds({
+      x: Math.floor(rect.x),
+      y: Math.floor(rect.y),
+      width: Math.ceil(rect.width),
+      height: Math.ceil(rect.height),
+    });
+  },
+  setBrowserViewURL({uuid, url}, client, sender) {
+    browserViews.get(sender)?.get(uuid)?.webContents.loadURL(url);
+  },
 };
 
 const clients = new WeakMap();
@@ -202,7 +246,10 @@ ipcMain.handle('message', async (event, ...args) => {
   if (id)
     event.sender.send('message', {result, id});
 });
-
+ipcMain.handle('browserView-postMessage', async (event, message) => {
+  const {parent, uuid} = browserViewContentsToParentContents.get(event.sender);
+  parent.send('message', { method: 'browserView-message', params: {uuid, message} });
+});
 /**
  * @return {import('../host/').Client}
  */

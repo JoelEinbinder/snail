@@ -170,13 +170,24 @@ export class Shell {
                     activeIframeBlock = null;
                   }
                   const dataStr = new TextDecoder().decode(data.slice(1));
-                  const iframeBlock = new IFrameBlock(dataStr, {
+                  let dataObj: {entry: string, browserView?: boolean};
+                  try {
+                  if (dataStr.startsWith('{'))
+                    dataObj = JSON.parse(dataStr)
+                  else
+                    dataObj = {entry: dataStr};
+                  }
+                  catch { }
+                  if (!dataObj)
+                    dataObj = { entry: 'uh-oh-invalid-parse-entry???!!!' };
+                  const iframeBlock = new IFrameBlock(String(dataObj.entry), {
                     async sendInput(data) {
                         await notify('input', { data, id});
                     },
                     connection,
                     socketId: this._connectionToSocketId.get(connection),
                     antiFlicker: this._antiFlicker,
+                    browserView: !!(dataObj.browserView),
                   });
                   activeIframeBlock = iframeBlock;
                   this.addItem(iframeBlock);
