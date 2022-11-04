@@ -59,6 +59,9 @@ function onMessage(data) {
     } else if (method === 'fontChanged') {
       document.body.style.setProperty('--current-font', params);
       window.dispatchEvent(new Event('resize'));
+    } else if (method === 'cdpMessage') {
+      if (cdpListener)
+        cdpListener(params);
     }
   } else {
     const {id, result} = data;
@@ -166,6 +169,21 @@ async function getDevicePixelRatio() {
   return dprPromise;
 }
 
+let cdpListener;
+
+function openDevTools() {
+  sendMessageToParent({method: 'openDevTools'});  
+}
+
+async function attachToCDP(listener) {
+  cdpListener = listener;
+  sendMessageToParent({method: 'requestCDP'});
+  // TODO throw if not actually connected.
+  return message => {
+    sendMessageToParent({method: 'cdpMessage', params: message});
+  };
+}
+
 window.d4 = {
   waitForMessage,
   setHeight,
@@ -175,5 +193,7 @@ window.d4 = {
   saveItem,
   loadItem,
   getDevicePixelRatio,
+  attachToCDP,
+  openDevTools,
 }
 sendMessageToParent('ready')

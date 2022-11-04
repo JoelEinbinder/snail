@@ -154,6 +154,7 @@ app.on('new-window-for-tab', () => {
 const browserViews = new WeakMap();
 /** @type {WeakMap<import('electron').WebContents, {uuid: string, parent: import('electron').WebContents}>} */
 const browserViewContentsToParentContents = new WeakMap();
+/** @type {{[key: string]: (params: any, client: import('../host/').Client, sender: import('electron').WebContents) => any}} */
 const overrides = {
   ...handler,
   async beep() {
@@ -217,8 +218,10 @@ const overrides = {
   destroyBrowserView({uuid}, client, sender) {
     const views = browserViews.get(sender);
     const window = BrowserWindow.fromWebContents(sender);
-    window.removeBrowserView(views.get(uuid));
-    browserViewContentsToParentContents.delete(views.get(uuid));
+    const view = views.get(uuid);
+    window.removeBrowserView(view);
+    view.webContents.destroy();
+    browserViewContentsToParentContents.delete(view);
     views.delete(uuid);
   },
   postBrowserViewMessage({uuid, message}, client, sender) {
@@ -235,6 +238,52 @@ const overrides = {
   setBrowserViewURL({uuid, url}, client, sender) {
     browserViews.get(sender)?.get(uuid)?.webContents.loadURL(url);
   },
+  attachToCDP({browserViewUUID}, client, sender) {
+    const webContents = browserViewUUID ? browserViews.get(sender)?.get(browserViewUUID)?.webContents : sender;
+    if (!webContents)
+      throw new Error('Could not attach to web content. Maybe it was destroyed?');
+    if (webContents.debugger.isAttached())
+      throw new Error('A debugger is already attached.');
+    webContents.debugger.attach();
+    const onDetach = (event, reason) => {
+      close();
+    };
+    const onMessage = (event, method, params, sessionId) => {
+      client.send({ method: 'messageFromCDP', params: { browserViewUUID, message: { method, params, sessionId } } });
+    };
+    webContents.debugger.on('detach', onDetach);
+    webContents.debugger.on('message', onMessage);
+
+    function close() {
+      webContents.debugger.off('detach', onDetach);
+      webContents.debugger.off('message', onMessage);
+      webContents.debugger.detach();
+    }
+  },
+  detachFromCDP({browserViewUUID}, client, sender) {
+    const webContents = browserViewUUID ? browserViews.get(sender)?.get(browserViewUUID)?.webContents : sender;
+    if (!webContents)
+      throw new Error('Could not detach from web content. Maybe it was already destroyed?');
+    if (!webContents.debugger.isAttached())
+      throw new Error('No debugger is attached.');
+    webContents.debugger.detach();
+    // this calls the cleanup code in attachToCDP via on('detach')
+  },
+  async sendMessageToCDP({browserViewUUID, message}, client, sender) {
+    const webContents = browserViewUUID ? browserViews.get(sender)?.get(browserViewUUID)?.webContents : sender;
+    if (!webContents)
+      throw new Error('Could not send message to web content. Maybe it was destroyed?');
+    if (!webContents.debugger.isAttached())
+      throw new Error('No debugger is attached.');
+
+    const {sessionId, method, params, id} = message;
+    try {
+      const result = await webContents.debugger.sendCommand(method, params, sessionId);
+      client.send({ method: 'messageFromCDP', params: { browserViewUUID, message: { id, result, sessionId } } });
+    } catch (error) {
+      client.send({ method: 'messageFromCDP', params: { browserViewUUID, message: { id, error, sessionId } } });
+    }
+  }
 };
 
 const clients = new WeakMap();
@@ -247,8 +296,15 @@ ipcMain.handle('message', async (event, ...args) => {
     event.sender.send('message', {result, id});
 });
 ipcMain.handle('browserView-postMessage', async (event, message) => {
-  const {parent, uuid} = browserViewContentsToParentContents.get(event.sender);
-  parent.send('message', { method: 'browserView-message', params: {uuid, message} });
+  if (message.method === 'openDevTools') {
+    event.sender.openDevTools({
+      mode: 'detach',
+      activate: true,
+    });
+  } else {
+    const {parent, uuid} = browserViewContentsToParentContents.get(event.sender);
+    parent.send('message', { method: 'browserView-message', params: {uuid, message} });
+  }
 });
 /**
  * @return {import('../host/').Client}

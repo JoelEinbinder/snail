@@ -19,6 +19,10 @@ const browserViewMessageHandler = new Map<number, (data: any) => void>();
 host.onEvent('browserView-message', ({uuid, message}) => {
   browserViewMessageHandler.get(uuid)?.(message);
 });
+let cdpListener: (message: any) => void = null;
+host.onEvent('messageFromCDP', ({browserViewUUID, message}) => {
+  cdpListener?.(message);
+});
 
 export type IFrameBlockDelegate = {
   connection: JSConnection;
@@ -46,17 +50,21 @@ class BrowserView implements WebContentView {
   private _uuid = crypto.randomUUID();
   constructor(handler: (data: any) => void) {
     this._dummyElement.classList.add('browser-view-dummy');
+    this._dummyElement.tabIndex = -1;
     host.notify({ method: 'createBrowserView', params: this._uuid });
     this._resizeObserver = new ResizeObserver(() => this._updateRect());
     this._resizeObserver.observe(this._dummyElement);
     browserViewMessageHandler.set(this._uuid, handler);
+    this._dummyElement.addEventListener('focus', () => [
+      host.notify({
+        method: 'focusBrowserView',
+        params: {uuid: this._uuid},
+      })  
+    ]);
   }
 
   focus(): void {
-    host.notify({
-      method: 'focusBrowserView',
-      params: {uuid: this._uuid},
-    });
+    this._dummyElement.focus();
   }
 
   dispose(): void {
@@ -148,6 +156,7 @@ export class IFrameBlock implements LogItem {
   private readyPromise: Promise<void>;
   private _closed = false;
   private _isFullscreen = false;
+  private _attachedToCDP = false;
   public willResizeEvent = new JoelEvent<void>(undefined);
   constructor(
     data: string,
@@ -220,7 +229,7 @@ export class IFrameBlock implements LogItem {
           break;
         }
         case 'saveItem': {
-          host.sendMessage({method: 'saveItem', params: data.params});
+          host.notify({method: 'saveItem', params: data.params});
           break;
         }
         case 'getDevicePixelRatio': {
@@ -228,6 +237,19 @@ export class IFrameBlock implements LogItem {
             result: getDPR(),
             id: data.id,
           });
+          break;
+        }
+        case 'requestCDP': {
+          if (!this._attachedToCDP) {
+            this._attachedToCDP = true;
+            host.notify({method: 'attachToCDP', params: {}});
+            cdpListener = message => this._webContentView.postMessage({method: 'cdpMessage', params: message});
+          }
+          break;
+        }
+        case 'cdpMessage': {
+          host.notify({method: 'sendMessageToCDP', params: {message: data.params}});
+          break;
         }
       }
     };
@@ -264,6 +286,11 @@ export class IFrameBlock implements LogItem {
   dispose(): void {
     this._webContentView.dispose();
     font.off(this._onFontChanged);
+    if (this._attachedToCDP) {
+      host.notify({method: 'detachFromCDP'});
+      this._attachedToCDP = false;
+      cdpListener = null;
+    }
   }
   _onFontChanged = async () => {
     await this.readyPromise;

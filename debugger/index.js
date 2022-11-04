@@ -19,6 +19,7 @@ function send(data) {
   process.stdout.write(`\x1b\x1aM${str}\x00`);
 }
 
-setTimeout(() => {
-  console.log('done?');
-}, 5000);
+process.stdin.on('close', () => process.exit());
+process.stdin.on('data', () => {
+  // stay alive to keep the web block fullscreen
+});

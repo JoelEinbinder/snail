@@ -14,4 +14,6 @@ declare var d4: {
   saveItem(key: string, value: any): void;
   loadItem(key: string): Promise<any>;
   getDevicePixelRatio(): Promise<number>;
+  attachToCDP(onMessage: (message: any) => void): Promise<(message: any) => void>;
+  openDevTools(): void;
 };
