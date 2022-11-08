@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -45,10 +45,13 @@
 		F00D6869287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "node-v16.16.0-darwin-arm64"; path = "../Downloads/node-v16.16.0-darwin-arm64"; sourceTree = "<group>"; };
 		F020A6E928AAFE0700F2FF07 /* D4ContextMenu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = D4ContextMenu.h; sourceTree = "<group>"; };
 		F020A6EA28AAFE0700F2FF07 /* D4ContextMenu.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = D4ContextMenu.m; sourceTree = "<group>"; };
+		F042804629198BC900864009 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = ../WebKit/WebKitBuild/Release/WebKit.framework; sourceTree = "<group>"; };
+		F0428094291B0C8A00864009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F091DC94287B730100915D30 /* WebKitBundle */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WebKitBundle; sourceTree = "<group>"; };
 		F091DC98287BBA1A00915D30 /* Window.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Window.storyboard; sourceTree = "<group>"; };
 		F091DCBF287D268E00915D30 /* D4WebPanel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = D4WebPanel.h; sourceTree = "<group>"; };
 		F091DCC0287D268E00915D30 /* D4WebPanel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = D4WebPanel.m; sourceTree = "<group>"; };
+		F0C7374729198B8300FBA733 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		F0EA445D27EC0C4A0085A081 /* Terminal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Terminal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F0EA446027EC0C4A0085A081 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		F0EA446127EC0C4A0085A081 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -94,6 +97,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		F0C737432918D8A600FBA733 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F042804629198BC900864009 /* WebKit.framework */,
+				F0C7374729198B8300FBA733 /* Cocoa.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		F0EA445427EC0C4A0085A081 = {
 			isa = PBXGroup;
 			children = (
@@ -103,6 +115,7 @@
 				F0EA447527EC0C4E0085A081 /* TerminalTests */,
 				F0EA447F27EC0C4E0085A081 /* TerminalUITests */,
 				F0EA445E27EC0C4A0085A081 /* Products */,
+				F0C737432918D8A600FBA733 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -119,6 +132,7 @@
 		F0EA445F27EC0C4A0085A081 /* Terminal */ = {
 			isa = PBXGroup;
 			children = (
+				F0428094291B0C8A00864009 /* Info.plist */,
 				F0EA446027EC0C4A0085A081 /* AppDelegate.h */,
 				F0EA446127EC0C4A0085A081 /* AppDelegate.m */,
 				F091DCBF287D268E00915D30 /* D4WebPanel.h */,
@@ -236,7 +250,7 @@
 				};
 			};
 			buildConfigurationList = F0EA445827EC0C4A0085A081 /* Build configuration list for PBXProject "Terminal" */;
-			compatibilityVersion = "Xcode 13.0";
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -354,6 +368,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_MODULES_AUTOLINK = NO;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -381,6 +396,7 @@
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = /Users/joeleinbinder/WebKit/WebKitBuild/Release/;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -399,7 +415,14 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Cocoa,
+					"-framework",
+					WebKit,
+				);
 				SDKROOT = macosx;
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = /Users/joeleinbinder/WebKit/WebKitBuild/Release/;
 			};
 			name = Debug;
 		};
@@ -414,6 +437,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_MODULES_AUTOLINK = NO;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -441,6 +465,7 @@
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				FRAMEWORK_SEARCH_PATHS = /Users/joeleinbinder/WebKit/WebKitBuild/Release/;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -453,7 +478,14 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Cocoa,
+					"-framework",
+					WebKit,
+				);
 				SDKROOT = macosx;
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = /Users/joeleinbinder/WebKit/WebKitBuild/Release/;
 			};
 			name = Release;
 		};
@@ -462,14 +494,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_MODULES_AUTOLINK = NO;
 				CODE_SIGN_ENTITLEMENTS = Terminal/Terminal.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 0.3;
-				DEVELOPMENT_TEAM = KM96MU7G7A;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Terminal/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -478,9 +512,11 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joeleinbinder.Terminal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = Debug;
@@ -490,14 +526,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_MODULES_AUTOLINK = NO;
 				CODE_SIGN_ENTITLEMENTS = Terminal/Terminal.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 0.3;
-				DEVELOPMENT_TEAM = KM96MU7G7A;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Terminal/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -506,9 +544,11 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joeleinbinder.Terminal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = Release;

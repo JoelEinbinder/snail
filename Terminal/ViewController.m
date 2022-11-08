@@ -230,6 +230,12 @@
         [self.view.window close];
     } else if ([@"setProgress" isEqual:body[@"method"]]) {
         [self setProgressBar:[params[@"progress"] doubleValue]];
+    } else if ([@"attachToCDP" isEqual:body[@"method"]]) {
+        // messageFromCDP
+    } else if ([@"detachFromCDP" isEqual:body[@"method"]]) {
+        
+    } else if ([@"sendMessageToCDP" isEqual:body[@"method"]]) {
+
     } else {
         [nodeTalker sendMessage:body];
     }

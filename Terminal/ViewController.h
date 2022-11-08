@@ -13,8 +13,10 @@
 -(void)showConsole;
 @end
 @interface D4WebView : WKWebView
--(id)_inspector;
+//-(id)_inspector;
+//-(id)connectInspectorFrontendChannel;
 @end
+
 @interface ViewController : NSViewController<WKUIDelegate, WKScriptMessageHandler, NSWindowDelegate> {
     D4WebView* webView;
     NodeTalker* nodeTalker;

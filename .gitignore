@@ -12,3 +12,5 @@ joel-terminal-*.vsix
 xcuserdata/
 /CoreBundle/
 __pycache__
+/build/
+
