@@ -73,6 +73,30 @@ function onMessage(data) {
   }
 }
 
+let chording = false;
+window.addEventListener('keydown', event => {
+  if (event.defaultPrevented)
+    return;
+  if (!chording) {
+    if (event.code === 'KeyA' && event.ctrlKey) {
+      chording = true;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  } else {
+    if (event.key === 'Shift' || event.key === 'Control' && event.key === 'Alt' || event.key === 'Meta')
+      return;
+    chording = false;
+    sendMessageToParent({method: 'chordPressed', params: {
+      key: event.key,
+      code: event.code,
+      shiftKey: event.shiftKey,
+    }});
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+}, true);
+
 window.addEventListener('keydown', event => {
   if (event.defaultPrevented)
     return;

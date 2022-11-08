@@ -210,10 +210,25 @@ const overrides = {
     const views = browserViews.get(sender);
     browserViewContentsToParentContents.set(browserView.webContents, {uuid, parent: sender});
     // TODO are we leaking browserViews when the sender is destroyed?
+    const onParentDestroy = () => {
+      console.log('on parent destroy');
+      browserView.webContents.destroy();
+    };
+    browserView.webContents.on('destroyed', () => {
+      console.log('browserView destroyed');
+      client.off('destroyed', onParentDestroy);
+      browserViewContentsToParentContents.delete(browserView.webContents);
+      views.delete(uuid);
+    });
+
+    client.on('destroyed', onParentDestroy);
     views.set(uuid, browserView);
   },
   focusBrowserView({uuid}, client, sender) {
     browserViews.get(sender)?.get(uuid)?.webContents.focus();
+  },
+  focusMainContent(_, client, sender) {
+    sender.focus();
   },
   destroyBrowserView({uuid}, client, sender) {
     const views = browserViews.get(sender);
@@ -221,8 +236,6 @@ const overrides = {
     const view = views.get(uuid);
     window.removeBrowserView(view);
     view.webContents.destroy();
-    browserViewContentsToParentContents.delete(view);
-    views.delete(uuid);
   },
   postBrowserViewMessage({uuid, message}, client, sender) {
     browserViews.get(sender)?.get(uuid)?.webContents.send('postMessage', message);
@@ -251,8 +264,12 @@ const overrides = {
     const onMessage = (event, method, params, sessionId) => {
       client.send({ method: 'messageFromCDP', params: { browserViewUUID, message: { method, params, sessionId } } });
     };
+    const onWebContentsDestroyed = () => {
+      close();
+    };
     webContents.debugger.on('detach', onDetach);
     webContents.debugger.on('message', onMessage);
+    client.on('destroyed', onWebContentsDestroyed);
 
     function close() {
       webContents.debugger.off('detach', onDetach);
@@ -307,6 +324,7 @@ ipcMain.handle('browserView-postMessage', async (event, message) => {
   }
 });
 /**
+ * @param {import('electron').WebContents} sender
  * @return {import('../host/').Client}
  */
 function clientForSender(sender) {
@@ -314,7 +332,10 @@ function clientForSender(sender) {
     const client = new (require('events')).EventEmitter();
     client.send = message => sender.send('message', message);
     sender.on('destroyed', () => client.emit('destroyed'));
-    sender.on('did-navigate', () => client.emit('destroyed'));
+    sender.on('did-frame-navigate', (event, url, isInPlace, isMainFrame, frameProcessId, frameRoutingId) => {
+      if (isMainFrame)
+        client.emit('destroyed');
+    });
     clients.set(sender, client);
   }  
   return clients.get(sender);

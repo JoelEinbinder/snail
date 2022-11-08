@@ -684,6 +684,7 @@ export class Shell {
     container.appendChild(element);
     editor.layout();
     editor.focus();
+    host.notify({ method: 'focusMainContent' });
     element.onfocus = () => editor.focus();
 
     const belowPrompt = document.createElement('div');

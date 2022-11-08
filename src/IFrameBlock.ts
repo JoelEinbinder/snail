@@ -50,7 +50,7 @@ class BrowserView implements WebContentView {
   private _uuid = crypto.randomUUID();
   constructor(handler: (data: any) => void) {
     this._dummyElement.classList.add('browser-view-dummy');
-    this._dummyElement.tabIndex = -1;
+    this._dummyElement.tabIndex = 0;
     host.notify({ method: 'createBrowserView', params: this._uuid });
     this._resizeObserver = new ResizeObserver(() => this._updateRect());
     this._resizeObserver.observe(this._dummyElement);
@@ -61,6 +61,12 @@ class BrowserView implements WebContentView {
         params: {uuid: this._uuid},
       })  
     ]);
+    this._dummyElement.addEventListener('focusout', () => {
+      console.log('focusout', document.activeElement);
+    });
+    this._dummyElement.addEventListener('blur', () => {
+      console.log('blur', document.activeElement);
+    });
   }
 
   focus(): void {
@@ -204,6 +210,22 @@ export class IFrameBlock implements LogItem {
               params: response,
             });
           });
+          break;
+        }
+        case 'chordPressed': {
+          // emit fake key press to get handled
+          this._webContentView.element.dispatchEvent(new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key: 'a',
+            code: 'KeyA',
+            ctrlKey: true,
+          }));
+          this._webContentView.element.dispatchEvent(new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            ...data.params,
+          }));
           break;
         }
         case 'keyPressed': {
