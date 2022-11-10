@@ -3,6 +3,9 @@ const fs = require('fs');
 const os = require('os');
 const userid = require('userid');
 const mimeTypes = require('mime-types');
+/**
+ * @return {Promise<number>}
+ */
 async function run(args, stdout, stderr) {
   stdout.write(`\x1b\x1aL${path.join(__dirname, 'index.ts')}\x00`);
 
@@ -22,21 +25,31 @@ async function run(args, stdout, stderr) {
   if (directoryArgs.length === 1)
     directoryArgs = ['.']
   const platform = os.platform();
-  send({
-      args,
-      dirs: await Promise.all(directoryArgs.map(dir => {
-        return buildItemInfo(cwd, path.resolve(cwd, dir), 1);
-      })),
-      cwd,
-      showHidden: args.some(a => a.startsWith('-') && a.includes('a')),
-      platform,
-  });
+  try {
+    send({
+        args,
+        dirs: await Promise.all(directoryArgs.map(dir => {
+          return buildItemInfo(cwd, path.resolve(cwd, dir), 1);
+        })),
+        cwd,
+        showHidden: args.some(a => a.startsWith('-') && a.includes('a')),
+        platform,
+    });
+  } catch (error) {
+    stderr.write(String(error) + '\n');
+    return 1;
+  }
+  return 0;
 }
 
 async function buildItemInfo(parentDir, filePath, depth) {
   async function readDir(link) {
     const resolved = link ? link : filePath;
-    const stat = await fs.promises.lstat(resolved);
+    const stat = await fs.promises.lstat(resolved).catch(e => {
+      if (e.errno === -2)
+        throw `ls: ${path.relative(process.cwd(), resolved)}: No such file or directory`;
+      return e;
+    });
     if (stat.isSymbolicLink()) {
       const link = path.resolve(path.dirname(resolved), await fs.promises.readlink(resolved));
       try {

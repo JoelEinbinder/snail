@@ -1,2 +1,4 @@
 #!/usr/bin/env node
-require('./lib').run(process.argv.slice(2), process.stdout, process.stderr);
+require('./lib').run(process.argv.slice(2), process.stdout, process.stderr).then(code => {
+  process.exitCode = code;
+})

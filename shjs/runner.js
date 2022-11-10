@@ -40,7 +40,7 @@ const builtins = {
     ls: (args, stdout, stderr) => {
         if (stdout !== process.stdout || args.some(x => x.startsWith('-') && /[^\-la]/.test(x)))
             return 'pass';
-        return require('../apps/ls/lib').run(args, stdout, stderr).then(() => 0);
+        return require('../apps/ls/lib').run(args, stdout, stderr);
     },
     export: async (args, stdout, stderr) => {
         for (const arg of args) {
