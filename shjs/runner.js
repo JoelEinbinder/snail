@@ -341,6 +341,8 @@ function processAlias(executable, args) {
     }
 }
 
+class UserError extends Error {}
+
 /**
  * @param {import('./ast').Word} word
  * @return {string[]}
@@ -360,9 +362,12 @@ function processWord(word) {
     }
     if (parts.some(x => typeof x !== 'string')) {
         const glob = require('fast-glob');
-        const output = glob.sync(parts.map(p => typeof p === 'string' ? glob.escapePath(p) : p.glob).join(''), {
-            onlyFiles: false,       
+        const globStr = parts.map(p => typeof p === 'string' ? glob.escapePath(p) : p.glob).join('');
+        const output = glob.sync(globStr, {
+            onlyFiles: false,
         });
+        if (!output.length)
+            throw new UserError(`No matches found: ${globStr}`);
         return output;
     }
     return [parts.join('')];
@@ -389,95 +394,106 @@ function computeReplacement(replacement) {
  * @return {{stdin: Writable, kill: (signal: number) => boolean, closePromise: Promise<number>}}
  */
 function execute(expression, stdout, stderr, stdin) {
-    if ('executable' in expression) {
-        const { redirects } = expression;
-        const {executable, args} = processAlias(processWord(expression.executable)[0], expression.args.flatMap(processWord));
-        const env = {...process.env};
-        for (const {name, value} of expression.assignments || [])
-            env[name] = processWord(value)[0];
-        if (executable in builtins) {
-            const closePromise = builtins[executable](args, stdout, stderr, stdin);
-            if (closePromise !== 'pass') {
-                return {
-                    closePromise,
-                    stdin: new Writable({write(){}}),
-                    kill: () => void 0,
+    try {
+        if ('executable' in expression) {
+            const { redirects } = expression;
+            const {executable, args} = processAlias(processWord(expression.executable)[0], expression.args.flatMap(processWord));
+            const env = {...process.env};
+            for (const {name, value} of expression.assignments || [])
+                env[name] = processWord(value)[0];
+            if (executable in builtins) {
+                const closePromise = builtins[executable](args, stdout, stderr, stdin);
+                if (closePromise !== 'pass') {
+                    return {
+                        closePromise,
+                        stdin: new Writable({write(){}}),
+                        kill: () => void 0,
+                    }
                 }
-            }
-        } 
-        if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
-            return execute({executable: 'cd', args: [executable], redirects}, stdout, stderr, stdin);
-        } else {
-            /** @type {(Readable|Writable|number|undefined)[]} */
-            const stdio = [stdin, stdout, stderr];
-            const openFds = [];
-            for (const redirect of redirects || []) {
-                const file = processWord(redirect.to)[0];
-                const fd = fs.openSync(file, redirect.type === 'write' ? 'w' : 'a');
+            } 
+            if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
+                return execute({executable: 'cd', args: [executable], redirects}, stdout, stderr, stdin);
+            } else {
+                /** @type {(Readable|Writable|number|undefined)[]} */
+                const stdio = [stdin, stdout, stderr];
+                const openFds = [];
+                for (const redirect of redirects || []) {
+                    const file = processWord(redirect.to)[0];
+                    const fd = fs.openSync(file, redirect.type === 'write' ? 'w' : 'a');
 
-                stdio[redirect.from] = fd;
-                openFds.push(fd);
-            }
-            const defaultStdio = [process.stdin, process.stdout, process.stderr];
-            const child = spawn(executable, args, {
-                stdio: stdio.map((stream, index) => {
-                    if (typeof stream === 'number')
-                        return stream;
-                    if (!stream)
+                    stdio[redirect.from] = fd;
+                    openFds.push(fd);
+                }
+                const defaultStdio = [process.stdin, process.stdout, process.stderr];
+                const child = spawn(executable, args, {
+                    stdio: stdio.map((stream, index) => {
+                        if (typeof stream === 'number')
+                            return stream;
+                        if (!stream)
+                            return 'pipe';
+                        if (stream === defaultStdio[index])
+                            return 'inherit';
                         return 'pipe';
-                    if (stream === defaultStdio[index])
-                        return 'inherit';
-                    return 'pipe';
-                }),
-                env,
-            });
-            const closePromise = new Promise(resolve => {
-                child.on('close', resolve);
-                child.on('error', err => {
-                    stderr.write(err.message + '\n');
-                    resolve(127);
+                    }),
+                    env,
                 });
-            });
-            closePromise.then(() => {
-                for (const fd of openFds)
-                    fs.close(fd);
-            });
-            for (let i = 0; i < stdio.length; i++) {
-                const stream = stdio[i];
-                if (stream === defaultStdio[i] || typeof stream === 'number' || !stream)
-                    continue;
-                if ('write' in stream)
-                    child.stdio[i].pipe(stream, { end: false });
-                else
-                    stream.pipe(/** @type {Writable} */(child.stdio[i]), { end: false });
+                const closePromise = new Promise(resolve => {
+                    child.on('close', resolve);
+                    child.on('error', err => {
+                        stderr.write(err.message + '\n');
+                        resolve(127);
+                    });
+                });
+                closePromise.then(() => {
+                    for (const fd of openFds)
+                        fs.close(fd);
+                });
+                for (let i = 0; i < stdio.length; i++) {
+                    const stream = stdio[i];
+                    if (stream === defaultStdio[i] || typeof stream === 'number' || !stream)
+                        continue;
+                    if ('write' in stream)
+                        child.stdio[i].pipe(stream, { end: false });
+                    else
+                        stream.pipe(/** @type {Writable} */(child.stdio[i]), { end: false });
+                }
+            return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
             }
-        return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
+        } else if ('pipe' in expression) {
+            const pipe = execute(expression.pipe, stdout, stderr);
+            const main = execute(expression.main, pipe.stdin, stderr, stdin);
+            const closePromise = main.closePromise.then(() => {
+                pipe.stdin.end();
+                return pipe.closePromise;
+            });
+            return {stdin: main.stdin, kill: main.kill, closePromise};
+        } else if ('left' in expression) {
+            const writableStdin = new Writable({
+                write(chunk, encoding, callback) {
+                    active.stdin.write(chunk, encoding, callback);
+                }
+            });
+            const left = execute(expression.left, stdout, stderr, stdin);
+            let active = left;
+            const closePromise = left.closePromise.then(async code => {
+                if (!!code === (expression.type === 'or')) {
+                    const right = execute(expression.right, stdout, stderr, stdin);
+                    active = right;
+                    return right.closePromise;
+                }
+                return code;   
+            });
+            return {stdin: writableStdin, kill: (...args) => active.kill(...args), closePromise};
         }
-    } else if ('pipe' in expression) {
-        const pipe = execute(expression.pipe, stdout, stderr);
-        const main = execute(expression.main, pipe.stdin, stderr, stdin);
-        const closePromise = main.closePromise.then(() => {
-            pipe.stdin.end();
-            return pipe.closePromise;
-        });
-        return {stdin: main.stdin, kill: main.kill, closePromise};
-    } else if ('left' in expression) {
-        const writableStdin = new Writable({
-            write(chunk, encoding, callback) {
-                active.stdin.write(chunk, encoding, callback);
-            }
-        });
-        const left = execute(expression.left, stdout, stderr, stdin);
-        let active = left;
-        const closePromise = left.closePromise.then(async code => {
-            if (!!code === (expression.type === 'or')) {
-                const right = execute(expression.right, stdout, stderr, stdin);
-                active = right;
-                return right.closePromise;
-            }
-            return code;   
-        });
-        return {stdin: writableStdin, kill: (...args) => active.kill(...args), closePromise};
+    } catch(error) {
+        if (!(error instanceof UserError))
+            throw error;
+        stderr.write(`shjs: ${error.message}\n`);
+        return {
+            closePromise: Promise.resolve(1),
+            stdin: new Writable({write(){}}),
+            kill: () => void 0,
+        }
     }
 }
 

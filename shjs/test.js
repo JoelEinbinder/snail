@@ -405,6 +405,7 @@ await sh("bar foo")`);
 
 describe('glob', () => {
     const {sh} = require('./jsapi');
+    const {getResult} = require('.');
     it('should glob everything in the test-assets folder', async () => {
         const output = await sh`echo test-assets/*`;
         expect(output).toEqual(['test-assets/bar.txt test-assets/baz.txt test-assets/foo.txt']);
@@ -412,6 +413,14 @@ describe('glob', () => {
     it('should not glob when there are quotes', async () => {
         const output = await sh`echo '*'`;
         expect(output).toEqual(['*']);
+    });
+    it('should fail when no globs are found', async () => {
+        const output = await getResult('echo *iamnotreal*');
+        expect(output).toEqual({
+            code: 1,
+            output: '',
+            stderr: 'shjs: No matches found: *iamnotreal*\n',
+        });
     });
 });
 

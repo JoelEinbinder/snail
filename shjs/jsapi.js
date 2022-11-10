@@ -77,10 +77,15 @@ function executeAndGetLines(expression) {
   return {
     /**
      * @param {(arg0: string[]) => void} resolve
+     * @param {(arg0: Error) => void} reject
      * @return {Promise<string[]>}
      */
-    async then(resolve) {
-      await closePromise;
+    async then(resolve, reject) {
+      const exitCode = await closePromise;
+      if (exitCode) {
+        reject(new Error(`Exited with code ${exitCode}`));
+        return;
+      }
       resolve(lines);
       return lines;
     },
