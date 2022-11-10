@@ -2,7 +2,7 @@ import {JoelEvent} from './JoelEvent';
 
 let measuredFontSize: number = null;
 export const font = new JoelEvent({
-  size: 14,
+  size: navigator.userAgent.includes('iPhone') ? 24 : 14,
   family: 'SFMono-Regular, ui-monospace, Menlo, Monaco, monospace',
 });
 function fontChanged() {

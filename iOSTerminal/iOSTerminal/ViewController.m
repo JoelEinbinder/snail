@@ -7,7 +7,8 @@
 
 #import "ViewController.h"
 #import <LibSSH/libssh.h>
-#import <UserNotifications/UNUserNotificationCenter.h>
+#import <UserNotifications/UserNotifications.h>
+#import <WebKit/WebKit.h>
 
 NSString* show_remote_processes(ssh_session session)
 {
@@ -57,19 +58,40 @@ NSString* show_remote_processes(ssh_session session)
   return str;
 }
 
-@interface ViewController ()
+@interface ViewController () <UNUserNotificationCenterDelegate> {
+    WKWebView* webView;
+}
 
 @end
 @implementation ViewController
 
-    - (void)viewDidLoad {
-        [super viewDidLoad];
-        [[UNUserNotificationCenter currentNotificationCenter] requestAuthorizationWithOptions:UNAuthorizationOptionAlert|UNAuthorizationOptionSound|UNAuthorizationOptionBadge completionHandler:^(BOOL granted, NSError * _Nullable error) {
-            NSLog(@"got permission %d", granted);
-        }];
-        UITextView* text = [[UITextView alloc] initWithFrame:self.view.bounds];
-        [self.view addSubview:text];
-        // Do any additional setup after loading the view.
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)(void))completionHandler {
+    NSLog(@"didReceiveNotificationResponse action:%@ request:%@", response.actionIdentifier, response.notification.request.content.userInfo);
+    NSDictionary* userInfo = response.notification.request.content.userInfo;
+    NSString* rawSSHAddress = [NSString stringWithFormat:@"%@@%@", userInfo[@"location"][@"username"], userInfo[@"location"][@"hostname"]];
+    NSString* sshAddress = [rawSSHAddress stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
+    NSString* socketPath = [userInfo[@"location"][@"socketPath"] stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
+    NSString* urlStr = [NSString stringWithFormat:@"http://Joels-Mac-mini.local/gap-year/?sshAddress=%@&socketPath=%@", sshAddress, socketPath];
+    [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:urlStr]]];
+    completionHandler();
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
+    [[UNUserNotificationCenter currentNotificationCenter] requestAuthorizationWithOptions:UNAuthorizationOptionAlert|UNAuthorizationOptionSound|UNAuthorizationOptionBadge completionHandler:^(BOOL granted, NSError * _Nullable error) {
+        NSLog(@"got permission %d", granted);
+    }];
+    webView = [[WKWebView alloc] initWithFrame:self.view.bounds configuration:[[WKWebViewConfiguration alloc] init]];
+    [webView setBackgroundColor:[UIColor blackColor]];
+    [webView setUnderPageBackgroundColor:[UIColor blackColor]];
+    [[webView scrollView] setBackgroundColor:[UIColor blackColor]];
+    // prevents a white flash
+    [webView setOpaque: NO];
+    [webView setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
+    [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://Joels-Mac-mini.local/gap-year/"]]];
+    [self.view addSubview:webView];
+    // Do any additional setup after loading the view.
     //    ssh_session my_ssh_session = ssh_new();
     //    if (my_ssh_session == NULL)
     //      exit(-1);

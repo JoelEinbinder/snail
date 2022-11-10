@@ -43,7 +43,7 @@ const handler = {
     return { result: output };
   },
   'Shell.restore': async () => {
-    shellState(message => transport.send(message));
+    shellState.restore(message => transport.send(message));
     const senderTransport = transport;
     const result = await lastCommandPromise;
     if (transport === senderTransport)
@@ -63,6 +63,26 @@ const handler = {
     const result = await lastCommandPromise;
     if (senderTransport === transport)
       clearStoredMessages();
+    else if (!transport) {
+      // nobody is connected, so maybe send a notification
+      const request = require('http').request('http://Joels-Mac-mini.local:26394/notify', {
+        method: 'POST',
+      });
+      request.end(JSON.stringify({
+        "aps" : {
+           "alert" : {
+              "title" : "Task Completed",
+              "body" : command
+           },
+           "sound" : "correct.wav",
+        },
+        location: {
+          username: os.userInfo().username,
+          hostname: os.hostname(),
+          socketPath,
+        }
+      }));
+    }
     return result;
   },
   'Shell.resolveFileForIframe': async (params) => {
@@ -146,7 +166,7 @@ session.on('inspectorNotification', notification => {
         }
       };
       transport?.send(message);
-      shellState.addMessage(notification);
+      shellState.addMessage(message);
     }
     return;
   }

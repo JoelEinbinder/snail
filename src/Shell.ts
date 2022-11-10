@@ -368,11 +368,12 @@ export class Shell {
     }
   }
 
-  static async create(sshAddress?: string): Promise<Shell> {
+  static async create(): Promise<Shell> {
     console.time('create shell');
+    const {searchParams} = new URL(location.href);
     const shell = new Shell();
     shells.add(shell);
-    await shell._setupConnection([], sshAddress);
+    await shell._setupConnection([], searchParams.get('sshAddress'), searchParams.get('socketPath'));
     console.timeEnd('create shell');
     return shell;
   }

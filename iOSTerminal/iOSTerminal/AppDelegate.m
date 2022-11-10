@@ -16,7 +16,6 @@
 - (instancetype)init {
     self = [super init];
     if (self) {
-        [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
     }
     return self;
 }
@@ -40,10 +39,6 @@
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
     NSLog(@"didFailToRegisterForRemoteNotificationsWithError %@", error);
 
-}
-- (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)(void))completionHandler {
-    NSLog(@"didReceiveNotificationResponse action:%@ request:%@", response.actionIdentifier, response.notification.request.content.userInfo);
-    completionHandler();
 }
 #pragma mark - UISceneSession lifecycle
 

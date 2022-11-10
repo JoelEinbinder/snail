@@ -30,6 +30,9 @@ export function onConnect(socket: import('ws').WebSocket, request: import('http'
     if (id)
       socket.send(JSON.stringify({error: String(error), id}));
   };
+  socket.on('close', () => {
+    client.emit('destroyed');
+  });
   function log(...args) {
     socket.send(JSON.stringify({method: 'log', params: args}));
   }
