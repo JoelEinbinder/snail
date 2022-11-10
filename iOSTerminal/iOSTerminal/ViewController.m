@@ -87,7 +87,7 @@ NSString* show_remote_processes(ssh_session session)
     //              ssh_get_error(my_ssh_session));
     //      exit(-1);
     //    }
-    //    rc = ssh_userauth_password(my_ssh_session, NULL, "macbadger");
+    //    rc = ssh_userauth_password(my_ssh_session, NULL, "thepassword");
     //    if (rc != SSH_AUTH_SUCCESS)
     //    {
     //      fprintf(stderr, "Error authenticating with password: %s\n",
