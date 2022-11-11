@@ -12,4 +12,9 @@
     if (self.onMessage)
         self.onMessage(message.body);
 }
+-(void)dispose {
+    [[[self configuration] userContentController] removeAllScriptMessageHandlers];
+    [self setOnMessage:nil];
+    [self removeFromSuperview];
+}
 @end

@@ -264,7 +264,7 @@
         [self.view.window makeFirstResponder:[browserViews valueForKey:uuid]];
     } else if ([@"destroyBrowserView" isEqual:body[@"method"]]) {
         NSString* uuid = params[@"uuid"];
-        [[browserViews valueForKey:uuid] removeFromSuperview];
+        [[browserViews valueForKey:uuid] dispose];
         [browserViews removeObjectForKey:uuid];
     } else if ([@"postBrowserViewMessage" isEqual:body[@"method"]]) {
         NSString* uuid = params[@"uuid"];
@@ -286,7 +286,6 @@
         BrowserView* browserView = [browserViews valueForKey:uuid];
         [browserView setFrameOrigin:CGPointMake(pointInView.x, pointInView.y - size.height)];
         [browserView setFrameSize:size];
-        NSLog(@"setBrowserViewRect %@ %f %f", params, pointInCSS.x, pointInCSS.y);
     } else if ([@"setBrowserViewURL" isEqual:body[@"method"]]) {
         NSString* uuid = params[@"uuid"];
         [[browserViews objectForKey:uuid] loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:params[@"url"]]]];
@@ -302,6 +301,10 @@
 }
 
 -(IBAction)reloadWindow:(id)sender {
+    for (BrowserView* browserView in [browserViews allValues]) {
+        [browserView dispose];
+    }
+    [browserViews removeAllObjects];
     [webView reload];
 }
 -(void)closePanel {

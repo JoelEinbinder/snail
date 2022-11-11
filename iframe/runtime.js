@@ -10,7 +10,7 @@ async function waitForMessage() {
 }
 
 function sendMessageToParent(message) {
-  if (window.parent)
+  if (window.parent && window.parent !== window)
     window.parent.postMessage(message, '*');
   else if (window.electronAPI)
     window.electronAPI.notify(message);
@@ -28,7 +28,7 @@ function setIsFullscreen(isFullscreen) {
   sendMessageToParent({method: 'setIsFullscreen', params: {isFullscreen}})
 }
 
-if (window.parent) {
+if (window.parent && window.parent !== window) {
   window.addEventListener('message', event => {
     if (event.source !== window.parent)
       return;
