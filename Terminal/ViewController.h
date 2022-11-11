@@ -8,7 +8,9 @@
 #import <Cocoa/Cocoa.h>
 #import <WebKit/WebKit.h>
 #import "NodeTalker.h"
-#include "D4WebPanel.h"
+#import "D4WebPanel.h"
+#import "BrowserView.h"
+
 @interface _WKInspector
 -(void)showConsole;
 @end
@@ -22,6 +24,7 @@
     NodeTalker* nodeTalker;
     D4WebPanel* panel;
     NSView* containerView;
+    NSMutableDictionary<NSString*, BrowserView*>* browserViews;
 }
 -(IBAction)reloadWindow:(id)sender;
 @end

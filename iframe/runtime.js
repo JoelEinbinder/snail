@@ -10,10 +10,14 @@ async function waitForMessage() {
 }
 
 function sendMessageToParent(message) {
-  if (window.electronAPI)
-    window.electronAPI.notify(message);
-  else
+  if (window.parent)
     window.parent.postMessage(message, '*');
+  else if (window.electronAPI)
+    window.electronAPI.notify(message);
+  else if (window['webkit'])
+    window['webkit'].messageHandlers.wkMessage.postMessage(message);
+  else
+    throw new Error('could not find a way to send message to parent');
 }
 
 function setHeight(height) {
@@ -24,14 +28,18 @@ function setIsFullscreen(isFullscreen) {
   sendMessageToParent({method: 'setIsFullscreen', params: {isFullscreen}})
 }
 
-if (window.electronAPI) {
-  window.electronAPI.onEvent('postMessage', onMessage);
-} else {
+if (window.parent) {
   window.addEventListener('message', event => {
     if (event.source !== window.parent)
       return;
     onMessage(event.data);
   });
+} else if (window.electronAPI) {
+  window.electronAPI.onEvent('postMessage', onMessage);
+} else if (window['webkit']) {
+  window['webkit_callback'] = onMessage;
+} else {
+  throw new Error('could not find a way to recieves messages from parent');
 }
 
 function onMessage(data) {

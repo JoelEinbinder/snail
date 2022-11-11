@@ -33,6 +33,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     nodeTalker = [[NodeTalker alloc] init];
+    browserViews = [[NSMutableDictionary alloc] init];
     WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
     [configuration.userContentController addScriptMessageHandler:self contentWorld:[WKContentWorld pageWorld] name:@"wkMessage"];
     [configuration.preferences setValue:@YES forKey:@"developerExtrasEnabled"];
@@ -235,7 +236,60 @@
     } else if ([@"detachFromCDP" isEqual:body[@"method"]]) {
         
     } else if ([@"sendMessageToCDP" isEqual:body[@"method"]]) {
+        
+    } else if ([@"createBrowserView" isEqual:body[@"method"]]) {
+        NSString* uuid = body[@"params"];
+        WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+        [configuration.preferences setValue:@YES forKey:@"developerExtrasEnabled"];
+        BrowserView* browserView = [[BrowserView alloc] initWithFrame:CGRectMake(0, 0, 50, 50) configuration:configuration];
+        [configuration.userContentController addScriptMessageHandler:browserView contentWorld:[WKContentWorld pageWorld] name:@"wkMessage"];
+        browserView.underPageBackgroundColor = [NSColor blackColor];
+        [browserView setValue:@false forKey:@"drawsBackground"];
+        [browserView setOnMessage:^(id _Nonnull message) {
+            NSData* jsonData = [NSJSONSerialization dataWithJSONObject:@{
+                @"method": @"browserView-message",
+                @"params": @{
+                    @"uuid": uuid,
+                    @"message": message,
+                }
+            } options:0 error:nil];
+            NSString* messageString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+            self->nodeTalker.onMessage(messageString);
+        }];
 
+        [self.view addSubview:browserView positioned:NSWindowAbove relativeTo:nil];
+        [browserViews setObject:browserView forKey:uuid];
+    } else if ([@"focusBrowserView" isEqual:body[@"method"]]) {
+        NSString* uuid = params[@"uuid"];
+        [self.view.window makeFirstResponder:[browserViews valueForKey:uuid]];
+    } else if ([@"destroyBrowserView" isEqual:body[@"method"]]) {
+        NSString* uuid = params[@"uuid"];
+        [[browserViews valueForKey:uuid] removeFromSuperview];
+        [browserViews removeObjectForKey:uuid];
+    } else if ([@"postBrowserViewMessage" isEqual:body[@"method"]]) {
+        NSString* uuid = params[@"uuid"];
+        NSData* jsonData = [NSJSONSerialization dataWithJSONObject:params[@"message"] options:0 error:nil];
+        NSString* message = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSString* code = [NSString stringWithFormat:@"webkit_callback(%@)", message];
+            __strong typeof(self) strongSelf = weakSelf;
+            if (strongSelf)
+                [[strongSelf->browserViews valueForKey:uuid] evaluateJavaScript:code completionHandler:nil];
+        });
+    } else if ([@"setBrowserViewRect" isEqual:body[@"method"]]) {
+        NSDictionary* rect = params[@"rect"];
+        NSPoint pointInCSS = { [rect[@"x"] floatValue] * webView.pageZoom, [rect[@"y"] floatValue] * webView.pageZoom};
+        NSPoint pointInView = [webView convertPoint:pointInCSS toView:self.view];
+        NSSize size = {[rect[@"width"] floatValue] * webView.pageZoom, [rect[@"height"] floatValue] * webView.pageZoom};
+        NSString* uuid = params[@"uuid"];
+        BrowserView* browserView = [browserViews valueForKey:uuid];
+        [browserView setFrameOrigin:CGPointMake(pointInView.x, pointInView.y - size.height)];
+        [browserView setFrameSize:size];
+        NSLog(@"setBrowserViewRect %@ %f %f", params, pointInCSS.x, pointInCSS.y);
+    } else if ([@"setBrowserViewURL" isEqual:body[@"method"]]) {
+        NSString* uuid = params[@"uuid"];
+        [[browserViews objectForKey:uuid] loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:params[@"url"]]]];
     } else {
         [nodeTalker sendMessage:body];
     }

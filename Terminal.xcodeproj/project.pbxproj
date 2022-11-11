@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		F00D686A287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 in Resources */ = {isa = PBXBuildFile; fileRef = F00D6869287E8D6400871DC2 /* node-v16.16.0-darwin-arm64 */; };
 		F020A6EB28AAFE0700F2FF07 /* D4ContextMenu.m in Sources */ = {isa = PBXBuildFile; fileRef = F020A6EA28AAFE0700F2FF07 /* D4ContextMenu.m */; };
+		F0428097291DC01200864009 /* BrowserView.m in Sources */ = {isa = PBXBuildFile; fileRef = F0428096291DC01200864009 /* BrowserView.m */; };
 		F091DC95287B730100915D30 /* WebKitBundle in Resources */ = {isa = PBXBuildFile; fileRef = F091DC94287B730100915D30 /* WebKitBundle */; };
 		F091DC99287BBA1A00915D30 /* Window.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F091DC98287BBA1A00915D30 /* Window.storyboard */; };
 		F091DCC1287D268E00915D30 /* D4WebPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = F091DCC0287D268E00915D30 /* D4WebPanel.m */; };
@@ -47,6 +48,8 @@
 		F020A6EA28AAFE0700F2FF07 /* D4ContextMenu.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = D4ContextMenu.m; sourceTree = "<group>"; };
 		F042804629198BC900864009 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = ../WebKit/WebKitBuild/Release/WebKit.framework; sourceTree = "<group>"; };
 		F0428094291B0C8A00864009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F0428095291DC01200864009 /* BrowserView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BrowserView.h; sourceTree = "<group>"; };
+		F0428096291DC01200864009 /* BrowserView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BrowserView.m; sourceTree = "<group>"; };
 		F091DC94287B730100915D30 /* WebKitBundle */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WebKitBundle; sourceTree = "<group>"; };
 		F091DC98287BBA1A00915D30 /* Window.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Window.storyboard; sourceTree = "<group>"; };
 		F091DCBF287D268E00915D30 /* D4WebPanel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = D4WebPanel.h; sourceTree = "<group>"; };
@@ -139,6 +142,8 @@
 				F091DCC0287D268E00915D30 /* D4WebPanel.m */,
 				F0EA446327EC0C4A0085A081 /* ViewController.h */,
 				F0EA446427EC0C4A0085A081 /* ViewController.m */,
+				F0428095291DC01200864009 /* BrowserView.h */,
+				F0428096291DC01200864009 /* BrowserView.m */,
 				F020A6E928AAFE0700F2FF07 /* D4ContextMenu.h */,
 				F020A6EA28AAFE0700F2FF07 /* D4ContextMenu.m */,
 				F0EA449027EC12740085A081 /* NSObject+KVOBlock.m */,
@@ -310,6 +315,7 @@
 				F020A6EB28AAFE0700F2FF07 /* D4ContextMenu.m in Sources */,
 				F0EA446C27EC0C4D0085A081 /* main.m in Sources */,
 				F0EA446227EC0C4A0085A081 /* AppDelegate.m in Sources */,
+				F0428097291DC01200864009 /* BrowserView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
