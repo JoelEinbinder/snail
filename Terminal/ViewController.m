@@ -34,6 +34,7 @@
     [super viewDidLoad];
     nodeTalker = [[NodeTalker alloc] init];
     browserViews = [[NSMutableDictionary alloc] init];
+    inspectorChannel = nil;
     WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
     [configuration.userContentController addScriptMessageHandler:self contentWorld:[WKContentWorld pageWorld] name:@"wkMessage"];
     [configuration.preferences setValue:@YES forKey:@"developerExtrasEnabled"];
@@ -233,10 +234,32 @@
         [self setProgressBar:[params[@"progress"] doubleValue]];
     } else if ([@"attachToCDP" isEqual:body[@"method"]]) {
         // messageFromCDP
+        if (![webView respondsToSelector:@selector(connectInspectorFrontendChannel)])
+            return;
+        if (inspectorChannel) {
+            [inspectorChannel close];
+            inspectorChannel = nil;
+        }
+        inspectorChannel = [webView connectInspectorFrontendChannel];
+        __weak typeof(self) weakSelf = self;
+        [inspectorChannel setOnMessage:^(NSString * _Nonnull message) {
+            NSString* messageString = [NSString stringWithFormat:@"{\"method\":\"messageFromCDP\",\"params\":{\"message\":%@}}", message];
+            __strong typeof(self) strongSelf = weakSelf;
+            if (strongSelf)
+                strongSelf->nodeTalker.onMessage(messageString);
+        }];
     } else if ([@"detachFromCDP" isEqual:body[@"method"]]) {
-        
+        if (!inspectorChannel)
+            return;
+        [inspectorChannel setOnMessage:nil];
+        [inspectorChannel close];
+        inspectorChannel = nil;
     } else if ([@"sendMessageToCDP" isEqual:body[@"method"]]) {
-        
+        if (!inspectorChannel)
+            return;
+        NSData* jsonData = [NSJSONSerialization dataWithJSONObject:params[@"message"] options:0 error:nil];
+        NSString* messageString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        [inspectorChannel sendMessageToBackend:messageString];
     } else if ([@"createBrowserView" isEqual:body[@"method"]]) {
         NSString* uuid = body[@"params"];
         WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];

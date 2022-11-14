@@ -14,6 +14,11 @@
 @interface _WKInspector
 -(void)showConsole;
 @end
+//@protocol WKInspectorFrontendChannel
+//-(void)sendMessageToBackend:(NSString*)message;
+//-(void)close;
+//@property (nonatomic, copy, nullable) void (^onMessage)(NSString*);
+//@end
 @interface D4WebView : WKWebView
 //-(id)_inspector;
 //-(id)connectInspectorFrontendChannel;
@@ -25,6 +30,7 @@
     D4WebPanel* panel;
     NSView* containerView;
     NSMutableDictionary<NSString*, BrowserView*>* browserViews;
+    id <WKInspectorFrontendChannel> inspectorChannel;
 }
 -(IBAction)reloadWindow:(id)sender;
 @end

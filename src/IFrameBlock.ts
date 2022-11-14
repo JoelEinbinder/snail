@@ -264,9 +264,9 @@ export class IFrameBlock implements LogItem {
         case 'requestCDP': {
           if (!this._attachedToCDP) {
             this._attachedToCDP = true;
-            host.notify({method: 'attachToCDP', params: {}});
             cdpListener = message => this._webContentView.postMessage({method: 'cdpMessage', params: message});
           }
+          host.notify({method: 'attachToCDP', params: {}});
           break;
         }
         case 'cdpMessage': {
