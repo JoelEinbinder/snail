@@ -4,6 +4,7 @@ import { host } from "./host";
 import { JoelEvent } from "./JoelEvent";
 import type { JSConnection } from "./JSConnection";
 import { LogItem } from "./LogView";
+import { cdpManager, DebuggingInfo } from './CDPManager';
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -15,13 +16,9 @@ window.addEventListener('message', event => {
   }
 });
 
-const browserViewMessageHandler = new Map<number, (data: any) => void>();
+const browserViewMessageHandler = new Map<string, (data: any) => void>();
 host.onEvent('browserView-message', ({uuid, message}) => {
   browserViewMessageHandler.get(uuid)?.(message);
-});
-let cdpListener: (message: any) => void = null;
-host.onEvent('messageFromCDP', ({browserViewUUID, message}) => {
-  cdpListener?.(message);
 });
 
 export type IFrameBlockDelegate = {
@@ -40,6 +37,7 @@ interface WebContentView {
   setURL(url: string): void;
   dispose(): void;
   didClose(): void;
+  get debuggingInfo(): DebuggingInfo;
 }
 
 class BrowserView implements WebContentView {
@@ -47,7 +45,7 @@ class BrowserView implements WebContentView {
   private _resizeObserver: ResizeObserver;
   private _closed = false;
   // @ts-ignore
-  private _uuid = crypto.randomUUID();
+  private _uuid: string = crypto.randomUUID();
   constructor(handler: (data: any) => void) {
     this._dummyElement.classList.add('browser-view-dummy');
     this._dummyElement.tabIndex = 0;
@@ -125,13 +123,23 @@ class BrowserView implements WebContentView {
       params: {uuid: this._uuid, url},
     });
   }
+
+  get debuggingInfo(): DebuggingInfo {
+    return {
+      browserViewUUID: this._uuid,
+      type: host.type() === 'webkit' ? 'webkit' : 'chromium',
+    }
+  }
 }
 
 class IFrameView implements WebContentView {
   private _iframe: HTMLIFrameElement = document.createElement('iframe');
+  // @ts-ignore
+  private _uuid: string = crypto.randomUUID();
   constructor(handler: (data: any) => void) {
     this._iframe.allowFullscreen = true;
     this._iframe.style.height = '0';
+    this._iframe.name = this._uuid;
     iframeMessageHandler.set(this._iframe, handler);
   }
 
@@ -154,6 +162,12 @@ class IFrameView implements WebContentView {
     iframeMessageHandler.delete(this._iframe);
   }
   didClose(): void {
+  }
+  get debuggingInfo(): DebuggingInfo {
+    return {
+      frameUUID: this._uuid,
+      type: host.type() === 'webkit' ? 'webkit' : 'chromium',
+    }
   }
 }
 
@@ -262,15 +276,25 @@ export class IFrameBlock implements LogItem {
           break;
         }
         case 'requestCDP': {
-          if (!this._attachedToCDP) {
-            this._attachedToCDP = true;
-            cdpListener = message => this._webContentView.postMessage({method: 'cdpMessage', params: message});
-          }
-          host.notify({method: 'attachToCDP', params: {}});
+          this._attachedToCDP = true;
+          cdpManager.attachCDPListener({
+            onMessage: (message, browserViewUUID) => {
+              this._webContentView.postMessage({method: 'cdpMessage', params: {message, browserViewUUID}});
+            },
+            updateDebuggees: (debuggees) => {
+              const myInfo = this.debugginInfo();
+              // prevent debugging myself by filtering out anything from this iframe block
+              for (const key in debuggees) {
+                if (debuggees[key].frameUUID === myInfo.frameUUID && debuggees[key].browserViewUUID === myInfo.browserViewUUID)
+                  delete debuggees[key];
+              }
+              this._webContentView.postMessage({method: 'updateDebugees', params: debuggees});
+            }
+          });
           break;
         }
         case 'cdpMessage': {
-          host.notify({method: 'sendMessageToCDP', params: {message: data.params}});
+          cdpManager.sendMessage(data.params.message, data.params.browserViewUUID);
           break;
         }
       }
@@ -309,9 +333,8 @@ export class IFrameBlock implements LogItem {
     this._webContentView.dispose();
     font.off(this._onFontChanged);
     if (this._attachedToCDP) {
-      host.notify({method: 'detachFromCDP'});
       this._attachedToCDP = false;
-      cdpListener = null;
+      cdpManager.detachCDPListener();
     }
   }
   _onFontChanged = async () => {
@@ -337,6 +360,10 @@ export class IFrameBlock implements LogItem {
     if (this._isFullscreen)
       this.setIsFullscreen(false);
 
+  }
+
+  debugginInfo() {
+    return this._webContentView.debuggingInfo;
   }
 }
 

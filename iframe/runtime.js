@@ -61,7 +61,10 @@ function onMessage(data) {
       window.dispatchEvent(new Event('resize'));
     } else if (method === 'cdpMessage') {
       if (cdpListener)
-        cdpListener(params);
+        cdpListener.onMessage(params.message, params.browserViewUUID);
+    } else if (method === 'updateDebugees') {
+      if (cdpListener)
+        cdpListener.onDebuggeesChanged(params);
     }
   } else {
     const {id, result} = data;
@@ -193,18 +196,20 @@ async function getDevicePixelRatio() {
   return dprPromise;
 }
 
+/** @type {{onMessage: (message: any, browserViewUUID?: string) => void, onDebuggeesChanged: (debuggees: {[key: string]: import('../src/CDPManager').DebuggingInfo}) => void}} */
 let cdpListener;
 
 function openDevTools() {
   sendMessageToParent({method: 'openDevTools'});  
 }
 
+/** @param {typeof cdpListener} listener */
 async function attachToCDP(listener) {
   cdpListener = listener;
   sendMessageToParent({method: 'requestCDP'});
   // TODO throw if not actually connected.
-  return message => {
-    sendMessageToParent({method: 'cdpMessage', params: message});
+  return (message, browserViewUUID) => {
+    sendMessageToParent({method: 'cdpMessage', params: {message, browserViewUUID}});
   };
 }
 

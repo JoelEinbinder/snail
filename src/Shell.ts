@@ -19,6 +19,7 @@ import { IFrameBlock } from './IFrameBlock';
 import { MenuItem, showContextMenu } from './contextMenu';
 import { fontString } from './font';
 import { Protocol } from './protocol';
+import { cdpManager } from './CDPManager';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
@@ -57,6 +58,8 @@ export class Shell {
   private _delegate?: ShellDelegate;
   private _connectionNameElement = document.createElement('div');
   private _connectionIsDaemon = new WeakMap<JSConnection, boolean>();
+  //@ts-ignore
+  private _uuid: string = crypto.randomUUID();
   private constructor() {
     this._connectionNameElement.classList.add('connection-name');
     this._connectionNameEvent.on(name => {
@@ -192,6 +195,7 @@ export class Shell {
                   activeIframeBlock = iframeBlock;
                   this.addItem(iframeBlock);
                   this.activeItem.dispatch(iframeBlock);
+                  cdpManager.setDebuggingInfoForTarget(this._uuid, iframeBlock.debugginInfo());
                 });
                 break;
               }
@@ -460,6 +464,7 @@ export class Shell {
       this._connectionToDestroy.get(connection)();
       if (this._connections.length === 0) {
         this._delegate?.onClose();
+        cdpManager.removeDebuggingInfoForTarget(this._uuid);
         return;
       }
       this._unlockPrompt();
