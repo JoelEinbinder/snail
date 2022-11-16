@@ -1,0 +1,10 @@
+.file-tree-item.selected {
+    background: #222;
+}
+.file-tree-item.selected:focus {
+    background: #444;
+    outline: none;
+}
+.source-pane {
+    white-space: pre;
+}

@@ -1,7 +1,7 @@
 import { JoelEvent } from "./JoelEvent";
-import { JSConnection } from "./JSConnection";
+import type { JSConnection } from "./JSConnection";
 import type { LogItem } from "./LogView";
-import { Protocol } from "./protocol";
+import type { Protocol } from "./protocol";
 import './remoteObject.css';
 
 export class JSBlock implements LogItem {

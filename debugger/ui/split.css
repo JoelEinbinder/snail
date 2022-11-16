@@ -1,0 +1,72 @@
+.split {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    --border-color: rgba(255, 255, 255, 0.3);
+}
+.split > .left,
+.split > .right {
+    position: absolute;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    overflow: auto;
+}
+
+.split > .gutter {
+    position: absolute;
+    z-index: 3;
+    background-color: transparent;
+    transition: background-color 0.15s;
+}
+
+.split.horizontal > .gutter {
+    top: 0px;
+    bottom: 0px;
+    width:10px;
+    margin-left:-5px;
+    cursor: ew-resize;
+}
+
+.split.vertical > .gutter {
+    left: 5px;
+    right: 5px;
+    height: 10px;
+    margin-top: -5px;
+    cursor: ns-resize;
+}
+
+.split > .gutter::before {
+    position: absolute;
+    content: "";
+}
+
+.split.horizontal > .gutter::before {
+    left: 4px;
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid var(--border-color);
+}
+
+.split.vertical > .gutter::before {
+    top: 4px;
+    left: 5px;
+    right: 5px;
+    border-top: 1px solid var(--border-color);
+}
+
+.split > .gutter:hover::before {
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.split > .gutter[data-keyboard-focus="true"]::before,
+.split > .gutter:active::before {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.split > .gutter[data-keyboard-focus="true"] {
+    background-color: rgba(255, 255, 255, 0.5);
+}

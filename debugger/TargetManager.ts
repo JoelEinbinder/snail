@@ -27,7 +27,6 @@ export class TargetManager {
   async startup() {
     const sendMessage = await d4.attachToCDP({
       onDebuggeesChanged: debuggees => {
-        console.log('onDebuggeesChanged', debuggees);
         const newTargets = new Map<string|undefined, WebKitTarget>();
         const framesForBrowserView = new Map<string|undefined, Set<string|undefined>>();
         const addTarget = (browserViewUUID?: string) => {
@@ -61,7 +60,6 @@ export class TargetManager {
           this._targets.get(browserViewUUID)!._updateFrames(frames);
       },
       onMessage: (message, browserViewUUID) => {
-        console.log('onMessage', message);
         this._targets.get(browserViewUUID)!._listener(message);
       }
     });
@@ -109,7 +107,10 @@ export class WebKitTarget {
       });
       for (const listener of this._listeners)
         listener.sessionUpdated(this.rpc);
-    })
+    });
+    this.topLevelRPC.on('Target.dispatchMessageFromTarget', params => {
+      rpcListenerForPage.get(params.targetId)!(JSON.parse(params.message));
+    });
   }
 
   addListener(listener: WebKitTargetListener) {

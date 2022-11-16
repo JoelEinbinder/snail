@@ -2,6 +2,7 @@
 import './index.css';
 import {iconPathForPath, looksLikeImageOrVideo} from '../../icon_service/iconService';
 import {DataGrid} from '../../datagrid/datagrid';
+console.log('i am ls', Math.random());
 type Entry = {
   dir: string,
   nlink: number,
@@ -258,7 +259,6 @@ async function renderTable() {
     }
   });
   await dataGrid.loadAllData();
-  console.log();
   const dirsToShow = (dirs.length === 1 && dirs[0].children) ? dirs[0].children : dirs;
   dataGrid.setItems(dirsToShow.filter(x => showHidden || !x.dir.startsWith('.')));
   document.body.append(dataGrid.element);

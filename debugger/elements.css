@@ -1,0 +1,46 @@
+details > .children {
+    padding-left: 13px;
+}
+
+.node.collapsed > .children {
+    display: none;
+}
+
+.node.collapsible > .title::before {
+    content: "▼";
+    width: 13px;
+    display: inline-block;
+    text-align: center;
+    color: var(--color-7);
+}
+.node.collapsible.collapsed > .title::before {
+    content: "▶";
+}
+
+.title {
+    padding-left: calc((var(--depth)) * 13px);
+}
+.node.collapsible > .title {
+    padding-left: calc((var(--depth) - 1) * 13px);
+}
+
+.title.selected {
+    background: #222;
+}
+.title.selected:focus {
+    background: #444;
+    outline: none;
+}
+
+.title > .tag {
+    color: var(--color-6);
+}
+.title > .attribute {
+    color: var(--color-3);
+}
+.title > .string {
+    color: var(--color-2);
+}
+.title > .doctype {
+    color: var(--color-7);
+}

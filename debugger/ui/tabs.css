@@ -1,0 +1,56 @@
+.tabs {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    --bg1: #222;
+    --bg2: #000;
+    --hover: #333;
+}
+
+.tab-content {
+    position: absolute;
+    top: 30px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg2);
+}
+
+.tabs-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    display: flex;
+}
+
+.tabs-header > .tab {
+    display: inline-block;
+    text-align: center;
+    user-select: none;
+    line-height: 30px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    background-color: var(--bg1);
+    box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.1) inset;
+}
+
+.tabs-header > .tab.selected {
+    background-color: var(--bg2);
+    box-shadow: none;
+}
+
+.tabs-header > .tab:hover:not(.selected) {
+    transition: none;
+    background-color: var(--hover);
+}
+
+.tabs-header > .tab:focus {
+    text-decoration: underline;
+    outline: none;
+}
