@@ -223,6 +223,9 @@ class RemoteNode implements TreeItem {
     this._titleElement.addEventListener('mousedown', event => {
       selectTreeItem(this);
     });
+    this._titleElement.addEventListener('mouseenter', event => {
+      highlightManager.highlight(this._client, this.data.nodeId);
+    });
   }
   get depth() {
     let depth = 0;
@@ -299,6 +302,8 @@ class RemoteNode implements TreeItem {
   setIsSelected(isSelected: boolean): void {
     this._titleElement.classList.toggle('selected', isSelected);
     this._titleElement.tabIndex = isSelected ? 0 : -1;
+    if (isSelected)
+      highlightManager.highlight(this._client, this.data.nodeId);
   }
   expand(): void {
     this.element.classList.toggle('collapsed', false);
@@ -446,3 +451,34 @@ function wrapAsString(content: string) {
   element.textContent = content;
   return element;
 }
+
+class HighlightManager {
+  private _highlightedSession?: WebKitSession;
+  private _highlightTimeout?: any;
+  closeHighlight() {
+    if (!this._highlightedSession)
+      return;
+    this._highlightedSession.send('DOM.hideHighlight', {});
+    if (this._highlightTimeout)
+      clearTimeout(this._highlightTimeout);
+    delete this._highlightTimeout;
+    delete this._highlightedSession;
+  }
+  highlight(session: WebKitSession, nodeId: number) {
+    this.closeHighlight();
+    this._highlightedSession = session;
+    session.send('DOM.highlightNode', {
+      nodeId,
+      highlightConfig: {
+        contentColor: { r: 0, g: 255, b: 0, a: 0.5 },
+        marginColor: { r: 0, g: 255, b: 0, a: 0.5 },
+        paddingColor: { r: 0, g: 255, b: 0, a: 0.5 },
+        borderColor: { r: 0, g: 255, b: 0, a: 0.5 },
+        showInfo: true,
+      }
+    });
+    this._highlightTimeout = setTimeout(() => this.closeHighlight(), 5000);
+  }
+}
+
+const highlightManager = new HighlightManager();
