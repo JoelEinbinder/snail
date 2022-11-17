@@ -20,6 +20,7 @@ import { MenuItem, showContextMenu } from './contextMenu';
 import { fontString } from './font';
 import { Protocol } from './protocol';
 import { cdpManager } from './CDPManager';
+import { randomUUID } from './uuid';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
@@ -59,7 +60,7 @@ export class Shell {
   private _connectionNameElement = document.createElement('div');
   private _connectionIsDaemon = new WeakMap<JSConnection, boolean>();
   //@ts-ignore
-  private _uuid: string = crypto.randomUUID();
+  private _uuid: string = randomUUID();
   private constructor() {
     this._connectionNameElement.classList.add('connection-name');
     this._connectionNameEvent.on(name => {

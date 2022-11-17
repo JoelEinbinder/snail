@@ -5,6 +5,7 @@ import { JoelEvent } from "./JoelEvent";
 import type { JSConnection } from "./JSConnection";
 import { LogItem } from "./LogView";
 import { cdpManager, DebuggingInfo } from './CDPManager';
+import { randomUUID } from "./uuid";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -45,7 +46,7 @@ class BrowserView implements WebContentView {
   private _resizeObserver: ResizeObserver;
   private _closed = false;
   // @ts-ignore
-  private _uuid: string = crypto.randomUUID();
+  private _uuid: string = randomUUID();
   constructor(handler: (data: any) => void) {
     this._dummyElement.classList.add('browser-view-dummy');
     this._dummyElement.tabIndex = 0;
@@ -135,7 +136,7 @@ class BrowserView implements WebContentView {
 class IFrameView implements WebContentView {
   private _iframe: HTMLIFrameElement = document.createElement('iframe');
   // @ts-ignore
-  private _uuid: string = crypto.randomUUID();
+  private _uuid: string = String(Math.random());
   constructor(handler: (data: any) => void) {
     this._iframe.allowFullscreen = true;
     this._iframe.style.height = '0';
