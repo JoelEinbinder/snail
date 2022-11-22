@@ -1,4 +1,4 @@
-export const randomUUID: () => string = 'randomUUID' in crypto ? crypto['randomUUID'] : () => {
+export const randomUUID: () => string = 'randomUUID' in crypto ? crypto['randomUUID'].bind(crypto) : () => {
   // https://stackoverflow.com/a/2117523/2800218
   // LICENSE: https://creativecommons.org/licenses/by-sa/4.0/legalcode
   return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g,
