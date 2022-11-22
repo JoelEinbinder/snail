@@ -23,6 +23,7 @@ const directoriesToCopy = [
   'datagrid',
   'icon_service',
   'include',
+  'debugger',
 ];
 const filesToCopy = [
   'package.json',
