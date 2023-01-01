@@ -332,7 +332,7 @@ function clientForSender(sender) {
     const client = new (require('events')).EventEmitter();
     client.send = message => sender.send('message', message);
     sender.on('destroyed', () => client.emit('destroyed'));
-    sender.on('did-frame-navigate', (event, url, isInPlace, isMainFrame, frameProcessId, frameRoutingId) => {
+    sender.on('did-frame-navigate', (event, url, httpResponseCode, httpStatusText, isMainFrame, frameProcessId, frameRoutingId) => {
       if (isMainFrame)
         client.emit('destroyed');
     });
