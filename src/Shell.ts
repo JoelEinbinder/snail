@@ -59,6 +59,7 @@ export class Shell {
   private _delegate?: ShellDelegate;
   private _connectionNameElement = document.createElement('div');
   private _connectionIsDaemon = new WeakMap<JSConnection, boolean>();
+  private _refreshActiveIframe?: () => void;
   //@ts-ignore
   private _uuid: string = randomUUID();
   private constructor() {
@@ -157,6 +158,9 @@ export class Shell {
         this._lockPrompt();
         let activeTerminalBlock: TerminalBlock = null;
         let activeIframeBlock: IFrameBlock = null;
+        this._refreshActiveIframe = () => {
+          activeIframeBlock?.refresh();
+        };
         const terminalTaskQueue = new TaskQueue();
         const processor = new TerminalDataProcessor({
           htmlTerminalMessage: data => {
@@ -433,6 +437,10 @@ export class Shell {
     await this.connection.send('Shell.setIsDaemon', {
       isDaemon: !this._connectionIsDaemon.get(this.connection),
     });
+  }
+
+  refreshActiveIframe() {
+    this._refreshActiveIframe?.();
   }
 
   _updateSuffix() {

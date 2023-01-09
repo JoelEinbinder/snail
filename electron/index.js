@@ -251,6 +251,9 @@ const overrides = {
   setBrowserViewURL({uuid, url}, client, sender) {
     browserViews.get(sender)?.get(uuid)?.webContents.loadURL(url);
   },
+  refreshBrowserView({uuid}, client, sender) {
+    browserViews.get(sender)?.get(uuid)?.webContents.reloadIgnoringCache();
+  },
   attachToCDP({browserViewUUID}, client, sender) {
     const webContents = browserViewUUID ? browserViews.get(sender)?.get(browserViewUUID)?.webContents : sender;
     if (!webContents)

@@ -38,6 +38,7 @@ interface WebContentView {
   setURL(url: string): void;
   dispose(): void;
   didClose(): void;
+  refresh(): void;
   get debuggingInfo(): DebuggingInfo;
 }
 
@@ -125,6 +126,13 @@ class BrowserView implements WebContentView {
     });
   }
 
+  refresh() {
+    host.notify({
+      method: 'refreshBrowserView',
+      params: {uuid: this._uuid},
+    });
+  }
+
   get debuggingInfo(): DebuggingInfo {
     return {
       browserViewUUID: this._uuid,
@@ -164,6 +172,9 @@ class IFrameView implements WebContentView {
   }
   didClose(): void {
   }
+  refresh() {
+    this._iframe.src = this._iframe.src;
+  }
   get debuggingInfo(): DebuggingInfo {
     return {
       frameUUID: this._uuid,
@@ -179,20 +190,19 @@ export class IFrameBlock implements LogItem {
   private _isFullscreen = false;
   private _attachedToCDP = false;
   public willResizeEvent = new JoelEvent<void>(undefined);
+  private _cachedMessages: any[] = [];
+  private _readyCallback: () => void;
   constructor(
     data: string,
     delegate: IFrameBlockDelegate,
     ) {
-    let readyCallback;
-    this.readyPromise = new Promise(resolve => {
-      readyCallback = resolve;
-    });
+    this._resetReadyPromise();
+    // TODO reset ready promise and wait for new signal on refresh
     font.on(this._onFontChanged);
     const didDraw = delegate.antiFlicker.expectToDraw(500);
     const handler = data => {
-      if (readyCallback) {
-        readyCallback();
-        readyCallback = undefined;
+      if (data === 'ready') {
+        this._readyCallback();
         return;
       }
       switch(data.method) {
@@ -319,6 +329,12 @@ export class IFrameBlock implements LogItem {
     if (delegate.browserView)
       this.setIsFullscreen(true);
   }
+
+  private _resetReadyPromise() {
+    this.readyPromise = new Promise(resolve => {
+      this._readyCallback = resolve;
+    });
+  }
   private setIsFullscreen(isFullscreen: boolean) {
     this._isFullscreen = isFullscreen;
     this.willResizeEvent.dispatch();
@@ -346,11 +362,13 @@ export class IFrameBlock implements LogItem {
     });
   }
   async message(data: string) {
-    await this.readyPromise;
-    this._webContentView.postMessage({
+    const message = {
       method: 'message',
       params: JSON.parse(data),
-    });
+    };
+    this._cachedMessages.push(message);
+    await this.readyPromise;
+    this._webContentView.postMessage(message);
   }
 
   didClose() {
@@ -365,6 +383,15 @@ export class IFrameBlock implements LogItem {
 
   debugginInfo() {
     return this._webContentView.debuggingInfo;
+  }
+
+  async refresh() {
+    const cachedMessages = [...this._cachedMessages];
+    this._resetReadyPromise();
+    this._webContentView.refresh();
+    await this.readyPromise;
+    for (const message of cachedMessages)
+      this._webContentView.postMessage(message);
   }
 }
 

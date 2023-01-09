@@ -63,6 +63,10 @@ export class LogView implements Block {
           this._shell.toggleDaemon();
           event.preventDefault();
           event.stopImmediatePropagation();
+        } else if (event.code === 'KeyR') {
+          this._shell.refreshActiveIframe();
+          event.preventDefault();
+          event.stopImmediatePropagation();
         }
         return;
       }
