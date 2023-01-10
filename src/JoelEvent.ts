@@ -7,7 +7,7 @@ export class JoelEvent<T = void> {
     this.current = arg;
     for (const listener of [...this.listeners]) {
       if (!this.listeners.has(listener))
-        return;
+        continue;
       listener(arg);
     }
   }
