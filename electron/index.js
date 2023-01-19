@@ -304,6 +304,13 @@ const overrides = {
     } catch (error) {
       client.send({ method: 'messageFromCDP', params: { browserViewUUID, message: { id, error, sessionId } } });
     }
+  },
+  requestInspect({uuid}, client, sender) {
+    const webContents = uuid ? browserViews.get(sender)?.get(uuid)?.webContents : sender;
+    webContents.openDevTools({
+      mode: 'detach',
+      activate: true
+    });
   }
 };
 

@@ -2,7 +2,6 @@
 import './index.css';
 import {iconPathForPath, looksLikeImageOrVideo} from '../../icon_service/iconService';
 import {DataGrid} from '../../datagrid/datagrid';
-console.log('i am ls', Math.random());
 type Entry = {
   dir: string,
   nlink: number,

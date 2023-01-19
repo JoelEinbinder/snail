@@ -213,6 +213,16 @@ async function attachToCDP(listener) {
   };
 }
 
+window.addEventListener('contextmenu', event => {
+  createContextMenu([{
+    title: 'Inspect Me',
+    callback: () => {
+      sendMessageToParent({method: 'requestInspect'});
+    }
+  }]);
+  event.preventDefault();
+});
+
 window.d4 = {
   waitForMessage,
   setHeight,

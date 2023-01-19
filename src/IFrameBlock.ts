@@ -39,6 +39,7 @@ interface WebContentView {
   dispose(): void;
   didClose(): void;
   refresh(): void;
+  requestInspect(): void;
   get debuggingInfo(): DebuggingInfo;
 }
 
@@ -61,12 +62,6 @@ class BrowserView implements WebContentView {
         params: {uuid: this._uuid},
       })  
     ]);
-    this._dummyElement.addEventListener('focusout', () => {
-      console.log('focusout', document.activeElement);
-    });
-    this._dummyElement.addEventListener('blur', () => {
-      console.log('blur', document.activeElement);
-    });
   }
 
   focus(): void {
@@ -133,6 +128,13 @@ class BrowserView implements WebContentView {
     });
   }
 
+  requestInspect() {
+    host.notify({
+      method: 'requestInspect',
+      params: {uuid: this._uuid}
+    })
+  }
+
   get debuggingInfo(): DebuggingInfo {
     return {
       browserViewUUID: this._uuid,
@@ -180,6 +182,12 @@ class IFrameView implements WebContentView {
       frameUUID: this._uuid,
       type: host.type() === 'webkit' ? 'webkit' : 'chromium',
     }
+  }
+  requestInspect() {
+    host.notify({
+      method: 'requestInspect',
+      params: {},
+    })
   }
 }
 
@@ -302,6 +310,10 @@ export class IFrameBlock implements LogItem {
               this._webContentView.postMessage({method: 'updateDebugees', params: debuggees});
             }
           });
+          break;
+        }
+        case 'requestInspect': {
+          this._webContentView.requestInspect();
           break;
         }
         case 'cdpMessage': {
