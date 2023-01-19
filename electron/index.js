@@ -275,12 +275,13 @@ const overrides = {
     client.on('destroyed', onWebContentsDestroyed);
 
     function close() {
+      client.off('destroyed', onWebContentsDestroyed);
       webContents.debugger.off('detach', onDetach);
       webContents.debugger.off('message', onMessage);
       webContents.debugger.detach();
     }
   },
-  detachFromCDP({browserViewUUID}, client, sender) {
+  detachFromCDP({browserViewUUID} = {}, client, sender) {
     const webContents = browserViewUUID ? browserViews.get(sender)?.get(browserViewUUID)?.webContents : sender;
     if (!webContents)
       throw new Error('Could not detach from web content. Maybe it was already destroyed?');

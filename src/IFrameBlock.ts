@@ -349,10 +349,13 @@ export class IFrameBlock implements LogItem {
   dispose(): void {
     this._webContentView.dispose();
     font.off(this._onFontChanged);
-    if (this._attachedToCDP) {
-      this._attachedToCDP = false;
-      cdpManager.detachCDPListener();
-    }
+    this._detachCDPIfNeeded();
+  }
+  _detachCDPIfNeeded() {
+    if (!this._attachedToCDP)
+      return;
+    this._attachedToCDP = false;
+    cdpManager.detachCDPListener();
   }
   _onFontChanged = async () => {
     await this.readyPromise;
@@ -374,6 +377,7 @@ export class IFrameBlock implements LogItem {
   didClose() {
     if (this._closed)
       return;
+    this._detachCDPIfNeeded();
     this._closed = true;
     this._webContentView.didClose();
     if (this._isFullscreen)
