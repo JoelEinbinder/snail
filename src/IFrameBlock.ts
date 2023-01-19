@@ -320,6 +320,10 @@ export class IFrameBlock implements LogItem {
           cdpManager.sendMessage(data.params.message, data.params.browserViewUUID);
           break;
         }
+        case 'did-navigate': {
+          this._detachCDPIfNeeded();
+          break;
+        }
       }
     };
     this._webContentView = delegate.browserView ? new BrowserView(handler) : new IFrameView(handler);

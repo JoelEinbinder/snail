@@ -222,6 +222,12 @@ const overrides = {
 
     client.on('destroyed', onParentDestroy);
     views.set(uuid, browserView);
+    browserView.webContents.on('did-frame-navigate', (event, url, httpResponseCode, httpStatusText, isMainFrame, frameProcessId, frameRoutingId) => {
+      if (isMainFrame)
+        sender.send('message', { method: 'browserView-message', params: {uuid, message: {
+          method: 'did-navigate',
+        }} });
+    });
   },
   focusBrowserView({uuid}, client, sender) {
     browserViews.get(sender)?.get(uuid)?.webContents.focus();
