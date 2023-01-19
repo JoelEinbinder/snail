@@ -100,7 +100,12 @@ export class Renderer extends Emitter {
     });
 
     this._scrollingElement = document.createElement('div');
-    this._scrollingElement.style.overflow = 'auto';
+    if (this._options.inline) {
+      this._scrollingElement.style.overflowX = 'auto';
+      this._scrollingElement.style.overflowY = 'hidden';
+    } else {
+      this._scrollingElement.style.overflow = 'auto';
+    }
     this._scrollingElement.style.position = 'absolute';
     this._scrollingElement.style.top = '0';
     this._scrollingElement.style.left = '0';
