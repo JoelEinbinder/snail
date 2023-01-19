@@ -211,11 +211,10 @@ const overrides = {
     browserViewContentsToParentContents.set(browserView.webContents, {uuid, parent: sender});
     // TODO are we leaking browserViews when the sender is destroyed?
     const onParentDestroy = () => {
-      console.log('on parent destroy');
+      window.removeBrowserView(browserView);
       browserView.webContents.destroy();
     };
     browserView.webContents.on('destroyed', () => {
-      console.log('browserView destroyed');
       client.off('destroyed', onParentDestroy);
       browserViewContentsToParentContents.delete(browserView.webContents);
       views.delete(uuid);
@@ -241,9 +240,10 @@ const overrides = {
     browserViews.get(sender)?.get(uuid)?.webContents.send('postMessage', message);
   },
   setBrowserViewRect({uuid, rect}, client, sender) {
+    const window = BrowserWindow.fromWebContents(sender);
     browserViews.get(sender)?.get(uuid)?.setBounds({
       x: Math.floor(rect.x),
-      y: Math.floor(rect.y),
+      y: Math.floor(rect.y) + window.getContentBounds().y - window.getBounds().y,
       width: Math.ceil(rect.width),
       height: Math.ceil(rect.height),
     });
