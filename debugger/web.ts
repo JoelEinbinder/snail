@@ -25,7 +25,14 @@ targetManager.addListener({
   },
 })
 
-const tabs = new Tabs();
+const tabs = new Tabs({
+  load() {
+    return d4.loadItem('debugger.tab-strip');
+  },
+  save(value) {
+    d4.saveItem('debugger.tab-strip', value);
+  }
+});
 const elementsPanel = new Elements(targetManager);
 tabs.appendTab({
   focus() {

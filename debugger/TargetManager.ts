@@ -1,14 +1,14 @@
 /// <reference path="../iframe/types.d.ts" />
 import {RPC} from '../src/RPC';
-import { WebKitProtocol } from '../src/webkitProtocol';
+import { Protocol } from '../src/protocol';
 
 interface TargetListener {
-  targetAdded(target: WebKitTarget): void;
-  targetRemoved(target: WebKitTarget): void;
+  targetAdded(target: Target): void;
+  targetRemoved(target: Target): void;
 }
 
 export class TargetManager {
-  private _targets = new Map<string|undefined, WebKitTarget>();
+  private _targets = new Map<string|undefined, Target>();
   private _listeners = new Set<TargetListener>();
   constructor() {
     this.startup();
@@ -27,14 +27,14 @@ export class TargetManager {
   async startup() {
     const sendMessage = await d4.attachToCDP({
       onDebuggeesChanged: debuggees => {
-        const newTargets = new Map<string|undefined, WebKitTarget>();
+        const newTargets = new Map<string|undefined, Target>();
         const framesForBrowserView = new Map<string|undefined, Set<string|undefined>>();
         const addTarget = (browserViewUUID?: string) => {
           const existingTarget = this._targets.get(browserViewUUID);
           if (existingTarget)
             newTargets.set(browserViewUUID, existingTarget);
           else
-            newTargets.set(browserViewUUID, new WebKitTarget(sendMessage));
+            newTargets.set(browserViewUUID, new Target(sendMessage));
           framesForBrowserView.set(browserViewUUID, new Set());
         }
         // always add undefined target for the main page
@@ -66,54 +66,30 @@ export class TargetManager {
   }
 }
 
-export type WebKitSession = RPC<{
-  [key in keyof WebKitProtocol.CommandParameters]: (params: WebKitProtocol.CommandParameters[key]) => WebKitProtocol.CommandReturnValues[key];
-}, WebKitProtocol.Events>;
-export interface WebKitTargetListener {
-  sessionUpdated(session: WebKitSession): void;
+export type ChromiumSession = RPC<{
+  [key in keyof Protocol.CommandParameters]: (params: Protocol.CommandParameters[key]) => Protocol.CommandReturnValues[key];
+}, Protocol.Events>;
+export interface ChromiumTargetListener {
+  sessionUpdated(session: ChromiumSession): void;
   frameAdded(frameUUID: string|undefined): void;
   frameRemoved(frameUUID: string|undefined): void;
 }
 
-export class WebKitTarget {
+export class Target {
   frames = new Set<string|undefined>();
-  private topLevelRPC: WebKitSession;
-  rpc?: WebKitSession;
+  rpc?: ChromiumSession;
   _listener: (message: any) => void;
-  private _listeners = new Set<WebKitTargetListener>();
+  private _listeners = new Set<ChromiumTargetListener>();
   constructor(send: (message: any) => void) {
-    this.topLevelRPC = new RPC({
+    this.rpc = new RPC({
       listen: listener => {
         this._listener = listener;
       },
       send,
     });
-    const rpcListenerForPage = new Map<string, (message: any) => void>();
-    this.topLevelRPC.on('Target.targetCreated', event => {
-      if (event.targetInfo.type !== 'page')
-        return;
-      if (event.targetInfo.isProvisional)
-        return;
-      this.rpc = new RPC({
-        listen: (listener) => {
-          rpcListenerForPage.set(event.targetInfo.targetId, listener);
-        },
-        send: (message) => {
-          this.topLevelRPC.send('Target.sendMessageToTarget', {
-            message: JSON.stringify(message),
-            targetId: event.targetInfo.targetId,
-          });
-        }
-      });
-      for (const listener of this._listeners)
-        listener.sessionUpdated(this.rpc);
-    });
-    this.topLevelRPC.on('Target.dispatchMessageFromTarget', params => {
-      rpcListenerForPage.get(params.targetId)!(JSON.parse(params.message));
-    });
   }
 
-  addListener(listener: WebKitTargetListener) {
+  addListener(listener: ChromiumTargetListener) {
     this._listeners.add(listener);
     if (this.rpc)
       listener.sessionUpdated(this.rpc);
@@ -121,7 +97,7 @@ export class WebKitTarget {
       listener.frameAdded(frame);
   }
 
-  removeListener(listener: WebKitTargetListener) {
+  removeListener(listener: ChromiumTargetListener) {
     this._listeners.delete(listener);
   }
 

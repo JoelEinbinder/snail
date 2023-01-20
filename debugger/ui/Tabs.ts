@@ -1,3 +1,4 @@
+import type { Setting } from './Setting';
 import './tabs.css';
 
 export class Tabs {
@@ -6,7 +7,8 @@ export class Tabs {
     private _tabsHeader = document.createElement("div");
     private _contentElement = document.createElement('div');
     private _tabToHeaderElement = new WeakMap<Tab, HTMLElement>();
-    constructor() {
+    private _tabTitle = new WeakMap<Tab, string>();
+    constructor(private _selectedSetting?: Setting<string|null>) {
         this.element.classList.add("tabs");
         this._tabsHeader.className = "tabs-header";
         this._tabsHeader.addEventListener('keydown', this._keydown.bind(this), false);
@@ -49,11 +51,12 @@ export class Tabs {
 
     }
 
-    appendTab(tab: Tab, title: string) {
+    async appendTab(tab: Tab, title: string) {
         const headerElement = document.createElement("div");
         headerElement.textContent = title;
         headerElement.classList.add("tab");
         headerElement["__tab"] = tab;
+        this._tabTitle.set(tab, title);
         this._tabsHeader.appendChild(headerElement);
         headerElement.addEventListener("mousedown", event => {
             this.selectTab(tab);
@@ -62,8 +65,11 @@ export class Tabs {
             event.preventDefault();
         }, false);
         this._tabToHeaderElement.set(tab, headerElement);
-        if (!this._selectedTab)
-            this.selectTab(tab);
+        if (!this._selectedTab) {
+            const settingValue = await this._selectedSetting?.load();
+            if (!this._selectedTab && !settingValue || settingValue === title)
+                this.selectTab(tab);
+        }
     }
 
     selectTab(tab: Tab|null) {
@@ -75,6 +81,7 @@ export class Tabs {
             element.removeAttribute("tabIndex");
             this._selectedTab.hide();
         }
+        this._selectedSetting?.save(tab ? this._tabTitle.get(tab)! : null)
         this._selectedTab = tab;
         if (this._selectedTab) {
             const element = this._tabToHeaderElement.get(this._selectedTab)!;

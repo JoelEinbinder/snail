@@ -1,7 +1,7 @@
-import type { TargetManager, WebKitSession } from './TargetManager';
-import { WebKitProtocol } from '../src/webkitProtocol';
+import type { TargetManager, ChromiumSession } from './TargetManager';
 import './elements.css';
 import { Tree, TreeItem, handleKeyEventForTreeItem, selectTreeItem } from './ui/Tree';
+import { Protocol } from '../src/protocol';
 
 export class Elements {
   element = document.createElement('div');
@@ -56,9 +56,10 @@ class ElementsSessionManager {
   private _frameIdToNodeID = new Map<string|undefined, number>();
   private _nodeIdToFrameID = new Map<number, string|undefined>();
   private _framesToShow = new Set<string|undefined>();
-  private _rootPromise: Promise<number>;
   private _contentDocumentIdToFrameId = new Map<number, string|undefined>();
-  constructor(private _session: WebKitSession, private _delegate: ElementsSessionManagerDelegate) {
+  constructor(private _session: ChromiumSession, private _delegate: ElementsSessionManagerDelegate) {
+    this._session.send('DOM.enable', {});
+    this._session.send('Overlay.enable', {});
     this._session.on('DOM.setChildNodes', (event) => {
       const remoteNode = this._nodes.get(event.parentId)!;
       remoteNode.populateChildren(event.nodes.map(node => this._processNode(remoteNode, node)));
@@ -97,8 +98,6 @@ class ElementsSessionManager {
     // this._session.on("DOM.willRemoveEventListener", (x) => console.log('DOM.willRemoveEventListener', JSON.stringify(x)));
     // this._session.on("DOM.didFireEvent", (x) => console.log('DOM.didFireEvent', JSON.stringify(x)));
     // this._session.on("DOM.powerEfficientPlaybackStateChanged", (x) => console.log('DOM.powerEfficientPlaybackStateChanged', JSON.stringify(x)));
-
-    this._rootPromise = this.getDocument();
   }
 
   nodeRemoved(nodeId: number) {
@@ -119,7 +118,7 @@ class ElementsSessionManager {
     for (const child of node.data.children || [])
       this.nodeRemoved(child.nodeId);
   }
-  _processNode(parent: TreeItem|undefined, node: WebKitProtocol.DOM.Node) {
+  _processNode(parent: TreeItem|undefined, node: Protocol.DOM.Node) {
     const remoteNode = new RemoteNode(this._session, parent, node);
     this._nodes.set(node.nodeId, remoteNode);
     if (node.children)
@@ -154,7 +153,7 @@ class ElementsSessionManager {
     this._delegate.hideFrameNode(contentDocument);
   }
   async getFrameNodeId(frameUUID: string|undefined) {
-    const rootId = await this._rootPromise;
+    const rootId = await this.getDocument();
     const {nodeId} = await this._session.send('DOM.querySelector', {
       nodeId: rootId,
       selector: `iframe[name="${frameUUID}"]`,
@@ -204,9 +203,9 @@ class RemoteNode implements TreeItem {
     return this._parent;
   }
   constructor(
-    private _client: WebKitSession,
+    private _client: ChromiumSession,
     parent: TreeItem|undefined,
-    public data: WebKitProtocol.DOM.Node) {
+    public data: Protocol.DOM.Node) {
     this._titleElement.tabIndex = -1;
     this.element.classList.add('node');
     this._childContainer.classList.add('children');
@@ -453,7 +452,7 @@ function wrapAsString(content: string) {
 }
 
 class HighlightManager {
-  private _highlightedSession?: WebKitSession;
+  private _highlightedSession?: ChromiumSession;
   private _highlightTimeout?: any;
   closeHighlight() {
     if (!this._highlightedSession)
@@ -464,7 +463,7 @@ class HighlightManager {
     delete this._highlightTimeout;
     delete this._highlightedSession;
   }
-  highlight(session: WebKitSession, nodeId: number) {
+  highlight(session: ChromiumSession, nodeId: number) {
     this.closeHighlight();
     this._highlightedSession = session;
     session.send('DOM.highlightNode', {
