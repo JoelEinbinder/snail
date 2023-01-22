@@ -1,0 +1,30 @@
+
+.folder.collapsed > .children {
+  display: none;
+}
+
+.file-tree .folder > .title::before {
+  content: "▼";
+  width: 13px;
+  display: inline-block;
+  text-align: center;
+  color: var(--color-7);
+}
+.file-tree .folder.collapsed > .title::before {
+  content: "▶";
+}
+
+.file-tree .file-tree-item {
+  padding-left: calc((var(--depth)) * 13px);
+}
+.file-tree .folder > .title {
+  padding-left: calc((var(--depth) - 1) * 13px);
+}
+
+.file-tree .title.selected {
+  background: #222;
+}
+.file-tree .title.selected:focus {
+  background: #444;
+  outline: none;
+}

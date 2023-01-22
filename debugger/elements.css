@@ -1,7 +1,3 @@
-details > .children {
-    padding-left: 13px;
-}
-
 .node.collapsed > .children {
     display: none;
 }

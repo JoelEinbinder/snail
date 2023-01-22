@@ -151,7 +151,11 @@ function previousTreeItem(item: TreeItem) {
     if (!item.parent)
         return null;
     const index = item.parent.children.indexOf(item);
-    if (index > 0)
-        return item.parent.children[index - 1];
+    if (index > 0) {
+        let cursor = item.parent.children[index - 1];
+        while (!cursor.collapsed && cursor.children.length)
+            cursor = cursor.children[cursor.children.length - 1];
+        return cursor;
+    }
     return item.parent;
 }

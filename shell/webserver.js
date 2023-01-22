@@ -26,6 +26,7 @@ async function resolveFileForIframe({filePath, headers, search}) {
         assetNames: '[name]-[hash]',
         chunkNames: '[name]-[hash]',
         entryNames: '[name]-[hash]',
+        sourcemap: true,
         format: 'esm',
         incremental: true,
         metafile: true,

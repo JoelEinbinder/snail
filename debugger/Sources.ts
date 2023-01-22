@@ -1,8 +1,8 @@
 import './sources.css';
-import { handleKeyEventForTreeItem, selectTreeItem, Tree, TreeItem } from './ui/Tree';
 import { Split } from './ui/Split';
 import type { TargetManager, ChromiumSession } from './TargetManager';
 import { Protocol } from '../src/protocol';
+import { FileTree } from './FileTree';
 export class Sources {
   element = document.createElement('div');
   private _fileTree = new FileTree();
@@ -115,59 +115,5 @@ class SourcePane {
       this._cachedSources.set(scriptId, session.send('Debugger.getScriptSource', { scriptId }));
     const source = await this._cachedSources.get(scriptId)!;
     this.element.textContent = source.scriptSource;
-  }
-}
-
-class FileTree {
-  private _tree = new Tree();
-  get element() {
-    return this._tree.element;
-  }
-  focus() {
-    this._tree.focus();
-  }
-  appendItem(url: string, onShow: () => void) {
-    const item = new FileTreeItem(this._tree, url, onShow);
-    this._tree.appendItem(item);
-  }
-}
-
-class FileTreeItem implements TreeItem {
-  collapsed = true;
-  collapsible = false;
-  readonly children = [];
-  element = document.createElement('div');
-  constructor(public parent: TreeItem, text: string, private _onShow: () => void) {
-    this.element.classList.add('file-tree-item');
-    this.element.textContent = text;
-    this.element.addEventListener('keydown', event => {
-      if (event.target !== this.element)
-        return;
-      if (handleKeyEventForTreeItem(event, this))
-        return;
-      // todo enter key to handle splitting selection from showing file
-    });
-    this.element.onclick = () => {
-      selectTreeItem(this);
-    };
-    this.setIsSelected(false);
-  }
-  focus(): void {
-    this.element.focus();
-  }
-  hasFocus(): boolean {
-    return this.element.ownerDocument.activeElement === this.element;
-  }
-  setIsSelected(isSelected: boolean): void {
-    this.element.classList.toggle('selected', isSelected);
-    this.element.tabIndex = isSelected ? 0 : -1;
-    if (isSelected)
-      this._onShow();
-  }
-  expand(): void {
-    throw new Error('Method not implemented.');
-  }
-  collapse(): void {
-    throw new Error('Method not implemented.');
   }
 }
