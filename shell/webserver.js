@@ -90,6 +90,7 @@ ${cssText}
       statusCode: 200,
       headers: {
         'Cache-Control': 'max-age=31536000',
+        'Access-Control-Allow-Origin': '*',
       }
     };
   }

@@ -3,6 +3,7 @@ import { Split } from './ui/Split';
 import type { TargetManager, ChromiumSession } from './TargetManager';
 import { Protocol } from '../src/protocol';
 import { FileTree } from './FileTree';
+import { parseSourceMap } from './sourcemap';
 export class Sources {
   element = document.createElement('div');
   private _fileTree = new FileTree();
@@ -48,6 +49,14 @@ export class Sources {
               if (!payload.url)
                 return;
               console.log(payload);
+              if (payload.sourceMapURL) {
+                for await (const { content, url } of parseSourceMap(payload.url, payload.sourceMapURL)) {
+                  this._fileTree.appendItem(url, () => {
+                    this._sourcePane.showScript(session, payload.scriptId + ' - ' + url, content);
+                  });
+                }
+                return;
+              }
               this._fileTree.appendItem(payload.url, () => {
                 this._sourcePane.showScript(session, payload.scriptId);
               });
@@ -107,13 +116,17 @@ class SourcePane {
   constructor() {
     this.element.classList.add('source-pane');
   }
-  async showScript(session: ChromiumSession, scriptId: string) {
+  async showScript(session: ChromiumSession, scriptId: string, contentOverride?: string) {
     if (this._showing === scriptId)
       return;
     this._showing = scriptId;
-    if (!this._cachedSources.has(scriptId))
-      this._cachedSources.set(scriptId, session.send('Debugger.getScriptSource', { scriptId }));
-    const source = await this._cachedSources.get(scriptId)!;
-    this.element.textContent = source.scriptSource;
+    if (contentOverride) {
+      this.element.textContent = contentOverride;
+    } else {
+      if (!this._cachedSources.has(scriptId))
+        this._cachedSources.set(scriptId, session.send('Debugger.getScriptSource', { scriptId }));
+      const source = await this._cachedSources.get(scriptId)!;
+      this.element.textContent = source.scriptSource;
+    }
   }
 }
