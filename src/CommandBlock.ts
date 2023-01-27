@@ -93,6 +93,10 @@ export class CommandBlock implements LogItem {
       return Promise.resolve(null);
     return this.cachedEvaluationResult.get(code);
   }
+
+  async serializeForTest(): Promise<any> {
+    return '> ' + this.command;
+  }
 }
 
 export class CommandPrefix {

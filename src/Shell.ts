@@ -21,6 +21,7 @@ import { fontString } from './font';
 import { Protocol } from './protocol';
 import { cdpManager } from './CDPManager';
 import { randomUUID } from './uuid';
+import { startAyncWork } from './async';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
@@ -645,6 +646,7 @@ export class Shell {
     editorWrapper.style.flex = '1';
     editorWrapper.style.minHeight = '1.4em';
     editorWrapper.addEventListener('keydown', async event => {
+      const finishWork = startAyncWork('User Evaluation');
       if ((event.key === 'Enter' && !event.shiftKey) || (event.code === 'KeyM' && event.ctrlKey)) {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -662,6 +664,7 @@ export class Shell {
               if (isUnexpectedEndOfInput(code)) {
                 willResize();
                 editor.smartEnter();
+                finishWork();
                 return;
               }
             }
@@ -670,7 +673,7 @@ export class Shell {
         const command = editor.value;
         editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
         editor.value = '';
-        this.runCommand(command);
+        await this.runCommand(command);
       } else if (event.code === 'KeyL' && event.ctrlKey) {
         for (const item of this.log) {
             item.dispose();
@@ -690,6 +693,7 @@ export class Shell {
         event.preventDefault();
         event.stopImmediatePropagation();
       }
+      finishWork();
     }, false);
     editorLine.appendChild(editorWrapper);
     const {editor, autocomplete} = makePromptEditor(this);

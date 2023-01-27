@@ -1,3 +1,4 @@
+import { waitForAnyWorkToFinish } from './async';
 import { font } from './font';
 import './gridPane.css';
 import { host } from './host';
@@ -20,8 +21,8 @@ export interface Block {
   focus(): void;
   hasFocus(): boolean;
   blockDelegate?: BlockDelegate;
+  serializeForTest(): Promise<any>;
 }
-
 class RootBlock {
   element = document.createElement('div');
   block?: Block = null;
@@ -61,9 +62,21 @@ class RootBlock {
   private _layout() {
     this.block?.updatePosition(this.element.getBoundingClientRect());
   }
+
+  async serializeForTest() {
+    return this.block ? this.block.serializeForTest() : null;
+  }
+
+  async waitForAnyWorkToFinish() {
+    await waitForAnyWorkToFinish();
+  }
 }
 
 export const rootBlock = new RootBlock();
+declare global {
+  interface Window { rootBlockForTest: RootBlock; }
+}
+window.rootBlockForTest = rootBlock;
 
 class SplitBlock implements Block {
   public blockDelegate?: BlockDelegate;
@@ -167,6 +180,14 @@ class SplitBlock implements Block {
       this._dividerElement.style.left = rect.x + 'px';
       this._dividerElement.style.width = rect.width + 'px';
     }
+  }
+
+  async serializeForTest() {
+    return {
+      type: 'split-' + this._type,
+      ratio: this._ratio,
+      children: await Promise.all(this._blocks.map(x => x.serializeForTest())),
+    };
   }
 }
 

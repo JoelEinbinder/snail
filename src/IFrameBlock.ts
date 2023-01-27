@@ -413,6 +413,10 @@ export class IFrameBlock implements LogItem {
     for (const message of cachedMessages)
       this._webContentView.postMessage(message);
   }
+
+  async serializeForTest(): Promise<any> {
+    return '<iframe>';
+  }
 }
 
 const isWebKit = /WebKit/.test(navigator.userAgent);

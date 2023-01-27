@@ -15,6 +15,14 @@ export class ProgressBlock implements LogItem {
     this._progress.max = 1;
     this._element.append(this._leftText, this._progress, this._rightText);
   }
+  async serializeForTest() {
+    return this._element.isConnected ? {
+      type: 'progress',
+      left: this._leftText.textContent || undefined,
+      value: this._progress.value,
+      right: this._rightText.textContent || undefined,
+    } : null;
+  }
   dispose(): void {
       
   }

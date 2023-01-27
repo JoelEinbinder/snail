@@ -195,6 +195,15 @@ export class LogView implements Block {
     this._lockScroll();
     this._promptElement = this._shell.addPrompt(this._scroller, () => this._lockScroll());
   }
+
+  async serializeForTest() {
+    return {
+      log: (await Promise.all(this._shell.log.map(item => {
+        return item.serializeForTest ? item.serializeForTest() : '<unknown>';
+      }))).filter(x => x),
+      prompt: !!this._promptElement
+    };
+  }
 }
 
 export interface LogItem {
@@ -202,4 +211,5 @@ export interface LogItem {
   render(): Element;
   focus(): void;
   dispose(): void;
+  serializeForTest(): Promise<any>;
 }

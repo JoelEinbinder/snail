@@ -172,4 +172,14 @@ export class TerminalBlock implements LogItem {
   allData() {
     return this._data;
   }
+
+  async serializeForTest(): Promise<any> {
+    if (!this.element.isConnected)
+      return null;
+    const buffer = this._terminal.buffer.active;
+    const lines = [];
+    for (let i = 0; i < buffer.length; i++)
+      lines.push(buffer.getLine(i).translateToString(true));
+    return lines.join('\n');
+  }
 }
