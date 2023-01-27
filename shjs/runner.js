@@ -2,7 +2,7 @@ const {spawn, spawnSync} = require('child_process');
 const {Writable, Readable} = require('stream');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+const pathService = require('../path_service/');
 
 /**
  * @type {{
@@ -22,7 +22,7 @@ let changes = null;
 const builtins = {
     cd: async (args, stdout, stderr) => {
         try {
-            const [dir = os.homedir()] = args;
+            const [dir = pathService.homedir()] = args;
             process.chdir(dir);
             if (!changes)
                 changes = {};
@@ -60,12 +60,12 @@ const builtins = {
         }
         return 0;
     },
-    declare: (args, stdout, stderr) => {
+    declare: (args, stdout, stderr, stdin) => {
         if (args[0] !== '-x') {
             stderr.write('declare is only supported with -x\n');
             return Promise.resolve(1);
         }
-        return builtins.export(args.slice(1), stdout, stderr);
+        return builtins.export(args.slice(1), stdout, stderr, stdin);
     },
     alias: async (args, stdout, stderr) => {
         if (!args[0]) {
@@ -109,7 +109,7 @@ const builtins = {
         if (args.length) {
             changes.reconnect = path.resolve(process.cwd(), args[0]);
         } else {
-            const socketDir = path.join(os.tmpdir(), '1d4-sockets');
+            const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
             const entries = (await fs.promises.readdir(socketDir)).filter(x => x.endsWith('.socket'));
             if (entries.length === 0) {
                 stderr.write('No daemons found to reconnect to.\n');
@@ -378,7 +378,7 @@ function processWord(word) {
  */
 function computeReplacement(replacement) {
     if (replacement === '~')
-        return process.env.HOME || require('os').homedir();
+        return process.env.HOME || pathService.homedir();
     if (replacement.startsWith('$')) {
         const key = replacement.substring(1);
         return key in process.env ? process.env[key] : '';

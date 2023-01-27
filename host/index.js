@@ -135,7 +135,7 @@ async function getDatabase() {
     return database;
   const path = require('path');
   const sqlite3 = require('sqlite3');
-  database = new sqlite3.Database(path.join(require('os').homedir(), '.terminal-history.sqlite3'));
+  database = new sqlite3.Database(path.join(require('../path_service/').homedir(), '.terminal-history.sqlite3'));
   await new Promise(x => database.run(`CREATE TABLE IF NOT EXISTS history (
     command_id INTEGER PRIMARY KEY AUTOINCREMENT,
     start INTEGER,

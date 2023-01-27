@@ -2,11 +2,11 @@ const inspector = require('inspector');
 const net = require('net');
 const fs = require('fs');
 const {PipeTransport} = require('../protocol/pipeTransport');
-const os = require('os');
+const pathService = require('../path_service/');
 const path = require('path');
 const worker_threads = require('node:worker_threads');
 const { ShellState } = require('./ShellState');
-const socketDir = path.join(os.tmpdir(), '1d4-sockets');
+const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
 const socketPath = path.join(socketDir, `${process.pid}.socket`);
 
 worker_threads.parentPort.on('message', changes => {
@@ -77,8 +77,8 @@ const handler = {
            "sound" : "correct.wav",
         },
         location: {
-          username: os.userInfo().username,
-          hostname: os.hostname(),
+          username: require('os').userInfo().username,
+          hostname: pathService.hostname(),
           socketPath,
         }
       }));
@@ -204,7 +204,7 @@ async function initObjectId({args}) {
       replMode: true,
     });
   } else {
-    const sourceCode = await fs.promises.readFile(path.join(os.homedir(), '.bootstrap.shjs'), 'utf8').catch(e => null);
+    const sourceCode = await fs.promises.readFile(path.join(pathService.homedir(), '.bootstrap.shjs'), 'utf8').catch(e => null);
     if (typeof sourceCode === 'string') {
       const expression = await transformCode(sourceCode);
       await send('Runtime.evaluate', {

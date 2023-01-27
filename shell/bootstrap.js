@@ -200,9 +200,8 @@ async function getServerUrl() {
 }
 
 async function launchServer() {
-  const os = require('os');
   const path = require('path');
-  const socketDir = path.join(os.tmpdir(), '1d4-shell-sockets');
+  const socketDir = path.join(require('../path_service/').tmpdir(), '1d4-shell-sockets');
   const socketPath = path.join(socketDir, `${process.pid}-shell.sock`);
   const fs = require('fs');
   fs.mkdirSync(socketDir, {recursive: true, mode: 0o700});

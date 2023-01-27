@@ -24,7 +24,7 @@ async function spawnJSProcess({cwd, sshAddress, socketPath}) {
       },
     };
     if (!cwd)
-      cwd = require('os').homedir();
+      cwd = require('../path_service/').homedir();
     const child = spawn('ssh', [sshAddress, `PATH=$PATH:/usr/local/bin node ~/gap-year/shell/wsPipeWrapper.js '${btoa(JSON.stringify({socketPath}))}'`], {
       stdio: ['pipe', 'pipe', 'inherit'],
       detached: false,
@@ -49,10 +49,11 @@ async function spawnJSProcess({cwd, sshAddress, socketPath}) {
   if (!socketPath) {
     // launch the process if we don't have an explicit socket to connect to
     if (!cwd || !fs.existsSync(cwd))
-      cwd = require('os').homedir();
-    const os = require('os');
-    const socketDir = path.join(os.tmpdir(), '1d4-sockets');
-
+      cwd = require('../path_service/').homedir();
+    const pathService = require('../path_service/');
+    const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
+    if (socketDir.length > 90)
+      throw new Error(`Cannot create socket in ${JSON.stringify(socketDir)} (path too long)`);
     fs.mkdirSync(socketDir, {recursive: true, mode: 0o700});
 
     const nodePath = process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node';
