@@ -104,6 +104,7 @@ function makeWindow() {
       preload: __dirname + '/preload.js',
     },
     backgroundColor: '#000',
+    show: !process.argv.includes('--test-headless'),
   });
   win.webContents.setWindowOpenHandler((details) => {
     return {

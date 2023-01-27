@@ -6,9 +6,12 @@ import { ShellModel } from './ShellModel';
 export const test = _test.extend<{
   shell: ShellModel,
 }>({
-  shell: async ({ }, use) => {
+  shell: async ({ headless }, use) => {
+    const args: string[] = [];
+    if (headless)
+      args.push('--test-headless');
     const app = await _electron.launch({
-      args: [path.join(__dirname, '..')],
+      args: [path.join(__dirname, '..'), ...args],
     });
     const page = await app.firstWindow();
     const shell = await ShellModel.create(page);
