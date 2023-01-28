@@ -10,3 +10,16 @@ test('can run a command', async ({ shell }) => {
     prompt: true
   });
 });
+
+test('can create a file and see it in ls', async ({ shell }) => {
+  await shell.runCommand('touch a.txt');
+  await shell.runCommand('ls');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> touch a.txt',
+      '> ls',
+      '<iframe>',
+    ],
+    prompt: true
+  });
+});

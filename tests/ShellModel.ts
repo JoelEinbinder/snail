@@ -10,8 +10,9 @@ export class ShellModel {
     return shell;
   }
   async runCommand(command: string) {
-    await this.page.getByRole('textbox').fill(command);
-    await this.page.getByRole('textbox').press('Enter');
+    const textarea = this.page.locator('textarea:enabled');
+    await textarea.fill(command);
+    await textarea.press('Enter');
     await this.waitForAsyncWorkToFinish();
   }
   async waitForAsyncWorkToFinish() {

@@ -6,6 +6,7 @@ import type { JSConnection } from "./JSConnection";
 import { LogItem } from "./LogView";
 import { cdpManager, DebuggingInfo } from './CDPManager';
 import { randomUUID } from "./uuid";
+import { startAyncWork } from "./async";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -350,6 +351,7 @@ export class IFrameBlock implements LogItem {
     this.readyPromise = new Promise(resolve => {
       this._readyCallback = resolve;
     });
+    this.readyPromise.then(startAyncWork('iframe loading'));
   }
   private setIsFullscreen(isFullscreen: boolean) {
     this._isFullscreen = isFullscreen;

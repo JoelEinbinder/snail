@@ -1,7 +1,12 @@
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView } = require('electron');
 const { handler } = require('../host');
+const headless = process.argv.includes('--test-headless');
 let windowNumber = 0;
+if (headless)
+  app.dock.hide();
+if (process.env.SNAIL_TEST_USER_DATA_DIR)
+  app.setPath('userData', process.env.SNAIL_TEST_USER_DATA_DIR);
 app.setName('Terminal');
 /** @type {Set<BrowserWindow>} */
 const windows = new Set();
@@ -104,7 +109,8 @@ function makeWindow() {
       preload: __dirname + '/preload.js',
     },
     backgroundColor: '#000',
-    show: !process.argv.includes('--test-headless'),
+    show: !headless,
+    skipTaskbar: headless,
   });
   win.webContents.setWindowOpenHandler((details) => {
     return {

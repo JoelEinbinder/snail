@@ -25,10 +25,12 @@ export const test = _test.extend<{
       args.push('--test-headless');
     const app = await _electron.launch({
       args: [path.join(__dirname, '..'), ...args],
+      cwd: workingDir,
       env: {
         ...process.env,
         SNAIL_TEST_HOME_DIR: workingDir,
         SNAIL_TEST_TMP_DIR: tmpDirForTest,
+        SNAIL_TEST_USER_DATA_DIR: test.info().outputPath('user-data-dir'),
       },
     });
     const page = await app.firstWindow();
