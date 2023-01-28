@@ -44,7 +44,7 @@ if (window.parent && window.parent !== window) {
 
 function onMessage(data) {
   if ('method' in data) {
-    const {method, params} = data;
+    const {method, params, id} = data;
     if (method === 'message') {
       if (callbacks.length) {
         callbacks.shift()(params);
@@ -65,6 +65,9 @@ function onMessage(data) {
     } else if (method === 'updateDebugees') {
       if (cdpListener)
         cdpListener.onDebuggeesChanged(params);
+    } else if (method === 'requestJSON') {
+      const json = typeof _toJSON === 'function' ? _toJSON() : undefined;
+      sendMessageToParent({id, result: {json}});
     }
   } else {
     const {id, result} = data;
@@ -223,6 +226,11 @@ window.addEventListener('contextmenu', event => {
   event.preventDefault();
 });
 
+let _toJSON;
+function setToJSON(toJSON) {
+  _toJSON = toJSON;
+}
+
 window.d4 = {
   waitForMessage,
   setHeight,
@@ -234,5 +242,6 @@ window.d4 = {
   getDevicePixelRatio,
   attachToCDP,
   openDevTools,
+  setToJSON,
 }
 sendMessageToParent('ready')

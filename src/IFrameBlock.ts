@@ -201,6 +201,8 @@ export class IFrameBlock implements LogItem {
   public willResizeEvent = new JoelEvent<void>(undefined);
   private _cachedMessages: any[] = [];
   private _readyCallback: () => void;
+  private _messageCallbacks = new Map<number, ((result: any) => void)>();
+  private _lastMessageId = 0;
   constructor(
     data: string,
     delegate: IFrameBlockDelegate,
@@ -214,6 +216,8 @@ export class IFrameBlock implements LogItem {
         this._readyCallback();
         return;
       }
+      if (!data.method && data.id)
+        this._messageCallbacks.get(data.id)(data.result);
       switch(data.method) {
         case 'setHeight': {
           this.willResizeEvent.dispatch();
@@ -417,7 +421,13 @@ export class IFrameBlock implements LogItem {
   }
 
   async serializeForTest(): Promise<any> {
-    return '<iframe>';
+    const id = ++this._lastMessageId;
+    const {json} = await new Promise(resolve => {
+      this._messageCallbacks.set(id, resolve);
+      this._webContentView.postMessage({id, method: 'requestJSON'});
+    });
+    this._messageCallbacks.delete(id);
+    return json || '<iframe>';
   }
 }
 

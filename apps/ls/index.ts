@@ -348,6 +348,11 @@ function inlineMode() {
     }
     d4.setHeight(document.body.offsetHeight);
   }
+  d4.setToJSON(() => {
+    return gridContainers.map(x => {
+      return x.element.textContent;
+    });
+  });
 }
 
 function makeImageForPath(fullPath: string, info: Entry) {

@@ -18,7 +18,7 @@ test('can create a file and see it in ls', async ({ shell }) => {
     log: [
       '> touch a.txt',
       '> ls',
-      '<iframe>',
+      ['a.txt'],
     ],
     prompt: true
   });
