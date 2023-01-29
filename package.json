@@ -4,9 +4,10 @@
   "scripts": {
     "start": "SNAIL_DEBUG_URL=http://localhost/gap-year/ electron .",
     "test": "cd shjs; mocha",
-    "build": "node esbuild.js",
+    "build": "node utils/esbuild.js",
     "bundle": "node utils/bundle.js"
   },
+  "version": "0.4",
   "workspaces": [
     "xterm.js"
   ],
@@ -24,6 +25,7 @@
     "clean-webpack-plugin": "^4.0.0-alpha.0",
     "css-loader": "^6.2.0",
     "electron": "^22.0.3",
+    "electron-packager": "^17.1.1",
     "electron-rebuild": "^3.2.7",
     "expect": "^27.4.6",
     "file-loader": "^6.2.0",

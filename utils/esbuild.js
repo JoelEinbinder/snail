@@ -3,10 +3,10 @@ const esbuild = require('esbuild');
 const fs = require('fs');
 try {
   console.time('build');
-  const outDir = path.join(__dirname, 'esout');
+  const outDir = path.join(__dirname, '..', 'esout');
   fs.rmSync(outDir, { recursive: true, force: true });
   esbuild.buildSync({
-    entryPoints: [path.join(__dirname, 'src', 'index.ts')],
+    entryPoints: [path.join(__dirname, '..', 'src', 'index.ts')],
     outdir: outDir,
     bundle: true,
     loader: {
