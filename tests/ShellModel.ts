@@ -6,7 +6,6 @@ export class ShellModel {
   }
   static async create(page: Page) {
     const shell = new ShellModel(page);
-    await shell.page.goto('http://localhost/gap-year/');
     return shell;
   }
   async runCommand(command: string) {

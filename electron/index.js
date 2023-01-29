@@ -1,6 +1,7 @@
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView } = require('electron');
 const { handler } = require('../host');
+const path = require('path');
 const headless = process.argv.includes('--test-headless');
 let windowNumber = 0;
 if (headless)
@@ -38,7 +39,9 @@ menu.append(new MenuItem({
         },
         backgroundColor: '#000',
       });
-      win.loadURL('http://localhost/gap-year/?logbook');
+      win.loadFile(path.join(__dirname, 'index.html'), {
+        search: 'logbook',
+      });
     }
   }]
 }))
@@ -146,7 +149,10 @@ function makeWindow() {
     window.excludedFromShownWindowsMenu = true;
     popups.add(window);
   })
-  win.loadURL('http://localhost/gap-year/');
+  if (process.env.SNAIL_DEBUG_URL)
+    win.loadURL(process.env.SNAIL_DEBUG_URL);
+  else
+    win.loadFile(path.join(__dirname, 'index.html'));
   win.on('closed', () => windows.delete(win));
   windows.add(win);
   if (!focusedWindow)

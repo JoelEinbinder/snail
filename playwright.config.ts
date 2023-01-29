@@ -3,7 +3,7 @@ import { devices, _electron } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 30 * 1000,
+  timeout: 5 * 1000,
   expect: {
     timeout: 5000
   },
@@ -14,7 +14,8 @@ const config: PlaywrightTestConfig = {
   reporter: 'line',
   use: {
     actionTimeout: 0,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
+    video: 'retain-on-failure',
   },
 
   projects: [

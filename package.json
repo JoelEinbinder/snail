@@ -2,9 +2,9 @@
   "name": "gap-year",
   "private": true,
   "scripts": {
-    "start": "electron .",
+    "start": "SNAIL_DEBUG_URL=http://localhost/gap-year/ electron .",
     "test": "cd shjs; mocha",
-    "build": "webpack",
+    "build": "node esbuild.js",
     "bundle": "node utils/bundle.js"
   },
   "workspaces": [

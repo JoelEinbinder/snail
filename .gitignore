@@ -6,6 +6,7 @@ history.sqlite3
 /a.js
 dist
 /WebKitBundle
+/esout
 
 joel-terminal-*.vsix
 

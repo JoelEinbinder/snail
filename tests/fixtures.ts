@@ -33,9 +33,17 @@ export const test = _test.extend<{
         SNAIL_TEST_USER_DATA_DIR: test.info().outputPath('user-data-dir'),
       },
     });
+    await app.context().tracing.start({
+      screenshots: true,
+      snapshots: true,
+      sources: true,
+    });
     const page = await app.firstWindow();
     const shell = await ShellModel.create(page);
     await use(shell);
+    await app.context().tracing.stop({
+      path: test.info().outputPath('trace.pwtrace')
+    });
     await app.close();
   }
 });

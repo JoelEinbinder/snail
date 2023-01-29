@@ -43,7 +43,7 @@ export function isUnexpectedEndOfInput(code: string) {
     try {
       // TODO: UH OH DONT DO THIS!
       // We are doing this because the `new Function` function gives us bad error messages about unexpected '}';
-      eval(code);
+      (0, eval)(code);
       console.error('THIS WENT BAD WE EXECUTED SOME SHIT');
     } catch (e) {
       return e.toString().startsWith('SyntaxError: Unexpected end of input') ||
