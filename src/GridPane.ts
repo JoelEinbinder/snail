@@ -1,4 +1,4 @@
-import { waitForAnyWorkToFinish } from './async';
+import { currentWaits, waitForAnyWorkToFinish } from './async';
 import { font } from './font';
 import './gridPane.css';
 import { host } from './host';
@@ -69,6 +69,10 @@ class RootBlock {
 
   async waitForAnyWorkToFinish() {
     await waitForAnyWorkToFinish();
+  }
+
+  currentWaitsForTest() {
+    return currentWaits();
   }
 }
 

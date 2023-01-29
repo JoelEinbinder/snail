@@ -44,6 +44,9 @@ export const test = _test.extend<{
     await app.context().tracing.stop({
       path: test.info().outputPath('trace.pwtrace')
     });
+    test.info().attach('waits', {
+      body: (await shell.currentWaits()).join('\n'),
+    });
     await app.close();
   }
 });

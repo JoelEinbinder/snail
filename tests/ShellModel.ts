@@ -26,4 +26,11 @@ export class ShellModel {
       return rootBlock.serializeForTest();
     });
   }
+
+  async currentWaits() {
+    return await this.page.evaluate(() => {
+      const rootBlock = window.rootBlockForTest;
+      return rootBlock.currentWaitsForTest();
+    });
+  }
 }

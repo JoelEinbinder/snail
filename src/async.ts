@@ -17,3 +17,6 @@ export async function waitForAnyWorkToFinish() {
   while(works.size)
     await workEvent.once();
 }
+export function currentWaits() {
+  return [...works].map(w => w.name);
+}
