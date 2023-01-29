@@ -255,7 +255,9 @@ function getOrMakeCachedColor(document: Document, css: string): CachedColor {
     const canvas = document.createElement('canvas');
     canvas.width = 1;
     canvas.height = 1;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', {
+      willReadFrequently: true,
+    });
     if (!ctx) {
       throw new Error('Could not get rendering context');
     }
