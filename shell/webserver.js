@@ -48,7 +48,7 @@ async function resolveFileForIframe({filePath, headers, search}) {
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="${require.resolve('../iframe/iframe.css')}">
-<script src="${require.resolve('../iframe/runtime.js')}" type="module"></script>
+<script src="${require.resolve('../iframe/iframe.js')}" type="module"></script>
 ${cssText}
 </head>
 <body class=${JSON.stringify(searchParams.get('class'))} style=${JSON.stringify(searchParams.get('css'))}>
