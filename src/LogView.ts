@@ -3,12 +3,16 @@ import type { Shell } from './Shell';
 import './shell.css';
 import './logView.css';
 import { Block, BlockDelegate } from './GridPane';
+export interface Prompt {
+  element: HTMLElement;
+  serializeForTest(): Promise<any>;
+}
 
 export class LogView implements Block {
   private _element = document.createElement('div');
   private _scroller = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
-  private _promptElement: HTMLElement;
+  private _prompt?: Prompt;
   private _lockingScroll = false;
   private _undoFullscreen: () => void = null;
   private _removeListeners: () => void;
@@ -24,7 +28,7 @@ export class LogView implements Block {
       document.body.removeEventListener('keydown', keyDownListener, false);
     };
     const keyDownListener = (event: KeyboardEvent) => {
-      if (!this._promptElement)
+      if (!this._prompt)
         return;
       if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey)
         return;
@@ -33,7 +37,7 @@ export class LogView implements Block {
         return;
       if (event.defaultPrevented)
         return;
-      this._promptElement.focus();
+      this._prompt.element.focus();
     };
     this._container.appendChild(this._element);
     document.body.addEventListener('keydown', keyDownListener, false);
@@ -81,9 +85,9 @@ export class LogView implements Block {
     });
     this._shell.promptLock.on(count => {
       if (count > 0) {
-        if (this._promptElement) {
-          this._promptElement.remove();
-          this._promptElement = null;
+        if (this._prompt) {
+          this._prompt.element.remove();
+          delete this._prompt;
         }
       } else {
         this._addPrompt();
@@ -97,8 +101,8 @@ export class LogView implements Block {
     });
   }
   focus(): void {
-    if (this._promptElement)
-      this._promptElement.focus();
+    if (this._prompt)
+      this._prompt.element.focus();
     else if (this._shell.activeItem.current)
       this._shell.activeItem.current.focus();
   }
@@ -127,9 +131,9 @@ export class LogView implements Block {
   }
 
   _repopulate() {
-    if (this._promptElement) {
-      this._promptElement.remove();
-      this._promptElement = null;
+    if (this._prompt) {
+      this._prompt.element.remove();
+      delete this._prompt;
     }
     this._scroller.textContent = '';
     for (const entry of this._shell.log)
@@ -172,8 +176,8 @@ export class LogView implements Block {
       this._lockScroll();
     });
     this._lockScroll();
-    if (this._promptElement)
-      this._scroller.insertBefore(element, this._promptElement);
+    if (this._prompt)
+      this._scroller.insertBefore(element, this._prompt.element);
     else
       this._scroller.appendChild(element);
     if (logItem === this._shell.activeItem.current)
@@ -193,7 +197,7 @@ export class LogView implements Block {
 
   _addPrompt() {
     this._lockScroll();
-    this._promptElement = this._shell.addPrompt(this._scroller, () => this._lockScroll());
+    this._prompt = this._shell.addPrompt(this._scroller, () => this._lockScroll());
   }
 
   async serializeForTest() {
@@ -201,7 +205,7 @@ export class LogView implements Block {
       log: (await Promise.all(this._shell.log.map(item => {
         return item.serializeForTest ? item.serializeForTest() : '<unknown>';
       }))).filter(x => x),
-      prompt: !!this._promptElement
+      prompt: await this._prompt?.serializeForTest(),
     };
   }
 }

@@ -3,7 +3,7 @@ import type { Shell } from "../Shell";
 import { registerCompleter } from "../shellCompleter";
 
 registerCompleter('apt', async (shell, line, abortSignal) => {
-  const anchor = 4;
+  const anchor = 'apt '.length;
   const prefix = line.slice(anchor);
   if (prefix.includes(' ')) {
     const command = line.slice(4).split(' ')[0];

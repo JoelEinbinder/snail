@@ -9,6 +9,7 @@
       "allowSyntheticDefaultImports": true,
       "module": "ESNext",
       "moduleResolution": "node",
+      "resolveJsonModule": true,
       "lib": [
           "esnext",
           "DOM",

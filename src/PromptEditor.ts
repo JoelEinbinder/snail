@@ -7,6 +7,7 @@ import './completions/git';
 import './completions/npx';
 import './completions/npm';
 import './completions/apt';
+import './completions/docker';
 import { searchHistory } from "./history";
 import { setSelection } from "./selection";
 import { host } from "./host";

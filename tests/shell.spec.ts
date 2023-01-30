@@ -7,7 +7,7 @@ test('can run a command', async ({ shell }) => {
       '> echo hello',
       'hello'
     ],
-    prompt: true
+    prompt: { value: '' }
   });
 });
 
@@ -20,6 +20,46 @@ test('can create a file and see it in ls', async ({ shell }) => {
       '> ls',
       ['a.txt'],
     ],
-    prompt: true
+    prompt: { value: '' }
   });
+});
+
+test('opens autocomplete', async ({ shell }) => {
+  await shell.typeInPrompt('docker ');
+  expect(await shell.serialize()).toEqual({
+    log: [],
+    prompt: {
+      value: 'docker ',
+      autocomplete: [
+        'attach',  'build',   'builder', 'buildx',
+        'commit',  'compose', 'config',  'container',
+        'context', 'cp',      'create',  'diff',
+        'events',  'exec',    'export',  'extension',
+        'history', 'image',   'images',  'import',
+        'info',    'inspect', 'kill',    'load',
+        'login',   'logout',  'logs',    'manifest',
+        'network', 'node',    'pause',   'plugin',
+        'port',    'ps',      'pull',    'push',
+        'rename',  'restart', 'rm',      'rmi',
+        'run',     'save',    'sbom',    'scan',
+        'search',  'secret',  'service', 'stack',
+        'start',   'stats',   'stop',    'swarm',
+        'system',  'tag',     'top',     'trust',
+        'unpause', 'update',  'version', 'volume',
+        'wait',
+
+        '--config',
+        '--context',
+        '--debug',
+        '--host',
+        '--log-level',
+        '--tls',
+        '--tlscacert',
+        '--tlscert',
+        '--tlskey',
+        '--tlsverify',
+        '--version',
+      ]
+    }
+  })
 });

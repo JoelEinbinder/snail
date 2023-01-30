@@ -16,7 +16,7 @@ try {
     splitting: false,
     format: 'esm',
     sourcemap: true,
-    minify: false,
+    minify: true,
     treeShaking: true,
   });
   console.timeEnd('build');

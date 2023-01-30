@@ -1,4 +1,5 @@
 import { Editor } from "../editor/js/editor";
+import { startAyncWork } from "./async";
 import { JoelEvent } from "./JoelEvent";
 import { SuggestBox } from "./SuggestBox";
 
@@ -140,7 +141,9 @@ export class Autocomplete {
         const textBeforeCursor = this._editor.text({ start: { line: location.line, column: 0 }, end: location });
         this._refreshingSuggestions = true;
         const completer = this._activationCode ? this._specialCompleters[this._activationCode] : this._defaultCompleter;
+        const finishWork = startAyncWork('completions');
         const completions = await completer(textBeforeCursor, abortController.signal);
+        finishWork();
         this._refreshingSuggestions = false;
         if (abortController.signal.aborted)
             return;
@@ -181,6 +184,10 @@ export class Autocomplete {
         const bottom = top + this._editor.lineHeight() * .75 + 4;
         this._suggestBox.fit(left, top, bottom);
 
+    }
+
+    async serializeForTest() {
+        return this._suggestBox?.showing ? this._suggestBox.serializeForTest() : undefined;
     }
 }
 
@@ -227,6 +234,14 @@ function filterAndSortSuggestionsSubstringMode(suggestions: Suggestion[], prefix
         const bContainsCorrectCase = b.text.includes(prefix);
         if (aContainsCorrectCase != bContainsCorrectCase)
             return aContainsCorrectCase ? -1 : 1;
+        const startsWithSpecialA = /^[^\w]/.test(a.text);
+        const startsWithSpecialB = /^[^\w]/.test(b.text);
+        if (startsWithSpecialA != startsWithSpecialB)
+            return startsWithSpecialA ? 1 : -1;
+        const underscoresA = /^_*/.exec(a.text)[0].length;
+        const underscoreB = /^_*/.exec(b.text)[0].length;
+        if (underscoresA !== underscoreB)
+            return underscoresA - underscoreB;
         return a.text.localeCompare(b.text);        
     });
     return filtered;

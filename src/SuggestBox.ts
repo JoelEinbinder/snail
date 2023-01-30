@@ -131,4 +131,8 @@ export class SuggestBox {
         this._glassPane.show();
         this._glassPane.position(x, top, bottom);
     }
+
+    serializeForTest() {
+        return this._suggestions.map(x => x.text);
+    }
 }

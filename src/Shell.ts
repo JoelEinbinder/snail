@@ -2,7 +2,7 @@ import 'xterm/css/xterm.css';
 import { addHistory, updateHistory } from './history';
 import { makePromptEditor } from './PromptEditor';
 import { JoelEvent } from './JoelEvent';
-import type { LogItem } from './LogView';
+import type { LogItem, Prompt } from './LogView';
 import { CommandBlock, CommandPrefix, computePrettyDirName } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { JSConnection } from './JSConnection';
@@ -565,7 +565,7 @@ export class Shell {
     return this._connectionToSSHAddress.get(this.connection);
   }
 
-  addPrompt(container: Element, willResize: () => void) {
+  addPrompt(container: Element, willResize: () => void): Prompt {
     const element = document.createElement('div');
     element.tabIndex = -1;
     element.style.opacity = '0';
@@ -745,7 +745,16 @@ export class Shell {
     }
     editor.on('change', onChange);
     autocomplete.suggestionChanged.on(onChange);
-    return element;
+    return {
+      element,
+      serializeForTest: async () => {
+        const serialized = { value: editor.value } as any;
+        const auto = await autocomplete.serializeForTest();
+        if (auto)
+          serialized.autocomplete = auto;
+        return serialized;
+      },
+    }
   }
 
   async _addToHistory(command: string) {

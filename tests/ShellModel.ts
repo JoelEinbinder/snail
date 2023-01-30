@@ -14,6 +14,13 @@ export class ShellModel {
     await textarea.press('Enter');
     await this.waitForAsyncWorkToFinish();
   }
+
+  async typeInPrompt(text: string) {
+    const textarea = this.page.locator('textarea:enabled');
+    await textarea.type(text);
+    await this.waitForAsyncWorkToFinish();
+  }
+
   async waitForAsyncWorkToFinish() {
     await this.page.evaluate(() => {
       const rootBlock = window.rootBlockForTest;
