@@ -99,3 +99,20 @@ test.fixme('can ssh2 into docker', async ({ shell, docker }) => {
     prompt: { value: '' }
   });
 });
+
+test('ssh2 delete this test', async ({ shell }) => {
+  await shell.runCommand('ssh2 joeleinbinder@localhost');
+  expect(await shell.serialize()).toEqual({
+    log: [ '> ssh2 joeleinbinder@localhost' ],
+    prompt: { value: '' }
+  });
+  await shell.runCommand('whoami && pwd');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> ssh2 joeleinbinder@localhost',
+      '> whoami && pwd',
+      'joeleinbinder\n/Users/joeleinbinder'
+    ],
+    prompt: { value: '' }
+  });
+});

@@ -301,19 +301,25 @@ export class Shell {
           connection.env[key] = value;
       },
       nod: async (args: string[]) => {
+        const done = startAyncWork('nod');
         this._lockPrompt();
         await this._setupConnection(args);
         this._unlockPrompt();
+        done();
       },
       ssh: async (sshAddress: string) => {
+        const done = startAyncWork('ssh');
         this._lockPrompt();
         await this._setupConnection([], sshAddress);
         this._unlockPrompt();
+        done();
       },
       reconnect: async (socketPath: string) => {
+        const done = startAyncWork('reconnect');
         this._lockPrompt();
         await this._setupConnection([], this._connectionToSSHAddress.get(connection), socketPath);
         this._unlockPrompt();
+        done();
       },
       code: async (file: string) => {
         let code;

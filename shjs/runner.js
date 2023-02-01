@@ -96,11 +96,38 @@ const builtins = {
         return 0;
     },
     ssh2: (args, stdout, stderr) => {
-        if (args.length !== 1 || args[0].startsWith('-'))
+        let address = null;
+        const nonAddressArgs = [];
+        for (let i = 0; i < args.length; i++) {
+            const arg = args[i];
+            if (arg === '-o') {
+                i++;
+                const option = args[i];
+                if (!option)
+                    return 'pass';
+                nonAddressArgs.push(arg, option);
+            } else if (arg === '-p') {
+                i++;
+                const port = args[i];
+                if (!port)
+                    return 'pass';
+                nonAddressArgs.push(arg, port);
+            } else if (arg.startsWith('-')) {
+                // unknown option
+                return 'pass';
+            } else if (!address) {
+                address = arg;
+            } else {
+                // too many arguments
+                return 'pass';
+            }
+        }
+        if (!address)
             return 'pass';
         if (!changes)
             changes = {};
-        changes.ssh = args[0];
+        // TODO nonAddressArgs
+        changes.ssh = address;
         return Promise.resolve(0);
     },
     reconnect: async (args, stdout, stderr) => {
