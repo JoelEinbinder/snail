@@ -140,6 +140,27 @@ export class TerminalBlock implements LogItem {
     this._lastWritePromise = new Promise(x => this._terminal.write(data, x));
   }
 
+  async waitForLineForTest(regex: RegExp, signal?: AbortSignal) {
+    let resolve: () => void;
+    const promise = new Promise<void>(x => resolve = x);
+    const callback = () => {
+      const buffer = this._terminal.buffer.active;
+      for (let i = 0; i < buffer.length; i++) {
+        const line = buffer.getLine(i);
+        if (regex.test(line.translateToString(true))) {
+          console.log('resolve!');
+          resolve();
+          break;
+        }
+      }
+    }
+    const dispose = this._terminal.onRender(callback);
+    signal?.addEventListener('abort', () => dispose.dispose(), { once: true});
+    callback();
+    await promise;
+    dispose.dispose();
+  }
+
   async close() {
     await this._lastWritePromise;
 

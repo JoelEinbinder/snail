@@ -8,6 +8,7 @@ type AutocompleteDescription = {
 
 registerCompleter('docker', async (shell, line, abortSignal) => {
   // probably not good at handling quotes just yet
+  // TODO: We should get the actual words the shjs tokenizer
   if (line.includes('\\') || line.includes('\'') || line.includes('\"'))
     return null;
   let description: AutocompleteDescription = {
@@ -19,14 +20,31 @@ registerCompleter('docker', async (shell, line, abortSignal) => {
   };
   const parts = line.split(' ');
   let text = '';
+  let type: string|undefined = undefined;
   for (const part of parts) {
-    if (text && !/\-\-?.+/.test(text)) {
-      description = description.commands.find(x => x.name === text)
-      if (!description)
-        return null;
+    if (text) {
+      if (type) {
+        // TODO maybe handle lists here?
+        type = null;
+      }
+      else if (/\-\-?.+/.test(text)) {
+        const long = description.aliases.find(alias => '-' + alias.short === text)?.long;
+        const flagText = long ? `--${long}` : text;
+        const flag = description.flags.find(flag => '--' + flag.name === flagText);
+        if (!flag)
+          return null; // unknown flag used. we dont know if it eats the next arg so stop autocomplete
+        type = flag.type;
+      } else {
+        type = undefined;
+        description = description.commands.find(x => x.name === text)
+        if (!description) // unknown command
+          return null;
+      }
     }
     text = part;
   }
+  if (type)
+    return null; // TODO maybe we can do some kind of hint from the type?
   const anchor = line.length - text.length;
   return {
     anchor,
@@ -35,7 +53,7 @@ registerCompleter('docker', async (shell, line, abortSignal) => {
       ...description.flags.map(flag => ({
         text: '--' + flag.name,
         description: async () => flag.description,
-        suffix: flag.type ? '=' + flag.type : undefined,
+        // suffix: flag.type ? '=' + flag.type : undefined,
       })),
     ],
     exact: true,

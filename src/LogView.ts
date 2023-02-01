@@ -208,6 +208,20 @@ export class LogView implements Block {
       prompt: await this._prompt?.serializeForTest(),
     };
   }
+
+  async waitForLineForTest(regex: RegExp) {
+    const abortController = new AbortController();
+    const callback = () => {
+      this._shell.activeItem.current?.waitForLineForTest?.(regex, abortController.signal).then(resolve);
+    };
+    let resolve: () => void;
+    const promise = new Promise<void>(x => resolve = x);
+    this._shell.activeItem.on(callback);
+    callback();
+    await promise;
+    this._shell.activeItem.off(callback);
+    abortController.abort();
+  }
 }
 
 export interface LogItem {
@@ -216,4 +230,5 @@ export interface LogItem {
   focus(): void;
   dispose(): void;
   serializeForTest(): Promise<any>;
+  waitForLineForTest?(regex: RegExp, signal?: AbortSignal): Promise<void>;
 }

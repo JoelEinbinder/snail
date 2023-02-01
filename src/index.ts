@@ -1,6 +1,7 @@
 import './dark.css';
 import './font';
 import { rootBlock } from './GridPane';
+import './TestingHooks';
 
 const isLogBook = document.location.search.includes('logbook');
 if (!isLogBook) {

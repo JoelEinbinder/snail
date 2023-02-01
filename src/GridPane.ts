@@ -1,4 +1,3 @@
-import { currentWaits, waitForAnyWorkToFinish } from './async';
 import { font } from './font';
 import './gridPane.css';
 import { host } from './host';
@@ -66,21 +65,9 @@ class RootBlock {
   async serializeForTest() {
     return this.block ? this.block.serializeForTest() : null;
   }
-
-  async waitForAnyWorkToFinish() {
-    await waitForAnyWorkToFinish();
-  }
-
-  currentWaitsForTest() {
-    return currentWaits();
-  }
 }
 
 export const rootBlock = new RootBlock();
-declare global {
-  interface Window { rootBlockForTest: RootBlock; }
-}
-window.rootBlockForTest = rootBlock;
 
 class SplitBlock implements Block {
   public blockDelegate?: BlockDelegate;

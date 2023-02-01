@@ -3,11 +3,20 @@ import { test as _test, _baseTest, _electron, type Page } from '@playwright/test
 import path from 'path';
 import fs from 'fs';
 import { ShellModel } from './ShellModel';
+import {spawn, execSync} from 'child_process';
+import getPort from 'get-port';
+type SshAddress = {
+  address: string,
+  port: number,
+};
 
 export const test = _test.extend<{
   shell: ShellModel,
   workingDir: string;
   tmpDirForTest: string;
+  docker: SshAddress;
+}, {
+  imageId: string;
 }>({
   workingDir: async ({ }, use) => {
     const workingDir = test.info().outputPath('working-dir');
@@ -18,6 +27,24 @@ export const test = _test.extend<{
     const tmpDir = await fs.promises.mkdtemp(path.join(require('os').tmpdir(), 'snail-temp-'));
     await use(tmpDir);
     await fs.promises.rm(tmpDir, { recursive: true, force: true });
+  },
+  imageId: [async ({ }, use) => {
+    const imageId = 'snail:tests';
+    execSync(`docker build --tag=${imageId} --file=./Dockerfile .`, {
+      cwd: path.join(__dirname, 'docker'),
+      stdio: 'ignore',
+    });
+    await use(imageId);
+  }, { scope: 'worker' }],
+  docker: async ({ imageId }, use) => {
+    const port = await getPort();
+    const docker = spawn('docker', ['run', '--rm', '-p', `${port}:22`, imageId], {
+      stdio: 'pipe',
+      cwd: path.join(__dirname, 'docker'),
+    });
+    await new Promise(x => setTimeout(x, 300));
+    await use({ address: 'snailuser@localhost', port });
+    docker.kill();
   },
   shell: async ({ headless, workingDir, tmpDirForTest }, use) => {
     const args: string[] = [];

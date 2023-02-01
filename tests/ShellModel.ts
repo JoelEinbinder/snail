@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 // for declare global side effect
-import type { } from '../src/GridPane';
+import type { } from '../src/TestingHooks';
 export class ShellModel {
   private constructor(public page: Page) {
   }
@@ -10,7 +10,9 @@ export class ShellModel {
   }
   async runCommand(command: string) {
     const textarea = this.page.locator('textarea:enabled');
-    await textarea.fill(command);
+    await textarea.fill(command, {
+      force: true,
+    });
     await textarea.press('Enter');
     await this.waitForAsyncWorkToFinish();
   }
@@ -23,21 +25,21 @@ export class ShellModel {
 
   async waitForAsyncWorkToFinish() {
     await this.page.evaluate(() => {
-      const rootBlock = window.rootBlockForTest;
-      return rootBlock.waitForAnyWorkToFinish();
+      const hooks = window.testingHooks;
+      return hooks.waitForAnyWorkToFinish();
     });
   }
   async serialize() {
     return await this.page.evaluate(() => {
-      const rootBlock = window.rootBlockForTest;
-      return rootBlock.serializeForTest();
+      const hooks = window.testingHooks;
+      return hooks.serializeForTest();
     });
   }
 
   async currentWaits() {
     return await this.page.evaluate(() => {
-      const rootBlock = window.rootBlockForTest;
-      return rootBlock.currentWaitsForTest();
+      const hooks = window.testingHooks;
+      return hooks.currentWaitsForTest();
     });
   }
 }
