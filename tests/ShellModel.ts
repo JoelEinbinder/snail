@@ -42,4 +42,11 @@ export class ShellModel {
       return hooks.currentWaitsForTest();
     });
   }
+  
+  async waitForLine(regex: RegExp) {
+    await this.page.evaluate(regex => {
+      const hooks = window.testingHooks;
+      return hooks.waitForLineForTest(regex);
+    }, regex);
+  }
 }

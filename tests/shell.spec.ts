@@ -66,14 +66,12 @@ test('opens autocomplete', async ({ shell }) => {
 
 
 test('can regular ssh into docker', async ({ shell, docker }) => {
-  const commandPromise = shell.runCommand(`ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`);
-  await shell.page.evaluate(() => {
-    const hooks = window.testingHooks;
-    return hooks.waitForLineForTest(/password: /);
+  shell.waitForLine(/password: /).then(async () => {
+    await shell.page.keyboard.type('mypassword');
+    await shell.page.keyboard.press('Enter');  
   });
-  await shell.page.keyboard.type('mypassword');
-  await shell.page.keyboard.press('Enter');
-  await commandPromise;
+
+  await shell.runCommand(`ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`);
   expect(await shell.serialize()).toEqual({
     log: [
       `> ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`,
