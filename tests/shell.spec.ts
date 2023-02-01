@@ -75,7 +75,26 @@ test('can regular ssh into docker', async ({ shell, docker }) => {
   expect(await shell.serialize()).toEqual({
     log: [
       `> ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`,
-      "snailuser@localhost's password: \ndone"
+      `${docker.address}'s password: \ndone`
+    ],
+    prompt: { value: '' }
+  });
+});
+
+test.fixme('can ssh2 into docker', async ({ shell, docker }) => {
+  shell.waitForLine(/password: /).then(async () => {
+    await shell.page.keyboard.type('mypassword');
+    await shell.page.keyboard.press('Enter');  
+  });
+
+  await shell.runCommand(`ssh2 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port}`);
+  await shell.runCommand('whoami');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      `> ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`,
+      `${docker.address}'s password: \n`,
+      '> whoami',
+      'snailuser'
     ],
     prompt: { value: '' }
   });
