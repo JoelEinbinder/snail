@@ -2,10 +2,12 @@ import './dark.css';
 import './font';
 import { rootBlock } from './GridPane';
 import './TestingHooks';
+import { startAyncWork } from './async'
 
 const isLogBook = document.location.search.includes('logbook');
 if (!isLogBook) {
   console.time('load shell module');
+  const done = startAyncWork('load shell module');
   const shellPromise = import('./Shell').then(({ Shell }) => {
     console.timeEnd('load shell module');
     return Shell.create();
@@ -14,6 +16,7 @@ if (!isLogBook) {
     const shell = await shellPromise;
     const logView = new LogView(shell, rootBlock.element);
     rootBlock.setBlock(logView);
+    done();
   });
 } else {
   document.title = 'LogBook';

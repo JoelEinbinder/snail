@@ -38,6 +38,15 @@ interface ShellDelegate {
   onClose(): void;
 }
 
+interface ConnectionCore {
+  send(message: {method: string, params: any, id: number}): void;
+  listen(callback: (message: {method: string, params: any}|{id: number, result: any}) => void): void;
+  onclose?: () => void;
+  destroy(): void;
+  urlForIframe(filePath: string): Promise<string>;
+  readonly isRestoration: boolean;
+}
+
 export class Shell {
   log: LogItem[] = [];
   public fullscreenItem: JoelEvent<LogItem> = new JoelEvent<LogItem>(null);
@@ -54,7 +63,6 @@ export class Shell {
   private _connectionToName = new WeakMap<JSConnection, string>();
   private _connectionToDestroy = new WeakMap<JSConnection, (() => void)>();
   private _connectionNameEvent = new JoelEvent<string>('');
-  private _connectionToSocketId = new WeakMap<JSConnection, number>();
   private _connectionToSSHAddress = new WeakMap<JSConnection, string>();
   private _antiFlicker = new AntiFlicker(() => this._lockPrompt(), () => this._unlockPrompt());
   private _delegate?: ShellDelegate;
@@ -93,26 +101,43 @@ export class Shell {
         sshAddress,
       }
     });
-    this._clearCache();
-    const connection = new JSConnection({
-      listen: callback => {
+    socketCloseListeners.set(socketId, () => {
+      core.onclose?.();
+      socketListeners.delete(socketId);
+      socketCloseListeners.delete(socketId);
+    });
+    const core: ConnectionCore = {
+      listen(callback) {
         socketListeners.set(socketId, callback);
       },
-      send: message => {
+      send(message) {
         host.notify({method: 'sendMessageToWebSocket', params: {socketId, message}});
       },
-    });
+      destroy() {
+        host.notify({method: 'destroyWebsocket', params: {socketId}});
+      },
+      urlForIframe(filePath) {
+        return host.sendMessage({
+          method: 'urlForIFrame',
+          params: {
+            socketId,
+            filePath,
+          }
+        })
+      },
+      isRestoration: !!socketPath,
+    }
+    return this._setupConnectionInner(core, args, sshAddress);
+  }
+  async _setupConnectionInner(core: ConnectionCore, args: string[], sshAddress = null) {
+    this._clearCache();
+    const connection = new JSConnection(core);
+    core.onclose = () => connection.didClose();
     this._connectionIsDaemon.set(connection, false);
     connection.on('Shell.daemonStatus', ({isDaemon}) => {
       this._connectionIsDaemon.set(connection, isDaemon);
       this._updateSuffix();
     });
-    socketCloseListeners.set(socketId, () => {
-      connection.didClose();
-      socketListeners.delete(socketId);
-      socketCloseListeners.delete(socketId);
-    });
-    this._connectionToSocketId.set(connection, socketId);
     this._connectionToSSHAddress.set(connection, sshAddress);
     const filePath = args[0];
     this._connectionToName.set(connection, filePath || sshAddress);
@@ -194,7 +219,7 @@ export class Shell {
                         await notify('input', { data, id});
                     },
                     connection,
-                    socketId: this._connectionToSocketId.get(connection),
+                    urlForIframe: filePath => core.urlForIframe(filePath),
                     antiFlicker: this._antiFlicker,
                     browserView: !!(dataObj.browserView),
                   });
@@ -352,7 +377,7 @@ export class Shell {
       if (destroyed)
         return;
       destroyed = true;
-      host.notify({method: 'destroyWebsocket', params: {socketId}});
+      core.destroy();
       for (const id of terminals.keys())
         handler.endTerminal({id});
       this._size.off(resize);
@@ -377,7 +402,7 @@ export class Shell {
       connection.env = result.value.env;
       connection.cwd = result.value.cwd;
     }
-    if (socketPath) {
+    if (core.isRestoration) {
       const result = await connection.send('Shell.restore', undefined);
       if (result)
         this._addJSBlock(result, connection);

@@ -27,7 +27,7 @@ export type IFrameBlockDelegate = {
   connection: JSConnection;
   sendInput: (data: string) => void;
   antiFlicker?: AntiFlicker;
-  socketId: number;
+  urlForIframe(filePath: string): Promise<string>;
   browserView: boolean;
 }
 
@@ -332,13 +332,7 @@ export class IFrameBlock implements LogItem {
       }
     };
     this._webContentView = delegate.browserView ? new BrowserView(handler) : new IFrameView(handler);
-    host.sendMessage({
-      method: 'urlForIFrame',
-      params: {
-        socketId: delegate.socketId,
-        filePath: data,
-      }
-    }).then(urlStr => {
+    delegate.urlForIframe(data).then(urlStr => {
       const url = new URL(urlStr);
       url.searchParams.set('class', `${host.type()}-host`);
       url.searchParams.set('css', `--current-font: ${fontString()}`);

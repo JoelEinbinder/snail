@@ -3,6 +3,7 @@ import type { Shell } from './Shell';
 import './shell.css';
 import './logView.css';
 import { Block, BlockDelegate } from './GridPane';
+import { startAyncWork } from './async';
 export interface Prompt {
   element: HTMLElement;
   serializeForTest(): Promise<any>;
@@ -64,9 +65,10 @@ export class LogView implements Block {
           event.preventDefault();
           event.stopImmediatePropagation();
         } else if (event.code === 'KeyD') {
-          this._shell.toggleDaemon();
           event.preventDefault();
           event.stopImmediatePropagation();
+          const done = startAyncWork('demon mode toggle');
+          this._shell.toggleDaemon().then(done);
         } else if (event.code === 'KeyR') {
           this._shell.refreshActiveIframe();
           event.preventDefault();

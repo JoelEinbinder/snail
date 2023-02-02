@@ -6,6 +6,7 @@ export class ShellModel {
   }
   static async create(page: Page) {
     const shell = new ShellModel(page);
+    await shell.waitForAsyncWorkToFinish();
     return shell;
   }
   async runCommand(command: string) {
@@ -24,7 +25,9 @@ export class ShellModel {
   }
 
   async waitForAsyncWorkToFinish() {
-    await this.page.evaluate(() => {
+    await this.page.evaluate(async () => {
+      if (document.readyState !== 'complete')
+        await new Promise(x => window.addEventListener('load', x, { once: true }));
       const hooks = window.testingHooks;
       return hooks.waitForAnyWorkToFinish();
     });
@@ -48,5 +51,11 @@ export class ShellModel {
       const hooks = window.testingHooks;
       return hooks.waitForLineForTest(regex);
     }, regex);
+  }
+
+  async toggleDemonMode() {    
+    await this.page.keyboard.press('Control+A');
+    await this.page.keyboard.press('Control+D');
+    await this.waitForAsyncWorkToFinish();
   }
 }

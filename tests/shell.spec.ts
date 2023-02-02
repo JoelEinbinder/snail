@@ -116,3 +116,18 @@ test('ssh2 delete this test', async ({ shell }) => {
     prompt: { value: '' }
   });
 });
+
+test('startup', async ({ shell }) => {
+  expect(await shell.serialize()).toEqual({
+    log: [],
+    prompt: { value: '' },
+  });
+});
+
+test('daemon mode toggle', async ({ shell }) => {
+  await shell.toggleDemonMode();
+  expect(await shell.page.title()).toMatch(/😈$/);
+  await shell.toggleDemonMode();
+  expect(await shell.page.title()).not.toMatch(/😈$/);
+});
+
