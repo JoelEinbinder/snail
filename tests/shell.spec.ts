@@ -70,11 +70,11 @@ test('can regular ssh into docker', async ({ shell, docker }) => {
     await shell.page.keyboard.type('mypassword');
     await shell.page.keyboard.press('Enter');  
   });
-
-  await shell.runCommand(`ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`);
+  // ConnectionAttempts because sshd really doesnt start up when it says it starts up
+  await shell.runCommand(`ssh -o ConnectionAttempts=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`);
   expect(await shell.serialize()).toEqual({
     log: [
-      `> ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`,
+      `> ssh -o ConnectionAttempts=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`,
       `${docker.address}'s password: \ndone`
     ],
     prompt: { value: '' }
@@ -87,11 +87,12 @@ test.fixme('can ssh2 into docker', async ({ shell, docker }) => {
     await shell.page.keyboard.press('Enter');  
   });
 
-  await shell.runCommand(`ssh2 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port}`);
+  // ConnectionAttempts because sshd really doesnt start up when it says it starts up
+  await shell.runCommand(`ssh2 -o ConnectionAttempts=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port}`);
   await shell.runCommand('whoami');
   expect(await shell.serialize()).toEqual({
     log: [
-      `> ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`,
+      `> ssh -o ConnectionAttempts=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`,
       `${docker.address}'s password: \n`,
       '> whoami',
       'snailuser'

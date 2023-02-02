@@ -5,6 +5,8 @@ import fs from 'fs';
 import { ShellModel } from './ShellModel';
 import {spawn, execSync} from 'child_process';
 import getPort from 'get-port';
+import net from 'net';
+
 type SshAddress = {
   address: string,
   port: number,
@@ -15,6 +17,7 @@ export const test = _test.extend<{
   workingDir: string;
   tmpDirForTest: string;
   docker: SshAddress;
+  waitForPort: (port: number) => Promise<void>;
 }, {
   imageId: string;
 }>({
@@ -36,13 +39,47 @@ export const test = _test.extend<{
     });
     await use(imageId);
   }, { scope: 'worker' }],
-  docker: async ({ imageId }, use) => {
+  waitForPort: async ({}, use) => {
+    /**
+     * Copyright (c) Microsoft Corporation.
+     *
+     * Licensed under the Apache License, Version 2.0 (the "License");
+     * you may not use this file except in compliance with the License.
+     * You may obtain a copy of the License at
+     *
+     * http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS,
+     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     * See the License for the specific language governing permissions and
+     * limitations under the License.
+     */
+    const token = { canceled: false };
+    await use(async port => {
+      while (!token.canceled) {
+        const promise = new Promise<boolean>(resolve => {
+          const conn = net.connect(port, '127.0.0.1')
+              .on('error', () => resolve(false))
+              .on('connect', () => {
+                conn.end();
+                resolve(true);
+              });
+        });
+        if (await promise)
+          return;
+        await new Promise(x => setTimeout(x, 100));
+      }
+    });
+    token.canceled = true;
+  },
+  docker: async ({ imageId, waitForPort }, use) => {
     const port = await getPort();
     const docker = spawn('docker', ['run', '--rm', '-p', `${port}:22`, imageId], {
       stdio: 'pipe',
       cwd: path.join(__dirname, 'docker'),
     });
-    await new Promise(x => setTimeout(x, 300));
+    await waitForPort(port);
     await use({ address: 'snailuser@localhost', port });
     docker.kill();
   },
