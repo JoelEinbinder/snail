@@ -1,6 +1,6 @@
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
-const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView } = require('electron');
-const { handler } = require('../host');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol } = require('electron');
+const { handler, proxies } = require('../host');
 const path = require('path');
 const headless = process.argv.includes('--test-headless');
 let windowNumber = 0;
@@ -96,6 +96,22 @@ menu.append(new MenuItem({
 
 Menu.setApplicationMenu(menu)
 app.whenReady().then(() => {
+  protocol.registerBufferProtocol('snail', async (request, callback) => {
+    const {host, search, pathname} = new URL('http://' + request.url.substring('snail:'.length));
+    const socketId = parseInt(host.substring('shell-'.length));
+    const filePath = decodeURIComponent(pathname);
+    const out = await proxies.get(socketId).send('Shell.resolveFileForIframe', {filePath, search, headers: request.headers});
+
+    const {result: {response}} = out;
+    const headers = response.headers || {};
+
+    callback({
+      data: response.data !== undefined ? Buffer.from(response.data, 'base64') : undefined,
+      statusCode: response.statusCode,
+      mimeType: response.mimeType,
+      headers,
+    });
+  });
   makeWindow();
 
 });
@@ -330,7 +346,14 @@ const overrides = {
       mode: 'detach',
       activate: true
     });
-  }
+  },
+
+  async urlForIFrame({socketId, filePath}) {
+    const url = new URL(`http://shell-${socketId}`);
+    url.pathname = filePath;
+    url.search = '?entry';
+    return 'snail://' + url.href.substring('http://'.length);;
+  },
 };
 
 const clients = new WeakMap();
