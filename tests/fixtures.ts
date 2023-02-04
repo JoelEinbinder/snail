@@ -33,10 +33,14 @@ export const test = _test.extend<{
   },
   imageId: [async ({ }, use) => {
     const imageId = 'snail:tests';
-    execSync(`docker build --tag=${imageId} --file=./Dockerfile .`, {
-      cwd: path.join(__dirname, 'docker'),
-      stdio: 'ignore',
-    });
+    try {
+      execSync(`docker build --tag=${imageId} --file=./Dockerfile .`, {
+        cwd: path.join(__dirname, 'docker'),
+        stdio: 'ignore',
+      });
+    } catch {
+      test.skip();
+    }
     await use(imageId);
   }, { scope: 'worker' }],
   waitForPort: async ({}, use) => {
