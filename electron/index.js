@@ -1,5 +1,5 @@
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
-const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, session } = require('electron');
 const { handler, proxies } = require('../host');
 const path = require('path');
 const headless = process.argv.includes('--test-headless');
@@ -94,7 +94,21 @@ menu.append(new MenuItem({
   }]
 }))
 
-Menu.setApplicationMenu(menu)
+Menu.setApplicationMenu(menu);
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'snail',
+    privileges: {
+      standard: true,
+      allowServiceWorkers: true,
+      bypassCSP: false,
+      corsEnabled: true,
+      secure: true,
+      stream: true,
+      supportFetchAPI: true,
+    }
+  }
+]);
 app.whenReady().then(() => {
   protocol.registerBufferProtocol('snail', async (request, callback) => {
     const {host, search, pathname} = new URL('http://' + request.url.substring('snail:'.length));
