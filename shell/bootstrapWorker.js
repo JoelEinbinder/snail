@@ -20,8 +20,13 @@ let isDaemon = false;
 const enabledTransports = new Set();
 let objectIdPromise;
 let lastCommandPromise;
+let lastSubshellId = 0;
+/** @type {Map<number, import('./ProtocolProxy').ProtocolProxy>} */
+const subshells = new Map();
+/** @typedef {import('../src/JSConnection').ExtraClientMethods} ShellHandler */
+/** @type {{[key in keyof ShellHandler]: (...args: Parameters<ShellHandler[key]>) => (Promise<ReturnType<ShellHandler[key]>)}} */
 const handler = {
-  'Shell.setIsDaemon': (params) => {
+  'Shell.setIsDaemon': async (params) => {
     isDaemon = !!params.isDaemon;
     for (const transport of enabledTransports)
       transport.send({method: 'Shell.daemonStatus', params: {isDaemon}});
@@ -33,7 +38,7 @@ const handler = {
       objectIdPromise = initObjectId(params);
     return {objectId: await objectIdPromise};
   },
-  'Shell.disable': (params) => {
+  'Shell.disable': async (params) => {
     enabledTransports.delete(transport);
   },
   'Shell.evaluate': async (params) => {
@@ -86,8 +91,47 @@ const handler = {
     return result;
   },
   'Shell.resolveFileForIframe': async (params) => {
+    if (params.shellIds.length) {
+      const subshellId = params.shellIds.shift();
+      const subshell = subshells.get(subshellId);
+      const out = await subshell.send('Shell.resolveFileForIframe', params);
+      if (out.error) {
+        return {
+          response: { statusCode: 500, data: Buffer.from(new TextEncoder().encode(out.error.message)).toString('base64') },
+        }
+      } else {
+        return out.result;
+      }
+    }
     const response = await require('./webserver').resolveFileForIframe(params);
     return {response};
+  },
+  'Shell.createSubshell': async ({sshAddress}) => {
+    const { spawnJSProcess } = require('./spawnJSProcess');
+    const { ProtocolProxy } = require('./ProtocolProxy');
+
+    const id = ++lastSubshellId;
+    const subshell = await spawnJSProcess({ cwd: process.cwd(), sshAddress });
+    const proxy = new ProtocolProxy(subshell, message => {
+      // TODO what to do when the transport has changed or is gone??
+      transport?.send({method: 'Shell.messageFromSubshell', params: { id, message }})
+    });
+    subshell.onclose = () => {
+      transport?.send({method: 'Shell.subshellDestroyed', params: { id }})
+    };
+    subshells.set(id, proxy);
+
+    return { id };
+  },
+  'Shell.sendMessageToSubshell': async ({id, message}) => {
+    const response = await subshells.get(id).send(message.method, message.params);
+    if (!message.id)
+      return;
+    response.id = message.id;
+    transport?.send({method: 'Shell.messageFromSubshell', params: { id, message: response }})
+  },
+  'Shell.destroySubshell': async ({id}) => {
+    subshells.get(id)?.close();
   },
   __proto__: null,
 };

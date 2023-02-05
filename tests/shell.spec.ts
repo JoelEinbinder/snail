@@ -116,6 +116,17 @@ test('ssh2 delete this test', async ({ shell }) => {
     ],
     prompt: { value: '' }
   });
+  await shell.runCommand(`cd /Users/joeleinbinder/gap-year/tests/docker/; ls`);
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> ssh2 joeleinbinder@localhost',
+      '> whoami && pwd',
+      'joeleinbinder\n/Users/joeleinbinder',
+      '> cd /Users/joeleinbinder/gap-year/tests/docker/; ls',
+      [ 'Dockerfile' ],
+    ],
+    prompt: { value: '' }
+  });
 });
 
 test('startup', async ({ shell }) => {

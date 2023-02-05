@@ -6,7 +6,7 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
   private _cwdHistory: string[] = [];
   public env: {[key: string]: string} = {};
   constructor(private _transport: Transport) {
-    this._transport.listen(message => {
+    this._transport.onmessage = message => {
       if ('id' in message) {
         const callback = this._callbacks.get(message.id);
         callback.call(null, message);
@@ -14,7 +14,7 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
       } else {
         this._emit(message.method as keyof ServerMethods, message.params);
       }
-    });
+    };
   }
   private _emit(method: keyof ServerMethods, params: any) {
     const listeners = this._listeners.get(method);
@@ -76,5 +76,5 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
 
 interface Transport {
   send(message: {method: string, params: any, id: number}): void;
-  listen(callback: (message: {method: string, params: any}|{id: number, result: any}) => void): void;
+  onmessage?: (message: {method: string, params: any}|{id: number, result: any}) => void;
 }

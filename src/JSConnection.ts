@@ -6,16 +6,24 @@ type ExtraServerMethods = {
   // TODO start typing these methods
   'Shell.notify': { payload: any; };
   'Shell.cwdChanged': { cwd: string; };
+  
+  'Shell.subshellDestroyed': { id: number };
+  'Shell.messageFromSubshell': { id: number, message: any };
 }
 type ServerMethods = Protocol.Events & ExtraServerMethods;
 
-type ExtraClientMethods = {
+export type ExtraClientMethods = {
   'Shell.enable': (parmas: {args: string[]}) => {objectId: string};
   'Shell.disable': () => void;
   'Shell.setIsDaemon': (params: {isDaemon: boolean}) => void;
   'Shell.evaluate': (params: {code: string}) => {result: string};
   'Shell.runCommand': (params: {command: string, expression: string}) => Protocol.CommandReturnValues['Runtime.evaluate'];
   'Shell.restore': () => Protocol.CommandReturnValues['Runtime.evaluate']|null;
+
+  'Shell.resolveFileForIframe': (params: {shellIds: number[], filePath: string, search: string, headers: Record<string, string>}) => void;
+  'Shell.createSubshell': (params: { sshAddress: string }) => {id: number};
+  'Shell.sendMessageToSubshell': (params: {id: number, message: {method: string, params: any}}) => void;
+  'Shell.destroySubshell': (params: {id: number}) => void;
 }
 
 type ClientMethods = {

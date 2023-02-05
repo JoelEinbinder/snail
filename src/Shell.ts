@@ -40,10 +40,10 @@ interface ShellDelegate {
 
 interface ConnectionCore {
   send(message: {method: string, params: any, id: number}): void;
-  listen(callback: (message: {method: string, params: any}|{id: number, result: any}) => void): void;
+  onmessage?: (message: {method: string, params: any}|{id: number, result: any}) => void;
   onclose?: () => void;
   destroy(): void;
-  urlForIframe(filePath: string): Promise<string>;
+  urlForIframe(filePath: string, shellIds: number[]): Promise<string>;
   readonly isRestoration: boolean;
 }
 
@@ -107,26 +107,24 @@ export class Shell {
       socketCloseListeners.delete(socketId);
     });
     const core: ConnectionCore = {
-      listen(callback) {
-        socketListeners.set(socketId, callback);
-      },
       send(message) {
         host.notify({method: 'sendMessageToWebSocket', params: {socketId, message}});
       },
       destroy() {
         host.notify({method: 'destroyWebsocket', params: {socketId}});
       },
-      urlForIframe(filePath) {
+      urlForIframe(filePath, shellIds) {
         return host.sendMessage({
           method: 'urlForIFrame',
           params: {
-            socketId,
+            shellIds: [socketId, ...shellIds],
             filePath,
           }
         })
       },
       isRestoration: !!socketPath,
     }
+    socketListeners.set(socketId, message => core.onmessage?.(message));
     return this._setupConnectionInner(core, args, sshAddress);
   }
   async _setupConnectionInner(core: ConnectionCore, args: string[], sshAddress = null) {
@@ -219,7 +217,7 @@ export class Shell {
                         await notify('input', { data, id});
                     },
                     connection,
-                    urlForIframe: filePath => core.urlForIframe(filePath),
+                    urlForIframe: filePath => core.urlForIframe(filePath, []),
                     antiFlicker: this._antiFlicker,
                     browserView: !!(dataObj.browserView),
                   });
@@ -335,7 +333,38 @@ export class Shell {
       ssh: async (sshAddress: string) => {
         const done = startAyncWork('ssh');
         this._lockPrompt();
-        await this._setupConnection([], sshAddress);
+        const { id } = await connection.send('Shell.createSubshell', { sshAddress });
+        const sshCore: ConnectionCore = {
+          destroy: () => {
+            connection.send('Shell.destroySubshell', { id });
+            cleanup();
+          },
+          isRestoration: false,
+          send: message => {
+            connection.send('Shell.sendMessageToSubshell', { id, message });
+          },
+          urlForIframe: async (filePath, shellIds) => {
+            return core.urlForIframe(filePath, [id, ...shellIds]);
+          },
+        };
+        // TODO maybe it would be nicer to have a single listener for this
+        const onSubshellMessage = payload => {
+          if (payload.id === id)
+            sshCore.onmessage?.(payload.message);
+        };
+        const onSubshellDestroyed = payload => {
+          if (payload.id === id) {
+            sshCore.onclose?.();
+            cleanup();
+          }
+        };
+        const cleanup = () => {
+          connection.off('Shell.messageFromSubshell', onSubshellMessage);
+          connection.off('Shell.subshellDestroyed', onSubshellDestroyed);
+        };
+        connection.on('Shell.messageFromSubshell', onSubshellMessage);
+        connection.on('Shell.subshellDestroyed', onSubshellDestroyed);
+        await this._setupConnectionInner(sshCore, [], sshAddress);
         this._unlockPrompt();
         done();
       },

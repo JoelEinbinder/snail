@@ -3,7 +3,7 @@
  * @typedef {import('events').EventEmitter & {send: (message: any) => void}} Client
  */
 
-const { ProtocolProxy } = require('./ProtocolProxy');
+const { ProtocolProxy } = require('../shell/ProtocolProxy');
 /**
  * @typedef {Object} FetchResponse
  * @property {string=} data
@@ -89,7 +89,8 @@ const handler = {
     });
     return runResult.changes;
   },
-  async urlForIFrame({socketId, filePath}) {
+  async urlForIFrame({shellIds, filePath}) {
+    const [socketId] = shellIds;
     const address = await proxies.get(socketId).startOrGetServer(false);
     const url = new URL(`http://localhost:${address.port}`);
     url.pathname = filePath;

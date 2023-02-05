@@ -55,7 +55,7 @@ class ProtocolProxy {
       try {
         const {pathname, search} = new URL(String(req.url), 'http://' + req.headers.host);
         const filePath = decodeURIComponent(pathname);
-        const out = await this.send('Shell.resolveFileForIframe', {filePath, search, headers: req.headers});
+        const out = await this.send('Shell.resolveFileForIframe', {shellIds: [], filePath, search, headers: req.headers});
         if (out.error)
           throw new Error(out.error.message);
         const {result: {response}} = out;

@@ -111,20 +111,28 @@ protocol.registerSchemesAsPrivileged([
 ]);
 app.whenReady().then(() => {
   protocol.registerBufferProtocol('snail', async (request, callback) => {
-    const {host, search, pathname} = new URL('http://' + request.url.substring('snail:'.length));
-    const socketId = parseInt(host.substring('shell-'.length));
-    const filePath = decodeURIComponent(pathname);
-    const out = await proxies.get(socketId).send('Shell.resolveFileForIframe', {filePath, search, headers: request.headers});
+    try {
+      const {host, search, pathname} = new URL('http://' + request.url.substring('snail:'.length));
+      const [socketId, ...shellIds] = host.split('-').slice(1).map(Number);
+      const filePath = decodeURIComponent(pathname);
+      const out = await proxies.get(socketId).send('Shell.resolveFileForIframe', {shellIds, filePath, search, headers: request.headers});
 
-    const {result: {response}} = out;
-    const headers = response.headers || {};
+      const {result: {response}} = out;
+      const headers = response.headers || {};
 
-    callback({
-      data: response.data !== undefined ? Buffer.from(response.data, 'base64') : undefined,
-      statusCode: response.statusCode,
-      mimeType: response.mimeType,
-      headers,
-    });
+      callback({
+        data: response.data !== undefined ? Buffer.from(response.data, 'base64') : undefined,
+        statusCode: response.statusCode,
+        mimeType: response.mimeType,
+        headers,
+      });
+    } catch (e) {
+      console.error(e);
+      callback({
+        statusCode: 500,
+        data: Buffer.from(String(e), 'utf8'),
+      })
+    }
   });
   makeWindow();
 
@@ -362,8 +370,8 @@ const overrides = {
     });
   },
 
-  async urlForIFrame({socketId, filePath}) {
-    const url = new URL(`http://shell-${socketId}`);
+  async urlForIFrame({shellIds, filePath}) {
+    const url = new URL(`http://shell-${shellIds.join('-')}`);
     url.pathname = filePath;
     url.search = '?entry';
     return 'snail://' + url.href.substring('http://'.length);;
