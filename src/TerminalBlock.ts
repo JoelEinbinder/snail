@@ -148,7 +148,6 @@ export class TerminalBlock implements LogItem {
       for (let i = 0; i < buffer.length; i++) {
         const line = buffer.getLine(i);
         if (regex.test(line.translateToString(true))) {
-          console.log('resolve!');
           resolve();
           break;
         }

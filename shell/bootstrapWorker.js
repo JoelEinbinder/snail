@@ -21,6 +21,9 @@ const enabledTransports = new Set();
 let objectIdPromise;
 let lastCommandPromise;
 let lastSubshellId = 0;
+let lastAskPassId = 0;
+/** @type {Map<number, (password: string) => void} */
+const passwordCallbacks = new Map();
 /** @type {Map<number, import('./ProtocolProxy').ProtocolProxy>} */
 const subshells = new Map();
 /** @typedef {import('../src/JSConnection').ExtraClientMethods} ShellHandler */
@@ -106,21 +109,85 @@ const handler = {
     const response = await require('./webserver').resolveFileForIframe(params);
     return {response};
   },
-  'Shell.createSubshell': async ({sshAddress}) => {
-    const { spawnJSProcess } = require('./spawnJSProcess');
+  'Shell.createSubshell': async ({sshAddress, sshArgs}) => {
     const { ProtocolProxy } = require('./ProtocolProxy');
+    const {spawn} = require('child_process');
 
     const id = ++lastSubshellId;
-    const subshell = await spawnJSProcess({ cwd: process.cwd(), sshAddress });
-    const proxy = new ProtocolProxy(subshell, message => {
+    /** @type {import('./ProtocolProxy').ProtocolSocket} */
+    const socket = {
+      send(message) {
+        rpc.notify('message', message);
+      },
+      close() {
+        child.kill();
+      },
+    };
+    const {SSHPassUtility} = require('./sshPassUtility');
+    const sshDir = path.join(pathService.tmpdir(), 'snail-ssh-askpass');
+    fs.mkdirSync(sshDir, {recursive: true, mode: 0o700});
+    const sshPassSocketPath = path.join(sshDir, `${process.pid}-ssh-${id}.socket`);
+    const utility = new SSHPassUtility(sshPassSocketPath, async data => {      
+      const id = ++lastAskPassId;
+      transport.send({method: 'Shell.askPassword', params: {id: lastAskPassId, message: data.message}});
+      return await new Promise(x => passwordCallbacks.set(id, x));
+    });
+    await utility.listeningPromise;
+      
+    const child = spawn('ssh', [...sshArgs, sshAddress, `PATH=$PATH:/usr/local/bin node ~/gap-year/shell/wsPipeWrapper.js '${btoa(JSON.stringify({socketPath: undefined}))}'`], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      detached: false,
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        DISPLAY: 'snail-fake-display-for-askpass',
+        PWD: process.cwd(),
+        SSH_ASKPASS: path.join(__dirname, './sshAskpass.js'),
+        SNAIL_SSH_PASS_SOCKET: sshPassSocketPath,
+        SSH_ASKPASS_REQUIRE: 'always', 
+      }
+    });
+    let startedTerminal = false;
+    let endedTerminal = false;
+    child.stderr.on('data', data => {
+      if (endedTerminal)
+        return;
+      if (!startedTerminal) {
+        transport.send({method: 'Shell.notify', params: { payload: {method: 'startTerminal', params: {id: -1}}}});
+        startedTerminal = true;
+      }
+      transport.send({method: 'Shell.notify', params: { payload: {method: 'data', params: {id: -1, data: String(data).replaceAll('\n', '\r\n')}}}});
+    });
+    const {RPC} = require('../protocol/rpc');
+    const {PipeTransport} = require('../protocol/pipeTransport');
+    const pipeTransport = new PipeTransport(child.stdin, child.stdout);
+    const rpc = RPC(pipeTransport, {
+      message: data => {
+        socket.onmessage?.({data});
+      },
+      ready: () => {
+        socket.onopen?.();
+      }
+    });
+    pipeTransport.onclose = () => {
+      transport?.send({method: 'Shell.subshellDestroyed', params: { id }});
+      utility.close();
+    };
+    
+    const proxy = new ProtocolProxy(socket, message => {
       // TODO what to do when the transport has changed or is gone??
       transport?.send({method: 'Shell.messageFromSubshell', params: { id, message }})
     });
-    subshell.onclose = () => {
-      transport?.send({method: 'Shell.subshellDestroyed', params: { id }})
-    };
     subshells.set(id, proxy);
-
+    await Promise.race([
+      new Promise(x => socket.onopen = x),
+      new Promise(x => child.once('close', x)),
+    ]);
+    if (startedTerminal)
+      transport.send({method: 'Shell.notify', params: { payload: {method: 'endTerminal', params: {id: -1}}}});
+    endedTerminal = true;
+    if (child.exitCode !== null)
+      return { exitCode: child.exitCode };
     return { id };
   },
   'Shell.sendMessageToSubshell': async ({id, message}) => {
@@ -132,6 +199,10 @@ const handler = {
   },
   'Shell.destroySubshell': async ({id}) => {
     subshells.get(id)?.close();
+  },
+  'Shell.providePassword': async ({id, password}) => {
+    passwordCallbacks.get(id)(password);
+    passwordCallbacks.delete(id);
   },
   __proto__: null,
 };

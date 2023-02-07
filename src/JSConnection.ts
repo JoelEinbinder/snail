@@ -9,6 +9,7 @@ type ExtraServerMethods = {
   
   'Shell.subshellDestroyed': { id: number };
   'Shell.messageFromSubshell': { id: number, message: any };
+  'Shell.askPassword': { id: number, message: string };
 }
 type ServerMethods = Protocol.Events & ExtraServerMethods;
 
@@ -21,9 +22,10 @@ export type ExtraClientMethods = {
   'Shell.restore': () => Protocol.CommandReturnValues['Runtime.evaluate']|null;
 
   'Shell.resolveFileForIframe': (params: {shellIds: number[], filePath: string, search: string, headers: Record<string, string>}) => void;
-  'Shell.createSubshell': (params: { sshAddress: string }) => {id: number};
+  'Shell.createSubshell': (params: { sshAddress: string, sshArgs: string[] }) => ({id: number}|{exitCode: number});
   'Shell.sendMessageToSubshell': (params: {id: number, message: {method: string, params: any}}) => void;
   'Shell.destroySubshell': (params: {id: number}) => void;
+  'Shell.providePassword': (params: { id: number, password: string }) => void;
 }
 
 type ClientMethods = {

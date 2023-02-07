@@ -22,6 +22,7 @@ import { Protocol } from './protocol';
 import { cdpManager } from './CDPManager';
 import { randomUUID } from './uuid';
 import { startAyncWork } from './async';
+import { AskPasswordBlock } from './AskPasswordBlock';
 
 const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
@@ -64,7 +65,8 @@ export class Shell {
   private _connectionToDestroy = new WeakMap<JSConnection, (() => void)>();
   private _connectionNameEvent = new JoelEvent<string>('');
   private _connectionToSSHAddress = new WeakMap<JSConnection, string>();
-  private _antiFlicker = new AntiFlicker(() => this._lockPrompt(), () => this._unlockPrompt());
+  private _antiFlicker = new AntiFlicker(() => this._lockPrompt('AntiFlicker'), unlockPrompt => unlockPrompt());
+  private _promptLocks = new Set<{ name?: string }>();
   private _delegate?: ShellDelegate;
   private _connectionNameElement = document.createElement('div');
   private _connectionIsDaemon = new WeakMap<JSConnection, boolean>();
@@ -154,6 +156,13 @@ export class Shell {
         return;
       this.addItem(new JSLogBlock(message, connection, this._size));
     });
+    connection.on('Shell.askPassword', ({ id, message}) => {
+      const item = new AskPasswordBlock(message, password => {
+        connection.send('Shell.providePassword', { id, password });
+      });
+      this.addItem(item);
+      this.activeItem.dispatch(item);
+    });
     connection.on('Runtime.executionContextDestroyed', message => {
         if (message.executionContextId === 1)
           destroy();
@@ -173,13 +182,12 @@ export class Shell {
         terminals.delete(id);
         this.activeItem.dispatch(null);
         await cleanup();
-        this._unlockPrompt();
         titleThrottle.update('');
       },
       startTerminal:({id}: {id: number}) => {
         const progressBlock = new ProgressBlock();
         this.addItem(progressBlock);
-        this._lockPrompt();
+        const unlockPrompt = this._lockPrompt('startTerminal');
         let activeTerminalBlock: TerminalBlock = null;
         let activeIframeBlock: IFrameBlock = null;
         this._refreshActiveIframe = () => {
@@ -268,11 +276,12 @@ export class Shell {
         terminals.set(id, {
           processor,
           cleanup: async () => {
-            await terminalTaskQueue.queue(() => {
+            await terminalTaskQueue.queue(async () => {
               if (activeIframeBlock)
                 activeIframeBlock.didClose();
               progressBlock.deactivate();
-              return closeActiveTerminalBlock();
+              await closeActiveTerminalBlock();
+              unlockPrompt();
             });
         }});
         const closeActiveTerminalBlock = async () => {
@@ -325,15 +334,22 @@ export class Shell {
       },
       nod: async (args: string[]) => {
         const done = startAyncWork('nod');
-        this._lockPrompt();
+        const unlockPrompt = this._lockPrompt('nod');
         await this._setupConnection(args);
-        this._unlockPrompt();
+        unlockPrompt();
         done();
       },
-      ssh: async (sshAddress: string) => {
+      ssh: async ({sshAddress, sshArgs}: {sshAddress: string, sshArgs: string[]}) => {
         const done = startAyncWork('ssh');
-        this._lockPrompt();
-        const { id } = await connection.send('Shell.createSubshell', { sshAddress });
+        const unlockPrompt = this._lockPrompt('ssh');
+        const subshellResult = await connection.send('Shell.createSubshell', { sshAddress, sshArgs });
+        // Setting up ssh may have failed or been canceled
+        if ('exitCode' in subshellResult) {
+          unlockPrompt();
+          done();
+          return;
+        }
+        const { id } = subshellResult;
         const sshCore: ConnectionCore = {
           destroy: () => {
             connection.send('Shell.destroySubshell', { id });
@@ -365,14 +381,15 @@ export class Shell {
         connection.on('Shell.messageFromSubshell', onSubshellMessage);
         connection.on('Shell.subshellDestroyed', onSubshellDestroyed);
         await this._setupConnectionInner(sshCore, [], sshAddress);
-        this._unlockPrompt();
+        unlockPrompt();
         done();
       },
       reconnect: async (socketPath: string) => {
         const done = startAyncWork('reconnect');
-        this._lockPrompt();
+        const unlockPrompt = this._lockPrompt('reconnect');
+        // TODO switch to Shell.createReconnectSubshell api
         await this._setupConnection([], this._connectionToSSHAddress.get(connection), socketPath);
-        this._unlockPrompt();
+        unlockPrompt();
         done();
       },
       code: async (file: string) => {
@@ -516,7 +533,7 @@ export class Shell {
       return;
     
     titleThrottle.update(command);
-    this._lockPrompt();
+    const unlockPrompt = this._lockPrompt('runCommand');
     this.activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
     const jsCode = await this._transformCode(command);
@@ -537,7 +554,7 @@ export class Shell {
         cdpManager.removeDebuggingInfoForTarget(this._uuid);
         return;
       }
-      this._unlockPrompt();
+      unlockPrompt();
       return;
     }
     this._clearCache();
@@ -576,7 +593,7 @@ export class Shell {
     }
     if (this.activeItem.current === commandBlock)
       this.activeItem.dispatch(null);
-    this._unlockPrompt();
+    unlockPrompt();
     this._addJSBlock(result, connection, commandBlock);
   }
 
@@ -613,12 +630,19 @@ export class Shell {
     return this._cachedEvaluationResult.get(code);
   }
 
-  _lockPrompt() {
-    this.promptLock.dispatch(this.promptLock.current + 1);
+  _lockPrompt(name?: string) {
+    const lock = { name };
+    this._promptLocks.add(lock);
+    this.promptLock.dispatch(this._promptLocks.size);
+    return () => {
+      this._promptLocks.delete(lock);
+      this.promptLock.dispatch(this._promptLocks.size);
+    };
   }
 
   _unlockPrompt() {
     this.promptLock.dispatch(this.promptLock.current - 1);
+    console.log('unlock prompt', this.promptLock.current);
   }
 
   get sshAddress() {

@@ -1,17 +1,18 @@
 import { startAyncWork } from "./async";
 
-export class AntiFlicker {
+export class AntiFlicker<T> {
   private count = 0;
   private _finishedWork?: () => void;
+  private _lockReturnValue?: T;
   constructor(
-    private lock: () => void,
-    private unlock: () => void,
+    private lock: () => T,
+    private unlock: (lockReturnValue: T) => void,
   ) {}
   expectToDraw(maxDelay: number) {
     this.count++;
     if (this.count === 1) {
       this._finishedWork = startAyncWork('anti flicker');
-      this.lock();
+      this._lockReturnValue = this.lock();
     }
     const unlock = () => {
       if (!timeout)
@@ -20,9 +21,10 @@ export class AntiFlicker {
       timeout = null;
       this.count--;
       if (this.count === 0) {
-        this.unlock();
+        this.unlock(this._lockReturnValue!);
         this._finishedWork();
         delete this._finishedWork;
+        delete this._lockReturnValue;
       }
     }
     let timeout = setTimeout(unlock, maxDelay);

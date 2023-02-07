@@ -10,7 +10,7 @@ const pathService = require('../path_service/');
  * aliases?: {[key: string]: string[]},
  * cwd?: string,
  * nod?: string[],
- * ssh?: string,
+ * ssh?: { sshAddress: string, sshArgs: string[] },
  * reconnect?: string,
  * code?: string,
  * exit?: number,
@@ -126,8 +126,7 @@ const builtins = {
             return 'pass';
         if (!changes)
             changes = {};
-        // TODO nonAddressArgs
-        changes.ssh = address;
+        changes.ssh = { sshAddress: address, sshArgs: nonAddressArgs };
         return Promise.resolve(0);
     },
     reconnect: async (args, stdout, stderr) => {

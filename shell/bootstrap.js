@@ -11,7 +11,7 @@ worker.on('exit', code => {
  * aliases?: {[key: string]: string[]},
  * cwd?: string,
  * nod?: string[],
- * ssh?: string,
+ * ssh?: { sshAddress: string, sshArgs: string[] },
  * reconnect?: string,
  * code?: string,
  * exit?: number,
