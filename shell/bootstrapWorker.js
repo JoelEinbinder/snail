@@ -133,18 +133,17 @@ const handler = {
       return await new Promise(x => passwordCallbacks.set(id, x));
     });
     await utility.listeningPromise;
-      
+    
     const child = spawn('ssh', [...sshArgs, sshAddress, `PATH=$PATH:/usr/local/bin node ~/gap-year/shell/wsPipeWrapper.js '${btoa(JSON.stringify({socketPath: undefined}))}'`], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
       cwd: process.cwd(),
       env: {
         ...process.env,
-        DISPLAY: 'snail-fake-display-for-askpass',
         PWD: process.cwd(),
         SSH_ASKPASS: path.join(__dirname, './sshAskpass.js'),
         SNAIL_SSH_PASS_SOCKET: sshPassSocketPath,
-        SSH_ASKPASS_REQUIRE: 'always', 
+        SSH_ASKPASS_REQUIRE: 'force',
       }
     });
     let startedTerminal = false;
