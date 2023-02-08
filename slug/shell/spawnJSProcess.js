@@ -25,7 +25,7 @@ async function spawnJSProcess({cwd, sshAddress, socketPath}) {
     };
     if (!cwd)
       cwd = require('../path_service/').homedir();
-    const child = spawn('ssh', [sshAddress, `PATH=$PATH:/usr/local/bin node ~/gap-year/shell/wsPipeWrapper.js '${btoa(JSON.stringify({socketPath}))}'`], {
+    const child = spawn('ssh', [sshAddress, `PATH=$PATH:/usr/local/bin node ~/gap-year/slug/shell/wsPipeWrapper.js '${btoa(JSON.stringify({socketPath}))}'`], {
       stdio: ['pipe', 'pipe', 'inherit'],
       detached: false,
       cwd,

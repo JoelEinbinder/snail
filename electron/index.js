@@ -1,6 +1,6 @@
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, session } = require('electron');
-const { handler, proxies } = require('../host');
+const { handler, proxies } = require('../slug/host');
 const path = require('path');
 const headless = process.argv.includes('--test-headless');
 let windowNumber = 0;
@@ -116,7 +116,8 @@ app.whenReady().then(() => {
       const [socketId, ...shellIds] = host.split('-').slice(1).map(Number);
       const filePath = decodeURIComponent(pathname);
       const out = await proxies.get(socketId).send('Shell.resolveFileForIframe', {shellIds, filePath, search, headers: request.headers});
-
+      if (out.error)
+        throw out.error.message;
       const {result: {response}} = out;
       const headers = response.headers || {};
 

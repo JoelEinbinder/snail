@@ -1,4 +1,4 @@
-import { Editor } from "../editor/js/editor";
+import { Editor } from "../slug/editor/js/editor";
 import { startAyncWork } from "./async";
 import { JoelEvent } from "./JoelEvent";
 import { SuggestBox } from "./SuggestBox";

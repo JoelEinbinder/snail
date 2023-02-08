@@ -134,7 +134,7 @@ const handler = {
     });
     await utility.listeningPromise;
     
-    const child = spawn('ssh', [...sshArgs, sshAddress, `PATH=$PATH:/usr/local/bin node ~/gap-year/shell/wsPipeWrapper.js '${btoa(JSON.stringify({socketPath: undefined}))}'`], {
+    const child = spawn('ssh', [...sshArgs, sshAddress, `PATH=$PATH:/usr/local/bin node ~/gap-year/slug/shell/wsPipeWrapper.js '${btoa(JSON.stringify({socketPath: undefined}))}'`], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
       cwd: process.cwd(),

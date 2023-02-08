@@ -1,4 +1,4 @@
-import { Editor, TextRange } from "../editor/js/editor";
+import { Editor, TextRange } from "../slug/editor/js/editor";
 import { JoelEvent } from "./JoelEvent";
 import { LogItem } from "./LogView";
 import { setSelection } from "./selection";

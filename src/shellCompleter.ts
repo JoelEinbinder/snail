@@ -21,7 +21,7 @@ registry.set('sudo', async (shell, line, abortSignal) => {
 
 export function makeShellCompleter(shell: Shell): Completer {
   return async (line: string, abortSignal: AbortSignal) => {
-    const {getAutocompletePrefix} = await import('../shjs/transform');
+    const {getAutocompletePrefix} = await import('../slug/shjs/transform');
     const prefix = getAutocompletePrefix(line, await shell.globalVars());
     let result: CompletionResult;
     if (prefix === null)

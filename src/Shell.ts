@@ -499,7 +499,7 @@ export class Shell {
   }
 
   async _transformCode(code: string) {
-    const { transformCode } = await import('../shjs/transform');
+    const { transformCode } = await import('../slug/shjs/transform');
     const jsCode = transformCode(code, 'global.pty', await this.globalVars());
     return jsCode;
   }

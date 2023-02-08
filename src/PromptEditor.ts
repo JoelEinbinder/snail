@@ -1,7 +1,7 @@
-import { Editor } from "../editor/js/editor";
+import { Editor } from "../slug/editor/js/editor";
 import { Autocomplete } from "./autocomplete";
 import type { Shell } from "./Shell";
-import '../shjs/editorMode';
+import '../slug/shjs/editorMode';
 import { makeShellCompleter } from "./shellCompleter";
 import './completions/git';
 import './completions/npx';
