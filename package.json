@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "start": "SNAIL_DEBUG_URL=http://localhost/gap-year/ electron .",
-    "test": "cd shjs; mocha",
+    "test": "cd slug/shjs; mocha",
+    "type": "tsc -p src/tsconfig.json",
     "build": "node utils/esbuild.js",
     "bundle": "node utils/bundle.js"
   },

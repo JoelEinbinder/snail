@@ -1,6 +1,6 @@
 import { startAyncWork } from "./async";
 
-export class AntiFlicker<T> {
+export class AntiFlicker<T = unknown> {
   private count = 0;
   private _finishedWork?: () => void;
   private _lockReturnValue?: T;

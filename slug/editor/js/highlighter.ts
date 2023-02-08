@@ -3,7 +3,7 @@ import { isSelectionCollapsed } from './model.js';
 import { getMode } from './modeRegistry';
 import { StringStream } from './StringStream';
 
-type Token = {
+export type Token = {
   length: number;
   color?: string;
   background?: string;

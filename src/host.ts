@@ -1,4 +1,4 @@
-/// <reference path="../iframe/types.d.ts" />
+/// <reference path="../slug/iframe/types.d.ts" />
 export interface IHostAPI {
   sendMessage: (message: {method: string, params?: any}) => Promise<any>;
   notify: (message: {method: string, params?: any}) => void;

@@ -280,6 +280,7 @@ function javascriptMode(config, parserConfig) {
     for (var i = arguments.length - 1; i >= 0; i--) cx.cc.push(arguments[i]);
   }
   function cont() {
+    //@ts-ignore
     pass.apply(null, arguments);
     return true;
   }
