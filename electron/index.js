@@ -1,6 +1,6 @@
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, session } = require('electron');
-const { handler, proxies } = require('../slug/host');
+const { handler, proxies } = require('../host');
 const path = require('path');
 const headless = process.argv.includes('--test-headless');
 let windowNumber = 0;

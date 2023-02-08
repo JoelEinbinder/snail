@@ -40,7 +40,7 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
     this._transport.send(message);
     const data = await promise;
     if (data.error)
-      throw new Error(method + ': ' + data.error.message);
+      throw new Error(String(method) + ': ' + data.error.message);
     return data.result;
   }
 

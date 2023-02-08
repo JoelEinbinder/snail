@@ -1,6 +1,6 @@
 const {EventEmitter} = require('events');
 const {handler} = require('../host/');
-const {PipeTransport} = require('../protocol/pipeTransport');
+const {PipeTransport} = require('../slug/protocol/pipeTransport');
 process.stdin.on('end', () => process.exit());
 const transport = new PipeTransport(process.stdout, process.stdin);
 

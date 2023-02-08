@@ -8,9 +8,9 @@ export interface IHostAPI {
 
 function makeHostAPI(): IHostAPI {
   if ('electronAPI' in window)
-    return window['electronAPI'];
+    return window['electronAPI'] as IHostAPI;
   if ('acquireVsCodeApi' in window) {
-    const api = window['acquireVsCodeApi']();
+    const api = (window['acquireVsCodeApi'] as any)();
     const {host, callback} = hostApiHelper('vscode', message => {
       api.postMessage(message);
     });
@@ -21,7 +21,7 @@ function makeHostAPI(): IHostAPI {
     });
     return host;
   }
-  if ('d4' in window) {
+  if (window.d4) {
     window.d4.setIsFullscreen(true);
     const {host, callback} = hostApiHelper('d4', message => {
       if (message.method === 'contextMenu') {

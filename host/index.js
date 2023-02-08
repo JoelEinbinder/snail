@@ -3,7 +3,7 @@
  * @typedef {import('events').EventEmitter & {send: (message: any) => void}} Client
  */
 
-const { ProtocolProxy } = require('../shell/ProtocolProxy');
+const { ProtocolProxy } = require('../slug/shell/ProtocolProxy');
 /**
  * @typedef {Object} FetchResponse
  * @property {string=} data
@@ -28,7 +28,7 @@ const handler = {
       proxies.delete(socketId);
       proxy.close();
     }
-    const { spawnJSProcess } = require('../shell/spawnJSProcess');
+    const { spawnJSProcess } = require('../slug/shell/spawnJSProcess');
     const socketPromise = spawnJSProcess({cwd, sshAddress, socketPath});
     const socket = await socketPromise;
     const socketId = ++lastWebsocketId;
@@ -136,7 +136,7 @@ async function getDatabase() {
     return database;
   const path = require('path');
   const sqlite3 = require('sqlite3');
-  database = new sqlite3.Database(path.join(require('../path_service/').homedir(), '.terminal-history.sqlite3'));
+  database = new sqlite3.Database(path.join(require('../slug/path_service').homedir(), '.terminal-history.sqlite3'));
   await new Promise(x => database.run(`CREATE TABLE IF NOT EXISTS history (
     command_id INTEGER PRIMARY KEY AUTOINCREMENT,
     start INTEGER,

@@ -416,7 +416,7 @@ export class IFrameBlock implements LogItem {
 
   async serializeForTest(): Promise<any> {
     const id = ++this._lastMessageId;
-    const {json} = await new Promise(resolve => {
+    const {json} = await new Promise<any>(resolve => {
       this._messageCallbacks.set(id, resolve);
       this._webContentView.postMessage({id, method: 'requestJSON'});
     });

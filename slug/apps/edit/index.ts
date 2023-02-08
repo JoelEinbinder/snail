@@ -1,5 +1,5 @@
 /// <reference path="../../iframe/types.d.ts" />
-/// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
+/// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import './index.css';
 try {
 await loadScript("../../node_modules/monaco-editor/min/vs/loader.js");

@@ -6,5 +6,8 @@
   "style": "css/xterm.css",
   "types": "typings/xterm.d.ts",
   "repository": "https://github.com/xtermjs/xterm.js",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "reflect-metadata": "^0.1.13"
+  }
 }
