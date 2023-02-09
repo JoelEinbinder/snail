@@ -15,10 +15,15 @@ let lastWebsocketId = 0;
 /** @type {Map<number, ProtocolProxy>} */
 const proxies = new Map();
 const handler = {
+  async obtainWebSocketId() {
+    return ++lastWebsocketId;
+  },
   /**
    * @param {Client} sender
    */
-  async createJSShell({cwd, sshAddress, socketPath}, sender) {
+  async createJSShell({cwd, sshAddress, socketPath, socketId}, sender) {
+    if (proxies.has(socketId))
+      throw new Error('Socket already exists');
     sender.on('destroyed', destroy);
 
     async function destroy() {
@@ -29,9 +34,32 @@ const handler = {
       proxy.close();
     }
     const { spawnJSProcess } = require('../slug/shell/spawnJSProcess');
-    const socketPromise = spawnJSProcess({cwd, sshAddress, socketPath});
+    let startedTerminal = false;
+    let endedTerminal = false;
+    const {socketPromise, err} = spawnJSProcess({cwd, sshAddress, socketPath});
+    err.on('data', data => {
+      if (endedTerminal)
+        return;
+      if (!startedTerminal) {
+        sender.send({ method: 'websocket', params: { socketId, message: {
+          method: 'Shell.notify',
+          params: { payload: {method: 'startTerminal', params: {id: -1}}}
+        }}});
+        startedTerminal = true;
+      }
+      sender.send({ method: 'websocket', params: { socketId, message: {
+        method: 'Shell.notify',
+        params: { payload: {method: 'data', params: {id: -1, data: String(data).replaceAll('\n', '\r\n')}}}
+      }}});
+    })
     const socket = await socketPromise;
-    const socketId = ++lastWebsocketId;
+    endedTerminal = true;
+    if (startedTerminal) {
+      sender.send({ method: 'websocket', params: { socketId, message: {
+        method: 'Shell.notify',
+        params: { payload: {method: 'endTerminal', params: {id: -1}}}
+      }}});
+    }
     const proxy = new ProtocolProxy(socket, message => {
       sender.send({ method: 'websocket', params: { socketId, message }});
     });
@@ -40,7 +68,6 @@ const handler = {
     }
     proxies.set(socketId, proxy);
     await new Promise(x => socket.onopen = x);
-    return { socketId };
   },
   async sendMessageToWebSocket({socketId, message}, sender) {
     const response = await proxies.get(socketId).send(message.method, message.params);

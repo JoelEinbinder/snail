@@ -24,7 +24,6 @@ import { randomUUID } from './uuid';
 import { startAyncWork } from './async';
 import { AskPasswordBlock } from './AskPasswordBlock';
 
-const shells = new Set<Shell>();
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
 const socketCloseListeners = new Map<number, () => void>();
 
@@ -44,6 +43,7 @@ interface ConnectionCore {
   onmessage?: (message: {method: string, params: any}|{id: number, result: any}) => void;
   onclose?: () => void;
   destroy(): void;
+  initialize(): Promise<void>;
   urlForIframe(filePath: string, shellIds: number[]): Promise<string>;
   readonly isRestoration: boolean;
 }
@@ -73,7 +73,9 @@ export class Shell {
   private _refreshActiveIframe?: () => void;
   //@ts-ignore
   private _uuid: string = randomUUID();
-  private constructor() {
+  private _setupUnlock = this._lockPrompt('setupInitialConnection');
+  constructor() {
+    console.time('create shell');
     this._connectionNameElement.classList.add('connection-name');
     this._connectionNameEvent.on(name => {
       this._connectionNameElement.textContent = name;
@@ -93,16 +95,8 @@ export class Shell {
   }
 
   async _setupConnection(args: string[], sshAddress = null, socketPath = null) {
-    const {socketId} = await host.sendMessage({
-      method: 'createJSShell',
-      params: {
-        // cwd comes from the top level because it has to match the host.
-        // TODO get this directly form the host?
-        cwd: this._connections[0] ? this._connections[0].cwd : localStorage.getItem('cwd') || '',
-        socketPath,
-        sshAddress,
-      }
-    });
+    const socketId = await host.sendMessage({ method: 'obtainWebSocketId' });
+
     socketCloseListeners.set(socketId, () => {
       core.onclose?.();
       socketListeners.delete(socketId);
@@ -123,6 +117,19 @@ export class Shell {
             filePath,
           }
         })
+      },
+      initialize: async () => {
+        return host.sendMessage({
+          method: 'createJSShell',
+          params: {
+            // cwd comes from the top level because it has to match the host.
+            // TODO get this directly form the host?
+            cwd: this._connections[0] ? this._connections[0].cwd : localStorage.getItem('cwd') || '',
+            socketPath,
+            sshAddress,
+            socketId,
+          }
+        });
       },
       isRestoration: !!socketPath,
     }
@@ -362,6 +369,14 @@ export class Shell {
           urlForIframe: async (filePath, shellIds) => {
             return core.urlForIframe(filePath, [id, ...shellIds]);
           },
+          async initialize() {
+            // nothing to do here, because we already made the subshell.
+            // TODO should create the subshell here after getting the id above
+            // stderr from createSubshell should appear in the inner connection
+            // Does that make sense though? Not really because its clearly part of the
+            // outer connection output. Consider "echo foo && ssh2 invalidremote"
+            // The foo and error from invalidremote should be part of the same connection log
+          }
         };
         // TODO maybe it would be nicer to have a single listener for this
         const onSubshellMessage = payload => {
@@ -435,6 +450,7 @@ export class Shell {
       this._connectionNameEvent.dispatch(this._connectionToName.get(this.connection));
     }
     this._connectionToDestroy.set(connection, destroy);
+    await core.initialize();
     const {objectId: notifyObjectId} = await connection.send('Shell.enable', {
       args
     });
@@ -455,14 +471,13 @@ export class Shell {
     }
   }
 
-  static async create(): Promise<Shell> {
-    console.time('create shell');
+  async setupInitialConnection() {
+    if (this.connection)
+      throw new Error('already has a connection');
     const {searchParams} = new URL(location.href);
-    const shell = new Shell();
-    shells.add(shell);
-    await shell._setupConnection([], searchParams.get('sshAddress'), searchParams.get('socketPath'));
+    await this._setupConnection([], searchParams.get('sshAddress'), searchParams.get('socketPath'));
     console.timeEnd('create shell');
-    return shell;
+    this._setupUnlock(); // prompt starts locked
   }
 
   private get connection() {
@@ -638,11 +653,6 @@ export class Shell {
       this._promptLocks.delete(lock);
       this.promptLock.dispatch(this._promptLocks.size);
     };
-  }
-
-  _unlockPrompt() {
-    this.promptLock.dispatch(this.promptLock.current - 1);
-    console.log('unlock prompt', this.promptLock.current);
   }
 
   get sshAddress() {
