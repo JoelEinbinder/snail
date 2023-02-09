@@ -72,8 +72,11 @@ class FolderTreeItem implements TreeItem {
     this._titleElement.addEventListener('keydown', event => {
       if (event.target !== this._titleElement)
         return;
-      if (handleKeyEventForTreeItem(event, this))
+      if (handleKeyEventForTreeItem(event, this)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
         return;
+      }
       // todo enter key to handle splitting selection from showing folder
     });
     this._titleElement.onmousedown = e => {
