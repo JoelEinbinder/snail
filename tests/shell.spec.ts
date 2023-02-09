@@ -64,6 +64,12 @@ test('opens autocomplete', async ({ shell }) => {
   })
 });
 
+test('sees aliases in autocomplete', async ({ shell }) => {
+  await shell.runCommand('alias my_alias_for_test ls');
+  await shell.typeInPrompt('my_alias');
+  expect((await shell.serialize()).prompt.autocomplete).toEqual(['my_alias_for_test']);
+});
+
 
 test('can regular ssh into docker', async ({ shell, docker }) => {
   shell.waitForLine(/password: /).then(async () => {

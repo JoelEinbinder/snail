@@ -14,6 +14,12 @@ worker_threads.parentPort.on('message', changes => {
     for (const key in changes.env)
       process.env[key] = changes.env[key];
   }
+  if (changes.aliases) {
+    const {setAlias} = require('../shjs/index');
+    for (const key of Object.keys(changes.aliases)) {
+      setAlias(key, changes.aliases[key]);
+    }
+  }
 });
 const shellState = new ShellState();
 let isDaemon = false;
