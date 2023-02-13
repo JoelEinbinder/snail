@@ -11,7 +11,7 @@ const config: PlaywrightTestConfig = {
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'line',
+  reporter: 'list',
   use: {
     actionTimeout: 0,
     trace: 'retain-on-failure',

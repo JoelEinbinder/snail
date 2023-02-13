@@ -384,14 +384,13 @@ export class Shell {
             sshCore.onmessage?.(payload.message);
         };
         const onSubshellDestroyed = payload => {
-          if (payload.id === id) {
-            sshCore.onclose?.();
+          if (payload.id === id)
             cleanup();
-          }
         };
         const cleanup = () => {
           connection.off('Shell.messageFromSubshell', onSubshellMessage);
           connection.off('Shell.subshellDestroyed', onSubshellDestroyed);
+          sshCore.onclose?.();
         };
         connection.on('Shell.messageFromSubshell', onSubshellMessage);
         connection.on('Shell.subshellDestroyed', onSubshellDestroyed);

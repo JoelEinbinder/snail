@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import os from 'os';
 
 test('can run a command', async ({ shell }) => {
   await shell.runCommand('echo hello');
@@ -113,6 +114,9 @@ test('can ssh2 into docker', async ({ shell, docker, slugURL }) => {
   ].join(' ');
   await shell.runCommand(sshCommand);
   await shell.runCommand('whoami');
+  await shell.runCommand('exit');
+  await shell.runCommand('whoami');
+
   expect(await shell.serialize()).toEqual({
     log: [
       `> ${sshCommand}`,
@@ -120,7 +124,10 @@ test('can ssh2 into docker', async ({ shell, docker, slugURL }) => {
       'Downloading snail runtime...\n' +
       'Downloading node for Linux aarch64...',
       '> whoami',
-      'snailuser'
+      'snailuser',
+      '> exit',
+      '> whoami',
+      os.userInfo().username,
     ],
     prompt: { value: '' }
   });
