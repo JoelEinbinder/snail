@@ -346,10 +346,10 @@ export class Shell {
         unlockPrompt();
         done();
       },
-      ssh: async ({sshAddress, sshArgs}: {sshAddress: string, sshArgs: string[]}) => {
+      ssh: async ({sshAddress, sshArgs, env}: {sshAddress: string, sshArgs: string[], env: Record<string, string>}) => {
         const done = startAyncWork('ssh');
         const unlockPrompt = this._lockPrompt('ssh');
-        const subshellResult = await connection.send('Shell.createSubshell', { sshAddress, sshArgs });
+        const subshellResult = await connection.send('Shell.createSubshell', { sshAddress, sshArgs, env });
         // Setting up ssh may have failed or been canceled
         if ('exitCode' in subshellResult) {
           unlockPrompt();

@@ -1,5 +1,6 @@
 {
   "name": "slug",
+  "version": "0.5",
   "private": true,
   "dependencies": {
     "acorn": "^8.7.0",

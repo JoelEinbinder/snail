@@ -87,19 +87,38 @@ test('can regular ssh into docker', async ({ shell, docker }) => {
   });
 });
 
-test.fixme('can ssh2 into docker', async ({ shell, docker }) => {
+test('can ssh2 into docker', async ({ shell, docker, slugURL }) => {
   shell.waitForLine(/password: /).then(async () => {
     await shell.page.keyboard.type('mypassword');
     await shell.page.keyboard.press('Enter');  
   });
-
-  // ConnectionAttempts because sshd really doesnt start up when it says it starts up
-  await shell.runCommand(`ssh2 -o ConnectionAttempts=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port}`);
+  let SNAIL_SLUGS_URL = slugURL; 
+  const parsedURL = new URL(slugURL);
+  const extraArgs:string[] = [];
+  if (parsedURL.hostname === 'localhost') {
+    SNAIL_SLUGS_URL = `http://localhost:${parsedURL.port}`;
+    extraArgs.push('-R', `${parsedURL.port}:localhost:${parsedURL.port}`)
+  }
+  const sshCommand = [
+    `SNAIL_SLUGS_URL=${JSON.stringify(SNAIL_SLUGS_URL)}`,
+    `ssh2`,
+    ...extraArgs,
+    // ConnectionAttempts because sshd really doesnt start up when it says it starts up
+    `-o ConnectionAttempts=10`,
+    `-o UserKnownHostsFile=/dev/null`,
+    `-o StrictHostKeyChecking=no`,
+    `-o LogLevel=ERROR`,
+    docker.address,
+    `-p ${docker.port}`
+  ].join(' ');
+  await shell.runCommand(sshCommand);
   await shell.runCommand('whoami');
   expect(await shell.serialize()).toEqual({
     log: [
-      `> ssh -o ConnectionAttempts=10 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=ERROR ${docker.address} -p ${docker.port} echo done`,
-      `${docker.address}'s password: \n`,
+      `> ${sshCommand}`,
+      { input: '<password>', message: `${docker.address}'s password: `},
+      'Downloading snail runtime...\n' +
+      'Downloading node for Linux aarch64...',
       '> whoami',
       'snailuser'
     ],

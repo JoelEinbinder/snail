@@ -6,7 +6,8 @@ import { ShellModel } from './ShellModel';
 import {spawn, execSync} from 'child_process';
 import getPort from 'get-port';
 import net from 'net';
-
+import http from 'http';
+import { buildSlugIfNeeded } from '../utils/build-slug-if-needed.js';
 type SshAddress = {
   address: string,
   port: number,
@@ -20,6 +21,7 @@ export const test = _test.extend<{
   waitForPort: (port: number) => Promise<void>;
 }, {
   imageId: string;
+  slugURL: string;
 }>({
   workingDir: async ({ }, use) => {
     const workingDir = test.info().outputPath('working-dir');
@@ -77,6 +79,25 @@ export const test = _test.extend<{
     });
     token.canceled = true;
   },
+  slugURL: [async ({}, use) => {
+    await buildSlugIfNeeded('linux', 'arm64');
+    const server = http.createServer((req, res) => {
+      const slugsDir = path.join(__dirname, '..', 'utils', 'built-slugs');
+      const slugPath = path.join(slugsDir, req.url!);
+      if (!slugPath.startsWith(slugsDir)) {
+        res.writeHead(403);
+        res.end();
+        return;
+      }
+      res.writeHead(200);
+      fs.createReadStream(slugPath).pipe(res);
+    });
+    server.listen();
+    await new Promise(x => server.once('listening', x));
+    const port: number = (server.address() as any).port;
+    await use(`http://localhost:${port}`);
+    server.close();
+  }, { scope: 'worker', option: true, timeout: 30_000 }],
   docker: async ({ imageId, waitForPort }, use) => {
     const port = await getPort();
     const docker = spawn('docker', ['run', '--rm', '-p', `${port}:22`, imageId], {
@@ -107,6 +128,15 @@ export const test = _test.extend<{
       sources: true,
     });
     const page = await app.firstWindow();
+    const logs: string[] = [];
+    page.on('console', log => {
+      logs.push(log.text());
+    });
+    page.on('pageerror', event => {
+      logs.push(event.message);
+      if (event.stack)
+        logs.push(event.stack);
+    });
     const shell = await ShellModel.create(page);
     await use(shell);
     await app.context().tracing.stop({
@@ -117,6 +147,11 @@ export const test = _test.extend<{
       test.info().attach('waits', {
         body: waits,
       });
+    }
+    if (logs.length) {
+      test.info().attach('console', {
+        body: logs.join('\n'),
+      });      
     }
     await app.close();
   }

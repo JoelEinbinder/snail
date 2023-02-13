@@ -9,7 +9,6 @@ class Transport {
     /** @type {(message: any) => void} */
     this.onmessage = undefined;
     process.stdin.on('data', buffer => this._dispatch(buffer));
-    
   }
   send(data) {
     const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
@@ -83,5 +82,7 @@ rpc.notify('setContent', {
   relativePath,
   newFile, 
 });
+// TODO thread stdin in case it had some data in it before we went to web mode
+// send a secret message and wait for it to come back.
 process.stdin.setRawMode(true);
 // process.exit(0);

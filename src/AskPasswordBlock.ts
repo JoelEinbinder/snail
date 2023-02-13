@@ -30,7 +30,7 @@ export class AskPasswordBlock implements LogItem {
   dispose(): void {
   }
   async serializeForTest(): Promise<any> {
-    return { message: this._message, input: this._input.value };
+    return { message: this._message, input: this._input.isConnected ? this._input.value : this._element.childNodes[1].textContent };
   }
   async waitForLineForTest(regex: RegExp, signal?: AbortSignal): Promise<void> {
     if (regex.test(this._message))

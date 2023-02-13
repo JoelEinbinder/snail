@@ -9,7 +9,7 @@
     "bundle": "node utils/bundle.js",
     "check": "npm run type && npm run build && npm run test && playwright test"
   },
-  "version": "0.4",
+  "version": "0.5",
   "workspaces": [
     "slug",
     "xterm.js"

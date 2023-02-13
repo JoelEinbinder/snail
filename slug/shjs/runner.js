@@ -10,7 +10,7 @@ const pathService = require('../path_service/');
  * aliases?: {[key: string]: string[]},
  * cwd?: string,
  * nod?: string[],
- * ssh?: { sshAddress: string, sshArgs: string[] },
+ * ssh?: { sshAddress: string, sshArgs: string[], env: NodeJS.ProcessEnv },
  * reconnect?: string,
  * code?: string,
  * exit?: number,
@@ -18,7 +18,7 @@ const pathService = require('../path_service/');
  */
 let changes = null;
 
-/** @type {Object<string, (args: string[], stdout: Writable, stderr: Writable, stdin: Readable) => Promise<number>|'pass'>} */
+/** @type {Object<string, (args: string[], stdout: Writable, stderr: Writable, stdin: Readable, env: NodeJS.ProcessEnv) => Promise<number>|'pass'>} */
 const builtins = {
     cd: async (args, stdout, stderr) => {
         try {
@@ -60,12 +60,12 @@ const builtins = {
         }
         return 0;
     },
-    declare: (args, stdout, stderr, stdin) => {
+    declare: (args, stdout, stderr, stdin, env) => {
         if (args[0] !== '-x') {
             stderr.write('declare is only supported with -x\n');
             return Promise.resolve(1);
         }
-        return builtins.export(args.slice(1), stdout, stderr, stdin);
+        return builtins.export(args.slice(1), stdout, stderr, stdin, env);
     },
     alias: async (args, stdout, stderr) => {
         if (!args[0]) {
@@ -95,7 +95,9 @@ const builtins = {
         changes.nod = args;
         return 0;
     },
-    ssh2: (args, stdout, stderr) => {
+    ssh2: (args, stdout, stderr, stdin, env) => {
+        if (stdout !== process.stdout)
+            return 'pass';
         let address = null;
         const nonAddressArgs = [];
         for (let i = 0; i < args.length; i++) {
@@ -112,6 +114,15 @@ const builtins = {
                 if (!port)
                     return 'pass';
                 nonAddressArgs.push(arg, port);
+            } else if (arg === '-L' || arg === '-R') {
+                // TODO doesn't support 0 port.
+                // Should either catch and report it or
+                // pass to the real ssh.
+                i++;
+                const forwarding = args[i];
+                if (!forwarding)
+                    return 'pass';
+                nonAddressArgs.push(arg, forwarding);
             } else if (arg.startsWith('-')) {
                 // unknown option
                 return 'pass';
@@ -126,7 +137,7 @@ const builtins = {
             return 'pass';
         if (!changes)
             changes = {};
-        changes.ssh = { sshAddress: address, sshArgs: nonAddressArgs };
+        changes.ssh = { sshAddress: address, sshArgs: nonAddressArgs, env };
         return Promise.resolve(0);
     },
     reconnect: async (args, stdout, stderr) => {
@@ -145,8 +156,8 @@ const builtins = {
         }
         return 0;
     },
-    code: (args, stdout, stderr) => {
-        if (!('SSH_CONNECTION' in process.env || 'SSH_CLIENT' in process.env))
+    code: (args, stdout, stderr, env) => {
+        if (!('SSH_CONNECTION' in env || 'SSH_CLIENT' in env))
             return 'pass';
         if (args.length !== 1 || args[0].startsWith('-'))
             return 'pass';
@@ -211,9 +222,9 @@ const builtins = {
         }
         return 0;
     },
-    __git_ref_name: async (args, stdout, stderr) => {
+    __git_ref_name: async (args, stdout, stderr, stdin, inEnv) => {
         const env = {
-            ...process.env,
+            ...inEnv,
             GIT_OPTIONAL_LOCKS: '0',
         };
         const isGit = spawnSync('git', ['rev-parse', '--git-dir'], { env });
@@ -231,9 +242,9 @@ const builtins = {
         }
         return 0;
     },
-    __is_git_dirty: async (args, stdout, stderr) => {
+    __is_git_dirty: async (args, stdout, stderr, stdin, inEnv) => {
         const env = {
-            ...process.env,
+            ...inEnv,
             GIT_OPTIONAL_LOCKS: '0',
         };
         const isGit = spawnSync('git', ['rev-parse', '--git-dir'], { env });
@@ -242,15 +253,18 @@ const builtins = {
         const status = spawnSync('git', ['status', '--porcelain'], { env });
         if (status.status)
             return 0;
+        if (!status.stdout)
+            return 0;
         if (status.stdout.toString().trim())
             stdout.write("dirty\n");
         return 0;
     },
-    __npx_completions: async (args, stdout, stderr) => {
+    __npx_completions: async (args, stdout, stderr, stdin, env) => {
         let dir = process.cwd();
         while (true) {
             const status = spawnSync('find', ['-L', '.', '-type', 'f', '-perm', '+111'], {
                 cwd: path.join(dir, 'node_modules', '.bin'),
+                env,
             });
             if (status.status === 0) {
                 const data = status.stdout.toString().split('\n').map(x => {
@@ -266,7 +280,7 @@ const builtins = {
         }
         return 0;
     },
-    __command_completions: async (args, stdout, stderr) => {
+    __command_completions: async (args, stdout, stderr, stdin, env) => {
         for (const key of Object.keys(builtins)) {
             if (key.startsWith('__'))
                 continue;
@@ -274,7 +288,7 @@ const builtins = {
         }
         for (const key of Object.keys(aliases))
             stdout.write(key + '\n');
-        await Promise.all(process.env.PATH.split(':').map(async dir => {
+        await Promise.all(env.PATH.split(':').map(async dir => {
             const names = await fs.promises.readdir(dir).catch(e => []);
             for (const name of names) {
                 try {
@@ -317,8 +331,8 @@ const builtins = {
             stdout.write(description + '\n');
         return 0;
     },
-    __environment_variables: async (args, stdout, stderr) => {
-        stdout.write(JSON.stringify(process.env) + '\n');
+    __environment_variables: async (args, stdout, stderr, stdin, env) => {
+        stdout.write(JSON.stringify(env) + '\n');
         return 0;
     },
 };
@@ -428,7 +442,7 @@ function execute(expression, stdout, stderr, stdin) {
             for (const {name, value} of expression.assignments || [])
                 env[name] = processWord(value)[0];
             if (executable in builtins) {
-                const closePromise = builtins[executable](args, stdout, stderr, stdin);
+                const closePromise = builtins[executable](args, stdout, stderr, stdin, env);
                 if (closePromise !== 'pass') {
                     return {
                         closePromise,

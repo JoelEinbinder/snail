@@ -7,7 +7,7 @@ history.sqlite3
 dist
 /WebKitBundle
 /esout
-/runtime-out
+/slug-out
 
 joel-terminal-*.vsix
 
@@ -21,3 +21,6 @@ __pycache__
 /playwright/.cache/
 
 /Snail-*-*/
+
+/utils/built-slugs/
+/node_18.14.0

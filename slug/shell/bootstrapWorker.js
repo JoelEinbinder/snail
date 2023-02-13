@@ -115,7 +115,7 @@ const handler = {
     const response = await require('./webserver').resolveFileForIframe(params);
     return {response};
   },
-  'Shell.createSubshell': async ({sshAddress, sshArgs}) => {
+  'Shell.createSubshell': async ({sshAddress, sshArgs, env}) => {
     const { ProtocolProxy } = require('./ProtocolProxy');
     const {spawn} = require('child_process');
 
@@ -139,13 +139,28 @@ const handler = {
       return await new Promise(x => passwordCallbacks.set(id, x));
     });
     await utility.listeningPromise;
-    
-    const child = spawn('ssh', [...sshArgs, sshAddress, `PATH=$PATH:/usr/local/bin node ~/gap-year/slug/shell/wsPipeWrapper.js '${btoa(JSON.stringify({socketPath: undefined}))}'`], {
+    // https://github.com/xxorax/node-shell-escape MIT
+    function shellescape(s) {
+      if (/[^A-Za-z0-9_\/:=-]/.test(s)) {
+        s = "'"+s.replace(/'/g,"'\\''")+"'";
+        s = s.replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
+          .replace(/\\'''/g, "\\'" ); // remove non-escaped single-quote if there are enclosed between 2 escaped
+      }
+      return s;
+    }    
+    const launchArg = btoa(JSON.stringify({socketPath: undefined}));
+    const execute = [
+      `SNAIL_VERSION=${JSON.stringify(require('../package.json').version)}`,
+      `SNAIL_SLUGS_URL=${shellescape(env.SNAIL_SLUGS_URL || 'https://joel.tools/slugs')}`,
+      `SNAIL_LAUNCH_ARG=${shellescape(launchArg)}`,
+      `sh -c ${shellescape(fs.readFileSync(path.join(__dirname, './download-slug-if-needed-and-run.sh'), 'utf8'))}`,
+    ].join(' ');
+    const child = spawn('ssh', [...sshArgs, sshAddress, execute], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
       cwd: process.cwd(),
       env: {
-        ...process.env,
+        ...env,
         PWD: process.cwd(),
         SSH_ASKPASS: path.join(__dirname, './sshAskpass.js'),
         SNAIL_SSH_PASS_SOCKET: sshPassSocketPath,
