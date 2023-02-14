@@ -24,6 +24,7 @@
  * @typedef {Object} ProtocolResponse
  * @property {number} id
  * @property {any=} result
+ * @property {any=} error
  */
 class PipeTransport {
   /**

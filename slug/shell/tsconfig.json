@@ -2,9 +2,12 @@
   "compilerOptions": {
     "noEmit": true,
     "allowJs": true,
+    "checkJs": true,
+    "resolveJsonModule": true,
     "target": "esnext",
     "moduleResolution": "node",
-    "module": "CommonJS"
+    "module": "CommonJS",
+    "skipLibCheck": true
   },
   "include": [
     "**/*.js",

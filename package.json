@@ -4,7 +4,7 @@
   "scripts": {
     "start": "SNAIL_DEBUG_URL=http://localhost/gap-year/ electron .",
     "test": "cd slug/shjs; mocha",
-    "type": "tsc -p src/tsconfig.json",
+    "type": "tsc -p src/tsconfig.json && tsc -p slug/shell/tsconfig.json",
     "build": "node utils/esbuild.js",
     "bundle": "node utils/bundle.js",
     "check": "npm run type && npm run build && npm run test && playwright test --forbid-only"

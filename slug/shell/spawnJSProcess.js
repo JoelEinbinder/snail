@@ -6,14 +6,14 @@ const fs = require('fs');
  * @typedef {{
  * send: (message:string) => void,
  * close: () => void,
- * onmessage?: (event: {data: string},
- * onopen?: () => void) => void
- * onclose?: () => void
+ * onmessage?: (event: {data: string}) => void,
+ * onopen?: () => void,
+ * onclose?: () => void,
  * }} JSSocket
  */
 
 /**
- * @return {{err?: NodeJS.ReadStream, socketPromise: Promise<JSSocket>}}
+ * @return {{err?: import('stream').Readable, socketPromise: Promise<JSSocket>}}
  */
 function spawnJSProcess({cwd, sshAddress, socketPath}) {
   if (sshAddress) {

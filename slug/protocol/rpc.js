@@ -9,6 +9,7 @@
  * @typedef {Object} ProtocolResponse
  * @property {number} id
  * @property {any=} result
+ * @property {any=} error
  */
 /**
  * @param {{
@@ -22,8 +23,8 @@ function RPC(transport, reciever) {
   /** @type {Map<number, (value: any) => void>} */
   const callbacks = new Map();
   transport.onmessage = async message => {
-    const {method, params, id, result, error} = message;
-    if (method) {
+    if ('method' in message) {
+      const {params, method, id} = message;
       try {
         const result = typeof reciever === 'function' ? await reciever({method, params}) : await reciever[method](params);
         if (id)
@@ -33,6 +34,7 @@ function RPC(transport, reciever) {
           transport.send({id, error: {message: error.message, method}})
       }
     } else {
+      const {id, result, error} = message;
       const callback = callbacks.get(id);
       if (error)
         console.error(error);

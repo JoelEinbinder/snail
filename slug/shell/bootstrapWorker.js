@@ -28,12 +28,12 @@ let objectIdPromise;
 let lastCommandPromise;
 let lastSubshellId = 0;
 let lastAskPassId = 0;
-/** @type {Map<number, (password: string) => void} */
+/** @type {Map<number, (password: string) => void>} */
 const passwordCallbacks = new Map();
 /** @type {Map<number, import('../protocol/ProtocolProxy').ProtocolProxy>} */
 const subshells = new Map();
-/** @typedef {import('../src/JSConnection').ExtraClientMethods} ShellHandler */
-/** @type {{[key in keyof ShellHandler]: (...args: Parameters<ShellHandler[key]>) => (Promise<ReturnType<ShellHandler[key]>)}} */
+/** @typedef {import('../../src/JSConnection').ExtraClientMethods} ShellHandler */
+/** @type {{[key in keyof ShellHandler]: (...args: Parameters<ShellHandler[key]>) => (Promise<ReturnType<ShellHandler[key]>>)}} */
 const handler = {
   'Shell.setIsDaemon': async (params) => {
     isDaemon = !!params.isDaemon;
@@ -92,7 +92,7 @@ const handler = {
         },
         location: {
           username: require('os').userInfo().username,
-          hostname: pathService.hostname(),
+          hostname: require('os').hostname(),
           socketPath,
         }
       }));
@@ -200,7 +200,7 @@ const handler = {
     });
     subshells.set(id, proxy);
     await Promise.race([
-      new Promise(x => socket.onopen = x),
+      /** @type {Promise<void>} */ (new Promise(x => socket.onopen = x)),
       new Promise(x => child.once('close', x)),
     ]);
     if (startedTerminal)
@@ -224,6 +224,7 @@ const handler = {
     passwordCallbacks.get(id)(password);
     passwordCallbacks.delete(id);
   },
+  // @ts-ignore
   __proto__: null,
 };
 
@@ -258,7 +259,7 @@ function waitForConnection() {
     detached = false;
     fs.unlinkSync(socketPath);
     transport = new PipeTransport(s, s);
-    transport.onmessage = message => {
+    transport.onmessage = (/** @type {import('../protocol/pipeTransport').ProtocolRequest} */ message) => {
       if (message.method in handler) {
         dispatchToHandler(message, transport);
         return;
@@ -288,7 +289,7 @@ process.on('exit', () => {
 
 const session = new inspector.Session();
 session.connectToMainThread();
-session.on('inspectorNotification', notification => {
+session.on('inspectorNotification', (/** @type {{method: string, params: any}} */ notification) => {
   if (notification.method === 'Runtime.bindingCalled' && notification.params.name === 'magic_binding') {
     const {method, params} = JSON.parse(notification.params.payload);
     if (method === 'cwd') {
@@ -310,14 +311,14 @@ session.on('inspectorNotification', notification => {
 });
 
 /**
- * @template {keyof import('../src/protocol').Protocol.CommandParameters} T
+ * @template {keyof import('../../src/protocol').Protocol.CommandParameters} T
  * @param {T} method
- * @param {import('../src/protocol').Protocol.CommandParameters[T]} params
- * @returns {Promise<import('../src/protocol').Protocol.CommandReturnValues[T]>}
+ * @param {import('../../src/protocol').Protocol.CommandParameters[T]} params
+ * @returns {Promise<import('../../src/protocol').Protocol.CommandReturnValues[T]>}
  */
 async function send(method, params) {
   return new Promise((resolve, reject) => {
-    session.post(method, params, (err, res) => err ? reject(err) : resolve(res));
+    session.post(method, params, (err, res) => err ? reject(err) : resolve(/** @type {any} */ (res)));
   });
 }
 

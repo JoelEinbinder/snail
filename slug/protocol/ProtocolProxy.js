@@ -1,4 +1,11 @@
-/** @typedef {{send: (message:string) => void, close: () => void, onmessage?: (event: {data: string}, onopen?: () => void) => void}} ProtocolSocket */
+/**
+ * @typedef {{
+ *  send: (message:string) => void,
+ *  close: () => void,
+ *  onmessage?: (event: {data: string}) => void,
+ *  onopen?: () => void,
+ * }} ProtocolSocket
+ */
 class ProtocolProxy {
   /**
    * @param {ProtocolSocket} socket
