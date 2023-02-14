@@ -428,8 +428,6 @@ export class Shell {
       const {method, params} = message.payload;
       handler[method](params);
     })
-    const resize = size => notify('resize', size);
-    this._size.on(resize);
     this._connections.push(connection);
     this._updateSuffix();
     this._connectionNameEvent.dispatch(this._connectionToName.get(connection));
@@ -454,6 +452,8 @@ export class Shell {
     const {objectId: notifyObjectId} = await connection.send('Shell.enable', {
       args
     });
+    const resize = size => notify('resize', size);
+    this._size.on(resize);
     notify('resize', this._size.current);
 
     {

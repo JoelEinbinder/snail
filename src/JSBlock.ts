@@ -18,7 +18,7 @@ export class JSBlock implements LogItem {
   dispose(): void {
   }
   async serializeForTest(): Promise<any> {
-    return '<JSBlock>';
+    return this._element.textContent;
   }
 }
 
@@ -51,7 +51,7 @@ export class JSLogBlock implements LogItem {
   dispose(): void {
   }
   async serializeForTest(): Promise<any> {
-    return '<JSLogBlock>';
+    return this._element.textContent;
   }
 }
 

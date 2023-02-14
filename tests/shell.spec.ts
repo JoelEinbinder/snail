@@ -189,3 +189,32 @@ test('can have two tabs', async ({ shellFactory }) => {
     prompt: { value: '' },
   });
 });
+
+test('can reconnect', async ({ shellFactory }) => {
+  const shell1 = await shellFactory();
+  await shell1.runCommand('let foo = 456');
+  await shell1.toggleDemonMode();
+  shell1.runCommand('read -p "Yes or no?" yn').catch(e => {});
+  await shell1.waitForLine(/Yes or no\?/);
+  await shell1.close();
+
+  const shell2 = await shellFactory();
+  const reconnect = shell2.runCommand('reconnect');
+  await shell2.waitForLine(/Yes or no\?/);
+  await shell2.page.keyboard.type('y');
+  await shell2.page.keyboard.press('Enter');
+  await reconnect;
+  await shell2.runCommand('console.log(foo)');
+  expect(await shell2.serialize()).toEqual({
+    log: [
+      '> reconnect',
+      'Yes or no?y',
+      '> console.log(foo)',
+      '456',
+      'undefined',
+    ],
+    prompt: {
+      value: '',
+    },
+  });
+});

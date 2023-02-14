@@ -384,9 +384,16 @@ ipcMain.handle('message', async (event, ...args) => {
   const {method, params, id} = args[0];
   if (!overrides.hasOwnProperty(method))
     throw new Error('command not found');
-  const result = await overrides[method](params, clientForSender(event.sender), event.sender);
-  if (id)
-    event.sender.send('message', {result, id});
+  try {
+    const result = await overrides[method](params, clientForSender(event.sender), event.sender);
+    if (id)
+      event.sender.send('message', {result, id});
+  } catch (error) {
+    if (id)
+      event.sender.send('message', {error: error.stack, id});
+    else
+      throw error;
+  }
 });
 ipcMain.handle('browserView-postMessage', async (event, message) => {
   if (message.method === 'openDevTools') {

@@ -39,7 +39,7 @@ const handler = {
     let startedTerminal = false;
     let endedTerminal = false;
     const {socketPromise, err} = spawnJSProcess({cwd, sshAddress, socketPath});
-    err.on('data', data => {
+    err?.on('data', data => {
       if (endedTerminal)
         return;
       if (!startedTerminal) {

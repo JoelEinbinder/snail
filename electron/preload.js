@@ -8,7 +8,7 @@ const listeners = new Map();
 const electronAPI = {
   sendMessage: message => {
     const id = ++lastId;
-    const promise = new Promise(x => callbacks.set(id, x));
+    const promise = new Promise((resolve, reject) => callbacks.set(id, {resolve, reject}));
     ipcRenderer.invoke('message', {id, ...message});
     return promise;
   },
@@ -24,7 +24,11 @@ const electronAPI = {
 };
 ipcRenderer.on('message', (sender, event) => {
   if ('id' in event) {
-    callbacks.get(event.id)(event.result);
+    if (event.error) {
+      callbacks.get(event.id).reject(event.error);
+    } else {
+     callbacks.get(event.id).resolve(event.result);
+    }
     callbacks.delete(event.id);
   } else {
     for (const listener of listeners.get(event.method) || [])

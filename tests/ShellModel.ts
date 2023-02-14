@@ -58,4 +58,8 @@ export class ShellModel {
     await this.page.keyboard.press('Control+D');
     await this.waitForAsyncWorkToFinish();
   }
+
+  async close() {
+    await this.page.close();
+  }
 }
