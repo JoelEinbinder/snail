@@ -135,8 +135,8 @@ app.whenReady().then(() => {
       })
     }
   });
-  makeWindow();
-
+  if (!process.argv.includes('--no-first-window'))
+    makeWindow();
 });
 /** @type {Set<BrowserWindow>} */
 const popups = new Set();
@@ -423,3 +423,7 @@ app.on('activate', event => {
     return;
   makeWindow();
 });
+
+
+// For tests
+global.makeWindow = makeWindow;

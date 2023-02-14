@@ -1,5 +1,5 @@
 export * from '@playwright/test';
-import { test as _test, _baseTest, _electron, type Page } from '@playwright/test';
+import { test as _test, _baseTest, _electron, type Page, type ElectronApplication } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 import { ShellModel } from './ShellModel';
@@ -15,6 +15,8 @@ type SshAddress = {
 
 export const test = _test.extend<{
   shell: ShellModel,
+  electronApp: ElectronApplication,
+  shellFactory: () => Promise<ShellModel>,
   workingDir: string;
   tmpDirForTest: string;
   docker: SshAddress;
@@ -108,10 +110,11 @@ export const test = _test.extend<{
     await use({ address: 'snailuser@localhost', port });
     docker.kill();
   },
-  shell: async ({ headless, workingDir, tmpDirForTest }, use) => {
+  electronApp: async ({ headless, workingDir, tmpDirForTest }, use) => {
     const args: string[] = [];
     if (headless)
       args.push('--test-headless');
+    args.push('--no-first-window');
     const app = await _electron.launch({
       args: [path.join(__dirname, '..'), ...args],
       cwd: workingDir,
@@ -127,22 +130,34 @@ export const test = _test.extend<{
       snapshots: true,
       sources: true,
     });
-    const page = await app.firstWindow();
-    const logs: string[] = [];
-    page.on('console', log => {
-      logs.push(log.text());
-    });
-    page.on('pageerror', event => {
-      logs.push(event.message);
-      if (event.stack)
-        logs.push(event.stack);
-    });
-    const shell = await ShellModel.create(page);
-    await use(shell);
+    await use(app);
     await app.context().tracing.stop({
       path: test.info().outputPath('trace.pwtrace')
     });
-    const waits = (await shell.currentWaits()).join('\n');
+    await app.close();
+  },
+  shellFactory: async ({ electronApp }, use) => {
+    const shells = new Set<ShellModel>();
+    const logs: string[] = [];
+    await use(async () => {
+      const [page] = await Promise.all([
+        electronApp.waitForEvent('window'),
+        electronApp.evaluate(() => global.makeWindow())
+      ]);
+      page.on('console', log => {
+        logs.push(log.text());
+      });
+      page.on('pageerror', event => {
+        logs.push(event.message);
+        if (event.stack)
+          logs.push(event.stack);
+      });
+      const shell = await ShellModel.create(page);
+      shells.add(shell);
+      page.once('close', () => shells.delete(shell));
+      return shell;
+    });
+    const waits = (await Promise.all([...shells].map(shell => shell.currentWaits()))).flat().join('\n');
     if (waits) {
       test.info().attach('waits', {
         body: waits,
@@ -153,7 +168,9 @@ export const test = _test.extend<{
         body: logs.join('\n'),
       });      
     }
-    await app.close();
+  },
+  shell: async ({ shellFactory }, use) => {
+    await use(await shellFactory());
   }
 });
 export default test;

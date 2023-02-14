@@ -342,6 +342,7 @@ export class Shell {
       nod: async (args: string[]) => {
         const done = startAyncWork('nod');
         const unlockPrompt = this._lockPrompt('nod');
+        // TODO switch to Shell.createNodSubshell
         await this._setupConnection(args);
         unlockPrompt();
         done();

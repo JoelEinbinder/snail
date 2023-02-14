@@ -175,3 +175,17 @@ test('daemon mode toggle', async ({ shell }) => {
   expect(await shell.page.title()).not.toMatch(/😈$/);
 });
 
+test('can have two tabs', async ({ shellFactory }) => {
+  const shell1 = await shellFactory();
+  const shell2 = await shellFactory();
+  await shell1.runCommand('echo hello');
+  await shell2.runCommand('echo world');
+  expect(await shell1.serialize()).toEqual({
+    log: [ '> echo hello', 'hello' ],
+    prompt: { value: '' },
+  });
+  expect(await shell2.serialize()).toEqual({
+    log: [ '> echo world', 'world' ],
+    prompt: { value: '' },
+  });
+});
