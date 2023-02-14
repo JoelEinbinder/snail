@@ -3,7 +3,8 @@
  * @typedef {import('events').EventEmitter & {send: (message: any) => void}} Client
  */
 
-const { ProtocolProxy } = require('../slug/shell/ProtocolProxy');
+const { ProtocolProxy } = require('../slug/protocol/ProtocolProxy');
+const { WebServers } = require('../host/WebServers');
 /**
  * @typedef {Object} FetchResponse
  * @property {string=} data
@@ -14,6 +15,7 @@ const { ProtocolProxy } = require('../slug/shell/ProtocolProxy');
 let lastWebsocketId = 0;
 /** @type {Map<number, ProtocolProxy>} */
 const proxies = new Map();
+const webServers = new WebServers(false);
 const handler = {
   async obtainWebSocketId() {
     return ++lastWebsocketId;
@@ -118,7 +120,7 @@ const handler = {
   },
   async urlForIFrame({shellIds, filePath}) {
     const [socketId] = shellIds;
-    const address = await proxies.get(socketId).startOrGetServer(false);
+    const address = await webServers.ensureServer(proxies.get(socketId));
     const url = new URL(`http://localhost:${address.port}`);
     url.pathname = filePath;
     url.search = '?entry';

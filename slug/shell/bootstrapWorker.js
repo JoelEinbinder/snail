@@ -30,7 +30,7 @@ let lastSubshellId = 0;
 let lastAskPassId = 0;
 /** @type {Map<number, (password: string) => void} */
 const passwordCallbacks = new Map();
-/** @type {Map<number, import('./ProtocolProxy').ProtocolProxy>} */
+/** @type {Map<number, import('../protocol/ProtocolProxy').ProtocolProxy>} */
 const subshells = new Map();
 /** @typedef {import('../src/JSConnection').ExtraClientMethods} ShellHandler */
 /** @type {{[key in keyof ShellHandler]: (...args: Parameters<ShellHandler[key]>) => (Promise<ReturnType<ShellHandler[key]>)}} */
@@ -116,11 +116,11 @@ const handler = {
     return {response};
   },
   'Shell.createSubshell': async ({sshAddress, sshArgs, env}) => {
-    const { ProtocolProxy } = require('./ProtocolProxy');
+    const { ProtocolProxy } = require('../protocol/ProtocolProxy');
     const {spawn} = require('child_process');
 
     const id = ++lastSubshellId;
-    /** @type {import('./ProtocolProxy').ProtocolSocket} */
+    /** @type {import('../protocol/ProtocolProxy').ProtocolSocket} */
     const socket = {
       send(message) {
         rpc.notify('message', message);
