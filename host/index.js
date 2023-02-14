@@ -23,7 +23,7 @@ const handler = {
   /**
    * @param {Client} sender
    */
-  async createJSShell({cwd, sshAddress, socketPath, socketId}, sender) {
+  async createJSShell({cwd, socketId}, sender) {
     if (proxies.has(socketId))
       throw new Error('Socket already exists');
     sender.on('destroyed', destroy);
@@ -38,7 +38,7 @@ const handler = {
     const { spawnJSProcess } = require('../slug/shell/spawnJSProcess');
     let startedTerminal = false;
     let endedTerminal = false;
-    const {socketPromise, err} = spawnJSProcess({cwd, sshAddress, socketPath});
+    const {socketPromise, err} = spawnJSProcess({cwd});
     err?.on('data', data => {
       if (endedTerminal)
         return;

@@ -70,5 +70,5 @@ then
   PATH=$(pwd)/node/bin:$PATH ./node/bin/npm install --silent --no-package-lock --omit=dev
 fi
 cd ../../
-.snail/$SNAIL_VERSION/node/bin/node .snail/$SNAIL_VERSION/shell/wsPipeWrapper.js $SNAIL_LAUNCH_ARG
+.snail/$SNAIL_VERSION/node/bin/node .snail/$SNAIL_VERSION/shell/wsPipeWrapper.js
 

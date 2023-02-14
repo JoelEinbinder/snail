@@ -5,7 +5,7 @@ import { JoelEvent } from './JoelEvent';
 import type { LogItem, Prompt } from './LogView';
 import { CommandBlock, CommandPrefix, computePrettyDirName } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
-import { JSConnection } from './JSConnection';
+import { ExtraClientMethods, JSConnection } from './JSConnection';
 import { JSBlock, JSLogBlock, renderRemoteObjectOneLine } from './JSBlock';
 import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 import type { Suggestion } from './autocomplete';
@@ -94,7 +94,7 @@ export class Shell {
     return this.connection?.env || {};
   }
 
-  async _setupConnection(args: string[], sshAddress = null, socketPath = null) {
+  async _setupConnection(args: string[]) {
     const socketId = await host.sendMessage({ method: 'obtainWebSocketId' });
 
     socketCloseListeners.set(socketId, () => {
@@ -125,16 +125,14 @@ export class Shell {
             // cwd comes from the top level because it has to match the host.
             // TODO get this directly form the host?
             cwd: this._connections[0] ? this._connections[0].cwd : localStorage.getItem('cwd') || '',
-            socketPath,
-            sshAddress,
             socketId,
           }
         });
       },
-      isRestoration: !!socketPath,
+      isRestoration: false,
     }
     socketListeners.set(socketId, message => core.onmessage?.(message));
-    return this._setupConnectionInner(core, args, sshAddress);
+    return this._setupConnectionInner(core, args);
   }
   async _setupConnectionInner(core: ConnectionCore, args: string[], sshAddress = null) {
     this._clearCache();
@@ -350,60 +348,18 @@ export class Shell {
       ssh: async ({sshAddress, sshArgs, env}: {sshAddress: string, sshArgs: string[], env: Record<string, string>}) => {
         const done = startAyncWork('ssh');
         const unlockPrompt = this._lockPrompt('ssh');
-        const subshellResult = await connection.send('Shell.createSubshell', { sshAddress, sshArgs, env });
+        const sshCore = await this._createSubshell(connection, core, { sshAddress, sshArgs, env })
         // Setting up ssh may have failed or been canceled
-        if ('exitCode' in subshellResult) {
-          unlockPrompt();
-          done();
-          return;
-        }
-        const { id } = subshellResult;
-        const sshCore: ConnectionCore = {
-          destroy: () => {
-            connection.send('Shell.destroySubshell', { id });
-            cleanup();
-          },
-          isRestoration: false,
-          send: message => {
-            connection.send('Shell.sendMessageToSubshell', { id, message });
-          },
-          urlForIframe: async (filePath, shellIds) => {
-            return core.urlForIframe(filePath, [id, ...shellIds]);
-          },
-          async initialize() {
-            // nothing to do here, because we already made the subshell.
-            // TODO should create the subshell here after getting the id above
-            // stderr from createSubshell should appear in the inner connection
-            // Does that make sense though? Not really because its clearly part of the
-            // outer connection output. Consider "echo foo && ssh2 invalidremote"
-            // The foo and error from invalidremote should be part of the same connection log
-          }
-        };
-        // TODO maybe it would be nicer to have a single listener for this
-        const onSubshellMessage = payload => {
-          if (payload.id === id)
-            sshCore.onmessage?.(payload.message);
-        };
-        const onSubshellDestroyed = payload => {
-          if (payload.id === id)
-            cleanup();
-        };
-        const cleanup = () => {
-          connection.off('Shell.messageFromSubshell', onSubshellMessage);
-          connection.off('Shell.subshellDestroyed', onSubshellDestroyed);
-          sshCore.onclose?.();
-        };
-        connection.on('Shell.messageFromSubshell', onSubshellMessage);
-        connection.on('Shell.subshellDestroyed', onSubshellDestroyed);
-        await this._setupConnectionInner(sshCore, [], sshAddress);
+        if (sshCore)
+          await this._setupConnectionInner(sshCore, [], sshAddress);
         unlockPrompt();
         done();
       },
       reconnect: async (socketPath: string) => {
         const done = startAyncWork('reconnect');
         const unlockPrompt = this._lockPrompt('reconnect');
-        // TODO switch to Shell.createReconnectSubshell api
-        await this._setupConnection([], this._connectionToSSHAddress.get(connection), socketPath);
+        const reconnectCore = await this._createSubshell(connection, core, { socketPath });
+        await this._setupConnectionInner(reconnectCore, [], this._connectionToSSHAddress.get(connection));
         unlockPrompt();
         done();
       },
@@ -471,11 +427,56 @@ export class Shell {
     }
   }
 
+  async _createSubshell(connection: JSConnection, core: ConnectionCore, params: Parameters<ExtraClientMethods['Shell.createSubshell']>[0]): Promise<ConnectionCore|null> {
+    const subshellResult = await connection.send('Shell.createSubshell', params);
+    // Setting up ssh may have failed or been canceled
+    if ('exitCode' in subshellResult)
+      return null;
+    const { id } = subshellResult;
+    const subCore: ConnectionCore = {
+      destroy: () => {
+        connection.send('Shell.destroySubshell', { id });
+        cleanup();
+      },
+      isRestoration: !!params['socketPath'],
+      send: message => {
+        connection.send('Shell.sendMessageToSubshell', { id, message });
+      },
+      urlForIframe: async (filePath, shellIds) => {
+        return core.urlForIframe(filePath, [id, ...shellIds]);
+      },
+      async initialize() {
+        // nothing to do here, because we already made the subshell.
+        // TODO should create the subshell here after getting the id above
+        // stderr from createSubshell should appear in the inner connection
+        // Does that make sense though? Not really because its clearly part of the
+        // outer connection output. Consider "echo foo && ssh2 invalidremote"
+        // The foo and error from invalidremote should be part of the same connection log
+      }
+    };
+    // TODO maybe it would be nicer to have a single listener for this
+    const onSubshellMessage = payload => {
+      if (payload.id === id)
+        subCore.onmessage?.(payload.message);
+    };
+    const onSubshellDestroyed = payload => {
+      if (payload.id === id)
+        cleanup();
+    };
+    const cleanup = () => {
+      connection.off('Shell.messageFromSubshell', onSubshellMessage);
+      connection.off('Shell.subshellDestroyed', onSubshellDestroyed);
+      subCore.onclose?.();
+    };
+    connection.on('Shell.messageFromSubshell', onSubshellMessage);
+    connection.on('Shell.subshellDestroyed', onSubshellDestroyed);
+    return subCore;
+  }
+
   async setupInitialConnection() {
     if (this.connection)
       throw new Error('already has a connection');
-    const {searchParams} = new URL(location.href);
-    await this._setupConnection([], searchParams.get('sshAddress'), searchParams.get('socketPath'));
+    await this._setupConnection([]);
     console.timeEnd('create shell');
     this._setupUnlock(); // prompt starts locked
   }

@@ -22,7 +22,7 @@ export type ExtraClientMethods = {
   'Shell.restore': () => Protocol.CommandReturnValues['Runtime.evaluate']|null;
 
   'Shell.resolveFileForIframe': (params: {shellIds: number[], filePath: string, search: string, headers: Record<string, string>}) => void;
-  'Shell.createSubshell': (params: { sshAddress: string, sshArgs: string[], env: Record<string, string> }) => ({id: number}|{exitCode: number});
+  'Shell.createSubshell': (params: { sshAddress: string, sshArgs: string[], env: Record<string, string> } | { socketPath: string }) => ({id: number}|{exitCode: number});
   'Shell.sendMessageToSubshell': (params: {id: number, message: {method: string, params: any, id?: number}}) => void;
   'Shell.destroySubshell': (params: {id: number}) => void;
   'Shell.providePassword': (params: { id: number, password: string }) => void;

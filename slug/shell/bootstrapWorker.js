@@ -115,85 +115,47 @@ const handler = {
     const response = await require('./webserver').resolveFileForIframe(params);
     return {response};
   },
-  'Shell.createSubshell': async ({sshAddress, sshArgs, env}) => {
+  'Shell.createSubshell': async params => {
+
     const { ProtocolProxy } = require('../protocol/ProtocolProxy');
-    const {spawn} = require('child_process');
 
     const id = ++lastSubshellId;
-    /** @type {import('../protocol/ProtocolProxy').ProtocolSocket} */
-    const socket = {
-      send(message) {
-        rpc.notify('message', message);
-      },
-      close() {
-        child.kill();
-      },
-    };
-    const {SSHPassUtility} = require('./sshPassUtility');
-    const sshDir = path.join(pathService.tmpdir(), 'snail-ssh-askpass');
-    fs.mkdirSync(sshDir, {recursive: true, mode: 0o700});
-    const sshPassSocketPath = path.join(sshDir, `${process.pid}-ssh-${id}.socket`);
-    const utility = new SSHPassUtility(sshPassSocketPath, async data => {      
-      const id = ++lastAskPassId;
-      transport.send({method: 'Shell.askPassword', params: {id: lastAskPassId, message: data.message}});
-      return await new Promise(x => passwordCallbacks.set(id, x));
-    });
-    await utility.listeningPromise;
-    // https://github.com/xxorax/node-shell-escape MIT
-    function shellescape(s) {
-      if (/[^A-Za-z0-9_\/:=-]/.test(s)) {
-        s = "'"+s.replace(/'/g,"'\\''")+"'";
-        s = s.replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
-          .replace(/\\'''/g, "\\'" ); // remove non-escaped single-quote if there are enclosed between 2 escaped
-      }
-      return s;
-    }    
-    const launchArg = btoa(JSON.stringify({socketPath: undefined}));
-    const execute = [
-      `SNAIL_VERSION=${JSON.stringify(require('../package.json').version)}`,
-      `SNAIL_SLUGS_URL=${shellescape(env.SNAIL_SLUGS_URL || 'https://joel.tools/slugs')}`,
-      `SNAIL_LAUNCH_ARG=${shellescape(launchArg)}`,
-      `sh -c ${shellescape(fs.readFileSync(path.join(__dirname, './download-slug-if-needed-and-run.sh'), 'utf8'))}`,
-    ].join(' ');
-    const child = spawn('ssh', [...sshArgs, sshAddress, execute], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      detached: false,
-      cwd: process.cwd(),
-      env: {
-        ...env,
-        PWD: process.cwd(),
-        SSH_ASKPASS: path.join(__dirname, './sshAskpass.js'),
-        SNAIL_SSH_PASS_SOCKET: sshPassSocketPath,
-        SSH_ASKPASS_REQUIRE: 'force',
-      }
-    });
     let startedTerminal = false;
     let endedTerminal = false;
-    child.stderr.on('data', data => {
-      if (endedTerminal)
-        return;
-      if (!startedTerminal) {
-        transport.send({method: 'Shell.notify', params: { payload: {method: 'startTerminal', params: {id: -1}}}});
-        startedTerminal = true;
+    /** @type {Awaited<ReturnType<import('./createSSHSubshell')['createSSHSubshell']>>} */
+    let output;
+    if ('sshAddress' in params) {
+      const {sshAddress, sshArgs, env} = params;
+      const { createSSHSubshell } = require('./createSSHSubshell');
+      output = await createSSHSubshell({
+        sshAddress, sshArgs, env,
+        askPass: async data => {      
+          const id = ++lastAskPassId;
+          transport.send({method: 'Shell.askPassword', params: {id: lastAskPassId, message: data.message}});
+          return await new Promise(x => passwordCallbacks.set(id, x));
+        },
+        onclose: () => transport?.send({method: 'Shell.subshellDestroyed', params: { id }}),
+        ondata: data => {
+          if (endedTerminal)
+            return;
+          if (!startedTerminal) {
+            transport.send({method: 'Shell.notify', params: { payload: {method: 'startTerminal', params: {id: -1}}}});
+            startedTerminal = true;
+          }
+          transport.send({method: 'Shell.notify', params: { payload: {method: 'data', params: {id: -1, data: String(data).replaceAll('\n', '\r\n')}}}});
+        },
+      });
+    } else {
+      const { connectToSocket } = require('./spawnJSProcess');
+      const socket = connectToSocket(params.socketPath);
+      output = {
+        socket,
+        closePromise: new Promise(x => socket.onclose = x),
+        getExitCode: () => null,
       }
-      transport.send({method: 'Shell.notify', params: { payload: {method: 'data', params: {id: -1, data: String(data).replaceAll('\n', '\r\n')}}}});
-    });
-    const {RPC} = require('../protocol/rpc');
-    const {PipeTransport} = require('../protocol/pipeTransport');
-    const pipeTransport = new PipeTransport(child.stdin, child.stdout);
-    const rpc = RPC(pipeTransport, {
-      message: data => {
-        socket.onmessage?.({data});
-      },
-      ready: () => {
-        socket.onopen?.();
-      }
-    });
-    pipeTransport.onclose = () => {
-      transport?.send({method: 'Shell.subshellDestroyed', params: { id }});
-      utility.close();
-    };
-    
+    }
+
+    const {socket, closePromise, getExitCode} = output;
     const proxy = new ProtocolProxy(socket, message => {
       // TODO what to do when the transport has changed or is gone??
       transport?.send({method: 'Shell.messageFromSubshell', params: { id, message }})
@@ -201,13 +163,13 @@ const handler = {
     subshells.set(id, proxy);
     await Promise.race([
       /** @type {Promise<void>} */ (new Promise(x => socket.onopen = x)),
-      new Promise(x => child.once('close', x)),
+      closePromise,
     ]);
     if (startedTerminal)
       transport.send({method: 'Shell.notify', params: { payload: {method: 'endTerminal', params: {id: -1}}}});
     endedTerminal = true;
-    if (child.exitCode !== null)
-      return { exitCode: child.exitCode };
+    if (getExitCode() !== null)
+      return { exitCode: getExitCode() };
     return { id };
   },
   'Shell.sendMessageToSubshell': async ({id, message}) => {

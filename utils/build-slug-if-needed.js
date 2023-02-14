@@ -38,7 +38,7 @@ async function buildSlugIfNeeded(platform, arch) {
     'darwin': 'Darwin',
   }[platform];
   const unameArch = {
-    'arm64': 'aarch64',
+    'arm64': unamePlatform === 'linux' ? 'aarch64' : 'arm64',
     'amd64': 'x86_64',
   }[arch];
   const tarName = `slug-${require('../package.json').version}-${unamePlatform}-${unameArch}.tar.gz`;
@@ -75,14 +75,6 @@ async function buildSlugInDocker(platform, arch, outputFilePath) {
     stdio: 'pipe',
     cwd: path.join(__dirname, '..'),
   });
-  const unamePlatform = {
-    'linux': 'Linux',
-    'darwin': 'Darwin',
-  }[platform];
-  const unameArch = {
-    'arm64': 'aarch64',
-    'amd64': 'x86_64',
-  }[arch];
   docker.stdout.pipe(fs.createWriteStream(outputFilePath));
   await new Promise(x => docker.on('exit', x));
 }

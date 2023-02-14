@@ -4,11 +4,8 @@ const {RPC} = require('../protocol/rpc');
 const {spawnJSProcess} = require('./spawnJSProcess');
 const transport = new PipeTransport(process.stdout, process.stdin);
 process.stdin.on('close', () => process.exit());
-const {socketPath} = JSON.parse(atob(process.argv[2]));
 const {socketPromise, err} = spawnJSProcess({
   cwd: process.cwd(),
-  sshAddress: false,
-  socketPath,
 });
 err.pipe(process.stderr);
 socketPromise.then((s) => {
