@@ -38,7 +38,7 @@ async function buildSlugIfNeeded(platform, arch) {
     'darwin': 'Darwin',
   }[platform];
   const unameArch = {
-    'arm64': unamePlatform === 'linux' ? 'aarch64' : 'arm64',
+    'arm64': unamePlatform === 'Linux' ? 'aarch64' : 'arm64',
     'amd64': 'x86_64',
   }[arch];
   const tarName = `slug-${require('../package.json').version}-${unamePlatform}-${unameArch}.tar.gz`;
