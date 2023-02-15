@@ -60,7 +60,7 @@ if [ ! -f ./node/bin/node ]
 then
   echoerr Downloading node for $(uname -s) $(uname -m)...
   download_url node.tar.gz $(get_node_url_for_platform)
-  mkdir node
+  mkdir -p node
   tar xf node.tar.gz -C node --strip-components 1
   rm node.tar.gz
 fi
@@ -68,6 +68,11 @@ if [ ! -d ./node_modules ]
 then
   echoerr Running npm install for the snail runtime...
   PATH=$(pwd)/node/bin:$PATH ./node/bin/npm install --silent --no-package-lock --omit=dev
+fi
+if [ ! -z $SNAIL_DONT_RUN ]
+then
+  echo Sucessfully not running
+  exit 0
 fi
 cd ../../
 .snail/$SNAIL_VERSION/node/bin/node .snail/$SNAIL_VERSION/shell/wsPipeWrapper.js

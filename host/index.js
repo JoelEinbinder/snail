@@ -4,7 +4,11 @@
  */
 
 const { ProtocolProxy } = require('../slug/protocol/ProtocolProxy');
+const pathService = require('../slug/path_service/');
 const { WebServers } = require('../host/WebServers');
+const path = require('path');
+const fs = require('fs');
+
 /**
  * @typedef {Object} FetchResponse
  * @property {string=} data
@@ -35,11 +39,29 @@ const handler = {
       proxies.delete(socketId);
       proxy.close();
     }
-    const { spawnJSProcess } = require('../slug/shell/spawnJSProcess');
+
+    // const execute = [
+    //   `SNAIL_VERSION=${JSON.stringify(require('../package.json').version)}`,
+    //   `SNAIL_SLUGS_URL=${shellescape(delegate.env.SNAIL_SLUGS_URL || 'https://joel.tools/slugs')}`,
+    //   `sh -c ${shellescape(fs.readFileSync(path.join(__dirname, './download-slug-if-needed-and-run.sh'), 'utf8'))}`,
+    // ].join(' ');
+    // const child = spawn('ssh', [...delegate.sshArgs, delegate.sshAddress, execute], {
+    //   stdio: ['pipe', 'pipe', 'pipe'],
+    //   detached: false,
+    //   cwd: process.cwd(),
+    //   env: {
+    //     ...delegate.env,
+    //     PWD: process.cwd(),
+    //     SSH_ASKPASS: path.join(__dirname, './sshAskpass.js'),
+    //     SNAIL_SSH_PASS_SOCKET: sshPassSocketPath,
+    //     SSH_ASKPASS_REQUIRE: 'force',
+    //   }
+    // });
+  
     let startedTerminal = false;
     let endedTerminal = false;
-    const {socketPromise, err} = spawnJSProcess({cwd});
-    err?.on('data', data => {
+    /** @type {(data: Buffer) => void} */
+    const onErrData = data => {
       if (endedTerminal)
         return;
       if (!startedTerminal) {
@@ -53,7 +75,46 @@ const handler = {
         method: 'Shell.notify',
         params: { payload: {method: 'data', params: {id: -1, data: String(data).replaceAll('\n', '\r\n')}}}
       }}});
-    })
+    }
+    const { bootstrapPath, nodePath } = await (async () => {
+      const localPath = path.join(__dirname, '..', 'slug', 'shell', 'bootstrap.js');
+      if (!process.env.SNAIL_FORCE_NO_LOCAL && fs.existsSync(path.join(__dirname, ))) {
+        return {
+          nodePath: process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node',
+          bootstrapPath: localPath,
+        }
+      }
+      const slugPath = path.join(pathService.homedir(), '.snail', require('../package.json').version);
+      const nodePath = path.join(slugPath, 'node', 'bin', 'node');  
+      if (!fs.existsSync(nodePath)) {
+        const { spawn } = require('child_process');
+        const child = spawn('sh', [path.join(__dirname, '..', 'slug', 'shell', './download-slug-if-needed-and-run.sh')], {
+          stdio: ['ignore', 'ignore', 'pipe'],
+          cwd: pathService.homedir(),
+          env: {
+            ...process.env,
+            SNAIL_VERSION: require('../package.json').version,
+            SNAIL_SLUGS_URL: process.env.SNAIL_SLUGS_URL || 'https://joel.tools/slugs',
+            SNAIL_DONT_RUN: '1',
+          },
+        });
+        child.stderr.on('data', onErrData);
+        await new Promise(x => child.on('exit', x));
+        if (child.exitCode !== 0)
+          throw new Error('Failed to download slug');
+      }
+      return {
+        nodePath,
+        bootstrapPath: path.join(slugPath, 'shell', 'bootstrap.js'),
+      }
+    })();
+    const { spawnJSProcess } = require('../slug/shell/spawnJSProcess');
+    const {socketPromise, err} = spawnJSProcess({
+      cwd,
+      nodePath,
+      bootstrapPath,
+    });
+    err?.on('data', onErrData);
     const socket = await socketPromise;
     endedTerminal = true;
     if (startedTerminal) {

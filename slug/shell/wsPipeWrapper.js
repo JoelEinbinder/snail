@@ -1,4 +1,6 @@
-//@ts-check
+// This file exists so that bootstrap can continue to run even
+// if disconnected from. This file forwards stdin/stdout to the
+// unix socket.
 const {PipeTransport} = require('../protocol/pipeTransport');
 const {RPC} = require('../protocol/rpc');
 const {spawnJSProcess} = require('./spawnJSProcess');
@@ -6,6 +8,8 @@ const transport = new PipeTransport(process.stdout, process.stdin);
 process.stdin.on('close', () => process.exit());
 const {socketPromise, err} = spawnJSProcess({
   cwd: process.cwd(),
+  nodePath: process.execPath,
+  bootstrapPath: require('path').join(__dirname, 'bootstrap.js'),
 });
 err.pipe(process.stderr);
 socketPromise.then((s) => {

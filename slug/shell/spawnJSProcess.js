@@ -15,7 +15,7 @@ const fs = require('fs');
 /**
  * @return {{err?: import('stream').Readable, socketPromise: Promise<JSSocket>}}
  */
-function spawnJSProcess({cwd}) {
+function spawnJSProcess({cwd, nodePath, bootstrapPath}) {
   // launch the process if we don't have an explicit socket to connect to
   if (!cwd || !fs.existsSync(cwd))
     cwd = require('../path_service/').homedir();
@@ -25,8 +25,7 @@ function spawnJSProcess({cwd}) {
     throw new Error(`Cannot create socket in ${JSON.stringify(socketDir)} (path too long)`);
   fs.mkdirSync(socketDir, {recursive: true, mode: 0o700});
 
-  const nodePath = process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node';
-  const child = spawn(nodePath, ['-e', `require(${JSON.stringify(path.join(__dirname, 'bootstrap.js'))})`], {
+  const child = spawn(nodePath, ['-e', `require(${JSON.stringify(bootstrapPath)})`], {
     stdio: ['ignore', 'ignore', 'pipe'],
     detached: true,
     cwd,

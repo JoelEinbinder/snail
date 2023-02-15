@@ -1,6 +1,9 @@
 {
   "name": "slug",
-  "version": "0.5.1",
+  "version": "0.5.2",
+  "workspaces": [
+    "thumbnail_generator"
+  ],
   "private": true,
   "dependencies": {
     "acorn": "^8.7.0",

@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "install": "test $(uname -s) = Darwin && node-gyp rebuild || echo 'only builds on macos'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
