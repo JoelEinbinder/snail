@@ -78,7 +78,7 @@ const handler = {
     }
     const { bootstrapPath, nodePath } = await (async () => {
       const localPath = path.join(__dirname, '..', 'slug', 'shell', 'bootstrap.js');
-      if (!process.env.SNAIL_FORCE_NO_LOCAL && fs.existsSync(path.join(__dirname, ))) {
+      if (!process.env.SNAIL_FORCE_NO_LOCAL && fs.existsSync(localPath)) {
         return {
           nodePath: process.execPath.endsWith('node') ? process.execPath : '/usr/local/bin/node',
           bootstrapPath: localPath,

@@ -23,4 +23,5 @@ __pycache__
 /Snail-*-*/
 
 /utils/built-slugs/
+/utils/electron-out/
 /node_18.14.0
