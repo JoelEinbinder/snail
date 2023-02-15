@@ -2,7 +2,7 @@
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import './index.css';
 try {
-await loadScript("../../node_modules/monaco-editor/min/vs/loader.js");
+await loadScript("../../../node_modules/monaco-editor/min/vs/loader.js");
 async function loadScript(path) {
   const script = document.createElement('script');
   script.src = path;
@@ -13,7 +13,7 @@ async function loadScript(path) {
   await promise;
 }
 
-(require as any).config({ paths: { vs: '../../node_modules/monaco-editor/min/vs' } });
+(require as any).config({ paths: { vs: '../../../node_modules/monaco-editor/min/vs' } });
 await new Promise(x => (require as any)(['vs/editor/editor.main'], x));
 monaco.editor.defineTheme('my-dark', {
   base: 'vs-dark',

@@ -153,6 +153,10 @@ function makeWindow() {
     backgroundColor: '#000',
     show: !headless,
     skipTaskbar: headless,
+
+    // linux options
+    autoHideMenuBar: true,
+    darkTheme: true,
   });
   win.webContents.setWindowOpenHandler((details) => {
     return {
@@ -196,7 +200,7 @@ function makeWindow() {
   windows.add(win);
   if (!focusedWindow)
     return;
-  focusedWindow.addTabbedWindow(win);
+  focusedWindow.addTabbedWindow?.(win);
 }
 app.on('new-window-for-tab', () => {
   makeWindow();
