@@ -47,6 +47,7 @@ async function createSSHSubshell(delegate) {
   const execute = [
     `SNAIL_VERSION=${JSON.stringify(require('../package.json').version)}`,
     `SNAIL_SLUGS_URL=${shellescape(delegate.env.SNAIL_SLUGS_URL || 'https://joel.tools/slugs')}`,
+    `SNAIL_NODE_URL=${shellescape(delegate.env.SNAIL_NODE_URL || 'https://nodejs.org/dist')}`,
     `sh -c ${shellescape(fs.readFileSync(path.join(__dirname, './download-slug-if-needed-and-run.sh'), 'utf8'))}`,
   ].join(' ');
   const child = spawn('ssh', [...delegate.sshArgs, delegate.sshAddress, execute], {

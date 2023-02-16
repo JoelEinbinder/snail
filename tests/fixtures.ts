@@ -1,5 +1,5 @@
 export * from '@playwright/test';
-import { test as _test, _baseTest, _electron, type Page, type ElectronApplication } from '@playwright/test';
+import { test as _test, _baseTest, _electron, expect, type Page, type ElectronApplication } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 import { ShellModel } from './ShellModel';
@@ -21,9 +21,11 @@ export const test = _test.extend<{
   tmpDirForTest: string;
   docker: SshAddress;
   waitForPort: (port: number) => Promise<void>;
+  shellInDocker: ShellModel;
 }, {
   imageId: string;
   slugURL: string;
+  nodeURL: string;
 }>({
   workingDir: async ({ }, use) => {
     const workingDir = test.info().outputPath('working-dir');
@@ -81,6 +83,33 @@ export const test = _test.extend<{
     });
     token.canceled = true;
   },
+  nodeURL: [async ({}, use) => {
+    const nodesDir = path.join(__dirname, 'cached-nodes');
+    const supportedNodes = ['v18.14.0/node-v18.14.0-linux-arm64.tar.gz'];
+    for (const node of supportedNodes) {
+      const nodePath = path.join(nodesDir, node);
+      if (fs.existsSync(path.join(nodesDir, node)))
+        continue;
+      const dirname = path.dirname(nodePath);
+      await fs.promises.mkdir(dirname, { recursive: true });
+      execSync(`curl -o ${path.basename(node)} https://nodejs.org/dist/${node}`, { cwd: dirname, stdio: 'inherit' });
+    }
+    const server = http.createServer((req, res) => {
+      const nodePath = path.join(nodesDir, req.url!);
+      if (!nodePath.startsWith(nodesDir)) {
+        res.writeHead(403);
+        res.end();
+        return;
+      }
+      res.writeHead(200);
+      fs.createReadStream(nodePath).pipe(res);
+    });
+    server.listen();
+    await new Promise(x => server.once('listening', x));
+    const port: number = (server.address() as any).port;
+    await use(`http://localhost:${port}`);
+    server.close();
+  }, { scope: 'worker', option: true, timeout: 30_000 }],
   slugURL: [async ({}, use) => {
     await buildSlugIfNeeded('linux', 'arm64');
     const server = http.createServer((req, res) => {
@@ -171,6 +200,52 @@ export const test = _test.extend<{
   },
   shell: async ({ shellFactory }, use) => {
     await use(await shellFactory());
+  },
+  shellInDocker: async ({ shell, slugURL, docker, nodeURL }, use) => {
+    shell.waitForLine(/password: /).then(async () => {
+      await shell.page.keyboard.type('mypassword');
+      await shell.page.keyboard.press('Enter');  
+    });
+    const extraArgs:string[] = [];
+
+    let SNAIL_SLUGS_URL = slugURL; 
+    const parsedSlugURL = new URL(slugURL);
+    if (parsedSlugURL.hostname === 'localhost') {
+      SNAIL_SLUGS_URL = `http://localhost:${parsedSlugURL.port}`;
+      extraArgs.push('-R', `${parsedSlugURL.port}:localhost:${parsedSlugURL.port}`)
+    }
+    let SNAIL_NODE_URL = nodeURL; 
+    const parsedNodeURL = new URL(nodeURL);
+    if (parsedNodeURL.hostname === 'localhost') {
+      SNAIL_NODE_URL = `http://localhost:${parsedNodeURL.port}`;
+      extraArgs.push('-R', `${parsedNodeURL.port}:localhost:${parsedNodeURL.port}`)
+    }
+    const sshCommand = [
+      `SNAIL_SLUGS_URL=${JSON.stringify(SNAIL_SLUGS_URL)}`,
+      `SNAIL_NODE_URL=${JSON.stringify(SNAIL_NODE_URL)}`,
+      `ssh2`,
+      ...extraArgs,
+      // ConnectionAttempts because sshd really doesnt start up when it says it starts up
+      `-o ConnectionAttempts=10`,
+      `-o UserKnownHostsFile=/dev/null`,
+      `-o StrictHostKeyChecking=no`,
+      `-o LogLevel=ERROR`,
+      docker.address,
+      `-p ${docker.port}`
+    ].join(' ');
+    await shell.runCommand(sshCommand);
+  
+    expect(await shell.serialize()).toEqual({
+      log: [
+        `> ${sshCommand}`,
+        { input: '<password>', message: `${docker.address}'s password: `},
+        'Downloading snail runtime...\n' +
+        'Downloading node for Linux aarch64...',
+      ],
+      prompt: { value: '' }
+    });
+    await shell.runCommand('clear');
+    await use(shell);
   }
 });
 export default test;

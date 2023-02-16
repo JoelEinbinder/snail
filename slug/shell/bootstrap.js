@@ -27,6 +27,7 @@ global.bootstrap = (args) => {
   const {sh} = require('../shjs/jsapi');
   const {setAlias, getAliases} = require('../shjs/index');
   global.sh = sh;
+  process.env.SNAIL_NODE_PATH = process.execPath;
   function notify(method, params) {
     binding(JSON.stringify({method, params}));
   }

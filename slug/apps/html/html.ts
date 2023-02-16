@@ -4,4 +4,5 @@ const {args} = await d4.waitForMessage<{
 }>();
 document.body.innerHTML = args[2];
 d4.setHeight(document.body.offsetHeight);
+d4.setToJSON(() => `HTML: ${document.body.innerHTML}`);
 export {};

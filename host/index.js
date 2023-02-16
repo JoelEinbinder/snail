@@ -40,24 +40,6 @@ const handler = {
       proxy.close();
     }
 
-    // const execute = [
-    //   `SNAIL_VERSION=${JSON.stringify(require('../package.json').version)}`,
-    //   `SNAIL_SLUGS_URL=${shellescape(delegate.env.SNAIL_SLUGS_URL || 'https://joel.tools/slugs')}`,
-    //   `sh -c ${shellescape(fs.readFileSync(path.join(__dirname, './download-slug-if-needed-and-run.sh'), 'utf8'))}`,
-    // ].join(' ');
-    // const child = spawn('ssh', [...delegate.sshArgs, delegate.sshAddress, execute], {
-    //   stdio: ['pipe', 'pipe', 'pipe'],
-    //   detached: false,
-    //   cwd: process.cwd(),
-    //   env: {
-    //     ...delegate.env,
-    //     PWD: process.cwd(),
-    //     SSH_ASKPASS: path.join(__dirname, './sshAskpass.js'),
-    //     SNAIL_SSH_PASS_SOCKET: sshPassSocketPath,
-    //     SSH_ASKPASS_REQUIRE: 'force',
-    //   }
-    // });
-  
     let startedTerminal = false;
     let endedTerminal = false;
     /** @type {(data: Buffer) => void} */
@@ -95,6 +77,7 @@ const handler = {
             ...process.env,
             SNAIL_VERSION: require('../package.json').version,
             SNAIL_SLUGS_URL: process.env.SNAIL_SLUGS_URL || 'https://joel.tools/slugs',
+            SNAIL_NODE_URL: process.env.SNAIL_NODE_URL || 'https://nodejs.org/dist',
             SNAIL_DONT_RUN: '1',
           },
         });

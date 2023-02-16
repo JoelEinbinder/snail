@@ -25,3 +25,4 @@ __pycache__
 /utils/built-slugs/
 /utils/electron-out/
 /node_18.14.0
+/tests/cached-nodes/

@@ -1,2 +1,7 @@
-#!/usr/bin/env node
-require('../../apps/show/backend.js');
+#!/usr/bin/env sh
+if [ -z "$SNAIL_NODE_PATH" ]
+then
+  echo "No SNAIL_NODE_PATH found." 1>&2;
+  exit 1
+fi
+$SNAIL_NODE_PATH $0/../../../apps/show/backend.js $@
