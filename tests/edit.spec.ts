@@ -59,3 +59,28 @@ test('can edit an existing file', async ({ shell, workingDir }) => {
     }
   });
 });
+
+test('is set as the default editor', async ({ shell }) => {
+  await shell.runCommand('$EDITOR foo.txt');
+  expect(await shell.serialize()).toEqual({
+    title: 'foo.txt',
+    content: '',
+  });
+});
+
+test('has a close button', async ({ shell, workingDir }) => {
+  await shell.runCommand('edit foo.txt');
+  expect(await shell.serialize()).toEqual({
+    title: 'foo.txt',
+    content: '',
+  });
+  await shell.page.frameLocator('iframe').locator('a.close').click();
+  expect(await shell.waitAndSerialize()).toEqual({
+    log: [
+      '> edit foo.txt',
+    ],
+    prompt: {
+      value: '',
+    }
+  });
+});

@@ -74,9 +74,23 @@ monaco.languages.registerTokensProviderFactory('shjs', {
 class Header {
   element = document.createElement('div');
   private title = '';
+  private _titleElement = document.createElement('div');
+  private _closeButton = document.createElement('a');
   private modified = false;
   constructor() {
     this.element.classList.add('header');
+    this._titleElement.classList.add('title');
+    this._closeButton.role = 'button';
+    this._closeButton.tabIndex = 0;
+    this._closeButton.title = 'Close (⌃X)'
+    this._closeButton.setAttribute('aria-label', this._closeButton.title);
+    this._closeButton.classList.add('codicon','codicon-close', 'close');
+    this._closeButton.onclick = event => {
+      event.stopImmediatePropagation();
+      event.preventDefault();
+      doClose();
+    };
+    this.element.append(this._titleElement, this._closeButton);
   }
   setTitle(title: string) {
     this.title = title;
@@ -92,7 +106,7 @@ class Header {
     return this.modified;
   }
   render() {
-    this.element.textContent = this.title + (this.modified ? '*' : '');
+    this._titleElement.textContent = this.title + (this.modified ? '*' : '');
   }
 }
 d4.setIsFullscreen(true);
@@ -116,15 +130,19 @@ document.addEventListener('keydown', event => {
   if ((event.code === 'KeyX' || event.code === 'KeyC') && event.ctrlKey) {
     event.preventDefault();
     event.stopPropagation();
-    if (editor && header.isModified()) {
-      if (!confirm(`Discard unsaved changes to ${relativePath}?`))
-        return;
-    }
-    // this will be handled by the iframe destruction
-    d4.startAsyncWork('closing editor');
-    rpc.notify('close', {});
+    doClose();
   }
 });
+
+function doClose() {
+  if (editor && header.isModified()) {
+    if (!confirm(`Discard unsaved changes to ${relativePath}?`))
+      return;
+  }
+  // this will be handled by the iframe destruction
+  d4.startAsyncWork('closing editor');
+  rpc.notify('close', {});
+}
 let lastSavedVersion;
 let editor: monaco.editor.IStandaloneCodeEditor;
 let relativePath: string;
