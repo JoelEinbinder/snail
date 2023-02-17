@@ -33,6 +33,8 @@ global.bootstrap = (args) => {
   }
   /** @type {Map<number, import('node-pty').IPty>} */
   const shells = new Map();
+  /** @type {WeakSet<import('node-pty').IPty>} */
+  const wroteToStdin = new WeakSet();
   let shellId = 0;
   let rows = 24;
   let cols = 80;
@@ -133,8 +135,15 @@ global.bootstrap = (args) => {
       if (returnValue.changes)
         freeShell.then(x => x.connection.sendString(JSON.stringify({changes: returnValue.changes})));
     } else if (!returnValue.died) {
-      disposeDataListener.dispose();
-      freeShell = Promise.resolve({connection, shell});
+      if (wroteToStdin.has(shell)) {
+        // Don't reuse a shell if it had stdin written to it, because it might leak into the next command.
+        // We could do something fancy to flush it out, but its probably easier to just leave it alone.
+        shell.kill();        
+      } else {
+        // This is where we reuse shells.
+        disposeDataListener.dispose();
+        freeShell = Promise.resolve({connection, shell});
+      }
     }
     if (returnValue.changes) {
       const changes = returnValue.changes;
@@ -172,9 +181,11 @@ global.bootstrap = (args) => {
   }
   const handler = {
     input({id, data}) {
-      if (!shells.has(id))
+      const shell = shells.get(id);
+      if (!shell)
         return;
-      shells.get(id).write(data);
+      wroteToStdin.add(shell);
+      shell.write(data);
     },
     resize(size) {
       rows = size.rows;

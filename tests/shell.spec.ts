@@ -190,3 +190,44 @@ test('can reconnect', async ({ shellFactory }) => {
     },
   });
 });
+
+test('stdin doesnt leak to the next command', async ({ shell }) => {
+  // https://github.com/xxorax/node-shell-escape MIT
+  function shellescape(s) {
+    if (/[^A-Za-z0-9_\/:=-]/.test(s)) {
+      s = "'"+s.replace(/'/g,"'\\''")+"'";
+      s = s.replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
+        .replace(/\\'''/g, "\\'" ); // remove non-escaped single-quote if there are enclosed between 2 escaped
+    }
+    return s;
+  }    
+  
+  // put some stuff into stdin that nobody wants to read
+  const firstCommandPromise = shell.runCommand('echo Command Running && sleep 3;');
+  await shell.waitForLine(/Command Running/);
+  await shell.page.keyboard.type('abcdefghijklmnopqrstuvwxy');
+  await firstCommandPromise;
+  
+  // make sure that the next command does not read it
+  function innerCommand() {
+    const received: Buffer[] = [];
+    process.stdin.on('data', data => {
+      received.push(data);
+      if (data.toString().includes('z')) {
+        console.log('recieved', Buffer.concat(received).toString());
+        process.exit(0);
+      }
+    });
+    process.stdin.setRawMode(true);
+    console.log('I am listening!');
+  }
+  const secondCommandPromise = shell.runCommand(`node -e ${shellescape(`(${innerCommand.toString()})()`)}`);
+  await shell.waitForLine(/I am listening!/);
+  await shell.page.keyboard.type('z');
+  await secondCommandPromise;
+  const serailized = await shell.serialize();
+  expect(serailized.log[3]).toEqual(
+    'I am listening!\n' +
+    'recieved z'
+  );
+});
