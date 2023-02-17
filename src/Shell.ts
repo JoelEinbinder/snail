@@ -268,7 +268,16 @@ export class Shell {
                     await addTerminalBlock();
                 });
                 break;
+              case 80: {
+                // thread stdin
+                const dataStr = new TextDecoder().decode(data.slice(1));
+                // this should only be a uuid. dont notify otherwise in case its some kind of strange injection attempt
+                if (!/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/.test(dataStr))
+                  break;
+                notify('input', { data: dataStr, id});
+                break;
               }
+            }
           },
           plainTerminalData: data => {
             terminalTaskQueue.queue(async () => {
