@@ -1,6 +1,7 @@
 /// <reference path="../../iframe/types.d.ts" />
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import './index.css';
+import { RPC } from '../../protocol/rpc';
 try {
 await loadScript("../../../node_modules/monaco-editor/min/vs/loader.js");
 async function loadScript(path) {
@@ -95,6 +96,16 @@ class Header {
   }
 }
 d4.setIsFullscreen(true);
+d4.expectingUserInput('edit');
+d4.setToJSON(() => {
+  if (!editor)
+    return 'Loading...';
+  return {
+    title: header.element.textContent,
+    content: editor.getValue(),
+  }
+});
+let initialDocumentLoad: (() => void) | null = d4.startAsyncWork('initial document load');
 document.title = 'foo';
 const header = new Header();
 document.body.append(header.element);
@@ -109,58 +120,70 @@ document.addEventListener('keydown', event => {
       if (!confirm(`Discard unsaved changes to ${relativePath}?`))
         return;
     }
-    d4.sendInput(JSON.stringify({method: 'close'}) + '\n');
+    // this will be handled by the iframe destruction
+    d4.startAsyncWork('closing editor');
+    rpc.notify('close', {});
   }
 });
 let lastSavedVersion;
 let editor: monaco.editor.IStandaloneCodeEditor;
 let relativePath: string;
-while (true){
-  const {method, params, id} = await d4.waitForMessage();
-  switch(method) {
-    case 'setContent': {
-      monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSuggestionDiagnostics: true,
-      });
-      const language = getLanguage(params.absolutePath);
-      relativePath = params.relativePath;
-      editor = monaco.editor.create(editorContainer, {
-        value: params.content,
-        language,
-        fontSize: parseInt(window.getComputedStyle(document.body).fontSize),
-        fontFamily: window.getComputedStyle(document.body).fontFamily,
-        wordBasedSuggestions: false,
-        minimap: {
-          enabled: false, 
-        },
-      });
-      lastSavedVersion = editor.getModel()!.getAlternativeVersionId();
-      editor.addAction({
-        id: 'edit.save',
-        label: 'Save',
-        run() {
-          d4.sendInput(JSON.stringify({method: 'save', params: {content: editor.getValue(), file: params.absolutePath}}) + '\n');
-          lastSavedVersion = editor.getModel()!.getAlternativeVersionId();
-          header.setModified(lastSavedVersion !== editor.getModel()!.getAlternativeVersionId());
-        },
-        contextMenuGroupId: 'file',
-        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
-      });
-      editor.getModel()!.onDidChangeContent(() => {
-        header.setModified(lastSavedVersion !== editor.getModel()!.getAlternativeVersionId());
-      });
-      window.onresize = () => editor.layout();
-      header.setTitle(params.relativePath || 'New Buffer');
-      editor.layout();
-      editor.focus();
-      setTimeout(() => {
-        editor.setScrollTop(0, monaco.editor.ScrollType.Immediate);
-      }, 0);
-      break;
+const transport: Parameters<typeof RPC>[0] = {
+  send(message) {
+    d4.sendInput(JSON.stringify(message) + '\n');
+  },
+};
+const rpc = RPC(transport, {
+  async setContent(params) {
+    if (initialDocumentLoad) {
+      console.log('initial document load done')
+      initialDocumentLoad();
+      initialDocumentLoad = null;
     }
-  }
-}
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: true,
+      noSuggestionDiagnostics: true,
+    });
+    const language = getLanguage(params.absolutePath);
+    relativePath = params.relativePath;
+    editor = monaco.editor.create(editorContainer, {
+      value: params.content,
+      language,
+      fontSize: parseInt(window.getComputedStyle(document.body).fontSize),
+      fontFamily: window.getComputedStyle(document.body).fontFamily,
+      wordBasedSuggestions: false,
+      minimap: {
+        enabled: false, 
+      },
+    });
+    lastSavedVersion = editor.getModel()!.getAlternativeVersionId();
+    editor.addAction({
+      id: 'edit.save',
+      label: 'Save',
+      async run() {
+        lastSavedVersion = editor.getModel()!.getAlternativeVersionId();
+        const done = d4.startAsyncWork('save');
+        await rpc.send('save', {content: editor.getValue(), file: params.absolutePath });
+        header.setModified(lastSavedVersion !== editor.getModel()!.getAlternativeVersionId());
+        done();
+      },
+      contextMenuGroupId: 'file',
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+    });
+    editor.getModel()!.onDidChangeContent(() => {
+      header.setModified(lastSavedVersion !== editor.getModel()!.getAlternativeVersionId());
+    });
+    window.onresize = () => editor.layout();
+    header.setTitle(params.relativePath || 'New Buffer');
+    editor.layout();
+    editor.focus();
+    setTimeout(() => {
+      editor.setScrollTop(0, monaco.editor.ScrollType.Immediate);
+    }, 0);
+  },
+});
+while (true)
+  transport.onmessage!(await d4.waitForMessage<any>());
 } catch (e) {
   console.error(e);
 }

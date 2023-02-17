@@ -204,6 +204,8 @@ export class LogView implements Block {
   }
 
   async serializeForTest() {
+    if (this._shell.activeItem.current?.isFullscreen?.())
+      return this._shell.activeItem.current.serializeForTest();
     return {
       log: (await Promise.all(this._shell.log.map(item => {
         return item.serializeForTest ? item.serializeForTest() : '<unknown>';
@@ -234,4 +236,5 @@ export interface LogItem {
   dispose(): void;
   serializeForTest(): Promise<any>;
   waitForLineForTest?(regex: RegExp, signal?: AbortSignal): Promise<void>;
+  isFullscreen?(): boolean;
 }

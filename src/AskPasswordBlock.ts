@@ -1,11 +1,13 @@
 import { JoelEvent } from "./JoelEvent";
 import type { LogItem } from "./LogView";
 import './AskPasswordBlock.css';
+import { expectingUserInput } from './async';
 
 export class AskPasswordBlock implements LogItem {
   private _element = document.createElement('div');
   private _input = document.createElement('input');
   willResizeEvent = new JoelEvent<void>(undefined);
+  private _resolveUserInput = expectingUserInput('ask password');
   constructor(private _message: string, callback: (password: string) => void) {
     this._element.classList.add('ask-password');
     this._input.type = /password/i.test(this._message) ?  'password' : 'text';
@@ -19,6 +21,7 @@ export class AskPasswordBlock implements LogItem {
       event.stopImmediatePropagation();
       callback(this._input.value);
       this._input.replaceWith(this._input.type === 'password' ? '<password>' : this._input.value);
+      this._resolveUserInput();
     });
   }
   render(): Element {
@@ -28,6 +31,7 @@ export class AskPasswordBlock implements LogItem {
     this._input.focus();
   }
   dispose(): void {
+    this._resolveUserInput();
   }
   async serializeForTest(): Promise<any> {
     return { message: this._message, input: this._input.isConnected ? this._input.value : this._element.childNodes[1].textContent };

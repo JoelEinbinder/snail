@@ -202,4 +202,8 @@ export class TerminalBlock implements LogItem {
       lines.push(buffer.getLine(i).translateToString(true));
     return lines.join('\n');
   }
+
+  isFullscreen(): boolean {
+    return this.fullscreenEvent.current;
+  }
 }

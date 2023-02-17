@@ -231,6 +231,20 @@ function setToJSON(toJSON) {
   _toJSON = toJSON;
 }
 
+let asyncWorkId = 0;
+function startAsyncWork(name = 'Anonymous Work') {
+  const id = ++asyncWorkId;
+  sendMessageToParent({method: 'startAsyncWork', params: {name, id}});
+  return () => sendMessageToParent({method: 'finishWork', params: {id}});
+}
+
+let asyncWorkContextId = 0;
+function expectingUserInput(name = 'Anonymous Work Context') {
+  const id = ++asyncWorkContextId;
+  sendMessageToParent({method: 'expectingUserInput', params: {name, id}});
+  return () => sendMessageToParent({method: 'resolveUserInput', params: {id}});
+}
+
 window.d4 = {
   waitForMessage,
   setHeight,
@@ -243,5 +257,7 @@ window.d4 = {
   attachToCDP,
   openDevTools,
   setToJSON,
+  startAsyncWork,
+  expectingUserInput,
 }
 sendMessageToParent('ready')

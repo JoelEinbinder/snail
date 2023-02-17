@@ -16,7 +16,7 @@ export class ProgressBlock implements LogItem {
     this._element.append(this._leftText, this._progress, this._rightText);
   }
   async serializeForTest() {
-    return this._element.isConnected ? {
+    return (this._element.isConnected && this._element.classList.contains('visible')) ? {
       type: 'progress',
       left: this._leftText.textContent || undefined,
       value: this._progress.value,

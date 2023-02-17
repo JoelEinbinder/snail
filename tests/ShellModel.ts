@@ -32,6 +32,10 @@ export class ShellModel {
       return hooks.waitForAnyWorkToFinish();
     });
   }
+  async waitAndSerialize() {
+    await this.waitForAsyncWorkToFinish();
+    return this.serialize();
+  }
   async serialize() {
     return await this.page.evaluate(() => {
       const hooks = window.testingHooks;

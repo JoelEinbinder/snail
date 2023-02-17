@@ -6,7 +6,7 @@ import type { JSConnection } from "./JSConnection";
 import { LogItem } from "./LogView";
 import { cdpManager, DebuggingInfo } from './CDPManager';
 import { randomUUID } from "./uuid";
-import { startAyncWork } from "./async";
+import { expectingUserInput, startAyncWork } from "./async";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -156,6 +156,9 @@ class IFrameView implements WebContentView {
   }
 
   focus() {
+    // This will focus the body in the iframe, so try not to disturb things if there is already focus.
+    if (this._iframe.ownerDocument.activeElement === this._iframe)
+      return;
     this._iframe.focus();
   }
   postMessage(message: any) {
@@ -203,6 +206,9 @@ export class IFrameBlock implements LogItem {
   private _readyCallback: () => void;
   private _messageCallbacks = new Map<number, ((result: any) => void)>();
   private _lastMessageId = 0;
+  private _finishWorks = new Map<number, () => void>();
+  private _resolveUserInputs = new Map<number, () => void>();
+  private _lastHeight = 0;
   constructor(
     data: string,
     delegate: IFrameBlockDelegate,
@@ -221,6 +227,7 @@ export class IFrameBlock implements LogItem {
       switch(data.method) {
         case 'setHeight': {
           this.willResizeEvent.dispatch();
+          this._lastHeight = data.params.height;
           this._webContentView.setHeight(data.params.height);
           if (data.params.height > 0)
             didDraw();
@@ -329,6 +336,30 @@ export class IFrameBlock implements LogItem {
           this._detachCDPIfNeeded();
           break;
         }
+        case 'startAsyncWork': {
+          if (this._finishWorks.has(data.params.id))
+            throw new Error('Work already started');
+          this._finishWorks.set(data.params.id, startAyncWork(data.params.name));
+          break;
+        }
+        case 'finishWork': {
+          const finishWork = this._finishWorks.get(data.params.id);
+          this._finishWorks.delete(data.params.id);
+          finishWork();
+          break;
+        }
+        case 'expectingUserInput': {
+          if (this._resolveUserInputs.has(data.params.id))
+            throw new Error('Already expecting user input');
+          this._resolveUserInputs.set(data.params.id, expectingUserInput(data.params.name));
+          break;
+        }
+        case 'resolveUserInput': {
+          const resolve = this._resolveUserInputs.get(data.params.id);
+          this._resolveUserInputs.delete(data.params.id);
+          resolve();
+          break;
+        }
       }
     };
     this._webContentView = delegate.browserView ? new BrowserView(handler) : new IFrameView(handler);
@@ -366,6 +397,15 @@ export class IFrameBlock implements LogItem {
     this._webContentView.dispose();
     font.off(this._onFontChanged);
     this._detachCDPIfNeeded();
+    this._cleanupAsyncWorkIfNeeded();
+  }
+  _cleanupAsyncWorkIfNeeded() {
+    for (const finish of this._finishWorks.values())
+      finish();
+    this._finishWorks.clear();
+    for (const resolve of this._resolveUserInputs.values())
+      resolve();
+    this._resolveUserInputs.clear();
   }
   _detachCDPIfNeeded() {
     if (!this._attachedToCDP)
@@ -394,6 +434,7 @@ export class IFrameBlock implements LogItem {
     if (this._closed)
       return;
     this._detachCDPIfNeeded();
+    this._cleanupAsyncWorkIfNeeded();
     this._closed = true;
     this._webContentView.didClose();
     if (this._isFullscreen)
@@ -415,6 +456,8 @@ export class IFrameBlock implements LogItem {
   }
 
   async serializeForTest(): Promise<any> {
+    if (this._lastHeight === 0 && !this._isFullscreen)
+      return null;
     const id = ++this._lastMessageId;
     const {json} = await new Promise<any>(resolve => {
       this._messageCallbacks.set(id, resolve);
@@ -422,6 +465,10 @@ export class IFrameBlock implements LogItem {
     });
     this._messageCallbacks.delete(id);
     return json || '<iframe>';
+  }
+
+  isFullscreen(): boolean {
+    return this._isFullscreen;
   }
 }
 

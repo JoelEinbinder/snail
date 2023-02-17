@@ -202,10 +202,6 @@ export const test = _test.extend<{
     await use(await shellFactory());
   },
   shellInDocker: async ({ shell, slugURL, docker, nodeURL }, use) => {
-    shell.waitForLine(/password: /).then(async () => {
-      await shell.page.keyboard.type('mypassword');
-      await shell.page.keyboard.press('Enter');  
-    });
     const extraArgs:string[] = [];
 
     let SNAIL_SLUGS_URL = slugURL; 
@@ -234,7 +230,10 @@ export const test = _test.extend<{
       `-p ${docker.port}`
     ].join(' ');
     await shell.runCommand(sshCommand);
-  
+    await shell.page.keyboard.type('mypassword');
+    await shell.page.keyboard.press('Enter');  
+    await shell.waitForAsyncWorkToFinish();
+
     expect(await shell.serialize()).toEqual({
       log: [
         `> ${sshCommand}`,
