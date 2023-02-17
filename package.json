@@ -9,7 +9,7 @@
     "bundle": "node utils/bundle.js",
     "check": "npm run type && npm run build && npm run test && playwright test --forbid-only"
   },
-  "version": "0.5.3",
+  "version": "0.5.5",
   "workspaces": [
     "slug",
     "xterm.js"

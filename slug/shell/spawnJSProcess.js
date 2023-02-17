@@ -31,8 +31,8 @@ function spawnJSProcess({cwd, nodePath, bootstrapPath}) {
     cwd,
     env: {
       ...process.env,
-      PATH: `${process.env.PATH}:${path.join(bootstrapPath, '..', 'include', 'bin')}`,
-      EDITOR: path.join(__dirname, '..', 'include', 'bin', 'edit'),
+      PATH: `${process.env.PATH}:${path.join(bootstrapPath, '..', '..', 'include', 'bin')}`,
+      EDITOR: path.join(bootstrapPath, '..', '..', 'include', 'bin', 'edit'),
     }
   });
 
