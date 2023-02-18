@@ -1,7 +1,6 @@
-/// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
+/// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import { StringStream } from './StringStream';
-import * as bundle from './build/lib';
-const {ShjsMode} = bundle as typeof import('../../shjs/editorMode');
+import { ShjsMode } from '../../shjs/editorMode';
 
 function copyState<T>(state: T, depth = 2): T {
   if (Array.isArray(state)) return state.slice(0) as T & any[];

@@ -84,3 +84,11 @@ test('has a close button', async ({ shell, workingDir }) => {
     }
   });
 });
+
+test('can edit inside docker', async ({ shellInDocker }) => {
+  await shellInDocker.runCommand('edit foo.txt');
+  expect(await shellInDocker.serialize()).toEqual({
+    title: 'foo.txt',
+    content: '',
+  });
+});
