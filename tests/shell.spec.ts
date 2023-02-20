@@ -105,7 +105,7 @@ test('can ssh2 into docker', async ({ shellInDocker }) => {
   });
 });
 
-test('ssh2 delete this test', async ({ shell }) => {
+test.skip('ssh2 delete this test', async ({ shell }) => {
   await shell.runCommand('ssh2 joeleinbinder@localhost');
   expect(await shell.serialize()).toEqual({
     log: [ '> ssh2 joeleinbinder@localhost' ],
@@ -166,7 +166,8 @@ test('can reconnect', async ({ shellFactory }) => {
   const shell1 = await shellFactory();
   await shell1.runCommand('let foo = 456');
   await shell1.toggleDemonMode();
-  shell1.runCommand('read -p "Yes or no?" yn').catch(e => {});
+  // read binary doesn't exist on arch so use bash builtin 
+  shell1.runCommand('bash -c \'read -p "Yes or no?" yn\'').catch(e => {});
   await shell1.waitForLine(/Yes or no\?/);
   await shell1.close();
 
@@ -189,6 +190,7 @@ test('can reconnect', async ({ shellFactory }) => {
       value: '',
     },
   });
+  await shell2.runCommand('exit');
 });
 
 test('stdin doesnt leak to the next command', async ({ shell }) => {

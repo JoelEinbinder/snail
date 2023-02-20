@@ -1,6 +1,8 @@
 const {it, describe, beforeEach, afterEach} = require('mocha');
 const expect = require('expect');
 const rimraf = require('rimraf');
+const os = require('os');
+
 describe('runner', () => {
     const {getResult} = require('./runner');
     it('should pipe', async () => {
@@ -70,8 +72,8 @@ describe('runner', () => {
         });
         expect(result).toEqual({
             output: '',
-            stderr: 'ls: not_a_real_directory: No such file or directory\n',
-            code: 1
+            stderr: os.platform() === 'darwin' ? 'ls: not_a_real_directory: No such file or directory\n' : "ls: cannot access 'not_a_real_directory': No such file or directory\n",
+            code: os.platform() === 'darwin' ? 1 : 2,
         })
     });
 
@@ -120,7 +122,7 @@ describe('runner', () => {
         });
         expect(result).toEqual({
             output: 'foo\n',
-            stderr: 'ls: not_a_real_directory: No such file or directory\n',
+            stderr: os.platform() === 'darwin' ? 'ls: not_a_real_directory: No such file or directory\n' : "ls: cannot access 'not_a_real_directory': No such file or directory\n",
             code: 0
         })
     });

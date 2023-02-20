@@ -5,7 +5,7 @@ const path = require('path');
 const headless = process.argv.includes('--test-headless');
 let windowNumber = 0;
 if (headless)
-  app.dock.hide();
+  app.dock?.hide();
 if (process.env.SNAIL_TEST_USER_DATA_DIR)
   app.setPath('userData', process.env.SNAIL_TEST_USER_DATA_DIR);
 app.setName('Terminal');
@@ -141,7 +141,14 @@ app.whenReady().then(() => {
 /** @type {Set<BrowserWindow>} */
 const popups = new Set();
 function makeWindow() {
-  const focusedWindow = [...windows].find(x => x.isFocused());
+  const focusedWindow = [...windows].find(x => {
+    try {
+      // sometimes the close event is late and this throws
+      return x.isFocused();
+    } catch {
+      return false;
+    }
+  });
   const win = new BrowserWindow({
     width: 490,
     height: 371,
@@ -428,7 +435,13 @@ function clientForSender(sender) {
   return clients.get(sender);
 }
 
-app.on('window-all-closed', e => e.preventDefault());
+app.on('window-all-closed', e => {
+  if (process.argv.includes('--no-first-window') || require('os').platform() === 'darwin') {
+    e.preventDefault();
+    return;
+  }
+  app.quit();
+});
 app.on('activate', event => {
   if (windows.size)
     return;

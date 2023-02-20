@@ -152,7 +152,8 @@ const handler = {
         socket,
         closePromise: new Promise(x => socket.onclose = x),
         getExitCode: () => null,
-      }
+      };
+      socket.onclose = () => transport?.send({method: 'Shell.subshellDestroyed', params: { id }});
     }
 
     const {socket, closePromise, getExitCode} = output;

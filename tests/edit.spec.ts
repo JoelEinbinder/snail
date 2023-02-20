@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 test('can edit a new file', async ({ shell, workingDir }) => {
   await shell.runCommand('edit foo.js');
@@ -13,7 +14,7 @@ test('can edit a new file', async ({ shell, workingDir }) => {
     title: 'foo.js*',
     content: 'hello world',
   });
-  await shell.page.keyboard.press('Meta+KeyS');
+  await shell.page.keyboard.press(os.platform() === 'darwin' ? 'Meta+KeyS' : 'Control+KeyS');
   expect(await shell.waitAndSerialize()).toEqual({
     title: 'foo.js',
     content: 'hello world',
@@ -43,7 +44,7 @@ test('can edit an existing file', async ({ shell, workingDir }) => {
     title: 'bar.txt*',
     content: 'old content\nnew content\n',
   });
-  await shell.page.keyboard.press('Meta+KeyS');
+  await shell.page.keyboard.press(os.platform() === 'darwin' ? 'Meta+KeyS' : 'Control+KeyS');
   expect(await shell.waitAndSerialize()).toEqual({
     title: 'bar.txt',
     content: 'old content\nnew content\n',

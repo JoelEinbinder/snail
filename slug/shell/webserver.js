@@ -1,40 +1,33 @@
 const path = require('path');
 /** @type {Map<string, import('esbuild').OutputFile>} */
 const compiledFiles = new Map();
-/** @type {Map<string, import('esbuild').BuildResult>} */
-const fileToServer = new Map();
-
 async function resolveFileForIframe({filePath, headers, search}) {
   const searchParams = new URLSearchParams(search);
   if (searchParams.has('entry')) {
-
     const resolved = path.resolve('/', filePath);
-    let server = fileToServer.get(resolved);
-    if (server) {
-      for (const file of server.outputFiles)
-        compiledFiles.delete(file.path);
-      await server.rebuild();
-    } else {
-      server = await require('esbuild').build({
-        bundle: true,
-        write: false,
-        entryPoints: [resolved],
-        loader: {
-          '.woff': 'file',
-          '.svg': 'file',
-        },
-        assetNames: '[name]-[hash]',
-        chunkNames: '[name]-[hash]',
-        entryNames: '[name]-[hash]',
-        sourcemap: true,
-        format: 'esm',
-        incremental: true,
-        metafile: true,
-        logLevel: 'error',
-        outdir: path.dirname(resolved),
-        absWorkingDir: '/',
-      });
-    }
+    const esbuild = require('esbuild');
+    const server = await esbuild.build({
+      bundle: true,
+      write: false,
+      entryPoints: [resolved],
+      loader: {
+        '.woff': 'file',
+        '.svg': 'file',
+      },
+      assetNames: '[name]-[hash]',
+      chunkNames: '[name]-[hash]',
+      entryNames: '[name]-[hash]',
+      sourcemap: true,
+      format: 'esm',
+      // TODO find a way to do this without creating zombie processes
+      // maybe esbuild is also just fast enough for a full rebuild every time
+      // incremental: true,
+      metafile: true,
+      logLevel: 'error',
+      outdir: path.dirname(resolved),
+      absWorkingDir: '/',
+      watch: false,
+    });
     for (const file of server.outputFiles)
       compiledFiles.set(file.path, file);
     const entryMeta = Object.entries(server.metafile.outputs).find(x => x[1].entryPoint && (path.resolve('/', x[1].entryPoint) === resolved));

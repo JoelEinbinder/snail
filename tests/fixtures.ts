@@ -35,6 +35,9 @@ export const test = _test.extend<{
   tmpDirForTest: async ({ workingDir }, use) => {
     const tmpDir = await fs.promises.mkdtemp(path.join(require('os').tmpdir(), 'snail-temp-'));
     await use(tmpDir);
+    const entries = await fs.promises.readdir(path.join(tmpDir, '1d4-sockets'));
+    if (entries.length)
+      console.warn('some sockets still open', entries);
     await fs.promises.rm(tmpDir, { recursive: true, force: true });
   },
   imageId: [async ({ }, use) => {
@@ -154,6 +157,8 @@ export const test = _test.extend<{
         SNAIL_TEST_USER_DATA_DIR: test.info().outputPath('user-data-dir'),
       },
     });
+    const err: Buffer[] = [];
+    app.process().stderr?.on('data', data => err.push(data));
     await app.context().tracing.start({
       screenshots: true,
       snapshots: true,
@@ -163,6 +168,11 @@ export const test = _test.extend<{
     await app.context().tracing.stop({
       path: test.info().outputPath('trace.pwtrace')
     });
+    if (err.length) {
+      test.info().attach('electron-err', {
+        body: err.map(err => err.toString('utf8')).join(''),
+      });
+    }
     await app.close();
   },
   shellFactory: async ({ electronApp }, use) => {
