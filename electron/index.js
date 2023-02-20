@@ -2,6 +2,7 @@ process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, session } = require('electron');
 const { handler, proxies } = require('../host');
 const path = require('path');
+const os = require('os');
 const headless = process.argv.includes('--test-headless');
 let windowNumber = 0;
 if (headless)
@@ -160,6 +161,7 @@ function makeWindow() {
     backgroundColor: '#000',
     show: !headless,
     skipTaskbar: headless,
+    icon: os.platform() === 'darwin' ? undefined : path.join(__dirname, '128.png'),
 
     // linux options
     autoHideMenuBar: true,
@@ -436,7 +438,7 @@ function clientForSender(sender) {
 }
 
 app.on('window-all-closed', e => {
-  if (process.argv.includes('--no-first-window') || require('os').platform() === 'darwin') {
+  if (process.argv.includes('--no-first-window') || os.platform() === 'darwin') {
     e.preventDefault();
     return;
   }

@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const package = require('electron-packager');
 const toCopy = [
   'esout',
@@ -27,16 +28,27 @@ execSync('npm install --no-package-lock', {
   cwd: destination,
 });
   
-package({
-  dir: destination,
-  name: 'Snail',
-  platform: 'darwin',
-  arch: 'arm64',
-  overwrite: true,
-  icon: path.join(__dirname, '..', 'icon', 'icon.icns'),
-  appVersion: require('../package.json').version,
-  osxSign: true, 
-});
+if (os.platform() === 'darwin') {
+  package({
+    dir: destination,
+    name: 'Snail',
+    platform: 'darwin',
+    arch: 'arm64',
+    overwrite: true,
+    icon: path.join(__dirname, '..', 'icon', 'icon.icns'),
+    appVersion: require('../package.json').version,
+    osxSign: true, 
+  });
+} else {
+  package({
+    dir: destination,
+    name: 'Snail',
+    platform: 'linux',
+    arch: 'arm64',
+    overwrite: true,
+    appVersion: require('../package.json').version,
+  });
+}
 
 
 function makeRegex(str) {
