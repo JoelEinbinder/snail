@@ -130,28 +130,9 @@ app.whenReady().then(() => {
       });
     } catch (e) {
       console.error(e);
-      function escapeForHTML(text) {
-        return text.replace(/[&<>]/g, char => {
-          return {'&': '&amp;', '<': '&lt;', '>': '&gt;'}[char];
-        });
-      }
       callback({
         statusCode: 500,
-        data: Buffer.from(`<!DOCTYPE html>
-        <head>
-        <meta charset="utf-8">
-        <title>Snail Protocol 500 Error</title>
-        <style>
-          body {
-            background: #000;
-            color: #fff;
-            white-space: pre;
-            font-family: SFMono-Regular, ui-monospace, Menlo, Monaco, monospace;
-          }
-        </style>
-        </head>
-        <body>${escapeForHTML(String(e))}</body>
-        </html>`, 'utf8'),
+        data: Buffer.from(String(e), 'utf8'),
       });
     }
   });

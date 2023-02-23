@@ -66,7 +66,7 @@ function onMessage(data) {
       if (cdpListener)
         cdpListener.onDebuggeesChanged(params);
     } else if (method === 'requestJSON') {
-      const json = typeof _toJSON === 'function' ? _toJSON() : undefined;
+      const json = typeof _toJSON === 'function' ? _toJSON() : _toJSON;
       sendMessageToParent({id, result: {json}});
     }
   } else {

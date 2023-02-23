@@ -22,6 +22,7 @@ export const test = _test.extend<{
   docker: SshAddress;
   waitForPort: (port: number) => Promise<void>;
   shellInDocker: ShellModel;
+  populateFilesystem: (files: { [filePath: string]: string }) => Promise<void>;
 }, {
   imageId: string;
   slugURL: string;
@@ -255,6 +256,15 @@ export const test = _test.extend<{
     });
     await shell.runCommand('clear');
     await use(shell);
-  }
+  },
+  populateFilesystem: async ({ workingDir }, use) => {
+    await use(async files => {
+      await Promise.all(Object.entries(files).map(async ([name, content]) => {
+        const filePath = path.join(workingDir, name);
+        await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
+        await fs.promises.writeFile(filePath, content, 'utf8');
+      }));
+    });
+  },
 });
 export default test;
