@@ -1,4 +1,4 @@
-import {JoelEvent} from './JoelEvent';
+import {JoelEvent} from '../slug/cdp-ui/JoelEvent';
 
 let measuredFontSize: number = null;
 export const font = new JoelEvent({

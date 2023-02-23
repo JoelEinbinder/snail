@@ -1,12 +1,12 @@
 import 'xterm/css/xterm.css';
 import { addHistory, updateHistory } from './history';
 import { makePromptEditor } from './PromptEditor';
-import { JoelEvent } from './JoelEvent';
+import { JoelEvent } from '../slug/cdp-ui/JoelEvent';
 import type { LogItem, Prompt } from './LogView';
 import { CommandBlock, CommandPrefix, computePrettyDirName } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { ExtraClientMethods, JSConnection } from './JSConnection';
-import { JSBlock, JSLogBlock, renderRemoteObjectOneLine } from './JSBlock';
+import { JSBlock, JSLogBlock, renderRemoteObjectOneLine } from '../slug/cdp-ui/JSBlock';
 import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 import type { Suggestion } from './autocomplete';
 import { suffixThrottle, titleThrottle } from './title';

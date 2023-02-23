@@ -1,4 +1,4 @@
-import { JoelEvent } from "./JoelEvent";
+import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { LogItem } from "./LogView";
 import './AskPasswordBlock.css';
 import { expectingUserInput } from './async';

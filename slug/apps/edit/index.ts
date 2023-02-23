@@ -1,7 +1,7 @@
 /// <reference path="../../iframe/types.d.ts" />
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import './index.css';
-import { RPC } from '../../protocol/rpc';
+import { RPC } from '../../protocol/rpc-js';
 try {
 await loadScript("./vs/loader.js");
 async function loadScript(path) {

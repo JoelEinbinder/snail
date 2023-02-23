@@ -1,7 +1,7 @@
 import { Terminal, IDisposable } from "xterm";
 import type { AntiFlicker } from "./AntiFlicker";
 import { font } from "./font";
-import { JoelEvent } from "./JoelEvent";
+import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
 import { titleThrottle } from "./title";

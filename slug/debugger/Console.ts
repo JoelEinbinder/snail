@@ -1,9 +1,9 @@
-import { JSLogBlock } from '../src/JSBlock';
+import { JSLogBlock } from '../cdp-ui/JSBlock';
 import './console.css';
-import { JoelEvent } from '../src/JoelEvent';
+import { JoelEvent } from '../cdp-ui/JoelEvent';
 import type { TargetManager, ChromiumSession } from './TargetManager';
-import type { JSConnection } from '../src/JSConnection';
-import { Protocol } from '../src/protocol';
+import type { JSConnection } from '../../src/JSConnection';
+import type { Protocol } from '../../src/protocol';
 
 type Log = {
   payload: Protocol.Runtime.consoleAPICalledPayload,

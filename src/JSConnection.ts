@@ -1,5 +1,5 @@
 import {Protocol} from './protocol';
-import { RPC } from './RPC';
+import { RPC } from '../slug/protocol/RPC-ts';
 
 type ExtraServerMethods = {
   'Shell.daemonStatus': { isDaemon: boolean };

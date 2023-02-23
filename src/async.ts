@@ -1,4 +1,4 @@
-import { JoelEvent } from "./JoelEvent";
+import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 
 type Work = {name: string};
 const workEvent = new JoelEvent<void>(undefined);

@@ -1,5 +1,5 @@
 import { Editor, TextRange } from "../slug/editor/js/editor";
-import { JoelEvent } from "./JoelEvent";
+import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import { LogItem } from "./LogView";
 import { setSelection } from "./selection";
 import type { Shell } from './Shell';

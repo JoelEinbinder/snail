@@ -1,6 +1,6 @@
 import { Editor } from "../slug/editor/js/editor";
 import { startAyncWork } from "./async";
-import { JoelEvent } from "./JoelEvent";
+import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import { SuggestBox } from "./SuggestBox";
 
 export class Autocomplete {

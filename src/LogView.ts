@@ -1,4 +1,4 @@
-import type { JoelEvent } from './JoelEvent';
+import type { JoelEvent } from '../slug/cdp-ui/JoelEvent';
 import type { Shell } from './Shell';
 import './shell.css';
 import './logView.css';

@@ -7,7 +7,7 @@ function send(data) {
   });
   process.stdout.write(`\x1b\x1aM${str}\x00`);
 }
-const {RPC} = require('../protocol/rpc');
+const {RPC} = require('../protocol/rpc-js');
 const crypto = require('node:crypto');
 class Transport {
   constructor() {

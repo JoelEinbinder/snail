@@ -1,11 +1,11 @@
 import { JoelEvent } from "./JoelEvent";
-import type { JSConnection } from "./JSConnection";
-import type { LogItem } from "./LogView";
-import type { Protocol } from "./protocol";
+import type { JSConnection } from "../../src/JSConnection";
+import type { LogItem } from "../../src/LogView";
+import type { Protocol } from "../../src/protocol";
 import './remoteObject.css';
 
 export class JSBlock implements LogItem {
-  willResizeEvent = new JoelEvent(undefined);
+  willResizeEvent = new JoelEvent<void>(undefined);
   private _element: HTMLElement;
   constructor(object: Protocol.Runtime.RemoteObject, private _connection: JSConnection, size: JoelEvent<{cols: number, rows: number}>) {
     this._element = renderRemoteObject(object, this._connection, this.willResizeEvent, size.current.cols - 1, true);
@@ -23,7 +23,7 @@ export class JSBlock implements LogItem {
 }
 
 export class JSLogBlock implements LogItem {
-  willResizeEvent = new JoelEvent(undefined);
+  willResizeEvent = new JoelEvent<void>(undefined);
   private _element = document.createElement('div');
   constructor(log: Protocol.Runtime.consoleAPICalledPayload, connection: JSConnection, size: JoelEvent<{cols: number, rows: number}>) {
     this._element.style.whiteSpace = 'pre';
@@ -83,7 +83,7 @@ function renderErrorRemoteObject(object: Protocol.Runtime.RemoteObject) {
   const span = document.createElement('span');
   span.classList.add('remote-object', 'error');
   span.style.whiteSpace = 'pre';
-  span.textContent = object.description;
+  span.textContent = object.description!;
   return span;
 }
 
@@ -103,7 +103,8 @@ export function renderRemoteObjectOneLine(object: Protocol.Runtime.RemoteObject,
     objLine.classList.add('add-left-padding');
     return objLine;
   }
-  return renderRemoteObject(object, undefined, undefined, charBudget);
+  // TODO fix types here
+  return renderRemoteObject(object, undefined!, undefined!, charBudget);
 }
 
 function renderObjectRemoteObject(
@@ -133,7 +134,7 @@ function renderObjectRemoteObject(
       return;
     populated = true;
     const {result, exceptionDetails, internalProperties, privateProperties} = await connection.send('Runtime.getProperties', {
-      objectId: object.objectId,
+      objectId: object.objectId!,
       generatePreview: true,
       ownProperties: true,
     });
@@ -166,7 +167,7 @@ function renderObjectRemoteObject(
         if (property.value) {
           div.appendChild(renderRemoteObject(property.value, connection, willResize, innerCharBudget));
         } else {
-          const types = [];
+          const types: string[] = [];
           if (property.get)
             types.push('Getter');
           if (property.set)
@@ -200,11 +201,11 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBu
   if (object.preview) {
     charBudget -= 4; // end amount
     if (object.preview.subtype !== 'array' && object.className !== 'Object')
-      summary.append(object.className, ' ');
+      summary.append(object.className!, ' ');
     summary.append(object.preview.subtype === 'array' ? '[ ' : '{ ');
     if (open)
       return summary;
-    charBudget -= summary.textContent.length;
+    charBudget -= summary.textContent!.length;
     let first = true;
     let overflow = object.preview.overflow
     for (const property of object.preview.properties) {
@@ -232,13 +233,13 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBu
           if (property.subtype === 'null')
             fragment.append(renderBasicRemoteObject(property));
           else
-            fragment.append(renderOther(property.value));
+            fragment.append(renderOther(property.value!));
           break;
         case 'accessor':
           fragment.append(renderOther('Getter'));
           break;
       }
-      charBudget -= fragment.textContent.length;
+      charBudget -= fragment.textContent!.length;
       if (charBudget < 0) {
         overflow = true;
         break;
@@ -256,14 +257,14 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBu
     if (object.type === 'function') {
       summary.append(renderFunctionSummary(object))
     } else {
-      summary.append(renderOther(object.description));
+      summary.append(renderOther(object.description!));
     }
   }
   return summary;
 }
 
 function renderFunctionSummary(object: Protocol.Runtime.RemoteObject) {
-  const functionName = /^function\s*(.*)\(/.exec(object.description);
+  const functionName = /^function\s*(.*)\(/.exec(object.description!);
   if (functionName && functionName[1])
     return renderOther(`Function: ${functionName[1]}`);
   return renderOther('Function');
@@ -281,7 +282,7 @@ function renderBasicRemoteObject(object: Protocol.Runtime.RemoteObject|Protocol.
   const span = document.createElement('span');
   span.classList.add('remote-object', object.subtype === 'null' ? 'null' : object.type);
   if ('description' in object)
-    span.textContent = object.description;
+    span.textContent = object.description!;
   else if ('value' in object)
     span.textContent = object.value;
   else

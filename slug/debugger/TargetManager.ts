@@ -1,6 +1,6 @@
 /// <reference path="../iframe/types.d.ts" />
-import {RPC} from '../src/RPC';
-import { Protocol } from '../src/protocol';
+import {RPC} from '../protocol/RPC-ts';
+import type { Protocol } from '../../src/protocol';
 
 interface TargetListener {
   targetAdded(target: Target): void;

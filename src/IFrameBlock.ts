@@ -1,7 +1,7 @@
 import { AntiFlicker } from "./AntiFlicker";
 import { font, fontString } from "./font";
 import { host } from "./host";
-import { JoelEvent } from "./JoelEvent";
+import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { JSConnection } from "./JSConnection";
 import { LogItem } from "./LogView";
 import { cdpManager, DebuggingInfo } from './CDPManager';
