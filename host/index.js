@@ -1,4 +1,3 @@
-
 /**
  * @typedef {import('events').EventEmitter & {send: (message: any) => void}} Client
  */
@@ -20,13 +19,12 @@ let lastWebsocketId = 0;
 /** @type {Map<number, ProtocolProxy>} */
 const proxies = new Map();
 const webServers = new WebServers(false);
+/** @typedef {import('./ShellHost').ShellHost} ShellHost */
+/** @type {{[key in keyof ShellHost]: (params: Parameters<ShellHost[key]>[0], sender: Client) => Promise<ReturnType<ShellHost[key]>>}} */
 const handler = {
   async obtainWebSocketId() {
     return ++lastWebsocketId;
   },
-  /**
-   * @param {Client} sender
-   */
   async createJSShell({cwd, socketId}, sender) {
     if (proxies.has(socketId))
       throw new Error('Socket already exists');
@@ -129,7 +127,7 @@ const handler = {
   async addHistory(item) {
     const database = await getDatabase();
     const runResult = await new Promise((res, rej) => {
-      database.run(`INSERT INTO history (command, start, pwd) VALUES (?, ?, ?)`, [item.command, item.start, item.pwd], function (err) {
+      database.run(`INSERT INTO history (command, start) VALUES (?, ?)`, [item.command, item.start], function (err) {
         if (err)
           rej(err)
         else

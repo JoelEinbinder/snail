@@ -219,7 +219,8 @@ app.on('new-window-for-tab', () => {
 const browserViews = new WeakMap();
 /** @type {WeakMap<import('electron').WebContents, {uuid: string, parent: import('electron').WebContents}>} */
 const browserViewContentsToParentContents = new WeakMap();
-/** @type {{[key: string]: (params: any, client: import('../host/').Client, sender: import('electron').WebContents) => any}} */
+/** @typedef {import('../host/ShellHost').ShellHost} ShellHost */
+/** @type {{[Key in keyof ShellHost]?: (params: Parameters<ShellHost[Key]>[0], client: import('../host/').Client, sender: import('electron').WebContents) => ReturnType<ShellHost[Key]>|Promise<ReturnType<ShellHost[Key]>>}} */
 const overrides = {
   ...handler,
   async beep() {

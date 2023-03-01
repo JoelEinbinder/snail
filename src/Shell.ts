@@ -119,7 +119,7 @@ export class Shell {
         })
       },
       initialize: async () => {
-        return host.sendMessage({
+        await host.sendMessage({
           method: 'createJSShell',
           params: {
             // cwd comes from the top level because it has to match the host.

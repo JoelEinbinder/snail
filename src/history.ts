@@ -46,7 +46,7 @@ export async function searchHistory(current: string, prefix: string, start: numb
 }
 
 export async function addHistory(command: string): Promise<number> {
-  const item: HistoryItem = {
+  const item = {
     command,
     start: Date.now(),
   };

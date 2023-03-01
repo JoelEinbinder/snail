@@ -1,0 +1,43 @@
+export type MenuItem = {
+  title?: string;
+  enabled?: boolean;
+  checked?: boolean;
+  callback?: () => void;
+  submenu?: MenuItem[];
+};
+
+export interface ShellHost {
+  obtainWebSocketId(): number;
+  createJSShell(params: {cwd: string, socketId: number}): {
+    nodePath: string,
+    bootstrapPath: string,
+  };
+  sendMessageToWebSocket(params: {socketId: number, message: { method: string; params: any; id: number; }}): void;
+  destroyWebsocket(params: {socketId: number}): void;
+  addHistory(item: {command: string, start: number}): number;
+  queryDatabase(params: {sql: string, params: any[]}): any[];
+  updateHistory(params: {id: number, col: string, value: string|number}): number;
+  urlForIFrame(params: {shellIds: number[], filePath: string}): string;
+  saveItem(params: {key: string, value: any}): number;
+  loadItem(params: {key: string}): any;
+  
+  focusMainContent(): void;
+  beep(): void;
+  setProgress(params: {progress: number}): void;
+  contextMenu(params: {menuItems: MenuItem}): { id: number };
+  requestInspect(params: {uuid?: string}): void;
+  refreshBrowserView(params: { uuid: string }): void;
+  setBrowserViewURL(params: { uuid: string, url: string }): void;
+  setBrowserViewRect(params: { uuid: string, rect: {x: number, y: number, width: number, height: number} }): void;
+  postBrowserViewMessage(params: { uuid: string, message: any }): void;
+  destroyBrowserView(params: { uuid: string }): void;
+  focusBrowserView(params: { uuid: string }): void;
+  createBrowserView(uuid: string): void;
+  close(params: {}): void;
+  positionPanel(params: { top: number, bottom: number, x: number}): void;
+  closeAllPopups(params: {}): void;
+  resizePanel(params: {width: number, height: number}): void;
+  sendMessageToCDP(params: {browserViewUUID?: string, message: any}): void;
+  attachToCDP(params: {browserViewUUID?: string}): void;
+  detachFromCDP(params: {browserViewUUID?: string}): void;
+}

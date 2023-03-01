@@ -1,7 +1,8 @@
 /// <reference path="../slug/iframe/types.d.ts" />
+import type { ShellHost } from '../host/ShellHost';
 export interface IHostAPI {
-  sendMessage: (message: {method: string, params?: any}) => Promise<any>;
-  notify: (message: {method: string, params?: any}) => void;
+  sendMessage<Key extends keyof ShellHost>(message: {method: Key, params?: Parameters<ShellHost[Key]>[0]}): Promise<ReturnType<ShellHost[Key]>>;
+  notify<Key extends keyof ShellHost>(message: {method: Key, params?: Parameters<ShellHost[Key]>[0]}): void;
   onEvent: (eventName: string, listener: (event: any) => void) => void;
   type(): string;
 }
