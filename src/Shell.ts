@@ -803,6 +803,7 @@ export class Shell {
     });
     // the script could cause the shell to be destroyed
     if (error) {
+      console.error(error);
       this._connectionToDestroy.get(connection)();
       if (this._connections.length === 0) {
         this._delegate.shellClosed();

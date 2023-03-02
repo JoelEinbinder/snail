@@ -321,7 +321,8 @@ body.dark.vscode-dark {
   padding: 0;
   color-scheme: normal;
 }
-body.dark.web-host {
+body.dark.web-host,
+body.dark.game-host {
   background: black;
   color-scheme: dark;
 

@@ -1,5 +1,6 @@
 import type { ShellHost } from '../host/ShellHost';
 import { REPLHost } from '../python_repl/REPLHost';
+import { GameHost } from '../game/GameHost';
 export interface IHostAPI {
   sendMessage<Key extends keyof ShellHost>(message: {method: Key, params?: Parameters<ShellHost[Key]>[0]}): Promise<ReturnType<ShellHost[Key]>>;
   notify<Key extends keyof ShellHost>(message: {method: Key, params?: Parameters<ShellHost[Key]>[0]}): void;
@@ -86,6 +87,9 @@ function makeHostAPI(): IHostAPI {
     const {host, callback} = hostApiHelper('webkit', message => window['webkit'].messageHandlers.wkMessage.postMessage(message));
     window['webkit_callback'] = callback;
     return host;
+  }
+  if (new URL(window.location.href).searchParams.has('game')) {
+    return new GameHost();
   }
   const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
   const socket = new WebSocket(`${protocol + window.location.host + window.location.pathname}`);

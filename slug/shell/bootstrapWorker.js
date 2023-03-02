@@ -226,7 +226,7 @@ const handler = {
         generatePreview: true,
         userGesture: true,
         allowUnsafeEvalBlockedByCSP: true,
-        throwOnSideEffect: /^[\.A-Za-z0-9_\s]*$/.test(expression) ? false : true,
+        throwOnSideEffect: (/^[\.A-Za-z0-9_\s]*$/.test(expression) && !expression.includes('debugger')) ? false : true,
         timeout: 1000,
         objectGroup: 'eager-eval',
       });

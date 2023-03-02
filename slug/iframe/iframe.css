@@ -328,13 +328,15 @@ body.light {
   color-scheme: light;
 }
 /* chromium oopifs have white backgrounds */
-body.light.electron-host,
-body.light.web-host {
+body.dark.electron-host,
+body.dark.web-host,
+body.dark.game-host {
   background-color: black;
 }
 
 body.light.electron-host,
-body.light.web-host {
+body.light.web-host,
+body.light.game-host {
   background-color: white;
 }
 
