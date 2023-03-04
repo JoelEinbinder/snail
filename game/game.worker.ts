@@ -1,3 +1,6 @@
+import { parse } from '../slug/shjs/parser';
+import { tokenize } from '../slug/shjs/tokenizer';
+import { makeWebExecutor } from './makeWebExecutor';
 import { runtimeHandler } from './runtimeHandler';
 console.log('game bundle');
 
@@ -57,15 +60,81 @@ async function protocol(message) {
 // overrideConsoleAPI('count', 'count');
 // overrideConsoleAPI('timeEnd', 'timeEnd');
 
-globalThis.process = {
-  env: {},
+const { execute, aliases, env } = makeWebExecutor();
+//@ts-ignore
+self.process = {
+  env,
   cwd: () => '/', 
 };
 
-self.bootstrap = function() {
+self['bootstrap'] = function() {
   return (message) => {
     console.log('bootstrap message', message);
   };
+};
+let shellId = 0;
+self['pty'] = async function(command) {
+  const id = ++shellId;
+  const stdout = {
+    _ended: false,
+    write(data, encoding, callback?) {
+      notify('data', {id, data});
+      callback?.();
+    },
+    end() {
+      if (this._ended)
+        return;
+      this._ended = true;
+      notify('endTerminal', {id});
+    },
+  };
+  const {tokens} = tokenize(command);
+  const ast = parse(tokens);
+  notify('startTerminal', {id});
+  const { closePromise, kill, stdin } = execute(ast, stdout, stdout);
+  let waitForDoneCallback;
+  const waitForDonePromise = new Promise(x => waitForDoneCallback = x);
+  // /** @type {{exitCode: number, died?: boolean, signal?: number, changes?: Changes}} */
+  // const returnValue = await Promise.race([
+  //   new Promise(x => shell.onExit(value => {x({...value, died: true}); waitForDoneCallback()})),
+  //   connectionDonePromise,
+  // ]);
+  const returnValue = { exitCode: await closePromise};
+  // if (returnValue.changes) {
+  //   const changes = returnValue.changes;
+  //   if (changes.cwd) {
+  //     origChangeDir(changes.cwd);
+  //     notify('cwd', changes.cwd);
+  //   }
+  //   if (changes.env) {
+  //     for (const key in changes.env) {
+  //       process.env[key] = changes.env[key];
+  //     }
+  //     notify('env', changes.env);
+  //   }
+  //   if (changes.aliases) {
+  //     notify('aliases', changes.aliases);
+  //     for (const key of Object.keys(changes.aliases)) {
+  //       setAlias(key, changes.aliases[key]);
+  //     }
+  //   }
+  //   if (changes.nod)
+  //     notify('nod', changes.nod);
+  //   if (changes.ssh)
+  //     notify('ssh', changes.ssh);
+  //   if (changes.reconnect)
+  //     notify('reconnect', changes.reconnect);
+  //   if (changes.code)
+  //     notify('code', changes.code);
+  //   if (changes.exit !== undefined) {
+  //     process.exit(changes.exit);
+  //   }
+  // worker.postMessage(changes);
+  stdout.end();
+  return 'this is the secret secret string:' + returnValue.exitCode;
 }
-
+function notify(method: string, params: any) {
+  dispatch({ method: 'Shell.notify', params: { payload: {method, params} }});
+}
+self.global = self;
 export {}

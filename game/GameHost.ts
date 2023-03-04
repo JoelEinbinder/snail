@@ -4,6 +4,10 @@ import { ClientMethods } from '../src/JSConnection';
 import { RPC, type Transport } from '../slug/protocol/RPC-ts';
 import makeWorker from 'worker-loader!./game.worker';
 import { preprocessTopLevelAwaitExpressions } from './top-level-await';
+import { } from '../slug/shjs/execute';
+import { tokenize } from '../slug/shjs/tokenizer';
+import { parse } from '../slug/shjs/parser';
+import { makeWebExecutor } from './makeWebExecutor';
 
 export class GameHost implements IHostAPI {
   private _game: Game = new Game((eventName, events) => {
@@ -28,7 +32,7 @@ export class GameHost implements IHostAPI {
     return 'game';
   }  
 }
-
+const {execute} = makeWebExecutor();
 type ShellHostInterface = {
   [Key in keyof ShellHost]?: (params: Parameters<ShellHost[Key]>[0]) => Promise<ReturnType<ShellHost[Key]>>;
 };
@@ -40,7 +44,7 @@ class Game implements ShellHostInterface {
     return ++lastWebSocketId;
   }
   async createJSShell(params: { cwd: string; socketId: number; }): Promise<{ nodePath: string; bootstrapPath: string; }> {
-    this._shells.set(params.socketId, makeGameShellHandler(this._sendEvent));
+    this._shells.set(params.socketId, makeGameShellHandler((eventName: string, data: any) => this._sendEvent('websocket', { socketId: params.socketId, message: { method: eventName, params: data } })));
     return {
       bootstrapPath: '',
       nodePath: '',
@@ -90,11 +94,9 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
   worker.addEventListener('message', event => {
     transport.onmessage(event.data);
   });
-  // workerRPC.on('Runtime.consoleAPICalled', event => {
-
-  // });
-  for (const event of ['Runtime.consoleAPICalled', 'Runtime.executionContextCreated', 'Runtime.exceptionThrown'])
+  for (const event of ['Runtime.consoleAPICalled', 'Runtime.executionContextCreated', 'Runtime.exceptionThrown', 'Shell.notify'])
     workerRPC.on(event as never, data => sendEvent(event, data));
+  
   return {
     'Shell.enable': async params => {
       await workerRPC.send('Runtime.enable', {});
@@ -105,8 +107,27 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
     
       return { objectId };
     },
-    'Shell.evaluate': async params => {
-      return { result: '' };
+    'Shell.evaluate': async ({code}) => {
+      const {tokens} = tokenize(code);
+      const ast = parse(tokens);
+      const chunks = [];
+      const {closePromise, kill, stdin} = execute(ast, {
+        write(chunk, encoding, callback) {
+          chunks.push(chunk);
+          callback?.();
+        },
+        end() {
+        },
+      }, {
+        write(chunk, encoding, callback) {
+          console.error(chunk.toString());
+          callback?.();
+        },
+        end() {
+        },
+      });
+      await closePromise;
+      return { result: chunks.join('')};
     },
     'Shell.runCommand': async ({command, expression}) => {
       let transformedExpression =  expression;

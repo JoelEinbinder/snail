@@ -12,6 +12,17 @@ import path from 'path';
 const { describe, expect } = test;
 const it = test;
 describe('runner', () => {
+    it('should work', async () => {
+        const result = await getResult({
+            executable: 'echo',
+            args: ['hello']
+        });
+        expect(result).toEqual({
+            output: 'hello\n',
+            stderr: '',
+            code: 0
+        })
+    });
     it('should pipe', async () => {
         const result = await getResult({
             main: {
