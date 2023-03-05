@@ -4,16 +4,12 @@ import './shell.css';
 import './logView.css';
 import { Block, BlockDelegate } from './GridPane';
 import { startAyncWork } from './async';
-export interface Prompt {
-  element: HTMLElement;
-  serializeForTest(): Promise<any>;
-}
 
 export class LogView implements Block {
   private _element = document.createElement('div');
   private _scroller = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
-  private _prompt?: Prompt;
+  private _prompt?: LogItem;
   private _lockingScroll = false;
   private _undoFullscreen: () => void = null;
   private _removeListeners: () => void;
@@ -38,7 +34,7 @@ export class LogView implements Block {
         return;
       if (event.defaultPrevented)
         return;
-      this._prompt.element.focus();
+      this._prompt.focus();
     };
     this._container.appendChild(this._element);
     document.body.addEventListener('keydown', keyDownListener, false);
@@ -88,7 +84,7 @@ export class LogView implements Block {
     this._shell.promptLock.on(count => {
       if (count > 0) {
         if (this._prompt) {
-          this._prompt.element.remove();
+          this._prompt.dispose();
           delete this._prompt;
         }
       } else {
@@ -104,7 +100,7 @@ export class LogView implements Block {
   }
   focus(): void {
     if (this._prompt)
-      this._prompt.element.focus();
+      this._prompt?.focus();
     else if (this._shell.activeItem.current)
       this._shell.activeItem.current.focus();
   }
@@ -135,7 +131,7 @@ export class LogView implements Block {
 
   _repopulate() {
     if (this._prompt) {
-      this._prompt.element.remove();
+      this._prompt.dispose();
       delete this._prompt;
     }
     this._scroller.textContent = '';
@@ -180,7 +176,7 @@ export class LogView implements Block {
     });
     this._lockScroll();
     if (this._prompt)
-      this._scroller.insertBefore(element, this._prompt.element);
+      this._scroller.insertBefore(element, this._prompt.render());
     else
       this._scroller.appendChild(element);
     if (logItem === this._shell.activeItem.current)

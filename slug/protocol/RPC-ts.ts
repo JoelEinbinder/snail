@@ -55,7 +55,7 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
 
   getRecentCwd() {
     const seen = new Set<string>();
-    const recentCwd = [];
+    const recentCwd: string[] = [];
     for (const cwd of this._cwdHistory.reverse()) {
       if (recentCwd.length >= 6)
         break;

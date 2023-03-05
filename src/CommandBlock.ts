@@ -10,7 +10,9 @@ export class CommandBlock implements LogItem {
   public wasCanceled = false;
   private _editor: Editor;
   private _exitCode = document.createElement('div');
+  private _commandPrefix?: CommandPrefix;
   constructor(public command: string,
+    private _size: JoelEvent<{rows: number, cols: number}>,
     private _connectionName: string,
     public env: {[key: string]: string},
     public cwd: string,
@@ -51,12 +53,13 @@ export class CommandBlock implements LogItem {
   }
 
   render(): Element {
+    this.dispose();
     const command = document.createElement('div');
     command.classList.add('command');
     command.classList.toggle('canceled', this.wasCanceled);
-    const commandPrefix = new CommandPrefix(this);
-    command.append(commandPrefix.element);
-    commandPrefix.render();
+    this._commandPrefix = new CommandPrefix(this, this._size);
+    command.append(this._commandPrefix.element);
+    this._commandPrefix.render();
     const editorWrapper = document.createElement('div');
     editorWrapper.style.position = 'relative';
     editorWrapper.style.flex = '1';
@@ -77,6 +80,8 @@ export class CommandBlock implements LogItem {
   focus(): void {
   }
   dispose(): void {
+    this._commandPrefix?.dispose();
+    delete this._commandPrefix;
   }
 
   setExitCode(code: number) {
@@ -101,10 +106,12 @@ export class CommandBlock implements LogItem {
 
 export class CommandPrefix {
   element = document.createElement('div');
-  constructor(private _shellOrCommand: Shell|CommandBlock, private _onClick?: (event: MouseEvent) => void) {
+  private _cleanup?: () => void;
+  constructor(private _shellOrCommand: Shell|CommandBlock, private _size: JoelEvent<{rows: number, cols: number}>, private _onClick?: (event: MouseEvent) => void) {
     this.element.classList.add('prefix');
   }
   async render() {
+    this.dispose();
     const [revName, dirtyState] = await Promise.all([
       this._shellOrCommand.cachedEvaluation('__git_ref_name'),
       this._shellOrCommand.cachedEvaluation('__is_git_dirty'),
@@ -116,16 +123,43 @@ export class CommandPrefix {
       paren: sshAddress ? 119 : 75,
       gitName: sshAddress? 119 : 78,
     };
-    const dir = Ansi(colors.path, computePrettyDirName(this._shellOrCommand, this._shellOrCommand.cwd));
-    dir.classList.add('dir')
+    const prettyDirName = computePrettyDirName(this._shellOrCommand, this._shellOrCommand.cwd);
+    const dir = Ansi(colors.path, prettyDirName);
+    dir.classList.add('dir');
+    const mediumDir = Ansi(colors.path, mediumDirname(prettyDirName));
+    mediumDir.classList.add('dir');
+    const tinyDir = Ansi(colors.path, tinyDirname(prettyDirName));
+    tinyDir.classList.add('dir');
     if (this._onClick) {
       this.element.classList.add('clickable-dir-name');
       this.element.addEventListener('mousedown', this._onClick);
       this.element.addEventListener('contextmenu', this._onClick);
     }
     const GitStatus = revName ? Ansi(colors.paren,"(", Ansi(colors.gitName, revName), Ansi(214, dirtyState ? '*' : ''), ")") : '';
-    this.element.textContent = '';
-    this.element.append(dir, GitStatus, makeVenvBadge(this._shellOrCommand) || ' ', Ansi(colors.arrow, '»'), ' ');
+    const renderInner = () => {
+      this.element.textContent = '';
+      const badge = makeVenvBadge(this._shellOrCommand) || ' ';
+      const arrow = Ansi(colors.arrow, '»');
+      const layouts: (string | Node)[][] = [
+        [dir, GitStatus, badge, arrow],
+        [mediumDir, GitStatus, badge, arrow],
+        [tinyDir, GitStatus, badge, arrow],
+        [badge, arrow],
+      ];
+      let firstFittingLayout: (string | Node)[] = null;
+      for (const layout of layouts) {
+        firstFittingLayout = layout;
+        if (this._size.current.cols - layout.reduce((a, b) => (b instanceof Node ? b.textContent.length : b.length) + a, 0) > 15)
+          break;
+      }
+      this.element.append(...firstFittingLayout, ' ');
+    };
+    this._size.on(renderInner);
+    renderInner();
+  }
+  dispose() {
+    this._cleanup?.();
+    delete this._cleanup;
   }
 }
 
@@ -154,3 +188,16 @@ function Ansi(color, ...children) {
   return span;
 }
 
+function mediumDirname(dir: string) {
+  const parts = dir.split('/');
+  if (parts.length <= 2)
+    return dir;
+  return parts.slice(0, 2).join('/') + '/…/' + parts[parts.length - 1];
+}
+
+function tinyDirname(dir: string) {
+  const parts = dir.split('/');
+  if (parts.length <= 1)
+    return dir;
+  return parts[parts.length - 1];
+}

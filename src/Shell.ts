@@ -2,7 +2,7 @@ import 'xterm/css/xterm.css';
 import { addHistory, updateHistory } from './history';
 import { makePromptEditor } from './PromptEditor';
 import { JoelEvent } from '../slug/cdp-ui/JoelEvent';
-import type { LogItem, Prompt } from './LogView';
+import type { LogItem } from './LogView';
 import { CommandBlock, CommandPrefix, computePrettyDirName } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { ExtraClientMethods, JSConnection } from './JSConnection';
@@ -551,7 +551,7 @@ export class Shell {
   }
 
   async runCommand(command: string) {
-    const commandBlock = new CommandBlock(command, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
+    const commandBlock = new CommandBlock(command, this._size, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)
@@ -669,7 +669,7 @@ export class Shell {
     return this._connectionToSSHAddress.get(this.connection);
   }
 
-  addPrompt(container: Element, willResize: () => void): Prompt {
+  addPrompt(container: Element, willResize: () => void): LogItem {
     const element = document.createElement('div');
     element.tabIndex = -1;
     element.style.opacity = '0';
@@ -677,7 +677,7 @@ export class Shell {
     const editorLine = document.createElement('div');
     editorLine.classList.add('editor-line');
     element.appendChild(editorLine);
-    const commandPrefix = new CommandPrefix(this, async event => {
+    const commandPrefix = new CommandPrefix(this, this._size, async event => {
       event.preventDefault();
       event.stopImmediatePropagation();
       const recentCwd = this.connection.getRecentCwd();
@@ -787,7 +787,7 @@ export class Shell {
         event.preventDefault();
         event.stopImmediatePropagation();
       } else if (event.code === 'KeyC' && event.ctrlKey) {
-        const commandBlock = new CommandBlock(editor.value, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
+        const commandBlock = new CommandBlock(editor.value, this._size, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
         commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
         commandBlock.wasCanceled = true;
         this.addItem(commandBlock);
@@ -849,8 +849,15 @@ export class Shell {
     }
     editor.on('change', onChange);
     autocomplete.suggestionChanged.on(onChange);
+    const willResizeEvent = new JoelEvent<void>(undefined);
     return {
-      element,
+      render: () => element,
+      dispose: () => {
+        commandPrefix.dispose();
+        element.remove();
+      },
+      focus: () => editor.focus(),
+      willResizeEvent,
       serializeForTest: async () => {
         const serialized = { value: editor.value } as any;
         const auto = await autocomplete.serializeForTest();
