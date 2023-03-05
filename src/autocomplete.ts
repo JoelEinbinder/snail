@@ -12,7 +12,7 @@ export class Autocomplete {
     private _activationCode = null;
     public suggestionChanged = new JoelEvent<void>(undefined);
     constructor(private _editor: Editor, private _defaultCompleter: Completer, private _activationChars: string, private _specialCompleters: { [key: string]: Completer }) {
-        this._editor.on('selectionChanged', event => {
+        this._editor.on('selection-changed', event => {
             this._abortController?.abort();
             delete this._abortController;
             if (this._editor.selections.length !== 1 || this._editor.somethingSelected() || this._editor.selections[0].start.column === 0)

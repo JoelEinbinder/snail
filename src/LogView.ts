@@ -196,7 +196,8 @@ export class LogView implements Block {
 
   _addPrompt() {
     this._lockScroll();
-    this._prompt = this._shell.addPrompt(this._scroller, () => this._lockScroll());
+    this._prompt = this._shell.addPrompt(this._scroller);
+    this._prompt.willResizeEvent.on(() => this._lockScroll());
   }
 
   async serializeForTest() {

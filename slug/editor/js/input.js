@@ -51,7 +51,7 @@ export class Input extends Emitter {
 
     parent.appendChild(this._textarea);
 
-    model.on('selectionChanged', this._selectionChanged.bind(this));
+    model.on('selection-changed', this._selectionChanged.bind(this));
     this._commandManager.addCommand(this._deleteChar.bind(this, true), 'backspace', 'Backspace');
     this._commandManager.addCommand(this._deleteChar.bind(this, false), 'delete', 'Delete');
     this._commandManager.addCommand(this._indent.bind(this), 'indent', 'Tab');

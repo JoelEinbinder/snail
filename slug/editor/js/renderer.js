@@ -89,7 +89,7 @@ export class Renderer extends Emitter {
         this.scheduleRefresh();
       }
     });
-    this._model.on('selectionChanged', () => {
+    this._model.on('selection-changed', () => {
       this._highlightWordOccurrences = false;
       this._overlayLayer.invalidate();
       this._overlayLayer.refresh();
@@ -535,7 +535,11 @@ export class Renderer extends Emitter {
     this._charHeight = parseInt(window.getComputedStyle(this._textLayer.canvas).fontSize);
     this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._textLayer.canvas).lineHeight || '0'), this._charHeight);
     if (this._options.inline) {
-      this.element.style.height = this._innerHeight() + 'px';
+      const newHeight = this._innerHeight() + 'px';
+      if (newHeight !== this.element.style.height) {
+        this.emit('might-resize');
+        this.element.style.height = newHeight;
+      }
     }
     var rect = this.element.getBoundingClientRect();
     this._width = rect.width;

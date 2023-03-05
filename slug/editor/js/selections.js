@@ -19,7 +19,7 @@ export class SelectionManger extends Emitter {
     /** @type {import("./model.js").Loc} */
     this._desiredLocation = null;
     this._renderer.on('contentMouseDown', this._contentMouseDown.bind(this));
-    this._model.on('selectionChanged', () => {
+    this._model.on('selection-changed', () => {
       this._anchor = this._model.selections[0].start;
       this._desiredLocation = null;
     });

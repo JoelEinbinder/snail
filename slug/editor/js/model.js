@@ -47,7 +47,7 @@ export class Model extends Emitter {
   setSelections(selections) {
     const previousSelections = this._selections;
     this._selections = selections;
-    this.emit('selectionChanged', {
+    this.emit('selection-changed', {
       selections,
       previousSelections
     });

@@ -669,7 +669,7 @@ export class Shell {
     return this._connectionToSSHAddress.get(this.connection);
   }
 
-  addPrompt(container: Element, willResize: () => void): LogItem {
+  addPrompt(container: Element): LogItem {
     const element = document.createElement('div');
     element.tabIndex = -1;
     element.style.opacity = '0';
@@ -758,7 +758,6 @@ export class Shell {
           const start = editor.selections[0].start;
           if (start.line !== editor.lastLine) {
             if (start.column === editor.line(start.line).length) {
-              willResize();
               editor.smartEnter();
               return;
             }
@@ -766,7 +765,6 @@ export class Shell {
             if (start.column === editor.line(start.line).length) {
               const code = await this._transformCode(editor.text());
               if (isUnexpectedEndOfInput(code)) {
-                willResize();
                 editor.smartEnter();
                 finishWork();
                 return;
@@ -823,6 +821,7 @@ export class Shell {
       if (lock !== mylock)
         return;
       if (!code.trim()) {
+        willResizeEvent.dispatch();
         belowPrompt.textContent = '';
         return;
       }
@@ -839,6 +838,7 @@ export class Shell {
       });
       if (lock !== mylock)
         return;
+      willResizeEvent.dispatch();
       belowPrompt.textContent = '';
       void this.connection.send('Runtime.releaseObjectGroup', {
         objectGroup: 'eager-eval',
@@ -847,9 +847,12 @@ export class Shell {
         return;
       belowPrompt.append(renderRemoteObjectOneLine(result.result, this._size.current.cols));
     }
-    editor.on('change', onChange);
-    autocomplete.suggestionChanged.on(onChange);
     const willResizeEvent = new JoelEvent<void>(undefined);
+    editor.on('change', onChange);
+    editor.on('might-resize', () => {
+      willResizeEvent.dispatch()
+    });
+    autocomplete.suggestionChanged.on(onChange);
     return {
       render: () => element,
       dispose: () => {

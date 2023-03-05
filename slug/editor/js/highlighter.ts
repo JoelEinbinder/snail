@@ -32,7 +32,7 @@ export class Highlighter extends Emitter<{
     private _underlay: (arg0: number, arg1: string) => Array<Token> = null,
     colors: { selectionBackground?: string; } | undefined = {}) {
     super();
-    this._model.on('selectionChanged', ({ selections, previousSelections }) => {
+    this._model.on('selection-changed', ({ selections, previousSelections }) => {
       for (var selection of selections)
         this.emit('highlight', {
           from: selection.start.line,

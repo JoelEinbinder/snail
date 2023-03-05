@@ -32,7 +32,7 @@ export class CommandBlock implements LogItem {
     });
     if (globalVars)
       this._editor.setModeOptions({globalVars});
-    this._editor.on('selectionChanged', () => {
+    this._editor.on('selection-changed', () => {
       setSelection(() => this._editor.selections.map(s => this._editor.text(s)).join('\n'));
     });
     this._editor.value = this.command;

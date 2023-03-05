@@ -33,7 +33,7 @@ export function makePromptEditor(shell: Shell) {
   });
   let historyIndex = 0;
   let currentValue = '';
-  editor.on('selectionChanged', () => {
+  editor.on('selection-changed', () => {
     historyIndex = 0;
     currentValue = '';
     setSelection(() => editor.selections.map(s => editor.text(s)).join('\n'));
