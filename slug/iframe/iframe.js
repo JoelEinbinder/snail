@@ -217,6 +217,8 @@ async function attachToCDP(listener) {
 }
 
 window.addEventListener('contextmenu', event => {
+  if (event.defaultPrevented)
+    return;
   createContextMenu([{
     title: 'Inspect Me',
     callback: () => {

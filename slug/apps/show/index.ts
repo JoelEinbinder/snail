@@ -1,3 +1,4 @@
+import { renderExcalidraw } from './excalidraw';
 import './index.css';
 declare var d4: {
   waitForMessage<T>(): Promise<T>;
@@ -12,7 +13,18 @@ let antiCache = 0;
 while (true) {
   const message = await d4.waitForMessage<{filePath: string, mimeType: string}>();
   const {filePath, mimeType} = message;
-  if (mimeType.startsWith('image/')) {
+  if (filePath.endsWith('.excalidraw')) {
+    await renderExcalidraw(filePath + '?' + antiCache++);
+    document.body.addEventListener('wheel', event => {
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)
+        return;
+      event.stopImmediatePropagation();
+    }, true);
+    updateSize();
+  } else if (!mimeType) {
+    document.body.textContent = `Cannot show ${filePath}. Unknown mime type.`;
+    updateSize();
+  } else if (mimeType.startsWith('image/')) {
     const image = document.createElement('img');
     image.src = filePath + '?' + antiCache++;
     image.onload = () => {

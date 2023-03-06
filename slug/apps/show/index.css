@@ -4,3 +4,34 @@ body {
 img, video {
   max-width: 100vw;
 }
+
+.container {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.excalidraw .App-menu_top .buttonList {
+  display: flex;
+}
+
+.excalidraw-wrapper {
+  height: 400px;
+  position: relative;
+}
+
+:root[dir="ltr"]
+  .excalidraw
+  .layer-ui__wrapper
+  .zen-mode-transition.App-menu_bottom--transition-left {
+  transform: none;
+}
+body .excalidraw .App-bottom-bar {
+  display: none;
+}
+.excalidraw .layer-ui__wrapper {
+  display: none;
+}
+
+body .excalidraw.theme--dark {
+  --theme-filter: hue-rotate(180deg) invert(100%);
+}
