@@ -156,7 +156,7 @@ const builtins = {
         }
         return 0;
     },
-    code: (args, stdout, stderr, env) => {
+    code: (args, stdout, stderr, stdin, env) => {
         if (!('SSH_CONNECTION' in env || 'SSH_CLIENT' in env))
             return 'pass';
         if (args.length !== 1 || args[0].startsWith('-'))
