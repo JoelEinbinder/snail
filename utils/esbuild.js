@@ -10,7 +10,7 @@ try {
     outdir: outDir,
     bundle: true,
     loader: {
-      '.svg': 'text',
+      '.svg': 'dataurl',
     },
     // TODO, splitting breaks on shjs
     splitting: false,
