@@ -430,7 +430,6 @@ export class Renderer extends Emitter {
       word = this._model.text(selection).toLowerCase();
     }
     if (word.match(/^\s+$/)) word = '';
-    var lineNumbersWidth = this._lineNumbersWidth();
     ctx.save();
     ctx.fillStyle = this.colors.selectionBackground;
     ctx.globalAlpha = 0.4;
