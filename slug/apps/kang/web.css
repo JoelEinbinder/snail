@@ -53,3 +53,9 @@ body {
   mask-position: center;
   background-color: #d1d1d1;
 }
+
+.editor-hover {
+  border: 1px solid #333;
+  background: #222;
+  color: #f1f1f1;
+}

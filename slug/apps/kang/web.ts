@@ -2,7 +2,8 @@
 import './web.css';
 import { RPC } from '../../protocol/rpc-js';
 import { Editor } from '../../editor/js/editor';
-
+import '../../editor/modes/javascript';
+import './fake-mode';
 class Header {
   element = document.createElement('div');
   private title = '';
@@ -63,8 +64,25 @@ document.addEventListener('keydown', event => {
     event.preventDefault();
     event.stopPropagation();
     doClose();
+  } else if (event.code === 'KeyG' && event.ctrlKey) {
+    toggleEditorMode();
+    event.preventDefault();
+    event.stopPropagation();
   }
 });
+
+let inLanguageMode = false;
+function toggleEditorMode() {
+  inLanguageMode = !inLanguageMode;
+  if (!editor)
+    return;
+  if (inLanguageMode) {
+    const ext = relativePath.split('.').pop();
+    editor.setModeOptions({actualLang: ext, indentUnit: 4});
+  } else {
+    editor.setModeOptions({});
+  }
+}
 
 function doClose() {
   if (editor && header.isModified()) {
@@ -92,6 +110,7 @@ const rpc = RPC(transport, {
     }
     relativePath = params.relativePath;
     editor = new Editor(params.content, {
+      language: '<fake>',
       lineNumbers: true,
       padBottom: true,
       backgroundColor: '#000',
@@ -104,6 +123,8 @@ const rpc = RPC(transport, {
         gutterForeground: '#666',
       }  
     });
+    inLanguageMode = false;
+    toggleEditorMode();
     editorContainer.append(editor.element);
     editor.layout();
     lastSavedVersion = editor.value;

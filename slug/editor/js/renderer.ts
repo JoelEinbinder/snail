@@ -28,6 +28,8 @@ export class Renderer extends Emitter<{
   private _charWidth: any;
   private _height: number;
   private _charHeight: number;
+  private _hoverTimer?: ReturnType<typeof setTimeout>;
+  private _hoverElement = document.createElement('div');
   constructor(
     private _model: Model,
     public element: HTMLElement,
@@ -40,6 +42,9 @@ export class Renderer extends Emitter<{
     this._scrollTop = 0;
     this._scrollLeft = 0;
     this._refreshScheduled = false;
+    this._hoverElement.classList.add('editor-hover');
+    this._hoverElement.style.position = 'absolute';
+    this._hoverElement.style.pointerEvents = 'none';
 
     this._hasFocus = false;
     this.element.addEventListener('focusin', () => {
@@ -61,6 +66,7 @@ export class Renderer extends Emitter<{
     if (this._options.inline) this._options.padBottom = false;
     var lineCount = 1;
     this._model.on('change', () => {
+      this._clearHover();
       if (this._model.lineCount() === lineCount) return;
       if (this._options.inline) this.layout();
       else {
@@ -104,6 +110,7 @@ export class Renderer extends Emitter<{
       this._highlightWordOccurrences = false;
       this._overlayLayer.invalidate();
       this._overlayLayer.refresh();
+      this._clearHover();
     });
     this._model.on('squiggliesChanged', () => {
       this._overlayLayer.invalidate();
@@ -135,6 +142,8 @@ export class Renderer extends Emitter<{
     this._fillerElement.addEventListener('mousedown', event => {
       this.emit('contentMouseDown', event);
     });
+    this.element.addEventListener('mouseleave', () => this._clearHover());
+    this.element.addEventListener('mousemove', event => this._startHoverTimer(event));
     this.element.appendChild(this._scrollingElement);
     this._lastScrollOffset = {
       top: 0,
@@ -145,6 +154,37 @@ export class Renderer extends Emitter<{
       selectionBackground: 'rgba(0,128,255,0.1)',
       cursorColor: 'rgba(0,0,0,0.8)',
     };
+  }
+
+  _startHoverTimer(event: MouseEvent) {
+    const updateHover = () => {
+      delete this._hoverTimer;
+      const loc = this.locationFromPoint(event.clientX, event.clientY);
+      const hover = this._highlighter.hoverForLocation(loc);
+      if (!hover) {
+        this._clearHover();
+        return;
+      }
+      this._hoverElement.textContent = '';
+      this._hoverElement.append(hover.content);
+      this.element.append(this._hoverElement);
+      const point = this.pointFromLocation(hover.reposition);
+      this._hoverElement.style.left = `${Math.round(point.x)}px`;
+      this._hoverElement.style.top = `${Math.round(point.y - this._hoverElement.offsetHeight)}px`;
+    };
+
+    const hasHover = this._hoverElement.isConnected;
+    this._clearHover();
+    if (hasHover) updateHover()
+    else this._hoverTimer = setTimeout(updateHover, 500);
+  }
+
+  _clearHover() {
+    if (this._hoverTimer) {
+      clearTimeout(this._hoverTimer);
+      delete this._hoverTimer;
+    }
+    this._hoverElement.remove();
   }
 
   highlightWordOccurrences() {
@@ -276,6 +316,7 @@ export class Renderer extends Emitter<{
       top: this.scrollTop,
       left: this.scrollLeft
     };
+    this._clearHover();
     this.emit('scroll', undefined);
   }
 

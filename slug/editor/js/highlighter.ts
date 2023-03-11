@@ -1,5 +1,5 @@
 import { Emitter } from './emitter';
-import { isSelectionCollapsed, type Line } from './model';
+import { isSelectionCollapsed, Loc, type Line } from './model';
 import { getMode } from './modeRegistry';
 import { StringStream } from './StringStream';
 
@@ -14,6 +14,7 @@ export interface Mode<State> {
   blankLine?: (state: State) => void;
   token(stream: StringStream, state: State): string|null;
   indent?(state: State, textAfter: string): number;
+  hover?(state: State): Node|string|null;
 };
 const MAX_TOKENS = 1000;
 export class Highlighter extends Emitter<{
@@ -69,7 +70,7 @@ export class Highlighter extends Emitter<{
     this._mode = getMode(_language)?.({ indentUnit: 2 }, {});
 
     this._colors =
-      (_language === 'js' || _language === 'shjs')
+      (_language !== 'css')
         ? [
             ['keyword', '#af5fff'],
             ['number', '#999900'],
@@ -158,6 +159,7 @@ export class Highlighter extends Emitter<{
         for (const [name, c] of this._colors) {
           if (className.indexOf(name) !== -1) color = c;
         }
+        if (!color && className.startsWith('#')) color = className;
         tokens.push({ length: stream.pos - stream.start, color });
         stream.start = stream.pos;
         if (tokens.length > MAX_TOKENS) {
@@ -260,6 +262,38 @@ export class Highlighter extends Emitter<{
 
     if (this._underlay) return mergeTokens(this._underlay.call(null, lineNumber, line.text), mergedTokens);
     return mergedTokens;
+  }
+
+  hoverForLocation(loc: Loc): { content: string | Node, reposition: Loc } | null {
+    if (!this._mode.hover)
+      return null;
+    const line = this._model.line(loc.line);
+    if (!line)
+      return null;
+
+    const state = loc.line
+      ? this._copyState(this._lineInfo.get(this._model.line(loc.line - 1))!.state)
+      : this._mode.startState();
+    let tokenCount = 0;
+    const stream = new StringStream(line.text);
+    let startColumn = 0;
+    let startState = this._copyState(state);
+    while (!stream.eol() && stream.pos < loc.column) {
+      tokenCount++;
+      startColumn = stream.pos;
+      startState = this._copyState(state);
+      this._mode.token(stream, state);
+      if (tokenCount > MAX_TOKENS)
+        return null;
+    }
+
+    const content = this._mode.hover(startState);
+    if (!content)
+      return null;
+    return {
+      content,
+      reposition: { line: loc.line, column: startColumn },
+    };
   }
 
   _selectionTokens(lineNumber: number): Array<Token> {

@@ -449,6 +449,7 @@ export class IFrameBlock implements LogItem {
   async refresh() {
     const cachedMessages = [...this._cachedMessages];
     this._resetReadyPromise();
+    this._cleanupAsyncWorkIfNeeded();
     this._webContentView.refresh();
     await this.readyPromise;
     for (const message of cachedMessages)
