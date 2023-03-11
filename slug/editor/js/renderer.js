@@ -512,12 +512,12 @@ export class Renderer extends Emitter {
    */
   _drawLineNumbers(ctx) {
     var width = this._lineNumbersWidth();
-    ctx.fillStyle = '#eeeeee';
+    ctx.fillStyle = this._options.colors.gutterBackground || '#eeeeee';
     ctx.fillRect(0, 0, width, this._height);
-    ctx.fillStyle = '#bbbbbb';
+    ctx.fillStyle = this._options.colors.gutterBorder || '#bbbbbb';
     ctx.fillRect(width - 1, 0, 1, this._height);
 
-    ctx.fillStyle = 'rgb(128, 128, 128)';
+    ctx.fillStyle = this._options.colors.gutterForeground || 'rgb(128, 128, 128)';
     var { from, to } = this.viewport();
     for (var i = from; i <= to; i++) {
       ctx.fillText(

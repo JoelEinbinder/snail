@@ -124,6 +124,9 @@ export type EditorOptions = {
     foreground: string;
     selectionBackground: string;
     cursorColor: string;
+    gutterBackground?: string;
+    gutterForeground?: string;
+    gutterBorder?: string;
   }
 }
 

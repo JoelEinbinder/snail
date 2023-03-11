@@ -1,0 +1,55 @@
+.editor {
+  line-height: 1.4em;
+  letter-spacing: 0;
+  cursor: text;
+  position: absolute;
+  inset: 0;
+  color: white;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  inset: 0;
+}
+.header {
+  padding: 2px 2px;
+  overflow: hidden;
+  color: #d4d4d4;
+  flex: 0 1 auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.header > .title {
+  flex: 0 1 auto;
+  text-align: center;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+.header > .close {
+  position: absolute;
+  right: 0;
+  top: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 2px;
+}
+.header > .close:hover {
+  background: rgba(128,128,128,0.75);
+  border-radius: 5px;
+}
+.editor-container {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+.codicon-close {
+  width: 16px;
+  height: 16px;
+  -webkit-mask: url(./codicon-close.svg);
+  -webkit-mask-position: center;
+  mask: url(./codicon-close.svg);
+  mask-position: center;
+  background-color: #d1d1d1;
+}
