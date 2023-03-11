@@ -1,23 +1,18 @@
 import { Emitter } from "./emitter";
-import { compareLocation, compareRange, copyLocation, isSelectionCollapsed } from "./model.js";
-
+import {
+  compareLocation, compareRange, copyLocation, isSelectionCollapsed,
+  type Loc, type Model
+} from "./model";
+import type { Renderer } from './renderer';
+import type { CommandManager } from './commands';
 export class SelectionManger extends Emitter {
-  /**
-   * @param {import('./renderer').Renderer} renderer
-   * @param {import('./model').Model} model
-   * @param {import('./commands').CommandManager} commandManager
-   */
-  constructor(renderer, model, commandManager) {
+  private _anchor: any;
+  private _cursor: {x: number, y: number}| null = null;
+  private _desiredLocation: Loc|null = null;
+  private _increment: number;
+  constructor(private _renderer: Renderer, private _model: Model, private _commandManager: CommandManager) {
     super();
-    this._renderer = renderer;
-    this._commandManager = commandManager;
-    this._model = model;
-    /** @type {import("./model.js").Loc} */
     this._anchor = this._model.selections[0].start;
-    /** @type {{x: number, y: number}} */
-    this._cursor = null;
-    /** @type {import("./model.js").Loc} */
-    this._desiredLocation = null;
     this._renderer.on('contentMouseDown', this._contentMouseDown.bind(this));
     this._model.on('selection-changed', () => {
       this._anchor = this._model.selections[0].start;
@@ -34,20 +29,20 @@ export class SelectionManger extends Emitter {
       'Meta+A'
     );
 
-    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, 0), 'moveLeft', 'ArrowLeft');
-    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, 0), 'moveRight', 'ArrowRight');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, 0, false), 'moveLeft', 'ArrowLeft');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, 0, false), 'moveRight', 'ArrowRight');
     this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, 0, true), 'extendLeft', 'Shift+ArrowLeft');
     this._commandManager.addCommand(
       this.moveCursorHorizontal.bind(this, 1, 0, true),
       'extendRight',
       'Shift+ArrowRight'
     );
-    this._commandManager.addCommand(this.moveCursorVertical.bind(this, -1), 'moveUp', 'ArrowUp');
-    this._commandManager.addCommand(this.moveCursorVertical.bind(this, 1), 'moveDown', 'ArrowDown');
+    this._commandManager.addCommand(this.moveCursorVertical.bind(this, -1, false), 'moveUp', 'ArrowUp');
+    this._commandManager.addCommand(this.moveCursorVertical.bind(this, 1, false), 'moveDown', 'ArrowDown');
     this._commandManager.addCommand(this.moveCursorVertical.bind(this, -1, true), 'extendUp', 'Shift+ArrowUp');
     this._commandManager.addCommand(this.moveCursorVertical.bind(this, 1, true), 'extendDown', 'Shift+ArrowDown');
     this._commandManager.addCommand(
-      () => this.moveCursor({ column: 0, line: this._model.selections[0].start.line }),
+      () => this.moveCursor({ column: 0, line: this._model.selections[0].start.line }, false),
       'moveLineStart',
       'Home',
       ['Home', 'Ctrl+A'],
@@ -150,7 +145,7 @@ export class SelectionManger extends Emitter {
         if (isSelectionCollapsed(selection)) return this._commandManager.trigger('selectWord');
         const needle = this._model.text(selection);
         let nextLocation = this._model.search(needle, this._model.selections[this._model.selections.length - 1].end);
-        if (!nextLocation) nextLocation = this._model.search(needle);
+        if (!nextLocation) nextLocation = this._model.search(needle)!;
         if (compareLocation(nextLocation, selection.start) === 0) return true; // we wrapped around to the start
         const selections = this._model.selections.slice(0);
         const end = {
@@ -190,10 +185,7 @@ export class SelectionManger extends Emitter {
     );
   }
 
-  /**
-   * @param {MouseEvent} event
-   */
-  _contentMouseDown(event) {
+  _contentMouseDown(event: MouseEvent) {
     if (event.which !== 1) return;
     if (event.detail >= 4) {
       this.selectAll();
@@ -211,22 +203,20 @@ export class SelectionManger extends Emitter {
 
   _trackDrag() {
     // We have to listen on the window so that you can select outside the bounds
-    var window = this._renderer.element.ownerDocument.defaultView;
-    /** @type {function(MouseEvent):void} */
-    var mousemove = event => {
+    const window = this._renderer.element.ownerDocument.defaultView!;
+    const mousemove: (arg0: MouseEvent) => void = (event): void => {
       this._cursor = {
         x: event.clientX,
         y: event.clientY
       };
       this._updateMouseSelection();
     };
-    /** @type {function(MouseEvent):void} */
-    var mouseup = event => {
+    const mouseup: (arg0: MouseEvent) => void = (event): void => {
       window.removeEventListener('mousemove', mousemove, true);
       window.removeEventListener('mouseup', mouseup, true);
       this._renderer.off('scroll', scroll);
     };
-    var scroll = () => {
+    const scroll = () => {
       this._updateMouseSelection();
     };
     window.addEventListener('mousemove', mousemove, true);
@@ -237,7 +227,7 @@ export class SelectionManger extends Emitter {
   _updateMouseSelection() {
     console.assert(!!this._cursor, 'cursor should be defined');
     console.assert(this._increment > 0 && this._increment <= 3, 'unknown increment');
-    var head = this._renderer.locationFromPoint(this._cursor.x, this._cursor.y);
+    var head = this._renderer.locationFromPoint(this._cursor!.x, this._cursor!.y);
     var anchor = this._anchor;
     var start, end;
     if (head.line < anchor.line || (head.line === anchor.line && head.column < anchor.column)) {
@@ -322,11 +312,7 @@ export class SelectionManger extends Emitter {
     this._renderer.highlightWordOccurrences();
   }
 
-  /**
-   * @param {string} character
-   * @return {-1|0|1|2}
-   */
-  _charType(character) {
+  _charType(character: string): -1 | 0 | 1 | 2 {
     if (character.match(/\s/)) return 0;
     if (character.match(/[_0-9a-zA-Z]/)) return 1;
     if (character) return 2;
@@ -337,12 +323,7 @@ export class SelectionManger extends Emitter {
     this._model.setSelections([this._model.fullRange()]);
   }
 
-  /**
-   * @param {-1|1} direction
-   * @param {boolean} extend
-   * @return {boolean}
-   */
-  _startIsHead(direction, extend) {
+  _startIsHead(direction: -1 | 1, extend: boolean): boolean {
     if (!extend) return direction < 0;
     var selection = this._model.selections[0];
     var anchorIsStart = !!this._anchor && !compareLocation(this._anchor, selection.start);
@@ -351,13 +332,7 @@ export class SelectionManger extends Emitter {
     return !anchorIsStart;
   }
 
-  /**
-   * @param {1|-1} direction
-   * @param {0} increment
-   * @param {boolean=} extend
-   * @return {boolean}
-   */
-  moveCursorHorizontal(direction, increment, extend) {
+  moveCursorHorizontal(direction: 1 | -1, increment: 0, extend: boolean): boolean {
     var selection = this._model.selections[0];
     var modifyStart = this._startIsHead(direction, extend);
 
@@ -382,12 +357,7 @@ export class SelectionManger extends Emitter {
     return this.moveCursor(point, extend);
   }
 
-  /**
-   * @param {1|-1} direction
-   * @param {boolean=} extend
-   * @return {boolean}
-   */
-  moveCursorVertical(direction, extend) {
+  moveCursorVertical(direction: 1 | -1, extend: boolean): boolean {
     var selection = this._model.selections[0];
     var modifyStart = this._startIsHead(direction, extend);
 
@@ -409,12 +379,7 @@ export class SelectionManger extends Emitter {
     return true;
   }
 
-  /**
-   * @param {import("./model.js").Loc} point
-   * @param {boolean=} extend
-   * @return {boolean}
-   */
-  moveCursor(point, extend) {
+  moveCursor(point: Loc, extend?: boolean): boolean {
     var selection = this._model.selections[0];
     var anchor = extend ? this._anchor || point : point;
     if (compareLocation(point, anchor) < 0) selection = { start: point, end: anchor };

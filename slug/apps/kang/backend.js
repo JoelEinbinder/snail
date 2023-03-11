@@ -2,7 +2,7 @@
 const path = require('path');
 const fs = require('fs');
 const { display, makeRPC } = require('../../sdk');;
-display(path.join(__dirname, 'index.ts'));
+display(path.join(__dirname, 'web.ts'));
 const rpc = makeRPC({
   async save({file, content}) {
     await fs.promises.writeFile(file, content);

@@ -1,39 +1,28 @@
 import { Emitter } from "./emitter";
 
-export class Model extends Emitter {
-  /**
-   * @param {string} data
-   */
-  constructor(data) {
+export class Model extends Emitter<{
+  'selection-changed': { selections: TextRange[], previousSelections: TextRange[]},
+  'squiggliesChanged': void,
+  'change': TextRange,
+}> {
+  private _lines: Line[];
+  private _selections: TextRange[] = [{ start: { line: 0, column: 0 }, end: { line: 0, column: 0 } }];
+  private _undoStack: {range: TextRange, text: string, selections:TextRange[]}[] = [];
+  private _redoStack: {range: TextRange, text: string, selections:TextRange[]}[] = [];
+  private _squigglies: {range: TextRange, color: string}[] = [];
+
+  constructor(data: string) {
     super();
     this._lines = this._createLines(data);
-    /** @type {Array<TextRange>} */
-    this._selections = [{ start: { line: 0, column: 0 }, end: { line: 0, column: 0 } }];
-
-    /** @type {Array<{range: TextRange, text: string, selections:Array<TextRange>}>} */
-    this._undoStack = [];
-    /** @type {Array<{range: TextRange, text: string, selections:Array<TextRange>}>} */
-    this._redoStack = [];
-    /** @type {Array<{range: TextRange, color: string}>} */
-    this._squigglies = [];
   }
 
-  /**
-   * @param {number} from
-   * @param {number} to
-   * @return {number}
-   */
-  charCountForLines(from, to) {
+  charCountForLines(from: number, to: number): number {
     var total = 0;
     for (var i = from; i <= to; i++) total += this._lines[i].length;
     return total;
   }
 
-  /**
-   * @param {number} i
-   * @return {Line}
-   */
-  line(i) {
+  line(i: number): Line {
     return this._lines[i];
   }
 
@@ -41,10 +30,7 @@ export class Model extends Emitter {
     return this._lines.length;
   }
 
-  /**
-   * @param {Array<TextRange>} selections
-   */
-  setSelections(selections) {
+  setSelections(selections: TextRange[]) {
     const previousSelections = this._selections;
     this._selections = selections;
     this.emit('selection-changed', {
@@ -61,23 +47,15 @@ export class Model extends Emitter {
     return this._squigglies;
   }
 
-  /**
-   * @param {TextRange} range
-   * @param {string} color
-   */
-  addSquiggly(range, color) {
+  addSquiggly(range: TextRange, color: string) {
     this._squigglies.push({
       range,
       color
     });
-    this.emit('squiggliesChanged');
+    this.emit('squiggliesChanged', undefined);
   }
 
-  /**
-   * @param {TextRange=} range
-   * @return {string}
-   */
-  text(range = this.fullRange()) {
+  text(range: TextRange | undefined = this.fullRange()): string {
     const clippedRange = this.clipRange(range);
     if (clippedRange.start.line === clippedRange.end.line)
       return this._lines[clippedRange.start.line].text.substring(clippedRange.start.column, clippedRange.end.column);
@@ -90,12 +68,7 @@ export class Model extends Emitter {
     return result;
   }
 
-  /**
-   * @param {number} from
-   * @param {number} to
-   * @return {string}
-   */
-  _rasterizeLines(from, to) {
+  _rasterizeLines(from: number, to: number): string {
     var text = '';
     var anchor = '';
     var end = 0;
@@ -119,10 +92,7 @@ export class Model extends Emitter {
     return text;
   }
 
-  /**
-   * @return {TextRange}
-   */
-  fullRange() {
+  fullRange(): TextRange {
     return {
       start: {
         line: 0,
@@ -135,12 +105,7 @@ export class Model extends Emitter {
     };
   }
 
-  /**
-   * @param {string} text
-   * @param {TextRange} range
-   * @return {Loc}
-   */
-  replaceRange(text, range) {
+  replaceRange(text: string, range: TextRange): Loc {
     var replacedText = this.text(range);
     var endLocation = this._replaceRange(text, range);
     if (replacedText !== text) {
@@ -156,12 +121,7 @@ export class Model extends Emitter {
     return endLocation;
   }
 
-  /**
-   * @param {string} text
-   * @param {TextRange} range
-   * @return {Loc}
-   */
-  _undoReplaceRange(text, range) {
+  _undoReplaceRange(text: string, range: TextRange): Loc {
     var replacedText = this.text(range);
     var endLocation = this._replaceRange(text, range);
     if (replacedText !== text) {
@@ -177,12 +137,7 @@ export class Model extends Emitter {
     return endLocation;
   }
 
-  /**
-   * @param {string} text
-   * @param {TextRange} range
-   * @return {Loc}
-   */
-  _replaceRange(text, range) {
+  _replaceRange(text: string, range: TextRange): Loc {
     var before = this._lines[range.start.line].text.substring(0, range.start.column);
     var after = this._lines[range.end.line].text.substring(range.end.column);
     var lines = this._createLines(before + text + after);
@@ -201,33 +156,23 @@ export class Model extends Emitter {
     };
   }
 
-  /**
-   * @return {boolean}
-   */
-  undo() {
+  undo(): boolean {
     if (!this._undoStack.length) return false;
-    var undoItem = this._undoStack.pop();
+    const undoItem = this._undoStack.pop()!;
     this._undoReplaceRange(undoItem.text, undoItem.range);
     this.setSelections(undoItem.selections);
     return true;
   }
 
-  /**
-   * @return {boolean}
-   */
-  redo() {
+  redo(): boolean {
     if (!this._redoStack.length) return false;
-    var redoItem = this._redoStack.pop();
+    const redoItem = this._redoStack.pop()!;
     this.replaceRange(redoItem.text, redoItem.range);
     this.setSelections(redoItem.selections);
     return true;
   }
 
-  /**
-   * @param {TextRange} range
-   * @return {TextRange}
-   */
-  clipRange(range) {
+  clipRange(range: TextRange): TextRange {
     const copy = {start:{...range.start}, end:{...range.end}};
     if (copy.start.line < 0) {
       copy.start.line = 0;
@@ -255,13 +200,9 @@ export class Model extends Emitter {
     return copy;
   }
 
-  /**
-   * @param {string} data
-   * @return {Array<Line>}
-   */
-  _createLines(data) {
+  _createLines(data: string): Array<Line> {
     /** @type {Array<Line>} */
-    var lines = [];
+    var lines: Array<Line> = [];
     var start = 0;
     var end = -1;
     while (end < data.length) {
@@ -274,12 +215,7 @@ export class Model extends Emitter {
     return lines;
   }
 
-  /**
-   * @param {string} needle
-   * @param {Loc} from
-   * @return {?Loc}
-   */
-  search(needle, from = { line: 0, column: 0 }) {
+  search(needle: string, from: Loc = { line: 0, column: 0 }): Loc | null {
     let { line, column } = from;
     let index;
     while (line < this._lines.length) {
@@ -293,20 +229,14 @@ export class Model extends Emitter {
 }
 
 export class Line {
-  /**
-   * @param {string} sourceString
-   * @param {number} start
-   * @param {number} end
-   * @param {string} lineEnding
-   */
-  constructor(sourceString, start, end, lineEnding) {
-    this._rasterized = false;
-    this._start = start;
-    this._end = end;
-    this._text = null;
-    this._sourceString = sourceString;
-    this._lineEnding = lineEnding;
-  }
+  private _rasterized = false;
+  private _text: string|null = null;
+  constructor(
+    public _sourceString: string,
+    public _start: number,
+    public _end: number,
+    private _lineEnding: string,
+  ) { }
 
   get lineEnding() {
     return this._lineEnding;
@@ -321,65 +251,42 @@ export class Line {
     this._rasterized = true;
   }
 
-  /**
-   * @return {string}
-   */
-  get text() {
+  get text(): string {
     this._rasterize();
-    return this._text;
+    return this._text!;
   }
 
   get length() {
-    return this._rasterized ? this._text.length : this._end - this._start;
+    return this._rasterized ? this._text!.length : this._end - this._start;
   }
 }
 
-/**
- * @typedef {Object} Loc
- * @property {number} column
- * @property {number} line
- */
+export type Loc = {
+  column: number;
+  line: number;
+};
 
-/**
- * @typedef {Object} TextRange
- * @property {Loc} start
- * @property {Loc} end
- */
+export type TextRange = {
+  start: Loc;
+  end: Loc;
+};
 
-/**
- * @param {TextRange} selection
- * @return {boolean}
- */
-export function isSelectionCollapsed(selection) {
+export function isSelectionCollapsed(selection: TextRange): boolean {
   return selection.start.line === selection.end.line && selection.start.column === selection.end.column;
 }
 
-/**
- * @param {Loc} location
- * @return {Loc}
- */
-export function copyLocation(location) {
+export function copyLocation(location: Loc): Loc {
   return {
     line: location.line,
     column: location.column
   };
 }
 
-/**
- * @param {TextRange} a
- * @param {TextRange} b
- * @return {-1|0|1}
- */
-export function compareRange(a, b) {
+export function compareRange(a: TextRange, b: TextRange): -1 | 0 | 1 {
   return compareLocation(a.start, b.start) || compareLocation(a.end, b.end);
 }
 
-/**
- * @param {Loc} a
- * @param {Loc} b
- * @return {-1|0|1}
- */
-export function compareLocation(a, b) {
+export function compareLocation(a: Loc, b: Loc): -1 | 0 | 1 {
   if (a.line !== b.line) return a.line > b.line ? 1 : -1;
   if (a.column !== b.column) return a.column > b.column ? 1 : -1;
   return 0;

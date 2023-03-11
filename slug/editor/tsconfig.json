@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+      "noEmit": true,
+      "allowJs": true,
+      "checkJs": true,
+      "target": "ESNext",
+      "strictBindCallApply": true,
+      "strictNullChecks": true,
+      "allowSyntheticDefaultImports": true,
+      "module": "ESNext",
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "lib": [
+          "esnext",
+          "DOM",
+          "DOM.Iterable"
+      ],
+      "types": []
+  }
+}

@@ -1,20 +1,29 @@
+import type { CommandManager } from "./commands";
 import { Emitter } from "./emitter";
-import { compareLocation, compareRange, copyLocation, isSelectionCollapsed } from "./model.js";
+import {
+  compareLocation,
+  compareRange,
+  copyLocation,
+  isSelectionCollapsed,
+  type TextRange,
+  type Model,
+  type Loc,
+} from "./model";
+
+import type { Renderer } from './renderer';
 
 export class Input extends Emitter {
-  /**
-   * @param {HTMLElement} parent
-   * @param {import('./model').Model} model
-   * @param {import('./commands').CommandManager} commandManager
-   * @param {import('./renderer').Renderer} renderer
-   * @param {boolean=} readOnly
-   */
-  constructor(parent, model, commandManager, renderer, readOnly) {
+  private _buffer: string;
+  private _bufferRange: { start: { line: number; column: number; }; end: { line: number; column: number; }; };
+  private _editable: boolean;
+  private _textarea: HTMLTextAreaElement;
+  private _parent: HTMLElement;
+  constructor(parent: HTMLElement,
+    private _model: Model,
+    private _commandManager: CommandManager,
+    private _renderer: Renderer, readOnly: boolean | undefined) {
     super();
     parent.addEventListener('focus', this.focus.bind(this), false);
-    this._model = model;
-    this._commandManager = commandManager;
-    this._renderer = renderer;
     this._buffer = '';
     this._bufferRange = {
       start: { line: 0, column: 0 },
@@ -51,7 +60,7 @@ export class Input extends Emitter {
 
     parent.appendChild(this._textarea);
 
-    model.on('selection-changed', this._selectionChanged.bind(this));
+    this._model.on('selection-changed', this._selectionChanged.bind(this));
     this._commandManager.addCommand(this._deleteChar.bind(this, true), 'backspace', 'Backspace');
     this._commandManager.addCommand(this._deleteChar.bind(this, false), 'delete', 'Delete');
     this._commandManager.addCommand(this._indent.bind(this), 'indent', 'Tab');
@@ -84,10 +93,7 @@ export class Input extends Emitter {
     });
   }
 
-  /**
-   * @param {HTMLElement} parent
-   */
-  _setupContextMenuListeners(parent) {
+  _setupContextMenuListeners(parent: HTMLElement) {
     parent.addEventListener('mouseup', event => {
       if (event.which !== 3) return;
       // @ts-ignore layerX is a thing shut up
@@ -139,10 +145,7 @@ export class Input extends Emitter {
     });
   }
 
-  /**
-   * @param {{selections: Array<import("./model.js").TextRange>, previousSelections: Array<import("./model.js").TextRange>}} event
-   */
-  _selectionChanged(event) {
+  _selectionChanged(event: { selections: TextRange[]; previousSelections: TextRange[]; }) {
     var mainSelection = event.selections[0];
     this._bufferRange = {
       start: { line: mainSelection.start.line, column: 0 },
@@ -168,19 +171,14 @@ export class Input extends Emitter {
     );
   }
 
-  /**
-   * @param {ClipboardEvent} event
-   */
-  _onCopy(event) {
-    event.clipboardData.setData('text/plain', this._selectionsText());
+  _onCopy(event: ClipboardEvent) {
+    event.clipboardData?.setData('text/plain', this._selectionsText());
     event.preventDefault();
   }
 
-  /**
-   * @param {ClipboardEvent} event
-   */
-  _onPaste(event) {
-    if (event.clipboardData.types.indexOf('text/plain') === -1) return;
+  _onPaste(event: ClipboardEvent) {
+    if (!event.clipboardData) return;
+    if (event.clipboardData?.types.indexOf('text/plain') === -1) return;
 
     var text = event.clipboardData.getData('text/plain');
     var loc = this._model.replaceRange(text, this._model.selections[0]);
@@ -189,26 +187,20 @@ export class Input extends Emitter {
     event.preventDefault();
   }
 
-  /**
-   * @param {ClipboardEvent} event
-   */
-  _onCut(event) {
+  _onCut(event: ClipboardEvent) {
     if (!this._editable) return;
-    event.clipboardData.setData('text/plain', this._selectionsText());
+    event.clipboardData?.setData('text/plain', this._selectionsText());
     var loc = this._model.replaceRange('', this._model.selections[0]);
     this._model.setSelections([{ start: loc, end: loc }]);
     this._renderer.scrollLocationIntoView(loc);
     event.preventDefault();
   }
 
-  /**
-   * @return {string}
-   */
-  _selectionsText() {
+  _selectionsText(): string {
     return this._model.selections.map(selection => this._model.text(selection)).join('\n');
   }
 
-  update(event) {
+  update(event: InputEvent) {
     var value = this._textarea.value;
     var buffer = this._buffer;
     if (value === buffer) return;
@@ -256,8 +248,7 @@ export class Input extends Emitter {
   }
 
   _replaceRanges(text, ranges) {
-    /** @type {Array<import("./model.js").TextRange>} */
-    let cursors = [];
+    let cursors: TextRange[] = [];
     for (let i = 0; i < ranges.length; i++) {
       const loc = this._model.replaceRange(text, ranges[i]);
       ranges = ranges.map(selection => rebaseRange(selection, ranges[i], loc));
@@ -274,11 +265,7 @@ export class Input extends Emitter {
     this._textarea.style.lineHeight = window.getComputedStyle(this._parent).lineHeight;
   }
 
-  /**
-   * @param {boolean} backwards
-   * @return {boolean}
-   */
-  _deleteChar(backwards) {
+  _deleteChar(backwards: boolean): boolean {
     this._replaceRanges(
       '',
       this._model.selections.map(range => {
@@ -333,15 +320,12 @@ export class Input extends Emitter {
     return true;
   }
 
-  /**
-   * @param {string} text
-   */
-  insertText(text) {
+  insertText(text: string) {
     this._replaceRanges(text, this._model.selections);
   }
 
   _dedent() {
-    const lines = new Set();
+    const lines = new Set<number>();
     for (const selection of this._model.selections) {
       for (let i = selection.start.line; i < selection.end.line + 1; i++)
         lines.add(i);
@@ -368,25 +352,13 @@ export class Input extends Emitter {
   }
 }
 
-/**
- * @param {import('./model').TextRange} target
- * @param {import('./model').TextRange} from
- * @param {import('./model').Loc} to
- * @return {import('./model').TextRange}
- */
-function rebaseRange(target, from, to) {
+function rebaseRange(target: TextRange, from: TextRange, to: Loc): TextRange {
   const start = rebaseLoc(target.start, from, to);
   const end = rebaseLoc(target.end, from, to);
   return { start, end };
 }
 
-/**
- * @param {import('./model').Loc} target
- * @param {import('./model').TextRange} from
- * @param {import('./model').Loc} to
- * @return {import('./model').Loc}
- */
-function rebaseLoc(target, from, to) {
+function rebaseLoc(target: Loc, from: TextRange, to: Loc): Loc {
   if (compareLocation(target, from.start) <= 0) return target;
   const loc = { line: target.line, column: target.column };
   if (loc.line === from.end.line) loc.column += to.column - from.end.column;

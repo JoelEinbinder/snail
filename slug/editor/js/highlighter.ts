@@ -1,5 +1,5 @@
 import { Emitter } from './emitter';
-import { isSelectionCollapsed } from './model.js';
+import { isSelectionCollapsed, type Line } from './model';
 import { getMode } from './modeRegistry';
 import { StringStream } from './StringStream';
 
@@ -13,7 +13,7 @@ export interface Mode<State> {
   startState(): State;
   blankLine?: (state: State) => void;
   token(stream: StringStream, state: State): string|null;
-  indent(state: State, textAfter: string): number;
+  indent?(state: State, textAfter: string): number;
 };
 const MAX_TOKENS = 1000;
 export class Highlighter extends Emitter<{
@@ -21,7 +21,7 @@ export class Highlighter extends Emitter<{
 }> {
   private _selectionColors: {color?: string, background?: string};
   private _mode: Mode<any>;
-  private _lineInfo = new WeakMap<import('./model').Line, {state: Object, tokens: Array<Token>}>();
+  private _lineInfo = new WeakMap<import('./model').Line, {state: any, tokens: Array<Token>}>();
   private _currentLineNumber = 0;
   private _requestLineNumber = 0;
   private _tokenizeTimeout = 0;
@@ -29,7 +29,7 @@ export class Highlighter extends Emitter<{
   constructor(
     private _model: import('./model').Model,
     private _language: string = 'js',
-    private _underlay: (arg0: number, arg1: string) => Array<Token> = null,
+    private _underlay?: (arg0: number, arg1: string) => Token[],
     colors: { selectionBackground?: string; } | undefined = {}) {
     super();
     this._model.on('selection-changed', ({ selections, previousSelections }) => {
@@ -140,21 +140,22 @@ export class Highlighter extends Emitter<{
     }
     var start = timeLimit && Date.now();
     var state = this._currentLineNumber
-      ? this._copyState(this._lineInfo.get(this._model.line(this._currentLineNumber - 1)).state)
+      ? this._copyState(this._lineInfo.get(this._model.line(this._currentLineNumber - 1))!.state)
       : this._mode.startState();
+    let line: Line|undefined;
     for (
       ;
-      this._currentLineNumber <= lineNumber && (!timeLimit || Date.now() - start < timeLimit);
+      this._currentLineNumber <= lineNumber && (!timeLimit || Date.now() - start! < timeLimit);
       this._currentLineNumber++
     ) {
-      var tokens = [];
-      var line = this._model.line(this._currentLineNumber);
-      var stream = new StringStream(line.text);
+      const tokens: Token[] = [];
+      line = this._model.line(this._currentLineNumber);
+      const stream = new StringStream(line.text);
       if (stream.eol() && this._mode.blankLine) this._mode.blankLine(state);
       while (!stream.eol()) {
-        var className = this._mode.token(stream, state) || '';
-        var color = null;
-        for (var [name, c] of this._colors) {
+        const className = this._mode.token(stream, state) || '';
+        let color: string|undefined = undefined;
+        for (const [name, c] of this._colors) {
           if (className.indexOf(name) !== -1) color = c;
         }
         tokens.push({ length: stream.pos - stream.start, color });
@@ -163,26 +164,25 @@ export class Highlighter extends Emitter<{
           state = this._mode.startState();
           tokens.push({
             length: stream.string.length - stream.start,
-            color: null
           });
           break;
         }
       }
       this._lineInfo.set(line, { state: null, tokens });
     }
-    if (line) this._lineInfo.get(line).state = this._copyState(state);
+    if (line) this._lineInfo.get(line)!.state = this._copyState(state);
   }
 
-  indentation(lineNumber: number) {
+  indentation(lineNumber: number): number {
     const line = this._model.line(lineNumber);
     if (!this._lineInfo.has(line))
-      return;
-    const state = this._lineInfo.get(line).state;
+      return 0;
+    const state = this._lineInfo.get(line)!.state;
     if (!state)
-      return;
+      return 0;
     const copy = this._copyState(state);
     this._mode.token(new StringStream('\n'), copy);
-    return this._mode.indent(copy, '');
+    return this._mode.indent?.(copy, '') || 0;
   }
 
   setModeOptions(options: any) {
@@ -209,11 +209,11 @@ export class Highlighter extends Emitter<{
 
   tokensForLine(lineNumber: number): Array<Token> {
     const mergeTokens = (a: Array<Token>, b: Array<Token>): Array<Token> => {
-      var tokens = [];
+      var tokens: Token[] = [];
       var line = this._model.line(lineNumber);
       var length = 0;
-      var color = null;
-      var background = null;
+      var color: string|undefined = undefined;
+      var background: string|undefined = undefined;
       var aIndex = 0;
       var bIndex = 0;
       var aToken = a[aIndex];
@@ -255,7 +255,7 @@ export class Highlighter extends Emitter<{
     this._tokenizeUpTo(lineNumber, 10000);
     var line = this._model.line(lineNumber);
     var mergedTokens = this._lineInfo.has(line)
-      ? mergeTokens(this._lineInfo.get(line).tokens, this._selectionTokens(lineNumber))
+      ? mergeTokens(this._lineInfo.get(line)!.tokens, this._selectionTokens(lineNumber))
       : mergeTokens([{ length: line.length }], this._selectionTokens(lineNumber)); // default
 
     if (this._underlay) return mergeTokens(this._underlay.call(null, lineNumber, line.text), mergedTokens);
@@ -263,8 +263,8 @@ export class Highlighter extends Emitter<{
   }
 
   _selectionTokens(lineNumber: number): Array<Token> {
-    var ranges = [];
-    var tokens = [];
+    var ranges: {start: number, end: number}[] = [];
+    var tokens: Token[] = [];
     var { length } = this._model.line(lineNumber);
     for (var selection of this._model.selections) {
       if (!isSelectionCollapsed(selection) && selection.start.line <= lineNumber && selection.end.line >= lineNumber) {

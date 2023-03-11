@@ -1,14 +1,10 @@
-/**
- * @typedef {function():boolean} CommandFunction
- */
+export type CommandFunction = () => boolean;
+
 export class CommandManager {
-  /**
-   * @param {HTMLElement} parent
-   */
-  constructor(parent) {
-    /** @type {Map<string, CommandFunction>} */
+  private _commands = new Map<string, CommandFunction>();
+  private _shortcuts: {shortcut: string, command: string}[] = [];
+  constructor(parent: HTMLElement) {
     this._commands = new Map();
-    /** @type {Array<{shortcut: string, command: string}>} */
     this._shortcuts = [];
 
     parent.addEventListener(
@@ -17,7 +13,7 @@ export class CommandManager {
         var shortcut = this._eventToString(event);
         for (var i = this._shortcuts.length - 1; i >= 0; i--) {
           if (this._shortcuts[i].shortcut !== shortcut) continue;
-          if (this._commands.get(this._shortcuts[i].command)()) {
+          if (this._commands.get(this._shortcuts[i].command)!()) {
             event.preventDefault();
             event.stopPropagation();
             return;
@@ -28,32 +24,17 @@ export class CommandManager {
     );
   }
 
-  /**
-   * @param {string} command
-   * @return {boolean}
-   */
-  trigger(command) {
+  trigger(command: string): boolean {
     if (!this._commands.has(command)) throw new Error('Unknown command "' + command + '"');
-    return this._commands.get(command)();
+    return this._commands.get(command)!();
   }
 
-  /**
-   * @param {CommandFunction} commandFunction
-   * @param {string} command
-   * @param {(string|string[])=} shortcut
-   * @param {(string|string[])=} macShortcut
-   */
-  addCommand(commandFunction, command, shortcut, macShortcut) {
+  addCommand(commandFunction: CommandFunction, command: string, shortcut?: (string | string[]), macShortcut?: (string | string[])) {
     this._commands.set(command, commandFunction);
     this.registerShortcut(command, shortcut, macShortcut);
   }
 
-  /**
-   * @param {string} command
-   * @param {(string|string[])} shortcuts
-   * @param {(string|string[])=} macShortcuts
-   */
-  registerShortcut(command, shortcuts, macShortcuts) {
+  registerShortcut(command: string, shortcuts?: (string | string[]), macShortcuts?: (string | string[])) {
     console.assert(this._commands.has(command), `Command not found "${command}"`);
     if (macShortcuts && navigator.platform.indexOf('Mac') > -1) shortcuts = macShortcuts;
     if (!shortcuts) return;
@@ -62,10 +43,7 @@ export class CommandManager {
       this._shortcuts.push({ shortcut: shortcut.toLowerCase(), command });
   }
 
-  /**
-   * @param {KeyboardEvent} event
-   */
-  _eventToString(event) {
+  _eventToString(event: KeyboardEvent) {
     var str = event.key.toLowerCase();
     if (event.ctrlKey) str = 'ctrl+' + str;
     if (event.shiftKey) str = 'shift+' + str;

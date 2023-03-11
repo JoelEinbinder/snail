@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { registerMode } from '../js/modeRegistry';
 registerMode('js', javascriptMode);
 // CodeMirror, copyright (c) by Marijn Haverbeke and others

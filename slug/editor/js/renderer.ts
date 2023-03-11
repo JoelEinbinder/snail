@@ -1,26 +1,41 @@
 import { Emitter } from "./emitter";
-import { isSelectionCollapsed } from "./model.js";
+import { isSelectionCollapsed, type Loc, type Model, type Line } from "./model";
+import type { EditorOptions } from "./editor";
+import type { Highlighter } from "./highlighter";
 
-export class Renderer extends Emitter {
-  /**
-   * @param {import('./model').Model} model
-   * @param {HTMLElement} element
-   * @param {import('./highlighter').Highlighter} highlighter
-   * @param {import('./editor').EditorOptions=} options
-   */
-  constructor(model, element, highlighter, options = {}) {
+export class Renderer extends Emitter<{
+  'might-resize': void,
+  'contentMouseDown': MouseEvent,
+  'scroll': void,
+}> {
+  TAB = '  ';
+  private _debugPainting = false;
+  private _padding: any;
+  private _scrollTop: number;
+  private _scrollLeft: number;
+  private _refreshScheduled: boolean;
+  private _hasFocus: boolean;
+  private _textLayer: Layer;
+  private _overlayLayer: Layer;
+  private _lineHeight: number;
+  private _width: any;
+  private _highlightWordOccurrences: boolean;
+  private _scrollingElement: HTMLDivElement;
+  private _fillerElement: HTMLDivElement;
+  private _lastScrollOffset: { top: number; left: number; };
+  colors: EditorOptions['colors'] & {};
+  private _textMeasuring: any;
+  private _charWidth: any;
+  private _height: number;
+  private _charHeight: number;
+  constructor(
+    private _model: Model,
+    public element: HTMLElement,
+    private _highlighter: Highlighter,
+    private _options: EditorOptions = {},
+  ) {
     super();
-    this.TAB = '  ';
-    this._model = model;
 
-    this._options = options;
-    this._debugPainting = false;
-
-    this._highlighter = highlighter;
-    this.element = element;
-
-    /** @type {WeakMap<import("./highlighter").Token, string>} */
-    this._rasterizedTokens = new WeakMap();
     this._padding = typeof this._options.padding === 'number' ? this._options.padding : 4;
     this._scrollTop = 0;
     this._scrollLeft = 0;
@@ -39,10 +54,6 @@ export class Renderer extends Emitter {
 
     if (this._options.backgroundColor)
       this._textLayer.canvas.style.backgroundColor = this._options.backgroundColor;
-
-    /** @type {WeakMap<import('./model').Line, Array<{column: number, offset: number}>>} */
-    this._lineMetrics = new WeakMap();
-    this._charWidths = {};
 
     this.element.appendChild(this._textLayer.canvas);
     this.element.appendChild(this._overlayLayer.canvas);
@@ -144,10 +155,7 @@ export class Renderer extends Emitter {
     this._overlayLayer.refresh();
   }
 
-  /**
-   * @param {string} text
-   */
-  setText(text) {
+  setText(text: string) {
     this._model.replaceRange(text, this._model.fullRange());
   }
 
@@ -161,12 +169,7 @@ export class Renderer extends Emitter {
     return this._scrollLeft; //this._scrollingElement.scrollLeft;
   }
 
-  /**
-   * @param {number} offsetX
-   * @param {number} offsetY
-   * @return {import('./model.js').Loc}
-   */
-  locationFromPoint(offsetX, offsetY) {
+  locationFromPoint(offsetX: number, offsetY: number): Loc {
     var rect = this._scrollingElement.getBoundingClientRect();
     var y = Math.floor((offsetY + this.scrollTop - rect.top) / this._lineHeight);
     if (y >= this._model.lineCount()) {
@@ -205,10 +208,7 @@ export class Renderer extends Emitter {
     };
   }
 
-  /**
-   * @param {import('./model.js').Loc} location
-   */
-  scrollLocationIntoView(location) {
+  scrollLocationIntoView(location: Loc) {
     this._updateMetrics();
     var point = this.pointFromLocation(location);
     var top = point.y - this._padding + this._scrollTop;
@@ -228,11 +228,7 @@ export class Renderer extends Emitter {
       this._scrollingElement.scrollLeft = right - this._scrollingElement.clientWidth;
   }
 
-  /**
-   * @param {import('./model.js').Loc} location
-   * @return {{x: number, y: number}}
-   */
-  pointFromLocation(location) {
+  pointFromLocation(location: Loc): { x: number; y: number; } {
     if (location.line >= this._model.lineCount()) location = this._model.fullRange().end;
     var line = this._model.line(location.line);
     return {
@@ -245,14 +241,11 @@ export class Renderer extends Emitter {
     return this._lineNumbersWidth() + this._padding - this.scrollLeft;
   }
 
-  /**
-   * @param {WheelEvent} event
-   */
-  _gutterWheel(event) {
-    var node = /** @type {Node} */ (event.target);
+  _gutterWheel(event: WheelEvent) {
+    const node = event.target as Node;
     if (node === this._scrollingElement || this._scrollingElement.contains(node)) return;
-    var deltaY = event.deltaY;
-    var deltaX = event.deltaX;
+    const deltaY = event.deltaY;
+    const deltaX = event.deltaX;
     if (Math.abs(deltaX) > Math.abs(deltaY)) this._scrollingElement.scrollLeft += deltaX;
     else this._scrollingElement.scrollTop += deltaY;
   }
@@ -262,9 +255,9 @@ export class Renderer extends Emitter {
     this._scrollTop = Math.round(this._scrollingElement.scrollTop * dpr) / dpr;
     this._scrollLeft =
       Math.round(this._scrollingElement.scrollLeft * dpr) / dpr;
-    var rects = [];
-    var deltaX = this.scrollLeft - this._lastScrollOffset.left;
-    var deltaY = this.scrollTop - this._lastScrollOffset.top;
+    const rects: Rect[] = [];
+    const deltaX = this.scrollLeft - this._lastScrollOffset.left;
+    const deltaY = this.scrollTop - this._lastScrollOffset.top;
     if (deltaX > 0) {
       rects.push({ x: this._width - deltaX - 1, y: 0, width: deltaX + 1, height: this._height });
       rects.push({ x: 0, y: 0, width: this._lineNumbersWidth() + 1, height: this._height });
@@ -274,7 +267,7 @@ export class Renderer extends Emitter {
     if (deltaY < 0) rects.push({ x: 0, y: 0, width: this._width, height: -deltaY + 1 });
     this._textLayer.translate(deltaX, deltaY);
     this._overlayLayer.translate(deltaX, deltaY);
-    for (var rect of rects) {
+    for (const rect of rects) {
       this._textLayer.invalidate(rect);
       this._overlayLayer.invalidate(rect);
     }
@@ -283,7 +276,7 @@ export class Renderer extends Emitter {
       top: this.scrollTop,
       left: this.scrollLeft
     };
-    this.emit('scroll');
+    this.emit('scroll', undefined);
   }
 
   _innerHeight() {
@@ -334,18 +327,11 @@ export class Renderer extends Emitter {
     });
   }
 
-  /**
-   * @param {number} y
-   */
-  _lineForOffset(y) {
+  _lineForOffset(y: number) {
     return Math.floor(y / this._lineHeight);
   }
 
-  /**
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {Array<Rect>} clipRects
-   */
-  _drawText(ctx, clipRects) {
+  _drawText(ctx: CanvasRenderingContext2D, clipRects: Rect[]) {
     if (!this._lineHeight || !this._charWidth) throw new Error('Must call layout() before draw()');
     if (this._debugPainting) {
       ctx.fillStyle = 'rgba(0,0,0,0.1)';
@@ -405,11 +391,7 @@ export class Renderer extends Emitter {
     if (this._options.lineNumbers) this._drawLineNumbers(ctx);
   }
 
-  /**
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {Array<Rect>} clipRects
-   */
-  _drawOverlay(ctx, clipRects) {
+  _drawOverlay(ctx: CanvasRenderingContext2D, clipRects: Rect[]) {
     ctx.clearRect(0, 0, this._width, this._height);
     var selection = this._model.selections[0];
     var word;
@@ -507,17 +489,14 @@ export class Renderer extends Emitter {
     return Math.max(this._charWidth * Math.ceil(Math.log10(this._model.lineCount())) + this._padding * 2, 22);
   }
 
-  /**
-   * @param {CanvasRenderingContext2D} ctx
-   */
-  _drawLineNumbers(ctx) {
+  _drawLineNumbers(ctx: CanvasRenderingContext2D) {
     var width = this._lineNumbersWidth();
-    ctx.fillStyle = this._options.colors.gutterBackground || '#eeeeee';
+    ctx.fillStyle = this.colors.gutterBackground || '#eeeeee';
     ctx.fillRect(0, 0, width, this._height);
-    ctx.fillStyle = this._options.colors.gutterBorder || '#bbbbbb';
+    ctx.fillStyle = this.colors.gutterBorder || '#bbbbbb';
     ctx.fillRect(width - 1, 0, 1, this._height);
 
-    ctx.fillStyle = this._options.colors.gutterForeground || 'rgb(128, 128, 128)';
+    ctx.fillStyle = this.colors.gutterForeground || 'rgb(128, 128, 128)';
     var { from, to } = this.viewport();
     for (var i = from; i <= to; i++) {
       ctx.fillText(
@@ -536,7 +515,7 @@ export class Renderer extends Emitter {
     if (this._options.inline) {
       const newHeight = this._innerHeight() + 'px';
       if (newHeight !== this.element.style.height) {
-        this.emit('might-resize');
+        this.emit('might-resize', undefined);
         this.element.style.height = newHeight;
       }
     }
@@ -546,11 +525,11 @@ export class Renderer extends Emitter {
     this._overlayLayer.layout(rect.width, rect.height);
     this._textLayer.layout(rect.width, rect.height);
     var last = this._charWidth;
-    var ctx = this._textLayer.canvas.getContext('2d');
+    const ctx = this._textLayer.canvas.getContext('2d')!;
     this._charWidth = ctx.measureText('x').width;
     if (this._charWidth !== last)
       this._textMeasuring = new TextMeasuring(
-        char => this._textLayer._ctx.measureText(char === '\t' ? this.TAB : char).width
+        char => ctx.measureText(char === '\t' ? this.TAB : char).width
       );
     
     if (this._lineHeight && this._charWidth)
@@ -563,20 +542,15 @@ export class Renderer extends Emitter {
 }
 
 class Layer {
-  /**
-   * @param {function(CanvasRenderingContext2D, Array<Rect>):void} draw
-   */
-  constructor(draw) {
-    this.canvas = document.createElement('canvas');
+  readonly canvas = document.createElement('canvas');
+  private _ctx = this.canvas.getContext('2d')!;
+  private _rects: Rect[] = [];
+  private _width = 0;
+  private _height = 0;
+  private _dpr = 1;
+  private _translation = { x: 0, y: 0 };
+  constructor(private _draw: (ctx: CanvasRenderingContext2D, rect: Rect[]) => void) {
     this.canvas.style.setProperty('font-kerning', 'none');
-    this._ctx = this.canvas.getContext('2d');
-    this._draw = draw;
-    /** @type {Array<Rect>} */
-    this._rects = [];
-    this._width = 0;
-    this._height = 0;
-    this._dpr = 1;
-    this._translation = { x: 0, y: 0 };
   }
 
   refresh() {
@@ -591,7 +565,7 @@ class Layer {
     if (this._rects.length) {
       this._ctx.save();
       this._ctx.scale(this._dpr, this._dpr);
-      var cleanRects = [];
+      const cleanRects: Rect[] = [];
       for (var rect of this._rects) {
         if (rect.x < 0) {
           rect.width += rect.x;
@@ -611,10 +585,7 @@ class Layer {
     this._rects = [];
   }
 
-  /**
-   * @param {Rect=} rect
-   */
-  invalidate(rect) {
+  invalidate(rect?: Rect) {
     if (!rect) {
       this._rects = [{ x: 0, y: 0, width: this._width, height: this._height }];
       return;
@@ -628,7 +599,7 @@ class Layer {
     this._rects = newRects;
   }
 
-  layout(width, height) {
+  layout(width: number, height: number) {
     var dpr = getDPR();
     this.canvas.width = width * dpr;
     this.canvas.height = height * dpr;
@@ -646,11 +617,7 @@ class Layer {
     this.invalidate();
   }
 
-  /**
-   * @param {number} x
-   * @param {number} y
-   */
-  translate(x, y) {
+  translate(x: number, y: number) {
     for (var rect of this._rects) {
       rect.x -= x;
       rect.y -= y;
@@ -661,14 +628,12 @@ class Layer {
 }
 
 class TextMeasuring {
-  /**
-   * @param {function(string):number} measure
-   */
-  constructor(measure) {
-    this._lineMetrics = new WeakMap();
-    this._charWidths = {};
-    /** @type {function(string):number} */
-    this._measure = text => {
+  private _lineMetrics = new WeakMap<object, any>();
+  private _charWidths = {};
+  private _measure: (text: string) => number;
+  private _longestLineLength: number;
+  constructor(measure: (arg0: string) => number) {
+    this._measure = (text: string): number => {
       var width = 0;
       for (var i = 0; i < text.length; i++) {
         var char = text.charAt(i);
@@ -685,12 +650,7 @@ class TextMeasuring {
     return this._longestLineLength;
   }
 
-  /**
-   * @param {?import('./model').Line} line
-   * @param {number} column
-   * @return {number}
-   */
-  xOffsetFromLocation(line, column) {
+  xOffsetFromLocation(line: Line | null, column: number): number {
     if (!line) return 0;
     var metrics = this._computeLineMetrics(line);
     var alpha = 0;
@@ -720,11 +680,7 @@ class TextMeasuring {
     return offset;
   }
 
-  /**
-   * @param {import('./model').Line} line
-   * @return {Array<{column: number, offset: number}>}
-   */
-  _computeLineMetrics(line) {
+  _computeLineMetrics(line: Line): { column: number; offset: number; }[] {
     if (this._lineMetrics.has(line)) return this._lineMetrics.get(line);
     var metrics = [{ column: 0, offset: 0 }];
     var text = line.text;
@@ -739,29 +695,18 @@ class TextMeasuring {
   }
 }
 
-/**
- * @typedef {Object} Rect
- * @property {number} x
- * @property {number} y
- * @property {number} width
- * @property {number} height
- */
+type Rect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
-/**
- * @param {Rect} a
- * @param {Rect} b
- * @return {boolean}
- */
-function intersects(a, b) {
+function intersects(a: Rect, b: Rect): boolean {
   return a.x + a.width > b.x && b.x + b.width > a.x && a.y + a.height > b.y && b.y + b.height > a.y;
 }
 
-/**
- * @param {Rect} inside
- * @param {Rect} outside
- * @return {boolean}
- */
-function contains(inside, outside) {
+function contains(inside: Rect, outside: Rect): boolean {
   return (
     inside.x >= outside.x &&
     inside.x + inside.width <= outside.x + outside.width &&
@@ -770,11 +715,7 @@ function contains(inside, outside) {
   );
 }
 
-/**
- * @param {Array<Rect>} rects
- * @return {Rect}
- */
-function combineRects(...rects) {
+function combineRects(...rects: Rect[]): Rect {
   var x = Math.min(...rects.map(rect => rect.x));
   var y = Math.min(...rects.map(rect => rect.y));
   var width = Math.max(...rects.map(rect => rect.x + rect.width)) - x;

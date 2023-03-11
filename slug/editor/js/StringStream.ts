@@ -100,7 +100,7 @@ export class StringStream {
       }
     } else {
       var match = this.string.slice(this.pos).match(pattern);
-      if (match && match.index > 0) {
+      if (match && (match.index || 0) > 0) {
         return null;
       }
       if (match && consume !== false) {
