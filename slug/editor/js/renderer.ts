@@ -170,7 +170,8 @@ export class Renderer extends Emitter<{
       this.element.append(this._hoverElement);
       const point = this.pointFromLocation(hover.reposition);
       this._hoverElement.style.left = `${Math.round(point.x)}px`;
-      this._hoverElement.style.top = `${Math.round(point.y - this._hoverElement.offsetHeight)}px`;
+      const y = loc.line === 0 ? point.y + this._lineHeight : point.y - this._hoverElement.offsetHeight;
+      this._hoverElement.style.top = `${Math.round(y)}px`;
     };
 
     const hasHover = this._hoverElement.isConnected;

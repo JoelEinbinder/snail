@@ -25,7 +25,7 @@ export class Editor extends Emitter<EditorEvents> {
     this._commandManager = new CommandManager(this.element);
     this._input = new Input(this.element, this._model, this._commandManager, this._renderer, options.readOnly);
     this._selectionManager = new SelectionManger(this._renderer, this._model, this._commandManager);
-    this._model.on('change', range => this.emit('change', range));
+    this._model.on('change', change => this.emit('change', change));
     this._renderer.on('might-resize', () => this.emit('might-resize', undefined));
     this._model.on('selection-changed', event => this.emit('selection-changed', event));
   }
@@ -104,7 +104,7 @@ export class Editor extends Emitter<EditorEvents> {
 }
 
 type EditorEvents = {
-  'change': TextRange;
+  'change': { range: TextRange, text: string };
   'might-resize': void;
   'selection-changed': { selections: TextRange[], previousSelections: TextRange[]};
 };

@@ -3,7 +3,7 @@ import { Emitter } from "./emitter";
 export class Model extends Emitter<{
   'selection-changed': { selections: TextRange[], previousSelections: TextRange[]},
   'squiggliesChanged': void,
-  'change': TextRange,
+  'change': { range: TextRange, text: string },
 }> {
   private _lines: Line[];
   private _selections: TextRange[] = [{ start: { line: 0, column: 0 }, end: { line: 0, column: 0 } }];
@@ -149,7 +149,7 @@ export class Model extends Emitter<{
       amount = 0;
     }
 
-    this.emit('change', range);
+    this.emit('change', {range, text});
     return {
       line: range.start.line + lines.length - 1,
       column: endColumn

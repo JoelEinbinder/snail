@@ -204,6 +204,8 @@ export class Input extends Emitter {
     var value = this._textarea.value;
     var buffer = this._buffer;
     if (value === buffer) return;
+    // Something changed with the textarea, but the web platform doesn't give us enough info to figure out what
+    // We have to figure out the text that was changed, and move the cursor
     var start = copyLocation(this._bufferRange.start);
     var selectionStart = this._textarea.selectionStart;
     var selectionEnd = this._textarea.selectionEnd;
@@ -223,6 +225,13 @@ export class Input extends Emitter {
         end.line--;
         end.column = this._model.line(end.line).length;
       }
+    }
+    // This is cursed and probably wrong
+    // But its 6am and the ranges are backwards.
+    // If you fix this later than 2023 I'll buy you a donut
+    if (compareLocation(start, end) === 1) {
+      start = end;
+      i = j;
     }
     const text = value.substring(i, j + 1);
     if (compareRange({ start, end }, this._model.selections[0]) !== 0) {

@@ -66,4 +66,8 @@ export class ShellModel {
   async close() {
     await this.page.close();
   }
+
+  activeFrame() {
+    return this.page.frames()[this.page.frames().length - 1];
+  }
 }

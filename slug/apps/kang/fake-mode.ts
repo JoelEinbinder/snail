@@ -7,9 +7,15 @@ type State = {
   /** if we split across lines we need to track this */
   characterIndex: number,
 };
-type Token = {}
+type Token = {
+  text: string;
+  hover?: string;
+  color: string;
+};
 class FakeMode implements Mode<State> {
-  constructor(private _options: { indentUnit: number, tokens?: Token[], actualLang?: string}) {
+  private _tokens: Token[];
+  constructor(options: { indentUnit: number, tokens?: Token[] }) {
+    this._tokens = options.tokens || [];
   }
   startState(): State {
     return {
@@ -21,14 +27,30 @@ class FakeMode implements Mode<State> {
     this.token(new StringStream(''), state);
   }
   token(stream: StringStream, state: State): string | null {
-    stream.next();
-    return '#F0F';
+    if (state.tokenIndex >= this._tokens.length) {
+      stream.skipToEnd();
+      return null;
+    }
+    const token = this._tokens[state.tokenIndex];
+    let partialTokenLength = Math.min(stream.string.length - stream.pos, token.text.length);
+    stream.pos += partialTokenLength;
+    if (stream.eol() && token.text[partialTokenLength] === '\n')
+      partialTokenLength++;
+    if (state.characterIndex + partialTokenLength === token.text.length) {
+      state.characterIndex = 0;
+      state.tokenIndex++;
+    } else {
+      state.characterIndex += partialTokenLength;
+    }
+    return token.color;
   }
   hover(state: State): string | Node | null {
-      return 'fake!';
+    if (state.tokenIndex >= this._tokens.length)
+      return null;
+    return this._tokens[state.tokenIndex].hover || null;
   }
 }
-registerMode('<fake>', (options: any, parserConfig) => {
+registerMode('<fake>', (options: { indentUnit: number, tokens?: Token[], actualLang?: string}, parserConfig) => {
   if (options.actualLang)
     return getMode(options.actualLang)?.(options, parserConfig);
   return new FakeMode(options);

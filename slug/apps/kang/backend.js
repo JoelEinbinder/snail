@@ -9,7 +9,12 @@ const rpc = makeRPC({
   },
   async close() {
     process.exit(0);
-  }
+  },
+  async highlight({content}) {
+    if (!doHighlight)
+      return;
+    doHighlight(content);
+  },
 });
 const pathArg = process.argv[2];
 let absolutePath;
@@ -18,11 +23,36 @@ if (pathArg) {
   absolutePath = path.resolve(pathArg);
   relativePath = path.relative(process.cwd(), absolutePath);
 }
+const highlightArg = process.argv[3];
+let doHighlight;
+if (highlightArg) {
+  const child_process = require('child_process');
+  const commandChild = child_process.spawn(highlightArg, {
+    stdio: ['pipe', 'pipe', 'inherit'],
+  });
+  const readline = require('readline');
+  const rl = readline.createInterface({
+    input: commandChild.stdout,
+    output: commandChild.stdin,
+    terminal: false,
+  });
+  rl.on('line', line => {
+    rpc.notify('highlight', JSON.parse(line));
+  });
+  doHighlight = content => {
+    commandChild.stdin.write(JSON.stringify(content) + '\n');
+  };
+  process.on('beforeExit', () => {
+    commandChild.kill();
+  });
+}
 let content = '';
 let newFile = true;
 try {
   if (pathArg) {
     content = fs.readFileSync(absolutePath, 'utf8');
+    if (doHighlight)
+      doHighlight(content);
     newFile = false;
   }
 } catch {

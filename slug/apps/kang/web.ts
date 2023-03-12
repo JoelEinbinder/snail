@@ -65,22 +65,25 @@ document.addEventListener('keydown', event => {
     event.stopPropagation();
     doClose();
   } else if (event.code === 'KeyG' && event.ctrlKey) {
-    toggleEditorMode();
+    updateEditorMode(!inLanguageMode);
     event.preventDefault();
     event.stopPropagation();
   }
 });
 
 let inLanguageMode = false;
-function toggleEditorMode() {
-  inLanguageMode = !inLanguageMode;
+let tokens: { text: string, color?: string, hover?: string }[] = [];
+function updateEditorMode(inl: boolean) {
+  inLanguageMode = inl;
   if (!editor)
     return;
   if (inLanguageMode) {
     const ext = relativePath.split('.').pop();
     editor.setModeOptions({actualLang: ext, indentUnit: 4});
   } else {
-    editor.setModeOptions({});
+    editor.setModeOptions({
+      tokens,
+    });
   }
 }
 
@@ -123,8 +126,8 @@ const rpc = RPC(transport, {
         gutterForeground: '#666',
       }  
     });
-    inLanguageMode = false;
-    toggleEditorMode();
+    window['editorForTest'] = editor;
+    updateEditorMode(true);
     editorContainer.append(editor.element);
     editor.layout();
     lastSavedVersion = editor.value;
@@ -139,14 +142,45 @@ const rpc = RPC(transport, {
         done();
       }
     });
-    editor.on('change', () => {
+    editor.on('change', ({range, text}) => {
       header.setModified(lastSavedVersion !== editor.value);
+      const cursor = { column: 0, line: 0 };
+      let start;
+      let end;
+      outer: for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        for (let j = 0; j < token.text.length; j++) {
+          if (cursor.line === range.start.line && cursor.column === range.start.column) {
+            start = { token: i, offset: j };
+          }
+          if (cursor.line === range.end.line && cursor.column === range.end.column) {
+            end = { token: i, offset: j };
+            break outer;
+          }
+          if (token.text[j] === '\n') {
+            cursor.column = 0;
+            cursor.line++;
+          } else {
+            cursor.column++;
+          }
+        }
+      }
+      const newToken = {
+        text: tokens[start.token].text.slice(0, start.offset) + text + tokens[end.token].text.slice(end.offset),
+        color: tokens[start.token]?.color,
+      };
+      tokens.splice(start.token, end.token - start.token + 1, newToken);
+      rpc.notify('highlight', {content: editor.value});
     });
     window.onresize = () => editor.layout();
     header.setTitle(params.relativePath || 'New Buffer');
     editor.layout();
     editor.focus();
   },
+  highlight: t => {
+    tokens = t;
+    updateEditorMode(inLanguageMode);
+  }
 });
 
 while (true)

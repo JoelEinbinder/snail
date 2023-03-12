@@ -1,5 +1,5 @@
 export * from '@playwright/test';
-import { test as _test, _baseTest, _electron, expect, type Page, type ElectronApplication } from '@playwright/test';
+import { test as _test, _electron, expect, type ElectronApplication } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 import { ShellModel } from './ShellModel';

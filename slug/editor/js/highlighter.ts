@@ -45,7 +45,7 @@ export class Highlighter extends Emitter<{
           to: selection.end.line
         });
     });
-    this._model.on('change', range => {
+    this._model.on('change', ({range}) => {
       this._findCurrentLineNumber(range.start.line);
       this.emit('highlight', {
         from: range.start.line,
