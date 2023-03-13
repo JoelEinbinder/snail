@@ -27,14 +27,21 @@ class FakeMode implements Mode<State> {
     this.token(new StringStream(''), state);
   }
   token(stream: StringStream, state: State): string | null {
+    if (this._tokens[state.tokenIndex]?.text === '\n') {
+      state.tokenIndex++;
+      state.characterIndex = 0;
+      if (stream.eol())
+        return null;
+    }
     if (state.tokenIndex >= this._tokens.length) {
       stream.skipToEnd();
       return null;
     }
     const token = this._tokens[state.tokenIndex];
-    let partialTokenLength = Math.min(stream.string.length - stream.pos, token.text.length);
+
+    let partialTokenLength = Math.min(stream.string.length - stream.pos, token.text.length - state.characterIndex);
     stream.pos += partialTokenLength;
-    if (stream.eol() && token.text[partialTokenLength] === '\n')
+    if (stream.eol() && token.text[partialTokenLength + state.characterIndex] === '\n')
       partialTokenLength++;
     if (state.characterIndex + partialTokenLength === token.text.length) {
       state.characterIndex = 0;

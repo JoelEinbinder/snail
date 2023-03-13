@@ -5,7 +5,7 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 rl.on('line', line => {
-  const content = JSON.parse(line);
+  const {content, id} = JSON.parse(line);
   const tokens = content.split('\n').map((text, index) => {
     return {
       text: text + '\n',
@@ -13,5 +13,5 @@ rl.on('line', line => {
       hover: ['#555', '#bbb'][index % 2],
     };
   })
-  process.stdout.write(JSON.stringify(tokens) + '\n');
+  process.stdout.write(JSON.stringify({tokens, id}) + '\n');
 });

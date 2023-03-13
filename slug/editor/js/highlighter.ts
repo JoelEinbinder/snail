@@ -159,7 +159,7 @@ export class Highlighter extends Emitter<{
         for (const [name, c] of this._colors) {
           if (className.indexOf(name) !== -1) color = c;
         }
-        if (!color && className.startsWith('#')) color = className;
+        if (!color && /^(?:#|rgba?\(|hsla?\()/.test(className)) color = className;
         tokens.push({ length: stream.pos - stream.start, color });
         stream.start = stream.pos;
         if (tokens.length > MAX_TOKENS) {

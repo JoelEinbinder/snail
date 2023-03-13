@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const { display, makeRPC } = require('../../sdk');;
 display(path.join(__dirname, 'web.ts'));
+const higlightCallbacks = new Map();
+let lastHighlightId = 0;
 const rpc = makeRPC({
   async save({file, content}) {
     await fs.promises.writeFile(file, content);
@@ -11,9 +13,13 @@ const rpc = makeRPC({
     process.exit(0);
   },
   async highlight({content}) {
-    if (!doHighlight)
-      return;
-    doHighlight(content);
+    if (!content || !doHighlight)
+      return [];
+    const id = ++lastHighlightId;
+    doHighlight(content, id);
+    const result = await new Promise(x => higlightCallbacks.set(id, x));
+    higlightCallbacks.delete(id);
+    return result;
   },
 });
 const pathArg = process.argv[2];
@@ -37,10 +43,11 @@ if (highlightArg) {
     terminal: false,
   });
   rl.on('line', line => {
-    rpc.notify('highlight', JSON.parse(line));
+    const {id, tokens} = JSON.parse(line);
+    higlightCallbacks.get(id)(tokens);
   });
-  doHighlight = content => {
-    commandChild.stdin.write(JSON.stringify(content) + '\n');
+  doHighlight = (content, id) => {
+    commandChild.stdin.write(JSON.stringify({content, id}) + '\n');
   };
   process.on('beforeExit', () => {
     commandChild.kill();
@@ -51,8 +58,6 @@ let newFile = true;
 try {
   if (pathArg) {
     content = fs.readFileSync(absolutePath, 'utf8');
-    if (doHighlight)
-      doHighlight(content);
     newFile = false;
   }
 } catch {

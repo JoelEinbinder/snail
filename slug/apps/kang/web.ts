@@ -9,6 +9,7 @@ class Header {
   private title = '';
   private _titleElement = document.createElement('div');
   private _closeButton = document.createElement('a');
+  private _loadingSpinner = document.createElement('div');
   private modified = false;
   constructor() {
     this.element.classList.add('header');
@@ -23,7 +24,8 @@ class Header {
       event.preventDefault();
       doClose();
     };
-    this.element.append(this._titleElement, this._closeButton);
+    this._loadingSpinner.classList.add('lds-dual-ring');
+    this.element.append(this._titleElement, this._loadingSpinner, this._closeButton);
   }
   setTitle(title: string) {
     this.title = title;
@@ -40,6 +42,9 @@ class Header {
   }
   render() {
     this._titleElement.textContent = this.title + (this.modified ? '*' : '');
+  }
+  setIsLoading(loading: boolean) {
+    this.element.classList.toggle('loading', loading);
   }
 }
 d4.setIsFullscreen(true);
@@ -142,7 +147,7 @@ const rpc = RPC(transport, {
         done();
       }
     });
-    editor.on('change', ({range, text}) => {
+    editor.on('change', async ({range, text}) => {
       header.setModified(lastSavedVersion !== editor.value);
       const cursor = { column: 0, line: 0 };
       let start;
@@ -165,24 +170,39 @@ const rpc = RPC(transport, {
           }
         }
       }
-      const newToken = {
-        text: tokens[start.token].text.slice(0, start.offset) + text + tokens[end.token].text.slice(end.offset),
-        color: tokens[start.token]?.color,
-      };
-      tokens.splice(start.token, end.token - start.token + 1, newToken);
-      rpc.notify('highlight', {content: editor.value});
+      if (start && end) {
+        const newToken = {
+          text: tokens[start.token].text.slice(0, start.offset) + text + tokens[end.token].text.slice(end.offset),
+          color: tokens[start.token]?.color,
+        };
+        tokens.splice(start.token, end.token - start.token + 1, newToken);
+      } else {
+        tokens = [];
+      }
+      requestHighlight();
     });
     window.onresize = () => editor.layout();
     header.setTitle(params.relativePath || 'New Buffer');
     editor.layout();
     editor.focus();
-  },
-  highlight: t => {
-    tokens = t;
-    updateEditorMode(inLanguageMode);
+    requestHighlight();
   }
 });
 
+let lastHighlight = '';
+async function requestHighlight() {
+  const content = editor.value;
+  if (content === lastHighlight)
+    return;
+  header.setIsLoading(true);
+  const highlightedTokens = await rpc.send('highlight', {content: editor.value});
+  if (content !== editor.value)
+    return;
+  header.setIsLoading(false);
+  lastHighlight = content;
+  tokens = highlightedTokens;
+  updateEditorMode(inLanguageMode);
+}
 while (true)
   transport.onmessage!(await d4.waitForMessage<any>());
 
