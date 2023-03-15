@@ -81,12 +81,14 @@ export class Target {
   _listener: (message: any) => void;
   private _listeners = new Set<ChromiumTargetListener>();
   constructor(send: (message: any) => void) {
-    this.rpc = new RPC({
-      listen: listener => {
-        this._listener = listener;
-      },
+    const transport: {
+      send(message: {method: string, params: any, id: number}): void;
+      onmessage?: (message: {method: string, params: any}|{id: number, result: any}) => void;
+    } = {
       send,
-    });
+    };
+    this.rpc = new RPC(transport);
+    this._listener = message => transport.onmessage!(message);
   }
 
   addListener(listener: ChromiumTargetListener) {
