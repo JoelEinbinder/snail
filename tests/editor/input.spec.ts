@@ -39,6 +39,6 @@ test('input events come in correctly', async ({ shell }) => {
   }]);
   expect(await shell.serialize()).toEqual({
     content: 'aa',
-    title: 'a.txt',
+    title: 'a.txt*',
   });
 });
