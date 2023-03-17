@@ -27,9 +27,12 @@ class FakeMode implements Mode<State> {
     this.token(new StringStream(''), state);
   }
   token(stream: StringStream, state: State): string | null {
-    if (this._tokens[state.tokenIndex]?.text === '\n') {
-      state.tokenIndex++;
-      state.characterIndex = 0;
+    if (this._tokens[state.tokenIndex]?.text[state.characterIndex] === '\n') {
+      state.characterIndex++;
+      if (state.characterIndex >= this._tokens[state.tokenIndex].text.length) {
+        state.tokenIndex++;
+        state.characterIndex = 0;  
+      }
       if (stream.eol())
         return null;
     }
