@@ -3,6 +3,7 @@ import './web.css';
 import { RPC } from '../../protocol/rpc-js';
 import { Editor } from '../../editor/js/editor';
 import '../../editor/modes/javascript';
+import '../../editor/modes/python';
 import './fake-mode';
 class Header {
   element = document.createElement('div');

@@ -13,7 +13,7 @@ export interface Mode<State> {
   startState(): State;
   blankLine?: (state: State) => void;
   token(stream: StringStream, state: State): string|null;
-  indent?(state: State, textAfter: string): number;
+  indent?(state: State, textAfter: string): number|undefined;
   hover?(state: State): Node|string|null;
 };
 const MAX_TOKENS = 1000;
