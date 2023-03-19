@@ -233,3 +233,28 @@ test('stdin doesnt leak to the next command', async ({ shell }) => {
     'recieved z'
   );
 });
+
+test('can clear', async ({ shell }) => {
+  await shell.runCommand('echo clear this');
+  await shell.runCommand('clear');
+  expect(await shell.serialize()).toEqual({
+    log: [
+    ],
+    prompt: {
+      value: '',
+    },
+  });
+});
+
+test('can clear and still show rest of terminal output', async ({ shell }) => {
+  await shell.runCommand('echo clear this');
+  await shell.runCommand('clear && echo hello');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      'hello',
+    ],
+    prompt: {
+      value: '',
+    },
+  });
+});

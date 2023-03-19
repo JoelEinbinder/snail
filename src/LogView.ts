@@ -1,11 +1,12 @@
 import type { JoelEvent } from '../slug/cdp-ui/JoelEvent';
-import type { Shell } from './Shell';
+import type { Shell, ShellDelegate } from './Shell';
 import './shell.css';
 import './logView.css';
 import { Block, BlockDelegate } from './GridPane';
 import { startAyncWork } from './async';
+import { makeLazyProxy } from './LazyProxy';
 
-export class LogView implements Block {
+export class LogView implements Block, ShellDelegate {
   private _element = document.createElement('div');
   private _scroller = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
@@ -13,14 +14,12 @@ export class LogView implements Block {
   private _lockingScroll = false;
   private _undoFullscreen: () => void = null;
   private _removeListeners: () => void;
+  private _log: LogItem[] = [];
+  private _activeItem: LogItem | null = null;
+  private _activeItemListeners = new Set<() => void>();
   blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
-    this._updateFullscreen();
     this._fullscreenElement.classList.add('fullscreen-element');
-    this._shell.fullscreenItem.on(() => this._updateFullscreen());
-    this._shell.setDelegate({
-      onClose: () => this._dispose(),
-    });
     this._removeListeners = () => {
       document.body.removeEventListener('keydown', keyDownListener, false);
     };
@@ -77,47 +76,72 @@ export class LogView implements Block {
     this._element.classList.add('log-view');
     this._element.append(this._scroller);
     this._repopulate();
-    this._shell.activeItem.on(item => {
-      if (item)
-        item.focus();
-    });
-    this._shell.promptLock.on(count => {
-      if (count > 0) {
-        if (this._prompt) {
-          this._prompt.dispose();
-          delete this._prompt;
-        }
-      } else {
-        this._addPrompt();
-      }
-    });
-    this._shell.addItemEvent.on(item => {
-      this._addEntry(item);
-    });
-    this._shell.clearEvent.on(() => {
-      this._repopulate();
-    });
   }
+
+  setActiveItem(item: LogItem|null) {
+    this._activeItem = item;
+    item?.focus();
+    this._activeItemListeners.forEach(listener => listener());
+  }
+
+  togglePrompt(showPrompt: boolean): void {
+    if (showPrompt) {
+      this._addPrompt();
+    } else {
+      this._prompt?.dispose();
+      delete this._prompt;
+    }
+  }
+
   focus(): void {
     if (this._prompt)
       this._prompt?.focus();
-    else if (this._shell.activeItem.current)
-      this._shell.activeItem.current.focus();
+    else if (this._activeItem)
+      this._activeItem.focus();
   }
   hasFocus(): boolean {
     return this._element.contains(document.activeElement);
   }
 
-  _dispose() {
+  addItem(item: LogItem) {
+    this._log.push(item);
+    this._addEntry(item);
+  }
+
+  removeItem(item: LogItem) {
+    item.dispose();
+    this._log.splice(this._log.indexOf(item), 1);
+    this._repopulate();
+  }
+
+  clearAllExcept(savedItem: LogItem): void {
+    for (const item of this._log) {
+      if (item !== savedItem)
+        item.dispose();
+    }
+    this._log = [savedItem];
+    this._repopulate();
+  }
+
+  clearAll(): void {
+    for (const item of this._log)
+      item.dispose();
+    this._log = [];
+  }
+
+  shellClosed() {
     this._removeListeners();
     this.blockDelegate.close();
     this._element.remove();
   }
 
   async _doSplit(direction: 'horizontal' | 'vertical') {
-    const shell = new (await import('./Shell')).Shell();
+    const logViewProxy = makeLazyProxy<ShellDelegate>();
+    const shell = new (await import('./Shell')).Shell(logViewProxy.proxy);
     await shell.setupInitialConnection();
-    this.blockDelegate.split(new LogView(shell, this._container), direction);
+    const view = new LogView(shell, this._container);
+    this.blockDelegate.split(view, direction);
+    logViewProxy.fulfill(view);
   }
 
   updatePosition(rect: { x: number; y: number; width: number; height: number; }): void {
@@ -130,19 +154,19 @@ export class LogView implements Block {
   }
 
   _repopulate() {
+    const hadPrompt = !!this._prompt;
     if (this._prompt) {
       this._prompt.dispose();
       delete this._prompt;
     }
     this._scroller.textContent = '';
-    for (const entry of this._shell.log)
+    for (const entry of this._log)
       this._addEntry(entry);
-    if (this._shell.promptLock.current === 0)
+    if (hadPrompt)
       this._addPrompt();
   }
 
-  _updateFullscreen() {
-    const fullScreenEntry = this._shell.fullscreenItem.current;
+  setFullscreenItem(fullScreenEntry: LogItem | null) {
     if (fullScreenEntry) {
       this._scroller.classList.add('inert');
       const placeholder = document.createElement('div');
@@ -179,7 +203,7 @@ export class LogView implements Block {
       this._scroller.insertBefore(element, this._prompt.render());
     else
       this._scroller.appendChild(element);
-    if (logItem === this._shell.activeItem.current)
+    if (logItem === this._activeItem)
       logItem.focus();
   }
 
@@ -201,10 +225,10 @@ export class LogView implements Block {
   }
 
   async serializeForTest() {
-    if (this._shell.activeItem.current?.isFullscreen?.())
-      return this._shell.activeItem.current.serializeForTest();
+    if (this._activeItem?.isFullscreen?.())
+      return this._activeItem.serializeForTest();
     return {
-      log: (await Promise.all(this._shell.log.map(item => {
+      log: (await Promise.all(this._log.map(item => {
         return item.serializeForTest ? item.serializeForTest() : '<unknown>';
       }))).filter(x => x),
       prompt: await this._prompt?.serializeForTest(),
@@ -214,14 +238,14 @@ export class LogView implements Block {
   async waitForLineForTest(regex: RegExp) {
     const abortController = new AbortController();
     const callback = () => {
-      this._shell.activeItem.current?.waitForLineForTest?.(regex, abortController.signal).then(resolve);
+      this._activeItem?.waitForLineForTest?.(regex, abortController.signal).then(resolve);
     };
     let resolve: () => void;
     const promise = new Promise<void>(x => resolve = x);
-    this._shell.activeItem.on(callback);
+    this._activeItemListeners.add(callback);
     callback();
     await promise;
-    this._shell.activeItem.off(callback);
+    this._activeItemListeners.delete(callback);
     abortController.abort();
   }
 }

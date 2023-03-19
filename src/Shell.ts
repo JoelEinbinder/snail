@@ -34,8 +34,15 @@ host.onEvent('websocket-closed', ({socketId}) => {
   socketCloseListeners.get(socketId)();
 });
 
-interface ShellDelegate {
-  onClose(): void;
+export interface ShellDelegate {
+  shellClosed(): void;
+  addItem(item: LogItem): void;
+  removeItem(item: LogItem): void;
+  clearAllExcept(item: LogItem): void;
+  clearAll(): void;
+  togglePrompt(showPrompt: boolean): void;
+  setActiveItem(item: LogItem|null): void;
+  setFullscreenItem(item: LogItem|null): void;
 }
 
 interface ConnectionCore {
@@ -49,12 +56,8 @@ interface ConnectionCore {
 }
 
 export class Shell {
-  log: LogItem[] = [];
-  public fullscreenItem: JoelEvent<LogItem> = new JoelEvent<LogItem>(null);
-  public activeItem = new JoelEvent<LogItem>(null);
-  public promptLock = new JoelEvent<number>(0);
-  public addItemEvent = new JoelEvent<LogItem>(null);
-  public clearEvent = new JoelEvent<void>(undefined);
+  private _fullscreenItem: JoelEvent<LogItem> = new JoelEvent<LogItem>(null);
+  private _activeItem = new JoelEvent<LogItem>(null);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
   private _connections: JSConnection[] = [];
   private _size = new JoelEvent({cols: 80, rows: 24});
@@ -67,23 +70,21 @@ export class Shell {
   private _connectionToSSHAddress = new WeakMap<JSConnection, string>();
   private _antiFlicker = new AntiFlicker(() => this._lockPrompt('AntiFlicker'), unlockPrompt => unlockPrompt());
   private _promptLocks = new Set<{ name?: string }>();
-  private _delegate?: ShellDelegate;
   private _connectionNameElement = document.createElement('div');
   private _connectionIsDaemon = new WeakMap<JSConnection, boolean>();
   private _refreshActiveIframe?: () => void;
   //@ts-ignore
   private _uuid: string = randomUUID();
   private _setupUnlock = this._lockPrompt('setupInitialConnection');
-  constructor() {
+  constructor(private _delegate: ShellDelegate) {
     console.time('create shell');
     this._connectionNameElement.classList.add('connection-name');
     this._connectionNameEvent.on(name => {
       this._connectionNameElement.textContent = name;
     });
-  }
-
-  setDelegate(delegate: ShellDelegate) {
-    this._delegate = delegate;
+    this._fullscreenItem.on(item => this._delegate.setFullscreenItem(item));
+    this._activeItem.on(item => this._delegate.setActiveItem(item));
+    this._delegate.togglePrompt(!this._promptLocks.size);
   }
 
   get cwd() {
@@ -166,7 +167,7 @@ export class Shell {
         connection.send('Shell.providePassword', { id, password });
       });
       this.addItem(item);
-      this.activeItem.dispatch(item);
+      this._activeItem.dispatch(item);
     });
     connection.on('Runtime.executionContextDestroyed', message => {
         if (message.executionContextId === 1)
@@ -185,7 +186,7 @@ export class Shell {
       endTerminal:async ({id}: {id: number}) => {
         const {cleanup} = terminals.get(id);
         terminals.delete(id);
-        this.activeItem.dispatch(null);
+        this._activeItem.dispatch(null);
         await cleanup();
         titleThrottle.update('');
       },
@@ -236,7 +237,7 @@ export class Shell {
                   });
                   activeIframeBlock = iframeBlock;
                   this.addItem(iframeBlock);
-                  this.activeItem.dispatch(iframeBlock);
+                  this._activeItem.dispatch(iframeBlock);
                   cdpManager.setDebuggingInfoForTarget(this._uuid, iframeBlock.debugginInfo());
                 });
                 break;
@@ -302,11 +303,8 @@ export class Shell {
           if (!activeTerminalBlock)
             return;
           await activeTerminalBlock.close();
-          if (activeTerminalBlock.cleared && activeTerminalBlock.empty) {
-            activeTerminalBlock.dispose();
-            this.log.splice(this.log.indexOf(activeTerminalBlock), 1);
-            this.clearEvent.dispatch();
-          }
+          if (activeTerminalBlock.cleared && activeTerminalBlock.empty)
+            this._delegate.removeItem(activeTerminalBlock);
           activeTerminalBlock = null;
         }
         const addTerminalBlock = async () => {
@@ -321,22 +319,17 @@ export class Shell {
           activeTerminalBlock = terminalBlock;
           const onFullScreen = (value: boolean) => {
             if (value)
-              this.fullscreenItem.dispatch(terminalBlock);
-            else if (this.fullscreenItem.current === terminalBlock)
-              this.fullscreenItem.dispatch(null);
+              this._fullscreenItem.dispatch(terminalBlock);
+            else if (this._fullscreenItem.current === terminalBlock)
+              this._fullscreenItem.dispatch(null);
           };
           const onClear = () => {
-            for (const item of this.log) {
-              if (item !== terminalBlock)
-                item.dispose();
-            }
-            this.log = [terminalBlock];
-            this.clearEvent.dispatch();
+            this._delegate.clearAllExcept(terminalBlock);
           };    
           terminalBlock.fullscreenEvent.on(onFullScreen);
           terminalBlock.clearEvent.on(onClear);
           this.addItem(terminalBlock);
-          this.activeItem.dispatch(terminalBlock);
+          this._activeItem.dispatch(terminalBlock);
         };
         terminalTaskQueue.queue(() => addTerminalBlock());
       },
@@ -559,7 +552,7 @@ export class Shell {
     
     titleThrottle.update(command);
     const unlockPrompt = this._lockPrompt('runCommand');
-    this.activeItem.dispatch(commandBlock);
+    this._activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
     const jsCode = await this._transformCode(command);
     let error;
@@ -575,7 +568,7 @@ export class Shell {
     if (error) {
       this._connectionToDestroy.get(connection)();
       if (this._connections.length === 0) {
-        this._delegate?.onClose();
+        this._delegate.shellClosed();
         cdpManager.removeDebuggingInfoForTarget(this._uuid);
         return;
       }
@@ -616,8 +609,8 @@ export class Shell {
         }, '#E50000');
       }
     }
-    if (this.activeItem.current === commandBlock)
-      this.activeItem.dispatch(null);
+    if (this._activeItem.current === commandBlock)
+      this._activeItem.dispatch(null);
     unlockPrompt();
     this._addJSBlock(result, connection, commandBlock);
   }
@@ -658,10 +651,12 @@ export class Shell {
   _lockPrompt(name?: string) {
     const lock = { name };
     this._promptLocks.add(lock);
-    this.promptLock.dispatch(this._promptLocks.size);
+    if (this._promptLocks.size === 1)
+      this._delegate.togglePrompt(false);
     return () => {
       this._promptLocks.delete(lock);
-      this.promptLock.dispatch(this._promptLocks.size);
+      if (!this._promptLocks.size)
+        this._delegate.togglePrompt(true);
     };
   }
 
@@ -777,11 +772,7 @@ export class Shell {
         editor.value = '';
         await this.runCommand(command);
       } else if (event.code === 'KeyL' && event.ctrlKey) {
-        for (const item of this.log) {
-            item.dispose();
-        }
-        this.log = [];
-        this.clearEvent.dispatch();
+        this._delegate.clearAll();
         event.preventDefault();
         event.stopImmediatePropagation();
       } else if (event.code === 'KeyC' && event.ctrlKey) {
@@ -894,8 +885,7 @@ export class Shell {
   }
 
   addItem(item: LogItem) {
-    this.log.push(item);
-    this.addItemEvent.dispatch(item);
+    this._delegate.addItem(item);
   }
 
   async jsCompletions(prefix: string): Promise<Suggestion[]> {
