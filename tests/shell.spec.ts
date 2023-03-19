@@ -258,3 +258,15 @@ test('can clear and still show rest of terminal output', async ({ shell }) => {
     },
   });
 });
+
+test('can clear with keyboard shortcut', async ({ shell }) => {
+  await shell.runCommand('echo clear this');
+  await shell.page.keyboard.press('Control+KeyL');
+  expect(await shell.serialize()).toEqual({
+    log: [
+    ],
+    prompt: {
+      value: '',
+    },
+  });
+});

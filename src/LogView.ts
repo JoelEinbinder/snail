@@ -17,6 +17,7 @@ export class LogView implements Block, ShellDelegate {
   private _log: LogItem[] = [];
   private _activeItem: LogItem | null = null;
   private _activeItemListeners = new Set<() => void>();
+  private _itemToElement = new WeakMap<LogItem, Element>();
   blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._fullscreenElement.classList.add('fullscreen-element');
@@ -75,7 +76,6 @@ export class LogView implements Block, ShellDelegate {
     this._scroller.classList.add('log-view-scroller');
     this._element.classList.add('log-view');
     this._element.append(this._scroller);
-    this._repopulate();
   }
 
   setActiveItem(item: LogItem|null) {
@@ -109,24 +109,26 @@ export class LogView implements Block, ShellDelegate {
   }
 
   removeItem(item: LogItem) {
+    const index = this._log.indexOf(item);
+    if (index === -1)
+      return;
     item.dispose();
-    this._log.splice(this._log.indexOf(item), 1);
-    this._repopulate();
+    this._log.splice(index, 1);
+    this._lockScroll();
+    this._itemToElement.get(item).remove();
+    this._itemToElement.delete(item);
   }
 
   clearAllExcept(savedItem: LogItem): void {
-    for (const item of this._log) {
+    for (const item of [...this._log]) {
       if (item !== savedItem)
-        item.dispose();
+        this.removeItem(item);
     }
-    this._log = [savedItem];
-    this._repopulate();
   }
 
   clearAll(): void {
-    for (const item of this._log)
-      item.dispose();
-    this._log = [];
+    for (const item of [...this._log])
+      this.removeItem(item);
   }
 
   shellClosed() {
@@ -151,19 +153,6 @@ export class LogView implements Block, ShellDelegate {
     this._element.style.width = rect.width + 'px';
     this._element.style.height = rect.height + 'px';
     this._shell.updateSize(rect.width, rect.height);
-  }
-
-  _repopulate() {
-    const hadPrompt = !!this._prompt;
-    if (this._prompt) {
-      this._prompt.dispose();
-      delete this._prompt;
-    }
-    this._scroller.textContent = '';
-    for (const entry of this._log)
-      this._addEntry(entry);
-    if (hadPrompt)
-      this._addPrompt();
   }
 
   setFullscreenItem(fullScreenEntry: LogItem | null) {
@@ -195,6 +184,7 @@ export class LogView implements Block, ShellDelegate {
     const element = logItem.render();
     if (!element)
       return;
+    this._itemToElement.set(logItem, element);
     logItem.willResizeEvent.on(async () => {
       this._lockScroll();
     });
