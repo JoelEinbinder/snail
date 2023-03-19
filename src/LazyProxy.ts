@@ -1,3 +1,6 @@
+// A proxy that delays method calls until the object is fulfilled.
+// Used when some object will be available later, but we want to
+// call its methods right away.
 export function makeLazyProxy<T extends object>() {
   let fulfilled: T|null = null;
   const messages: { method: string|symbol, args: any[] }[] = [];
@@ -14,6 +17,7 @@ export function makeLazyProxy<T extends object>() {
     fulfilled = value;
     for (const { method, args } of messages)
       value[method].apply(value, args);
+    messages.splice(0, messages.length);
   }
   return { proxy, fulfill };
 }
