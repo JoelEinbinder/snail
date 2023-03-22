@@ -75,9 +75,10 @@ export class Shell {
   private _refreshActiveIframe?: () => void;
   //@ts-ignore
   private _uuid: string = randomUUID();
-  private _setupUnlock = this._lockPrompt('setupInitialConnection');
+  private _setupUnlock: () => void;
   constructor(private _delegate: ShellDelegate) {
     console.time('create shell');
+    this._setupUnlock = this._lockPrompt('setupInitialConnection');
     this._connectionNameElement.classList.add('connection-name');
     this._connectionNameEvent.on(name => {
       this._connectionNameElement.textContent = name;
