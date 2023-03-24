@@ -80,8 +80,6 @@ export const DEFAULT_ANSI_COLORS = Object.freeze((() => {
  */
 export class ColorManager implements IColorManager {
   public colors: IColorSet;
-  private _ctx: CanvasRenderingContext2D;
-  private _litmusColor: CanvasGradient;
   private _contrastCache: IColorContrastCache;
   private _restoreColors!: IRestoreColorSet;
 

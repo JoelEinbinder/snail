@@ -51,16 +51,8 @@ export class BufferService extends Disposable implements IBufferService {
     this.buffers.dispose();
   }
 
-  public normalRows(): number {
-    return this.buffers.normal.rows;
-  }
-
-  public altRows(): number {
-    return this._rows;
-  }
-
   public get rows(): number {
-    return this.buffers.active === this.buffers.normal ? this.normalRows() : this.altRows();
+    return this._rows;
   }
 
   public resize(cols: number, rows: number): void {
@@ -97,14 +89,6 @@ export class BufferService extends Disposable implements IBufferService {
 
     const topRow = buffer.ybase + buffer.scrollTop;
     const bottomRow = buffer.ybase + buffer.scrollBottom;
-
-    if (this.buffer.delegatesScrolling && !buffer.lines.isFull && bottomRow === buffer.lines.length - 1) {
-      buffer.lines.push(newLine.clone());
-      buffer.ybase++;
-      buffer.resize(this.cols, buffer.rows + 1);
-      this._onResize.fire({ cols: this.cols, rows: this.rows });
-      return;
-    }
 
     if (buffer.scrollTop === 0) {
       // Determine whether the buffer is going to be trimmed after insertion.

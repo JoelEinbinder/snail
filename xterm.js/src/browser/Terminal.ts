@@ -633,6 +633,7 @@ export class Terminal extends CoreTerminal implements ITerminal {
     this.textarea?.remove();
     this.element?.removeAttribute('tabindex');
     this.enabled = false;
+    this._renderService?.onResize(this.cols, this.rows);
   }
 
   /**
@@ -843,8 +844,8 @@ export class Terminal extends CoreTerminal implements ITerminal {
     this.register(addDisposableDomListener(el, 'wheel', (ev: WheelEvent) => {
       // do nothing, if app side handles wheel itself
       if (requestedEvents.wheel) return;
-
-      if (!this.buffer.hasScrollback && (this.buffers.active !== this.buffers.normal || !this.buffer.delegatesScrolling)) {
+      if (this.buffer.delegatesScrolling && this.buffers.active === this.buffers.normal) return;
+      if (!this.buffer.hasScrollback) {
         // Convert wheel events into up/down events when the buffer does not have scrollback, this
         // enables scrolling in apps hosted in the alt buffer such as vim or tmux.
         const amount = this.viewport!.getLinesScrolled(ev);
@@ -1397,15 +1398,6 @@ export class Terminal extends CoreTerminal implements ITerminal {
     return this.options.bellStyle === 'sound';
     // return this.options.bellStyle === 'sound' ||
     //     this.options.bellStyle === 'both';
-  }
-
-  public deleteLastLine(): void {
-    // this._bufferService.buffers.normal.lines.pop();
-    if (this.options.delegatesScrolling) {
-      this._bufferService.buffers.normal.rows--;
-      this._bufferService.buffers.normal.lines.pop();
-    }
-    this.resize(this.cols, this.rows - 1);
   }
 }
 

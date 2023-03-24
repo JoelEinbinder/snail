@@ -26,3 +26,5 @@ __pycache__
 /utils/electron-out/
 /node_18.14.0
 /tests/cached-nodes/
+
+tsconfig.tsbuildinfo

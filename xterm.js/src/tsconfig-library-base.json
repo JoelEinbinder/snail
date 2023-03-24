@@ -4,6 +4,9 @@
     "composite": true,
     "strict": true,
     "declarationMap": true,
-    "experimentalDecorators": true
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
   }
 }

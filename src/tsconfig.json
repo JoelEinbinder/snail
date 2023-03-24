@@ -16,5 +16,8 @@
           "DOM.Iterable"
       ],
       "types": []
-  }
+  },
+  "references": [
+    { "path": "../xterm.js/src/browser" }
+  ]
 }

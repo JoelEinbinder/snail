@@ -5,6 +5,7 @@ import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
 import { titleThrottle } from "./title";
+import { RendererAddon } from "./terminal/RendererAddon";
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
@@ -26,6 +27,7 @@ export class TerminalBlock implements LogItem {
   private _data: (string|Uint8Array)[] = [];
   private _trailingNewline = false;
   private _lastWritePromise = Promise.resolve();
+  private _addon = new RendererAddon();
   public empty = true;
   private _closed = false;
   constructor(delegate: TerminalBlockDelegate) {
@@ -66,6 +68,7 @@ export class TerminalBlock implements LogItem {
       rendererType: 'canvas',
     });
     this._terminal.open(this.element);
+    this._terminal.loadAddon(this._addon);
     
     this._listeners.push(this._terminal.onData(data => {
       delegate.sendInput(data);
@@ -104,6 +107,7 @@ export class TerminalBlock implements LogItem {
     delegate.size.on(windowResize);
     this.dispose = () => {
       delegate.size.off(windowResize);
+      this._terminal.dispose();
     }
   }
   focus(): void {
@@ -166,20 +170,15 @@ export class TerminalBlock implements LogItem {
     for (const listeners of this._listeners)
       listeners.dispose();
     font.off(this._fontChanged);
-    if (this._trailingNewline) {
-      this._terminal.deleteLastLine();
-      
-    } else {
-      const buffer = this._terminal.buffer.active;
-      if (buffer === this._terminal.buffer.normal &&
-        buffer.length === 1 &&
-        buffer.getLine(0).translateToString(true) === '') {
-        this.element.style.display = 'none';
-        this.element.remove();
-        this.empty = true;
-      } else if (buffer === this._terminal.buffer.normal && buffer.getLine(buffer.length - 1).translateToString(true) === '') {
-        this._terminal.deleteLastLine();
-      }
+    const buffer = this._terminal.buffer.active;
+    const bufferSize = buffer.length - this._addon.bottomBlankRows;
+    if (bufferSize <= 1 &&
+      buffer.getLine(0).translateToString(true) === '') {
+      this.element.style.display = 'none';
+      this.element.remove();
+      this.dispose();
+      this.empty = true;
+    } else if (!this._trailingNewline) {
       // TODO write some extra '%' character to show there was no trailing newline?
     }
     if (this._terminal.buffer.active === this._terminal.buffer.alternate)
@@ -198,7 +197,8 @@ export class TerminalBlock implements LogItem {
       return null;
     const buffer = this._terminal.buffer.active;
     const lines = [];
-    for (let i = 0; i < buffer.length; i++)
+    const bufferSize = buffer.length - this._addon.bottomBlankRows;
+    for (let i = 0; i < bufferSize; i++)
       lines.push(buffer.getLine(i).translateToString(true));
     return lines.join('\n');
   }

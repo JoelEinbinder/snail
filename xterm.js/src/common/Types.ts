@@ -374,7 +374,7 @@ export interface IColorRestoreRequest {
 }
 export type IColorEvent = (IColorReportRequest | IColorSetRequest | IColorRestoreRequest)[];
 
-interface IParseStack {
+export interface IParseStack {
   paused: boolean;
   cursorStartX: number;
   cursorStartY: number;

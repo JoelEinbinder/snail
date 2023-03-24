@@ -1122,11 +1122,6 @@ declare module 'xterm' {
 
     readonly enabled: boolean;
     disable(): void;
-
-    /**
-     * Removes the last line from the terminal and shrinks the viewport.
-     */
-    deleteLastLine(): void;
   }
 
   /**

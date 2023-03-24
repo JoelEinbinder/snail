@@ -35,13 +35,11 @@ export class BufferSet extends Disposable implements IBufferSet {
   }
 
   public reset(): void {
-    this._normal?.dispose();
     this._normal = new Buffer(true, this._optionsService, this._bufferService);
     this._normal.fillViewportRows();
 
     // The alt buffer should never have scrollback.
     // See http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-The-Alternate-Screen-Buffer
-    this._alt?.dispose();
     this._alt = new Buffer(false, this._optionsService, this._bufferService);
     this._activeBuffer = this._normal;
     this._onBufferActivate.fire({
@@ -116,8 +114,8 @@ export class BufferSet extends Disposable implements IBufferSet {
    * Resizes both normal and alt buffers, adjusting their data accordingly.
    */
   public resize(): void {
-    this._normal.resize(this._bufferService.cols, this._bufferService.normalRows());
-    this._alt.resize(this._bufferService.cols, this._bufferService.altRows());
+    this._normal.resize(this._bufferService.cols, this._bufferService.rows);
+    this._alt.resize(this._bufferService.cols, this._bufferService.rows);
   }
 
   /**

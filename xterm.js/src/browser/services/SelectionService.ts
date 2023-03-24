@@ -373,7 +373,8 @@ export class SelectionService extends Disposable implements ISelectionService {
    * @param event The mouse event.
    */
   private _getMouseBufferCoords(event: MouseEvent): [number, number] | undefined {
-    const coords = this._mouseService.getCoords(event, this._screenElement, this._bufferService.cols, this._bufferService.rows, true);
+    const offset = this._bufferService.buffer.delegatesScrolling ? + this._bufferService.buffer.ydisp : 0;
+    const coords = this._mouseService.getCoords(event, this._screenElement, this._bufferService.cols, this._bufferService.rows + offset, true);
     if (!coords) {
       return undefined;
     }
@@ -383,7 +384,7 @@ export class SelectionService extends Disposable implements ISelectionService {
     coords[1]--;
 
     // Convert viewport coords to buffer coords
-    coords[1] += this._bufferService.buffer.ydisp;
+    coords[1] += this._bufferService.buffer.ydisp - offset;
     return coords;
   }
 
@@ -393,6 +394,8 @@ export class SelectionService extends Disposable implements ISelectionService {
    * @param event The mouse event.
    */
   private _getMouseEventScrollAmount(event: MouseEvent): number {
+    if (this._bufferService.buffer.delegatesScrolling)
+      return 0;
     let offset = getCoordsRelativeToElement(event, this._screenElement)[1];
     const terminalHeight = this._renderService.dimensions.canvasHeight;
     if (offset >= 0 && offset <= terminalHeight) {

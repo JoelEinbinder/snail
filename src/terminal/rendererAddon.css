@@ -1,0 +1,12 @@
+.xterm-screen > .cursor {
+  position: absolute;
+  --cursor-color: rgba(128, 128, 128, 1.0);
+  border: 1px solid var(--cursor-color);
+  box-sizing: border-box;
+}
+
+.xterm-screen:focus-within > .cursor {
+  background-color: var(--cursor-color);
+  border: none;
+  mix-blend-mode: lighten;
+}

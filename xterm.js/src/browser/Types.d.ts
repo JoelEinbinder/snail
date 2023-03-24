@@ -34,7 +34,6 @@ export interface ITerminal extends IPublicTerminal, ICoreTerminal {
 export interface IPublicTerminal extends IDisposable {
   textarea: HTMLTextAreaElement | undefined;
   rows: number;
-  altRows(): number;
   cols: number;
   buffer: IBuffer;
   markers: IMarker[];
@@ -84,7 +83,6 @@ export interface IPublicTerminal extends IDisposable {
   refresh(start: number, end: number): void;
   clearTextureAtlas(): void;
   reset(): void;
-  deleteLastLine(): void;
 }
 
 export type CustomKeyEventHandler = (event: KeyboardEvent) => boolean;

@@ -378,12 +378,13 @@ export class Linkifier2 extends Disposable implements ILinkifier2 {
    * @param event
    */
   private _positionFromMouseEvent(event: MouseEvent, element: HTMLElement, mouseService: IMouseService): IBufferCellPosition | undefined {
-    const coords = mouseService.getCoords(event, element, this._bufferService.cols, this._bufferService.rows);
+    const offset = this._bufferService.buffer.delegatesScrolling ? this._bufferService.buffer.ydisp : 0;
+    const coords = mouseService.getCoords(event, element, this._bufferService.cols, this._bufferService.rows + offset);
     if (!coords) {
       return;
     }
 
-    return { x: coords[0], y: coords[1] + this._bufferService.buffer.ydisp };
+    return { x: coords[0], y: coords[1] + this._bufferService.buffer.ydisp - offset};
   }
 
   private _createLinkUnderlineEvent(x1: number, y1: number, x2: number, y2: number, fg: number | undefined): ILinkifierEvent {
