@@ -23,6 +23,9 @@ export class RendererAddon implements ITerminalAddon {
   }
   dispose(): void {
   }
+  onScroll() {
+    this._renderer.onScroll();
+  }
   get bottomBlankRows(): number {
     return this._renderer?.bottomBlankRows;
   }
@@ -50,6 +53,7 @@ class Renderer implements IRenderer {
   private _isAttached = false;
   private _textLayer: Layer;
   private _bottomBlankRows = 0;
+  private _scrollOffset = 0;
   get bottomBlankRows(): number { return this._bottomBlankRows; }
   private _workCell = new CellData();
   private _selectionState: {
@@ -66,6 +70,7 @@ class Renderer implements IRenderer {
       (this._core as any).optionsService,
       () => this._selectionState,
       this.dimensions,
+      () => this._getScrollOffset() * getDPR(),
       ));
 
     this._updateDimensions();
@@ -102,11 +107,12 @@ class Renderer implements IRenderer {
     this._updateBottomBlankRows();
     const effectiveRows = this._terminal.buffer.active.length - this._bottomBlankRows;
     this._core.screenElement.style.height = `${effectiveRows * this.dimensions.actualCellHeight}px`;
-    this._canvas.style.height = `${effectiveRows * this.dimensions.actualCellHeight}px`;
+    const rows = Math.min(effectiveRows, this._terminal.rows + 1);
+    this._canvas.style.height = `${rows * this.dimensions.actualCellHeight}px`;
     this._canvas.style.width = `${this.dimensions.canvasWidth}px`;
     this._canvas.width = this.dimensions.scaledCanvasWidth;
-    this._canvas.height = this.dimensions.scaledCellHeight * effectiveRows;
-    this._textLayer.layout(this.dimensions.scaledCanvasWidth, effectiveRows * this.dimensions.scaledCellHeight);
+    this._canvas.height = this.dimensions.scaledCellHeight * rows;
+    this._textLayer.layout(this.dimensions.scaledCanvasWidth, rows * this.dimensions.scaledCellHeight);
   }
   onCharSizeChanged(): void {
     this.onResize(this._terminal.cols, this._terminal.rows);
@@ -115,6 +121,9 @@ class Renderer implements IRenderer {
   onBlur(): void {
   }
   onFocus(): void {
+  }
+  onScroll(): void {
+    this._doRender();
   }
   onSelectionChanged(start: [number, number]|undefined, end: [number, number]|undefined, columnSelectMode: boolean): void {
     if (!start || !end)
@@ -186,8 +195,16 @@ class Renderer implements IRenderer {
       width: this.dimensions.canvasWidth,
       height: (end - start) * this.dimensions.actualCellHeight
     });
+    this._doRender();
+  }
+
+  private _doRender() {
     if (!this._canvas.height)
       return;
+    const lastScrollOffset = this._scrollOffset;
+    this._scrollOffset = Math.max(-this._core.screenElement.getBoundingClientRect().top, 0);
+    this._canvas.style.top = `${this._scrollOffset}px`;
+    this._textLayer.translate(0, (this._scrollOffset - lastScrollOffset) * getDPR());
     this._textLayer.refresh();
     const ctx = this._canvas.getContext('2d')!;
     ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
@@ -288,6 +305,10 @@ class Renderer implements IRenderer {
     }
     this._bottomBlankRows = blankRows;
   }
+
+  private _getScrollOffset() {
+    return this._scrollOffset;
+  }
 }
 const isWebKit = /WebKit/.test(navigator.userAgent);
 const isChrome = /Chrome/.test(navigator.userAgent);
@@ -323,6 +344,38 @@ class Layer {
     if (this._translation.x || this._translation.y) {
       this._ctx.globalCompositeOperation = 'copy';
       this._ctx.drawImage(this.canvas, -this._translation.x, -this._translation.y);
+      if (this._translation.x < 0) {
+        this.invalidate({
+          x: 0,
+          y: 0,
+          width: -this._translation.x,
+          height: this._height
+        });
+      }
+      if (this._translation.y < 0) {
+        this.invalidate({
+          x: 0,
+          y: 0,
+          width: this._width,
+          height: -this._translation.y
+        });
+      }
+      if (this._translation.x > 0) {
+        this.invalidate({
+          x: this._width - this._translation.x,
+          y: 0,
+          width: this._translation.x,
+          height: this._height
+        });
+      }
+      if (this._translation.y > 0) {
+        this.invalidate({
+          x: 0,
+          y: this._height - this._translation.y,
+          width: this._width,
+          height: this._translation.y
+        });
+      }
       this._translation = { x: 0, y: 0 };
       this._ctx.globalCompositeOperation = 'source-over';
     }

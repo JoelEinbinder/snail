@@ -6,6 +6,7 @@ import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
 import { titleThrottle } from "./title";
 import { RendererAddon } from "./terminal/RendererAddon";
+import { startAyncWork } from "./async";
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
@@ -119,6 +120,10 @@ export class TerminalBlock implements LogItem {
     return this.element;
   }
 
+  onScroll() {
+    this._addon.onScroll();
+  }
+
   _fontChanged = () => {
     this._willResize();
     this._terminal.options.fontFamily = font.current.family;
@@ -141,7 +146,13 @@ export class TerminalBlock implements LogItem {
     this._data.push(data);
     if (data.length !== 0)
       this._trailingNewline = typeof data === 'string' ? data.endsWith('\n') : data[data.length - 1] === '\n'.charCodeAt(0);
-    this._lastWritePromise = new Promise(x => this._terminal.write(data, x));
+    const wroteData = startAyncWork('write terminal data');
+    this._lastWritePromise = new Promise(x => {
+      this._terminal.write(data, () => {
+        wroteData();
+        x();
+      })
+    });
   }
 
   async waitForLineForTest(regex: RegExp, signal?: AbortSignal) {

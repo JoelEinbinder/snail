@@ -17,6 +17,7 @@ export function makeTextDrawer(
   optionsService: IOptionsService,
   getSelection: () => ({ start: [number, number], end: [number, number], columnSelectMode: boolean } | undefined),
   dimensions: IRenderDimensions,
+  getScrollOffset: () => number,
   ) {
   let ctx: CanvasRenderingContext2D;
   const workCell = new CellData();
@@ -448,13 +449,47 @@ export function makeTextDrawer(
     }    
   }
 
-  return function(_ctx: CanvasRenderingContext2D, rects: { x: number, y: number, width: number, height: number }[]): void {
+  return function(_ctx: CanvasRenderingContext2D, rects: Rect[]): void {
     ctx = _ctx;
-    const firstRow = 0;
-    const lastRow = bufferService.buffer.lines.length - 1;
+    const scrollOffset = getScrollOffset();
+    ctx.save();
+    ctx.translate(0, -scrollOffset);
+    let firstRow = 0;
+    for (firstRow = 0; firstRow < bufferService.buffer.lines.length; firstRow++) {
+      if (rects.some(rect => intersects({
+        x: 0,
+        y: firstRow * dimensions.scaledCellHeight - scrollOffset,
+        width: dimensions.scaledCanvasWidth,
+        height: dimensions.scaledCellHeight
+      }, rect)))
+        break;
+    }
+    let lastRow = firstRow;
+    for (lastRow = firstRow; lastRow < bufferService.buffer.lines.length; lastRow++) {
+      if (!rects.some(rect => intersects({
+        x: 0,
+        y: lastRow * dimensions.scaledCellHeight - scrollOffset,
+        width: dimensions.scaledCanvasWidth,
+        height: dimensions.scaledCellHeight
+      }, rect)))
+        break;
+    }
     clearCells(0, firstRow, bufferService.cols, lastRow - firstRow + 1);
     drawBackground(firstRow, lastRow);
     drawSelection();
     drawForeground(firstRow, lastRow);
+    ctx.restore();
   }
+}
+
+
+type Rect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+function intersects(a: Rect, b: Rect): boolean {
+  return a.x + a.width > b.x && b.x + b.width > a.x && a.y + a.height > b.y && b.y + b.height > a.y;
 }

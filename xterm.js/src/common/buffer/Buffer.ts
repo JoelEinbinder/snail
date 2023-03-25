@@ -17,7 +17,7 @@ import { ExtendedAttrs } from 'common/buffer/AttributeData';
 
 export const MAX_BUFFER_SIZE = 4294967295; // 2^32 - 1
 
-const MAX_DELEGATES_SCROLLING_HEIGHT = 100;
+const MAX_DELEGATES_SCROLLING_HEIGHT = 50000;
 
 /**
  * This class represents a terminal buffer (an internal state of the terminal), where the

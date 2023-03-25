@@ -76,6 +76,10 @@ export class LogView implements Block, ShellDelegate {
     this._scroller.classList.add('log-view-scroller');
     this._element.classList.add('log-view');
     this._element.append(this._scroller);
+    this._scroller.addEventListener('scroll', event => {
+      for (const item of this._log)
+        item.onScroll?.();
+    }, { passive: true });
   }
 
   setActiveItem(item: LogItem|null) {
@@ -248,4 +252,5 @@ export interface LogItem {
   serializeForTest(): Promise<any>;
   waitForLineForTest?(regex: RegExp, signal?: AbortSignal): Promise<void>;
   isFullscreen?(): boolean;
+  onScroll?(): void;
 }
