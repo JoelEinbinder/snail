@@ -474,6 +474,10 @@ export function makeTextDrawer(
       }, rect)))
         break;
     }
+    ctx.beginPath();
+    for (const rect of rects)
+      ctx.rect(rect.x, rect.y + scrollOffset, rect.width, rect.height);
+    ctx.clip();
     clearCells(0, firstRow, bufferService.cols, lastRow - firstRow + 1);
     drawBackground(firstRow, lastRow);
     drawSelection();
