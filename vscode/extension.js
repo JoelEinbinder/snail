@@ -68,11 +68,14 @@ function activate(context) {
 				enableForms: true,
 				enableCommandUris: true,
 			};
-			const {PipeTransport} = require(path.join(os.homedir(), '/gap-year/protocol/pipeTransport'));
+			const {PipeTransport} = require(path.join(os.homedir(), '/gap-year/slug/protocol/pipeTransport'));
 			let ready = false;
 			let buffer = [];
 			const child = spawn('/usr/local/bin/node', [require.resolve(path.join(os.homedir(), '/gap-year/node_host/'))], {
-				env: {},
+				env: {
+					HOME: os.homedir(),
+					PATH: process.env.PATH,
+				},
 				stdio: ['pipe', 'pipe', 'inherit'],
 			});
 			const pipe = new PipeTransport(child.stdin, child.stdout);

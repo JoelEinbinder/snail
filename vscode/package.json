@@ -8,9 +8,9 @@
     "type": "git",
     "url": "https://github.com/JoelEinbinder/gap-year.git"
   },
-  "version": "0.1.1",
+  "version": "0.5.7-post",
   "engines": {
-    "vscode": "^1.65.0"
+    "vscode": "^1.70.0"
   },
   "categories": [
     "Other"
