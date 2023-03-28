@@ -261,7 +261,7 @@ async function renderTable() {
   const dirsToShow = (dirs.length === 1 && dirs[0].children) ? dirs[0].children : dirs;
   dataGrid.setItems(dirsToShow.filter(x => showHidden || !x.dir.startsWith('.')));
   document.body.append(dataGrid.element);
-  d4.setHeight(document.body.offsetHeight);
+  d4.setHeight(document.body.getBoundingClientRect().height);
 }
 if (useTable)
   renderTable();
@@ -346,7 +346,7 @@ function inlineMode() {
       container.element.style.setProperty('--rows', String(rows));
       container.element.style.setProperty('--cols', String(cols));
     }
-    d4.setHeight(document.body.offsetHeight);
+    d4.setHeight(document.body.getBoundingClientRect().height);
   }
   d4.setToJSON(() => {
     return gridContainers.map(x => {

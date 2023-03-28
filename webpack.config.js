@@ -15,9 +15,10 @@ module.exports = {
     maxAssetSize: 2 * 1024 * 1024,
   },
   devServer: {
-    contentBase: path.join(__dirname, './public'),
     hot: true,
-    clientLogLevel: 'warning',
+    client: {
+      logging: 'warn',
+    }
   },
   cache: true,
   plugins: [
