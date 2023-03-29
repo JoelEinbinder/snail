@@ -5,6 +5,7 @@ import './logView.css';
 import { Block, BlockDelegate } from './GridPane';
 import { startAyncWork } from './async';
 import { makeLazyProxy } from './LazyProxy';
+import { UIThrottle } from './UIThrottle';
 
 export class LogView implements Block, ShellDelegate {
   private _element = document.createElement('div');
@@ -18,12 +19,18 @@ export class LogView implements Block, ShellDelegate {
   private _activeItem: LogItem | null = null;
   private _activeItemListeners = new Set<() => void>();
   private _itemToElement = new WeakMap<LogItem, Element>();
+  private _suffixThrottle = new UIThrottle('', () => {
+    this.blockDelegate?.titleUpdated();
+  });
+  private _titleThrottle = new UIThrottle('Loading...', () => {
+    this.blockDelegate?.titleUpdated();
+  });
   blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._fullscreenElement.classList.add('fullscreen-element');
     this._removeListeners = () => {
       document.body.removeEventListener('keydown', keyDownListener, false);
-    };
+    };  
     const keyDownListener = (event: KeyboardEvent) => {
       if (!this._prompt)
         return;
@@ -80,6 +87,20 @@ export class LogView implements Block, ShellDelegate {
       for (const item of this._log)
         item.onScroll?.();
     }, { passive: true });
+    this.hide();
+  }
+  hide(): void {
+    this._element.style.display = 'none';
+  }
+  show(): void {
+    this._element.style.display = 'block';
+  }
+  title(): string {
+    return this._titleThrottle.value + this._suffixThrottle.value;
+  }
+  close(): void {
+    this._element.remove();
+    this._shell.close();
   }
 
   setActiveItem(item: LogItem|null) {
@@ -241,6 +262,14 @@ export class LogView implements Block, ShellDelegate {
     await promise;
     this._activeItemListeners.delete(callback);
     abortController.abort();
+  }
+
+  setTitle(title: string): void {
+    this._titleThrottle.update(title);
+  }
+
+  setSuffix(suffix: string): void {
+    this._suffixThrottle.update(suffix);
   }
 }
 

@@ -166,7 +166,15 @@ function makeWindow() {
     // linux options
     autoHideMenuBar: true,
     darkTheme: true,
+    frame: os.platform() === 'darwin',
   });
+  win.on('maximize', () => {
+    clientForSender(win.webContents).send({ method: 'maximizeStateChanged', params: { maximized: true }});
+  });
+  win.on('unmaximize', () => {
+    clientForSender(win.webContents).send({ method: 'maximizeStateChanged', params: { maximized: false }});
+  });
+
   win.webContents.setWindowOpenHandler((details) => {
     return {
       action: 'allow', 
@@ -249,6 +257,7 @@ const overrides = {
         } : undefined,
         submenu: item.submenu ? item.submenu.map(convertItem) : undefined,
         checked: item.checked,
+        accelerator: item.accelerator,
         type: item.checked ? 'checkbox' : undefined,
       }
     }
@@ -260,6 +269,15 @@ const overrides = {
   },
   async close(_, client, sender) {
     BrowserWindow.fromWebContents(sender).close();
+  },
+  async minimize(_, client, sender) {
+    BrowserWindow.fromWebContents(sender).minimize();
+  },
+  async setMaximized({maximized}, client, sender) {
+    if (maximized)
+      BrowserWindow.fromWebContents(sender).maximize();
+    else
+      BrowserWindow.fromWebContents(sender).unmaximize();
   },
 
   // BrowserView api

@@ -12,15 +12,20 @@ type Rect = {
 export interface BlockDelegate {
   close(): void;
   split(newBlock: Block, direction: 'horizontal' | 'vertical'): void;
-  replaceWith(block: Block): void
+  replaceWith(block: Block): void;
+  titleUpdated(): void;
 }
 
 export interface Block {
   updatePosition(rect: Rect): void;
+  hide(): void;
+  show(): void;
   focus(): void;
   hasFocus(): boolean;
   blockDelegate?: BlockDelegate;
   serializeForTest(): Promise<any>;
+  title(): string;
+  close(): void;
 }
 class RootBlock {
   element = document.createElement('div');
@@ -37,6 +42,7 @@ class RootBlock {
   }
   setBlock(block: Block) {
     const hadFocus = this.block?.hasFocus();
+    this.block?.hide();
     this.block = block;
     if (block) {
       block.blockDelegate = {
@@ -49,11 +55,15 @@ class RootBlock {
         },
         replaceWith: newBlock => {
           this.setBlock(newBlock);
-        }
+        },
+        titleUpdated: () => {
+          document.title = block.title();
+        },
       }
     } else {
       host.sendMessage({ method: 'close' });
     }
+    block?.show();
     this._layout();
     if (hadFocus)
       block.focus();
@@ -74,6 +84,7 @@ class SplitBlock implements Block {
   private _rect?: Rect;
   private _ratio = 0.5;
   private _dividerElement = document.createElement('div');
+  private _showing = false;
   constructor(private _blocks: [Block, Block], private _type: 'horizontal' | 'vertical', private _rootElement: HTMLElement) {
     for (let i = 0; i < this._blocks.length; i++)
       this.setBlock(i, this._blocks[i]);
@@ -94,7 +105,22 @@ class SplitBlock implements Block {
       });
       event.preventDefault();
     });
+  }
+  close(): void {
+    for (const block of this._blocks)
+      block.close();
+  }
+  hide(): void {
+    this._showing = false;
+    this._dividerElement.remove();
+    for (const block of this._blocks)
+      block.hide();
+  }
+  show(): void {
+    this._showing = true;
     this._rootElement.append(this._dividerElement);
+    for (const block of this._blocks)
+      block.show();
   }
 
   setBlock(index: number, block: Block) {
@@ -112,9 +138,18 @@ class SplitBlock implements Block {
         this.setBlock(index, newBlock);
         if (hadFocus)
           newBlock.focus();
-      }
+      },
+      titleUpdated: () => {
+        this.blockDelegate?.titleUpdated();
+      },
     }
+    if (this._showing)
+      block.show();
     this._layout();
+  }
+
+  title() {
+    return this._blocks.find(b => b.hasFocus())?.title() || this._blocks[0]?.title();
   }
 
   hasFocus(): boolean {

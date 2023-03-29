@@ -1,6 +1,7 @@
 import { host } from "./host";
 export type MenuItem = {
   title?: string;
+  accelerator?: string;
   enabled?: boolean;
   checked?: boolean;
   value?: string;

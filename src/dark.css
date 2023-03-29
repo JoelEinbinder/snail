@@ -306,6 +306,10 @@ body.glass-pane {
   background: none;
 }
 
+body, html {
+  overflow: hidden;
+}
+
 ::selection {
   background: var(--color-selection);
 }

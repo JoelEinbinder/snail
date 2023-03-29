@@ -1,0 +1,9 @@
+.placeholder {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 3em;
+    opacity: 0.4;
+    user-select: none;
+}

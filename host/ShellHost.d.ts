@@ -40,4 +40,7 @@ export interface ShellHost {
   sendMessageToCDP(params: {browserViewUUID?: string, message: any}): void;
   attachToCDP(params: {browserViewUUID?: string}): void;
   detachFromCDP(params: {browserViewUUID?: string}): void;
+
+  setMaximized(params: {maximized: boolean}): void;
+  minimize(): void;
 }

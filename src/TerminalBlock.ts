@@ -4,7 +4,6 @@ import { font } from "./font";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
-import { titleThrottle } from "./title";
 import { RendererAddon } from "./terminal/RendererAddon";
 import { startAyncWork } from "./async";
 
@@ -12,6 +11,7 @@ export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
   sendInput: (data: string) => void;
   antiFlicker?: AntiFlicker;
+  setTitle: (title: string) => void;
 }
 
 export class TerminalBlock implements LogItem {
@@ -79,7 +79,7 @@ export class TerminalBlock implements LogItem {
       this.fullscreenEvent.dispatch(this._terminal.buffer.active === this._terminal.buffer.alternate);
     }));
     this._listeners.push(this._terminal.onTitleChange(title => {
-      titleThrottle.update(title);
+      delegate.setTitle(title);
     }));
     this._listeners.push(this._terminal.onClear(() => {
       this.cleared = true;

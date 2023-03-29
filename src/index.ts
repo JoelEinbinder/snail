@@ -5,8 +5,11 @@ import './TestingHooks';
 import { startAyncWork } from './async'
 import { makeLazyProxy } from './LazyProxy';
 import type { ShellDelegate } from './Shell';
-
+import { TabBlock } from './TabBlock';
+import { host } from './host';
+document.title = 'Loading...';
 const isLogBook = document.location.search.includes('logbook');
+const useTabs = navigator['userAgentData'].platform !== 'macOS';
 if (!isLogBook) {
   console.time('load shell module');
   const done = startAyncWork('load shell module');
@@ -17,7 +20,39 @@ if (!isLogBook) {
     const shell = await shellPromise;
     const logView = new LogView(shell, rootBlock.element);
     lazyLogView.fulfill(logView);
-    rootBlock.setBlock(logView);
+    if (useTabs) {
+        const tabs = new TabBlock(rootBlock.element, {
+            onAdd: async () => {
+                const logViewProxy = makeLazyProxy<ShellDelegate>();
+                const shell = new (await import('./Shell')).Shell(logViewProxy.proxy);
+                await shell.setupInitialConnection();
+                const view = new LogView(shell, rootBlock.element);
+                logViewProxy.fulfill(view);
+                return view;
+            },
+            onClose: async () => {
+                tabs.blockDelegate?.close();
+            },
+            setMaximized: async (maximized) => {
+                await host.sendMessage({
+                    method: 'setMaximized',
+                    params: { maximized },
+                });
+            },
+            onMinimize: async () => {
+                await host.sendMessage({
+                    method: 'minimize'
+                });
+            },
+        });
+        host.onEvent('maximizeStateChanged', ({maximized}) => {
+            tabs.setMaximized(maximized);
+        })
+        rootBlock.setBlock(tabs);
+        tabs.addTab(logView);
+    } else {
+        rootBlock.setBlock(logView);
+    }
     await connetionPromise;
     done();
   });

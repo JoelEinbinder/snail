@@ -9,7 +9,6 @@ import { ExtraClientMethods, JSConnection } from './JSConnection';
 import { JSBlock, JSLogBlock, renderRemoteObjectOneLine } from '../slug/cdp-ui/JSBlock';
 import { preprocessForJS, isUnexpectedEndOfInput } from './PreprocessForJS';
 import type { Suggestion } from './autocomplete';
-import { suffixThrottle, titleThrottle } from './title';
 import { host } from './host';
 import { AntiFlicker } from './AntiFlicker';
 import { ProgressBlock } from './ProgressBlock';
@@ -43,6 +42,8 @@ export interface ShellDelegate {
   togglePrompt(showPrompt: boolean): void;
   setActiveItem(item: LogItem|null): void;
   setFullscreenItem(item: LogItem|null): void;
+  setTitle(title: string): void;
+  setSuffix(suffix: string): void;
 }
 
 interface ConnectionCore {
@@ -189,7 +190,7 @@ export class Shell {
         terminals.delete(id);
         this._activeItem.dispatch(null);
         await cleanup();
-        titleThrottle.update('');
+        this._delegate.setTitle('');
       },
       startTerminal:({id}: {id: number}) => {
         const progressBlock = new ProgressBlock();
@@ -316,6 +317,7 @@ export class Shell {
             },
             size: this._size,
             antiFlicker: this._antiFlicker,
+            setTitle: title => this._delegate.setTitle(title),
           });
           activeTerminalBlock = terminalBlock;
           const onFullScreen = (value: boolean) => {
@@ -541,7 +543,12 @@ export class Shell {
   }
 
   _updateSuffix() {
-    suffixThrottle.update(this._connectionIsDaemon.get(this.connection) ? ' 😈' : '');
+    this._delegate.setSuffix(this._connectionIsDaemon.get(this.connection) ? ' 😈' : '');
+  }
+
+  close() {
+    for (const connection of this._connections)
+      this._connectionToDestroy.get(connection)();
   }
 
   async runCommand(command: string) {
@@ -551,7 +558,7 @@ export class Shell {
     if (!command)
       return;
     
-    titleThrottle.update(command);
+    this._delegate.setTitle(command);
     const unlockPrompt = this._lockPrompt('runCommand');
     this._activeItem.dispatch(commandBlock);
     const historyId = await this._addToHistory(command);
@@ -737,7 +744,7 @@ export class Shell {
     
     const prettyName = computePrettyDirName(this, this.cwd);
     const title =  [this._connectionToName.get(this.connection), prettyName].filter(Boolean).join(' ');
-    titleThrottle.update(title);
+    this._delegate.setTitle(title);
     Promise.race([commandPrefix.render(), new Promise(x => setTimeout(x, 100))]).then(() => {
       element.style.removeProperty('opacity');
     });
