@@ -5,7 +5,8 @@
 .log-view-scroller {
   overflow: hidden auto;
   padding: 4px;
-  flex: 1;
+  position: absolute;
+  inset: 0;
 }
 .fullscreen-element {
   backdrop-filter: blur(15px);

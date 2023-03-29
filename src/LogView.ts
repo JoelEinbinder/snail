@@ -226,11 +226,10 @@ export class LogView implements Block, ShellDelegate {
     if (this._lockingScroll)
       return;
     const scrollBottom = this._scroller.scrollHeight - this._scroller.scrollTop - this._scroller.offsetHeight;
-    
     this._lockingScroll = true;
     await Promise.resolve();
     this._lockingScroll = false;
-    this._scroller.scrollTop = this._scroller.scrollHeight - this._scroller.offsetHeight - scrollBottom;
+    this._scroller.scrollTop = this._scroller.scrollHeight - this._scroller.offsetHeight - Math.floor(scrollBottom);
   }
 
   _addPrompt() {
