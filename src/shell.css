@@ -101,6 +101,6 @@ body:not(.vscode-dark) iframe.fullscreen {
   background-color: rgba(0,0,0,0.6);
 }
 
-.xterm-viewport {
+.terminal.xterm .xterm-viewport {
   overflow: hidden;
 }
