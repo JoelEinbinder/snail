@@ -1,18 +1,13 @@
-.tab-block {
+.tab-bar {
   --tab-foreground: #444;
   --tab-background: #202020;
   --tab-hover: #3a3a3a;
-}
-.tab-bar {
+  position: absolute;
   height: 30px;
   background-color: var(--tab-background);
   display: flex;
   flex-direction: row;
   align-items: end;
-}
-
-.tab-block {
-  position: absolute;
 }
 
 .maximize-button,

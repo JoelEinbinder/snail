@@ -6,7 +6,6 @@ export class TabBlock implements Block {
   private _activeTab?: Block;
   private _lastPosition?: { x: number; y: number; width: number; height: number; };
   blockDelegate?: BlockDelegate;
-  private _element = document.createElement('div');
   private _tabBar = document.createElement('div');
   private _addButton?: HTMLElement;
   private _minimizeButton?: HTMLElement;
@@ -47,7 +46,6 @@ export class TabBlock implements Block {
     setMaximized?: (maximized: boolean) => Promise<void>,
     onClose?: () => Promise<void>,
   } = {}) {
-    this._element.classList.add('tab-block');
     this._tabBar.classList.add('tab-bar');
     if (delegate.onAdd) {
       this._addButton = document.createElement('button');
@@ -86,7 +84,6 @@ export class TabBlock implements Block {
         await delegate.onClose();
       };
     }
-    this._element.append(this._tabBar);
     this.setMaximized(false);
   }
   close(): void {
@@ -94,20 +91,19 @@ export class TabBlock implements Block {
       tab.close();
   }
   hide(): void {
-    this._element.remove();
+    this._tabBar.remove();
     this._activeTab?.hide();
     window.removeEventListener('keydown', this._shortcutListener);
   }
   show(): void {
-    this._parentElement.append(this._element);
+    this._parentElement.append(this._tabBar);
     this._activeTab?.show();
     window.addEventListener('keydown', this._shortcutListener);
   }
   updatePosition(rect: { x: number; y: number; width: number; height: number; }): void {
-    this._element.style.left = rect.x + 'px';
-    this._element.style.top = rect.y + 'px';
-    this._element.style.width = rect.width + 'px';
-    this._element.style.height = rect.height + 'px';
+    this._tabBar.style.left = rect.x + 'px';
+    this._tabBar.style.top = rect.y + 'px';
+    this._tabBar.style.width = rect.width + 'px';
     const tabHeight = this._tabBar.getBoundingClientRect().height;
     this._lastPosition = {
       x: rect.x,
@@ -146,7 +142,7 @@ export class TabBlock implements Block {
     this._tabs.splice(index, 1);
     this._headerForTab.delete(tab);
     if (this._activeTab === tab) {
-      const showing = !!this._element.parentElement;
+      const showing = !!this._tabBar.parentElement;
       if (showing)
         tab.hide();
       delete this._activeTab;
@@ -216,7 +212,7 @@ export class TabBlock implements Block {
       this._headerForTab.get(this._activeTab).classList.remove('selected');
       this._headerForTab.get(this._activeTab).removeAttribute('tabIndex');
     }
-    const showing = !!this._element.parentElement;
+    const showing = !!this._tabBar.parentElement;
     if (showing)
       this._activeTab?.hide();
     this._activeTab = tab;
