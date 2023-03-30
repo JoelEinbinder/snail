@@ -420,12 +420,13 @@ export class IFrameBlock implements LogItem {
       params: fontString(),
     });
   }
-  async message(data: string) {
+  async message(data: string, dontCache?: boolean) {
     const message = {
       method: 'message',
       params: JSON.parse(data),
     };
-    this._cachedMessages.push(message);
+    if (!dontCache)
+      this._cachedMessages.push(message);
     await this.readyPromise;
     this._webContentView.postMessage(message);
   }

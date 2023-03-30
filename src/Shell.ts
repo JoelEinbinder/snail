@@ -245,6 +245,7 @@ export class Shell {
                 break;
               }
               case 77:
+              case 81:
                 // message
                 terminalTaskQueue.queue(async () => {
                   const dataStr = new TextDecoder().decode(data.slice(1));
@@ -252,7 +253,7 @@ export class Shell {
                     console.error('parse error, sending message without iframe');
                     return;
                   }
-                  activeIframeBlock.message(dataStr);
+                  activeIframeBlock.message(dataStr, /* dontCache */ data[0] === 81);
                 });
                 break;
               case 78:

@@ -6,7 +6,7 @@ display(path.join(__dirname, '..', 'src', 'index.ts'));
 const {handler} = require('../host/');
 const {EventEmitter} = require('events');
 const client = new EventEmitter();
-client.send = message => send(message);
+client.send = message => send(message, true);
 
 const overrides = {
   close() {

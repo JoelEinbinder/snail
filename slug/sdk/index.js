@@ -1,11 +1,11 @@
 function display(filePath) {
   process.stdout.write(`\x1b\x1aL${filePath}\x00`);
 }
-function send(data) {
+function send(data, dontCache) {
   const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
       return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
   });
-  process.stdout.write(`\x1b\x1aM${str}\x00`);
+  process.stdout.write(`\x1b\x1a${dontCache ? 'Q' : 'M'}${str}\x00`);
 }
 const {RPC} = require('../protocol/rpc-js');
 const crypto = require('node:crypto');
@@ -20,7 +20,7 @@ class Transport {
     process.stdout.write(`\x1b\x1aP${this._secretKey}\x00`);
   }
   send(data) {
-    send(data);
+    send(data, /* dontCache */ 'id' in data);
   }
 
   /**
