@@ -1,0 +1,165 @@
+import './quickPick.css'
+import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_match_patch';
+import { availableActions, registerGlobalAction, Action } from './actions';
+let activePick: QuickPick | undefined;
+class QuickPick {
+  private _element = document.createElement('dialog');
+  private _input = document.createElement('input');
+  private _optionsTray = document.createElement('div');
+  private _selected?: HTMLElement;
+  private _actions: Action[];
+  constructor() {
+    this._element.classList.add('quick-pick');
+    this._optionsTray.classList.add('quick-pick-options');
+    this._element.append(this._input, this._optionsTray);
+    this._actions = availableActions();
+    document.body.append(this._element);
+    activePick = this;
+
+    this._render();
+    this._element.showModal();
+    this._element.addEventListener('close', event => {
+      this.dispose();
+    });
+    // dismiss on backdrop click
+    this._element.addEventListener('mousedown', event => {
+      const rect = this._element.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)
+        this.dispose();
+    });
+    this._element.addEventListener('mouseup', event => {
+      this._input.focus();
+    });
+    this._input.addEventListener('input', () => {
+      this._render();
+    });
+    this._input.focus();
+    this._input.addEventListener('keydown', event => {
+      if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
+        return;
+      if (event.code === 'ArrowDown') {
+        const next = this._selected?.nextElementSibling || this._optionsTray.firstElementChild;
+        this._selectElement(next as HTMLElement);
+      } else if (event.code === 'ArrowUp') {
+        const prev = this._selected?.previousElementSibling || this._optionsTray.lastElementChild;
+        this._selectElement(prev as HTMLElement);
+      } else if (event.code === 'Enter') {
+        this._selected?.click();
+      } else {
+        return;
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    });
+  }
+
+  dispose() {
+    if (this._element.open)
+      this._element.close();
+    this._element.remove();
+    activePick = undefined;
+  }
+
+  _render() {
+    this._optionsTray.textContent = '';
+    this._selectElement(undefined);
+    const query = this._input.value;
+    const sortedItems = this._actions.map(({title, callback, shortcut}) => {
+      const diff = new diff_match_patch().diff_main(query.toLowerCase(), title.toLowerCase());
+      const element = document.createElement('div');
+      let total = 0;
+      for (const {0: type, 1: text} of diff) {
+        if (type === DIFF_EQUAL)
+          total += text.length;
+      }
+      if (total < query.length)
+        return null;
+      let score = 0;
+      let index = 0;
+      for (const {0: type, 1: text} of diff) {
+        if (type === DIFF_EQUAL) {
+          score += text.length ** 2;
+          const span = document.createElement('span');
+          const sliced = title.slice(index, index + text.length);
+          span.textContent = sliced;
+          span.classList.add('match');
+          element.append(span);
+        } else if (type === DIFF_INSERT) {
+          const sliced = title.slice(index, index + text.length);
+          element.append(sliced);
+        }
+        index += text.length;
+      }
+
+      if (shortcut) {
+        const shortcutElement = document.createElement('span');
+        shortcutElement.classList.add('shortcut');
+        shortcutElement.textContent = formatShortcut(shortcut);
+        element.append(shortcutElement);
+      }
+
+      element.classList.add('quick-pick-option');
+      element.addEventListener('click', () => {
+        this.dispose();
+        callback();
+      });
+      return {element, score};
+    }).filter(x => x).sort((a, b) => b.score - a.score);
+    for (const item of sortedItems) {
+      this._optionsTray.append(item.element);
+      if (!this._selected)
+        this._selectElement(item.element);
+    }
+  }
+
+  _selectElement(element?: HTMLElement) {
+    this._selected?.classList.remove('selected');
+    this._selected = element;
+    this._selected?.classList.add('selected');
+    this._selected?.scrollIntoView();
+  }
+}
+
+registerGlobalAction({
+  callback: () => {
+    new QuickPick();
+  },
+  title: 'Show all actions',
+  id: 'quick.action',
+  shortcut: 'Shift+CtrlOrCmd+P',
+});
+
+declare var module: any;
+if (module.hot) {
+  if (module.hot.data?.activePick && !activePick)
+    new QuickPick();
+  module.hot.dispose(data => {
+    data.activePick = activePick;
+    activePick?.dispose();
+  });
+  module.hot.accept();
+}
+function formatShortcut(shortcut: string) {
+  return shortcut.split(/[\+ ]/).map(key => {
+    if (navigator['userAgentData']?.platform === 'macOS') {
+      if (key === 'CtrlOrCmd' || key === 'Cmd' || key === 'Meta')
+        return '⌘';
+      if (key === 'Ctrl')
+        return '⌃';
+      if (key === 'Alt')
+        return '⌥';
+      if (key === 'Shift')
+        return '⇧';
+    } else {
+      if (key === 'CtrlOrCmd' || key === 'Ctrl')
+        return 'Ctrl';
+      if (key === 'Cmd' || key === 'Meta')
+        return 'Win';
+      if (key === 'Alt')
+        return 'Alt';
+      if (key === 'Shift')
+        return 'Shift';
+    }
+    return key;
+  }).join(' ');
+}

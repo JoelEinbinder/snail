@@ -6,6 +6,7 @@ import { Block, BlockDelegate } from './GridPane';
 import { startAyncWork } from './async';
 import { makeLazyProxy } from './LazyProxy';
 import { UIThrottle } from './UIThrottle';
+import { Action } from './actions';
 
 export class LogView implements Block, ShellDelegate {
   private _element = document.createElement('div');
@@ -140,7 +141,7 @@ export class LogView implements Block, ShellDelegate {
     item.dispose();
     this._log.splice(index, 1);
     this._lockScroll();
-    this._itemToElement.get(item).remove();
+    this._itemToElement.get(item)?.remove();
     this._itemToElement.delete(item);
   }
 
@@ -269,6 +270,15 @@ export class LogView implements Block, ShellDelegate {
 
   setSuffix(suffix: string): void {
     this._suffixThrottle.update(suffix);
+  }
+
+  actions(): Action[] {
+    return [{
+      title: 'Clear log',
+      shortcut: 'Ctrl+L',
+      id: 'log.clear',
+      callback: () => this.clearAll(),
+    }];
   }
 }
 

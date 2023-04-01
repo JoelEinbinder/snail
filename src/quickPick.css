@@ -1,0 +1,70 @@
+.quick-pick {
+  position: fixed;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  margin: 0 auto;
+  max-height: min(400px, 100vh - 16px);
+  max-width: min(80vw, 600px);
+  padding: 4px;
+  width: initial;
+  height: fit-content;
+
+  border-radius: 3px;
+  border: 1px solid var(--ansi-237);
+
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-pick::backdrop {
+  background: transparent;
+}
+
+body.vscode-dark .quick-pick {
+    backdrop-filter: initial;
+    -webkit-backdrop-filter: initial;
+}
+.quick-pick > input {
+  border: 1px solid rgb(133, 133, 133);
+  padding: 2px;
+  background-color: var(--ansi-237);
+  border-radius: 2px;
+  font-family: var(--current-font);
+}
+.quick-pick > input:focus {
+  border-color: var(--ansi-32);
+  outline: none;
+}
+
+.quick-pick-options:not(:empty) {
+  padding: 4px 0;
+  user-select: none;
+  cursor: pointer;
+}
+.quick-pick-option {
+  border-radius: 2px;
+  padding: 2px 8px;
+}
+
+.quick-pick-option:hover {
+  background-color: var(--ansi-236);
+}
+.quick-pick-option.selected {
+  background-color: var(--ansi-237);
+}
+.quick-pick-option > .match {
+  font-weight: bold;
+  color: var(--ansi-32);
+}
+
+.quick-pick-option > .shortcut {
+  color: var(--ansi-245);
+  display: block;
+  float: right;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+

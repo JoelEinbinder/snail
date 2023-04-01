@@ -7,6 +7,7 @@ import { makeLazyProxy } from './LazyProxy';
 import type { ShellDelegate } from './Shell';
 import { TabBlock } from './TabBlock';
 import { host } from './host';
+import './QuickPick';
 document.title = 'Loading...';
 const isLogBook = document.location.search.includes('logbook');
 const useTabs = navigator['userAgentData'].platform !== 'macOS';

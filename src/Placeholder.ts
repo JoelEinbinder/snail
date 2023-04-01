@@ -1,3 +1,4 @@
+import type { Action } from "./actions";
 import type { Block, BlockDelegate } from "./GridPane";
 import './placeholder.css';
 
@@ -34,5 +35,8 @@ export class Placeholder implements Block {
     }
     async serializeForTest(): Promise<any> {
         return { type: 'placeholder', title: this._element.textContent };
+    }
+    actions(): Action[] {
+        return [];
     }
 }

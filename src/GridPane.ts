@@ -1,3 +1,4 @@
+import type { Action } from './actions';
 import { font } from './font';
 import './gridPane.css';
 import { host } from './host';
@@ -26,6 +27,7 @@ export interface Block {
   serializeForTest(): Promise<any>;
   title(): string;
   close(): void;
+  actions(): Action[];
 }
 class RootBlock {
   element = document.createElement('div');
@@ -70,6 +72,10 @@ class RootBlock {
   }
   private _layout() {
     this.block?.updatePosition(this.element.getBoundingClientRect());
+  }
+
+  actions(): Action[] {
+    return this.block?.actions() || [];
   }
 
   async serializeForTest() {
@@ -163,6 +169,10 @@ class SplitBlock implements Block {
   updatePosition(rect: Rect): void {
     this._rect = rect;
     this._layout();
+  }
+
+  actions() {
+    return this._blocks.find(x => x.hasFocus())?.actions() || [];
   }
 
   private _dispose() {

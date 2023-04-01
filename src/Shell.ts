@@ -38,7 +38,6 @@ export interface ShellDelegate {
   addItem(item: LogItem): void;
   removeItem(item: LogItem): void;
   clearAllExcept(item: LogItem): void;
-  clearAll(): void;
   togglePrompt(showPrompt: boolean): void;
   setActiveItem(item: LogItem|null): void;
   setFullscreenItem(item: LogItem|null): void;
@@ -780,10 +779,6 @@ export class Shell {
         editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
         editor.value = '';
         await this.runCommand(command);
-      } else if (event.code === 'KeyL' && event.ctrlKey) {
-        this._delegate.clearAll();
-        event.preventDefault();
-        event.stopImmediatePropagation();
       } else if (event.code === 'KeyC' && event.ctrlKey) {
         const commandBlock = new CommandBlock(editor.value, this._size, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
         commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;

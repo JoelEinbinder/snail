@@ -230,6 +230,10 @@ export class TabBlock implements Block {
   title(): string {
     return this._activeTab?.title() || '<empty>';
   }
+
+  actions() {
+    return this._activeTab?.actions() || [];
+  }
 }
 
 
