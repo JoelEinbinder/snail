@@ -1,4 +1,5 @@
 import { rootBlock } from "./GridPane";
+import { shortcutParser, type ParsedShortcut } from './shortcutParser';
 
 const globalActions: Action[] = [];
 export function registerGlobalAction(action: Action): void {
@@ -24,38 +25,40 @@ export type Action = {
   callback: () => void;
 }
 
+let continuationActions: {shortcut: ParsedShortcut, action: Action}[] = null;
+
 document.addEventListener('keydown', event => {
   const isMac = navigator['userAgentData']?.platform === 'macOS';
-  const action = availableActions().find(x => {
-    if (!x.shortcut)
+  const currentActions = continuationActions ? continuationActions : availableActions().filter(x => x.shortcut).map(x => {
+    return {shortcut: shortcutParser(x.shortcut, isMac), action: x};
+  })
+  const matchingActions = currentActions.filter(x => {
+    const parsed = x.shortcut;
+    if (parsed.ctrlKey !== undefined && parsed.ctrlKey !== event.ctrlKey)
       return false;
-    const parts = x.shortcut.split('+');
-    for (const part of parts) {
-      if (part === 'CtrlOrCmd') {
-        if (isMac ? !event.metaKey : !event.ctrlKey)
-          return false;
-      } else if (part === 'Ctrl') {
-        if (!event.ctrlKey)
-          return false;
-      } else if (part === 'Meta' || part === 'Cmd') {
-        if (!event.metaKey)
-          return false;
-      } else if (part === 'Alt') {
-        if (!event.altKey)
-          return false;
-      } else if (part === 'Shift') {
-        if (!event.shiftKey)
-          return false;
-      } else {
-        if (event.key.toLowerCase() !== part.toLowerCase())
-          return false;
-      }
-    }
+    if (parsed.metaKey !== undefined && parsed.metaKey !== event.metaKey)
+      return false;
+    if (parsed.altKey !== undefined && parsed.altKey !== event.altKey)
+      return false;
+    if (parsed.shiftKey !== undefined && parsed.shiftKey !== event.shiftKey)
+      return false;
+    if (parsed.key.toLowerCase() !== event.key.toLowerCase() && parsed.key !== event.code)
+      return false;
     return true;
   });
-  if (!action)
+  if (event.key !== 'Shift' && event.key !== 'Control' && event.key !== 'Alt' && event.key !== 'Meta')
+    continuationActions = null;
+  if (!matchingActions.length)
     return;
   event.preventDefault();
   event.stopImmediatePropagation();
-  action.callback();
-})
+  const completeAction = matchingActions.find(x => !x.shortcut.continuation);
+  if (completeAction) {
+    continuationActions = null;
+    completeAction.action.callback();
+  } else {
+    continuationActions = matchingActions.map(x => {
+      return {shortcut: x.shortcut.continuation, action: x.action};
+    });
+  }
+}, true);

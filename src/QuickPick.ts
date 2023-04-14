@@ -126,7 +126,7 @@ registerGlobalAction({
   },
   title: 'Show all actions',
   id: 'quick.action',
-  shortcut: 'Shift+CtrlOrCmd+P',
+  shortcut: 'Shift+CmdOrCtrl+P',
 });
 
 declare var module: any;
@@ -142,7 +142,7 @@ if (module.hot) {
 function formatShortcut(shortcut: string) {
   return shortcut.split(/[\+ ]/).map(key => {
     if (navigator['userAgentData']?.platform === 'macOS') {
-      if (key === 'CtrlOrCmd' || key === 'Cmd' || key === 'Meta')
+      if (key === 'CmdOrCtrl' || key === 'Cmd' || key === 'Meta')
         return '⌘';
       if (key === 'Ctrl')
         return '⌃';
@@ -151,7 +151,7 @@ function formatShortcut(shortcut: string) {
       if (key === 'Shift')
         return '⇧';
     } else {
-      if (key === 'CtrlOrCmd' || key === 'Ctrl')
+      if (key === 'CmdOrCtrl' || key === 'Ctrl')
         return 'Ctrl';
       if (key === 'Cmd' || key === 'Meta')
         return 'Win';

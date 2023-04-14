@@ -45,42 +45,6 @@ export class LogView implements Block, ShellDelegate {
       this._prompt.focus();
     };
     this._container.appendChild(this._element);
-    document.body.addEventListener('keydown', keyDownListener, false);
-    let chording = false;
-    this._element.addEventListener('keydown', event => {
-      if (event.defaultPrevented)
-        return;
-      if (!chording) {
-        if (event.code === 'KeyA' && event.ctrlKey) {
-          chording = true;
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        }
-        return;
-      } else {
-        if (event.key !== 'Shift' && event.key !== 'Control' && event.key !== 'Alt' && event.key !== 'Meta') {
-          chording = false;
-        }
-        if (event.key === '%') {
-          this._doSplit('vertical');
-          event.preventDefault();
-        } else if (event.key === '"') {
-          this._doSplit('horizontal');
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        } else if (event.code === 'KeyD') {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          const done = startAyncWork('demon mode toggle');
-          this._shell.toggleDaemon().then(done);
-        } else if (event.code === 'KeyR') {
-          this._shell.refreshActiveIframe();
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        }
-        return;
-      }
-    }, true);
     this._scroller.classList.add('log-view-scroller');
     this._element.classList.add('log-view');
     this._element.append(this._scroller);
@@ -278,6 +242,29 @@ export class LogView implements Block, ShellDelegate {
       shortcut: 'Ctrl+L',
       id: 'log.clear',
       callback: () => this.clearAll(),
+    }, {
+      title: 'Split vertically',
+      shortcut: 'Ctrl+A %',
+      id: 'log.split.vertical',
+      callback: () => this._doSplit('vertical'),
+    }, {
+      title: 'Split horizontally',
+      shortcut: 'Ctrl+A "',
+      id: 'log.split.horizontal',
+      callback: () => this._doSplit('horizontal'),
+    }, {
+      title: 'Toggle daemon mode',
+      shortcut: 'Ctrl+A D',
+      id: 'log.toggle.daemon',
+      callback: () => {
+        const done = startAyncWork('demon mode toggle');
+        this._shell.toggleDaemon().then(done);
+      }
+    }, {
+      title: 'Refresh active iframe',
+      shortcut: 'Ctrl+A R',
+      id: 'log.refresh.active.iframe',
+      callback: () => this._shell.refreshActiveIframe(),
     }];
   }
 }
