@@ -18,6 +18,7 @@ const rpc = RPC(transport, {
 });
 const view = new LogBookView((sql, params) => rpc.send('queryDatabase', { sql, params }));
 document.body.append(view.element);
+view.focus();
 try {
 while (true) {
   const message = await d4.waitForMessage<any>();

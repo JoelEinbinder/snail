@@ -1,10 +1,12 @@
 import './logBookView.css';
 const ROW_HEIGHT = 20;
+const BATCH_SIZE = 100;
 class LogGrid {
   public element = document.createElement('div');
   private _scroller = document.createElement('div');
   private _abortUpadte?: () => void;
   private _rows: Row[] = [];
+  private _cachedQueries = new Map<number, Promise<any[]>>();
   constructor(private _query: (sql: string, params?: any) => Promise<any[]>) {
     this.element.classList.add('grid');
     this._scroller.classList.add('scroller');
@@ -19,19 +21,28 @@ class LogGrid {
     this._abortUpadte?.();
     const abort = new AbortController();
     this._abortUpadte = () => abort.abort();
-    this._scroller.textContent = '';
     const WHERE = filter ? `WHERE command LIKE ?` : '';
     const args = filter ? [filter] : [];
     const query = await this._query(`SELECT COUNT() FROM history ${WHERE}`, args);
-    if (!query) return;
+    const getOrCacheQuery = (index: number) => {
+      if (!this._cachedQueries.has(index))
+        this._cachedQueries.set(index, this._query(`SELECT command FROM history ${WHERE} LIMIT ? OFFSET ?`, [...args, BATCH_SIZE, index]));
+      return this._cachedQueries.get(index)!;
+    };
+    this._cachedQueries.clear();
+    if (!query) {
+      this._scroller.textContent = 'Query failed';
+      return;
+    };
+    await getOrCacheQuery(0);
+    this._scroller.textContent = '';
     const count = query[0]['COUNT()'];
     if (abort.signal.aborted) return;
-    // this._scroller.style.height = `${count * ROW_HEIGHT}px`;
     this._rows = [];
     for (let i = 0; i < count; i++) {
       const row = new Row(i, async () => {
-        const out = await this._query(`SELECT command FROM history ${WHERE} LIMIT 1 OFFSET ?`, [...args, i]);
-        return out[0];
+        const index = Math.floor(i / BATCH_SIZE) * BATCH_SIZE;
+        return (await getOrCacheQuery(index))[i % BATCH_SIZE];
       });
       this._scroller.appendChild(row.element);
       this._rows.push(row);
@@ -65,11 +76,16 @@ class Row {
 
 export class LogBookView {
   element = document.createElement('div');
+  private _filter: LogFilter;
   constructor(private _query: (sql: string, params?: any) => Promise<any[]>) {
     this.element.classList.add('logbook');
-    const filter = new LogFilter(filter => grid.setFilter(`%${filter}%`));
+    this._filter = new LogFilter(filter => grid.setFilter(`%${filter}%`));
     const grid = new LogGrid(_query);
-    this.element.append(filter.element, grid.element);
+    this.element.append(this._filter.element, grid.element);
+  }
+
+  focus() {
+    this._filter.focus();
   }
 }
 
@@ -80,5 +96,9 @@ class LogFilter {
     this.element.classList.add('log-filter');
     this.element.appendChild(this._input);
     this._input.addEventListener('input', () => this._onChange(this._input.value));
+  }
+
+  focus() {
+    this._input.focus();
   }
 }
