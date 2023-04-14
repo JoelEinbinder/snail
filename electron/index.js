@@ -27,23 +27,6 @@ menu.append(new MenuItem({
     click: () => makeWindow()
   }, {
     role: 'close',
-  }, {
-    label: 'New LogBook Window',
-    click: () => {
-      const win = new BrowserWindow({
-        width: 800,
-        height: 600,
-        title: 'LogBook',
-        tabbingIdentifier: (++windowNumber).toString(),
-        webPreferences: {
-          preload: __dirname + '/preload.js',
-        },
-        backgroundColor: '#000',
-      });
-      win.loadFile(path.join(__dirname, 'index.html'), {
-        search: 'logbook',
-      });
-    }
   }]
 }))
 

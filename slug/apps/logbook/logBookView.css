@@ -1,0 +1,31 @@
+.logbook {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
+.logbook > .grid {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.logbook > .grid > .scroller {
+  
+}
+
+.logbook > .grid > .scroller > .row {
+  display: block;
+  height: 20px;
+  white-space: pre;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.log-filter {
+  display: flex;
+}
+
+.log-filter > input {
+  flex: 1;
+  margin: 5px;
+}
