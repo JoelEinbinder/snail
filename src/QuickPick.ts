@@ -1,7 +1,9 @@
 import './quickPick.css'
 import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_match_patch';
 import { availableActions, registerGlobalAction, Action } from './actions';
+import { type ParsedShortcut, shortcutParser } from './shortcutParser';
 let activePick: QuickPick | undefined;
+const isMac = navigator['userAgentData']?.platform === 'macOS';
 class QuickPick {
   private _element = document.createElement('dialog');
   private _input = document.createElement('input');
@@ -94,7 +96,7 @@ class QuickPick {
       if (shortcut) {
         const shortcutElement = document.createElement('span');
         shortcutElement.classList.add('shortcut');
-        shortcutElement.textContent = formatShortcut(shortcut);
+        shortcutElement.textContent = formatShortcut(shortcutParser(shortcut, isMac));
         element.append(shortcutElement);
       }
 
@@ -139,27 +141,33 @@ if (module.hot) {
   });
   module.hot.accept();
 }
-function formatShortcut(shortcut: string) {
-  return shortcut.split(/[\+ ]/).map(key => {
-    if (navigator['userAgentData']?.platform === 'macOS') {
-      if (key === 'CmdOrCtrl' || key === 'Cmd' || key === 'Meta')
-        return '⌘';
-      if (key === 'Ctrl')
-        return '⌃';
-      if (key === 'Alt')
-        return '⌥';
-      if (key === 'Shift')
-        return '⇧';
-    } else {
-      if (key === 'CmdOrCtrl' || key === 'Ctrl')
-        return 'Ctrl';
-      if (key === 'Cmd' || key === 'Meta')
-        return 'Win';
-      if (key === 'Alt')
-        return 'Alt';
-      if (key === 'Shift')
-        return 'Shift';
-    }
-    return key;
-  }).join(' ');
+function formatShortcut(shortcut: ParsedShortcut) {
+  const parts = [];
+  if (isMac) {
+    if (shortcut.metaKey)
+      parts.push('⌘');
+    if (shortcut.ctrlKey)
+      parts.push('⌃');
+    if (shortcut.altKey)
+      parts.push('⌥');
+    if (shortcut.shiftKey)
+      parts.push('⇧');
+  } else {
+    if (shortcut.metaKey)
+      parts.push('Win');
+    if (shortcut.ctrlKey)
+      parts.push('Ctrl');
+    if (shortcut.altKey)
+      parts.push('Alt');
+    if (shortcut.shiftKey)
+      parts.push('Shift');
+  }
+  if (isMac && shortcut.key === 'Tab')
+    parts.push('⇥');
+  else
+    parts.push(shortcut.key);
+  const joined = parts.join(' ');
+  if (!shortcut.continuation)
+    return joined;
+  return joined + ' ' + formatShortcut(shortcut.continuation);
 }

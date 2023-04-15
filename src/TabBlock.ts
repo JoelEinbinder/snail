@@ -1,6 +1,7 @@
 import type { Block, BlockDelegate } from "./GridPane";
 import './tabBlock.css';
 import { showContextMenu } from './contextMenu';
+import { Action } from "./actions";
 export class TabBlock implements Block {
   private _tabs: Block[] = [];
   private _activeTab?: Block;
@@ -13,33 +14,6 @@ export class TabBlock implements Block {
   private _closeButton?: HTMLElement;
   private _maximized = false;
   private _headerForTab = new WeakMap<Block, HTMLElement>();
-  private _shortcutListener = (event: KeyboardEvent) => {
-    if (!this.hasFocus())
-      return;
-    if (this._activeTab && event.ctrlKey && event.code === 'KeyW') {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      this.closeTab(this._activeTab);
-    }
-    if (this._addButton && event.ctrlKey && event.code === 'KeyT') {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      this._addButton.click();
-    }
-    if (this._tabs.length > 1 && event.ctrlKey && event.code === 'Tab') {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      let index = this._tabs.indexOf(this._activeTab);
-      if (event.shiftKey)
-        index--;
-      else
-        index++;
-      index = (index + this._tabs.length) % this._tabs.length;
-      const tab = this._tabs[index];
-      this.switchTab(tab);
-      tab.focus();
-    }
-  }
   constructor(private _parentElement: HTMLElement, delegate: {
     onAdd?: () => Promise<Block>,
     onMinimize?: () => Promise<void>,
@@ -86,6 +60,17 @@ export class TabBlock implements Block {
     }
     this.setMaximized(false);
   }
+  selectSiblingTab(previous: boolean) {
+    let index = this._tabs.indexOf(this._activeTab);
+    if (previous)
+      index--;
+    else
+      index++;
+    index = (index + this._tabs.length) % this._tabs.length;
+    const tab = this._tabs[index];
+    this.switchTab(tab);
+    tab.focus();
+}
   close(): void {
     for (const tab of this._tabs)
       tab.close();
@@ -93,12 +78,10 @@ export class TabBlock implements Block {
   hide(): void {
     this._tabBar.remove();
     this._activeTab?.hide();
-    window.removeEventListener('keydown', this._shortcutListener);
   }
   show(): void {
     this._parentElement.append(this._tabBar);
     this._activeTab?.show();
-    window.addEventListener('keydown', this._shortcutListener);
   }
   updatePosition(rect: { x: number; y: number; width: number; height: number; }): void {
     this._tabBar.style.left = rect.x + 'px';
@@ -231,8 +214,34 @@ export class TabBlock implements Block {
     return this._activeTab?.title() || '<empty>';
   }
 
-  actions() {
-    return this._activeTab?.actions() || [];
+  actions(): Action[] {
+    return [
+      this._addButton && { 
+        title: 'New Tab',
+        shortcut: 'Ctrl+T',
+        id: 'new-tab',
+        callback: () => this._addButton.click(),
+      },
+      this._activeTab && {
+        title: 'Close Tab',
+        shortcut: 'Ctrl+W',
+        id: 'close-tab',
+        callback: () => this._activeTab.blockDelegate?.close(),
+      },
+      this._tabs.length > 1 && {
+        title: 'Select next tab',
+        shortcut: 'Ctrl+Tab',
+        id: 'next-tab',
+        callback: () => this.selectSiblingTab(false),
+      },
+      this._tabs.length > 1 && {
+        title: 'Select previous tab',
+        shortcut: 'Ctrl+Shift+Tab',
+        id: 'previous-tab',
+        callback: () => this.selectSiblingTab(true),
+      },
+      ...(this._activeTab?.actions() || []),
+    ].filter(x => x);
   }
 }
 

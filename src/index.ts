@@ -8,6 +8,7 @@ import type { ShellDelegate } from './Shell';
 import { TabBlock } from './TabBlock';
 import { host } from './host';
 import './QuickPick';
+import { registerGlobalAction } from './actions';
 document.title = 'Loading...';
 const useTabs = navigator['userAgentData'].platform !== 'macOS';
 console.time('load shell module');
@@ -51,6 +52,12 @@ if (useTabs) {
     tabs.addTab(logView);
 } else {
     rootBlock.setBlock(logView);
+    registerGlobalAction({
+        id: 'close',
+        title: 'Close',
+        shortcut: 'CmdOrCtrl+W',
+        callback: () => logView.blockDelegate?.close(),
+    });
 }
 await connetionPromise;
 done();
