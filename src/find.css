@@ -1,0 +1,23 @@
+.find {
+  display: block;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  position: fixed;
+  right: 0;
+  top: 0;
+  border: 1px solid var(--ansi-237);
+  border-radius: 2px;
+  padding: 4px;
+  border-top: none;
+  border-right: none;
+}
+
+.find > input {
+  max-width: 200px;
+  width: 50vw;
+}
+
+.find > .find-count {
+  margin-left: 4px;
+}

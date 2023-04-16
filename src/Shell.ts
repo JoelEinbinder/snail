@@ -863,6 +863,9 @@ export class Shell {
           serialized.autocomplete = auto;
         return serialized;
       },
+      setFind() {
+        // TODO prompt find
+      }
     }
   }
 

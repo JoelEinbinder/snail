@@ -7,8 +7,9 @@ import { startAyncWork } from './async';
 import { makeLazyProxy } from './LazyProxy';
 import { UIThrottle } from './UIThrottle';
 import { Action } from './actions';
+import { Find, Findable, FindableList, type FindParams } from './Find';
 
-export class LogView implements Block, ShellDelegate {
+export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
   private _scroller = document.createElement('div');
   private _fullscreenElement = document.createElement('div');
@@ -16,7 +17,7 @@ export class LogView implements Block, ShellDelegate {
   private _lockingScroll = false;
   private _undoFullscreen: () => void = null;
   private _removeListeners: () => void;
-  private _log: LogItem[] = [];
+  private _log = new FindableList<LogItem>();
   private _activeItem: LogItem | null = null;
   private _activeItemListeners = new Set<() => void>();
   private _itemToElement = new WeakMap<LogItem, Element>();
@@ -26,6 +27,7 @@ export class LogView implements Block, ShellDelegate {
   private _titleThrottle = new UIThrottle('Loading...', () => {
     this.blockDelegate?.titleUpdated();
   });
+  private _find = new Find(this, () => this.focus());
   blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._fullscreenElement.classList.add('fullscreen-element');
@@ -99,11 +101,9 @@ export class LogView implements Block, ShellDelegate {
   }
 
   removeItem(item: LogItem) {
-    const index = this._log.indexOf(item);
-    if (index === -1)
+    if (!this._log.removeItem(item))
       return;
     item.dispose();
-    this._log.splice(index, 1);
     this._lockScroll();
     this._itemToElement.get(item)?.remove();
     this._itemToElement.delete(item);
@@ -236,7 +236,13 @@ export class LogView implements Block, ShellDelegate {
     this._suffixThrottle.update(suffix);
   }
 
+  get _isFullscreen() {
+    return !!this._fullscreenElement.parentElement;
+  }
+
   actions(): Action[] {
+    if (this._isFullscreen)
+      return [];
     return [{
       title: 'Clear log',
       shortcut: 'Ctrl+L',
@@ -265,11 +271,23 @@ export class LogView implements Block, ShellDelegate {
       shortcut: 'Ctrl+A R',
       id: 'log.refresh.active.iframe',
       callback: () => this._shell.refreshActiveIframe(),
+    }, {
+      title: 'Find',
+      shortcut: 'CmdOrCtrl+F',
+      id: 'log.find',
+      callback: () => {
+        this._find.open(this._element);
+      },
     }];
   }
+
+  setFind(params: FindParams|null): void {
+    this._log.setFind(params);
+  }
+
 }
 
-export interface LogItem {
+export interface LogItem extends Findable {
   willResizeEvent: JoelEvent<void>;
   render(): Element;
   focus(): void;

@@ -7,6 +7,7 @@ import { LogItem } from "./LogView";
 import { cdpManager, DebuggingInfo } from './CDPManager';
 import { randomUUID } from "./uuid";
 import { expectingUserInput, startAyncWork } from "./async";
+import type { FindParams } from "./Find";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -374,6 +375,8 @@ export class IFrameBlock implements LogItem {
     // BrowserView cannot be inline because it is absolutely positioned
     if (delegate.browserView)
       this.setIsFullscreen(true);
+  }
+  setFind(params: FindParams): void {
   }
 
   private _resetReadyPromise() {

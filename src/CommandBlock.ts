@@ -1,8 +1,9 @@
-import { Editor, TextRange } from "../slug/editor/js/editor";
+import { Editor, type HighlightRanges, type TextRange } from "../slug/editor/js/editor";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import { LogItem } from "./LogView";
 import { setSelection } from "./selection";
 import type { Shell } from './Shell';
+import { FindParams } from "./Find";
 
 export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
@@ -42,6 +43,27 @@ export class CommandBlock implements LogItem {
     });
     observer.observe(this._editor.element);
 
+  }
+
+  setFind(params: FindParams|null): void {
+    if (!params) {
+      this._editor.setHighlightRanges([]);
+      return;
+    }
+    const ranges: HighlightRanges = [];
+    for (let i = 0; i <= this._editor.lastLine; i++) {
+      const text = this._editor.line(i).text;
+      let match;
+      let maxMatches = 10_000;
+      while ((match = params.regex.exec(text)) && maxMatches) {
+        const range: TextRange = {start: {line: i, column: match.index}, end: {line: i, column: match.index + match[0].length}};
+        const color = 'rgba(255, 255, 0, 0.3)';
+        ranges.push({ range, color });
+        maxMatches--;
+      }
+    }
+    this._editor.setHighlightRanges(ranges);
+    params.report(ranges.length);
   }
 
   get sshAddress() {

@@ -313,3 +313,15 @@ body, html {
 ::selection {
   background: var(--color-selection);
 }
+
+input {
+  border: 1px solid rgb(133, 133, 133);
+  padding: 2px;
+  background-color: var(--ansi-237);
+  border-radius: 2px;
+  font-family: var(--current-font);
+}
+input:focus {
+  border-color: var(--ansi-32);
+  outline: none;
+}

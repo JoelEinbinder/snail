@@ -2,6 +2,7 @@ import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { LogItem } from "./LogView";
 import './AskPasswordBlock.css';
 import { expectingUserInput } from './async';
+import type { FindParams } from "./Find";
 
 export class AskPasswordBlock implements LogItem {
   private _element = document.createElement('div');
@@ -43,4 +44,6 @@ export class AskPasswordBlock implements LogItem {
     return new Promise(x => {});
   }
 
+  setFind(params: FindParams): void {
+  }
 }

@@ -7,10 +7,13 @@ import { makeTextDrawer } from './TextLayer';
 import './rendererAddon.css';
 import type { IBufferService, ICoreService } from 'xterm/src/common/services/Services';
 import { CellData } from 'xterm/src/common/buffer/CellData';
+import { FindService, type FindState } from './FindService';
+import type { Findable, FindParams } from '../Find';
 
-export class RendererAddon implements ITerminalAddon {
+export class RendererAddon implements ITerminalAddon, Findable {
   private _terminal: Terminal;
   private _renderer: Renderer;
+  private _findService: FindService;
   constructor() {
   }
   activate(terminal: Terminal): void {
@@ -20,6 +23,7 @@ export class RendererAddon implements ITerminalAddon {
     const renderService: IRenderService = (terminal as any)._core._renderService;
     this._renderer = new Renderer(this._terminal);
     renderService.setRenderer(this._renderer);
+    this._findService = new FindService(this._terminal, state => this._renderer.setFindState(state));
   }
   dispose(): void {
   }
@@ -28,6 +32,9 @@ export class RendererAddon implements ITerminalAddon {
   }
   get bottomBlankRows(): number {
     return this._renderer?.bottomBlankRows;
+  }
+  setFind(params: FindParams): void {
+    this._findService.setFind(params);
   }
 }
 
@@ -61,6 +68,7 @@ class Renderer implements IRenderer {
     end: [number, number],
     columnSelectMode: boolean,
   }|undefined;
+  private _findState: FindState = { activeMatch: -1, matches: [] };
   constructor(private _terminal: Terminal) {
     this._core = (this._terminal as any)._core;
     this._textLayer = new Layer(makeTextDrawer(
@@ -71,6 +79,7 @@ class Renderer implements IRenderer {
       () => this._selectionState,
       this.dimensions,
       () => this._getScrollOffset() * getDPR(),
+      () => this._findState,
       ));
 
     this._updateDimensions();
@@ -308,6 +317,11 @@ class Renderer implements IRenderer {
 
   private _getScrollOffset() {
     return this._scrollOffset;
+  }
+
+  setFindState(findState: FindState): void {
+    this._findState = findState;
+    this._requestRedraw();
   }
 }
 const isWebKit = /WebKit/.test(navigator.userAgent);

@@ -3,6 +3,7 @@ import type { JSConnection } from "../../src/JSConnection";
 import type { LogItem } from "../../src/LogView";
 import type { Protocol } from "../../src/protocol";
 import './remoteObject.css';
+import type { FindParams } from "../../src/Find";
 
 export class JSBlock implements LogItem {
   willResizeEvent = new JoelEvent<void>(undefined);
@@ -19,6 +20,8 @@ export class JSBlock implements LogItem {
   }
   async serializeForTest(): Promise<any> {
     return this._element.textContent;
+  }
+  setFind(params: FindParams): void {
   }
 }
 
@@ -52,6 +55,8 @@ export class JSLogBlock implements LogItem {
   }
   async serializeForTest(): Promise<any> {
     return this._element.textContent;
+  }
+  setFind(params: FindParams): void {
   }
 }
 

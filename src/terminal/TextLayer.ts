@@ -9,6 +9,7 @@ import { JoinedCellData } from 'xterm/src/browser/services/CharacterJoinerServic
 import type { IRenderDimensions } from 'xterm/src/browser/renderer/Types';
 import { DIM_OPACITY, INVERTED_DEFAULT_COLOR, TEXT_BASELINE } from 'xterm/src/browser/renderer/atlas/Constants';
 import { channels, color, rgba } from 'xterm/src/browser/Color';
+import type { FindState } from './FindService';
 
 export function makeTextDrawer(
   bufferService: IBufferService,
@@ -18,6 +19,7 @@ export function makeTextDrawer(
   getSelection: () => ({ start: [number, number], end: [number, number], columnSelectMode: boolean } | undefined),
   dimensions: IRenderDimensions,
   getScrollOffset: () => number,
+  getFindState: () => FindState,
   ) {
   let ctx: CanvasRenderingContext2D;
   const workCell = new CellData();
@@ -448,7 +450,43 @@ export function makeTextDrawer(
       }
     }    
   }
+  function drawFind() {
+    const {matches, activeMatch} = getFindState();
+    for (let i = 0; i < matches.length; i++) {
+      const findMatch = matches[i];
+      const {start, end} = findMatch;
+      const active = i === activeMatch;
 
+      // Translate from buffer position to viewport position
+      const viewportStartRow = start[1];
+      const viewportEndRow = end[1];
+      const viewportCappedStartRow = Math.max(viewportStartRow, 0);
+      const viewportCappedEndRow = Math.min(viewportEndRow, bufferService.rows + bufferService.buffer.ydisp - 1);
+
+      // No need to draw the match
+      if (viewportCappedStartRow >= bufferService.rows + bufferService.buffer.ydisp || viewportCappedEndRow < 0)
+        return;
+
+      ctx.fillStyle = active ? 'rgba(255, 255, 0, 0.6)' : 'rgba(255, 255, 0, 0.3)';
+  
+      // Draw first row
+      const startCol = viewportStartRow === viewportCappedStartRow ? start[0] : 0;
+      const startRowEndCol = viewportCappedStartRow === viewportEndRow ? end[0] : bufferService.cols;
+      fillCells(startCol, viewportCappedStartRow, startRowEndCol - startCol, 1);
+
+      // Draw middle rows
+      const middleRowsCount = Math.max(viewportCappedEndRow - viewportCappedStartRow - 1, 0);
+      fillCells(0, viewportCappedStartRow + 1, bufferService.cols, middleRowsCount);
+
+      // Draw final row
+      if (viewportCappedStartRow !== viewportCappedEndRow) {
+        // Only draw viewportEndRow if it's not the same as viewportStartRow
+        const endCol = viewportEndRow === viewportCappedEndRow ? end[0] : bufferService.cols;
+        fillCells(0, viewportCappedEndRow, endCol, 1);
+      }
+    
+    }  
+  }
   return function(_ctx: CanvasRenderingContext2D, rects: Rect[]): void {
     ctx = _ctx;
     const scrollOffset = getScrollOffset();
@@ -482,6 +520,7 @@ export function makeTextDrawer(
     drawBackground(firstRow, lastRow);
     drawSelection();
     drawForeground(firstRow, lastRow);
+    drawFind();
     ctx.restore();
   }
 }

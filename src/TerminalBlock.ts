@@ -6,6 +6,7 @@ import type { LogItem } from "./LogView";
 import { setSelection } from './selection';
 import { RendererAddon } from "./terminal/RendererAddon";
 import { startAyncWork } from "./async";
+import type { FindParams } from "./Find";
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
@@ -216,5 +217,9 @@ export class TerminalBlock implements LogItem {
 
   isFullscreen(): boolean {
     return this.fullscreenEvent.current;
+  }
+
+  setFind(params: FindParams): void {
+      this._addon.setFind(params);
   }
 }

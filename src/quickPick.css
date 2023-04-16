@@ -28,17 +28,6 @@ body.vscode-dark .quick-pick {
     backdrop-filter: initial;
     -webkit-backdrop-filter: initial;
 }
-.quick-pick > input {
-  border: 1px solid rgb(133, 133, 133);
-  padding: 2px;
-  background-color: var(--ansi-237);
-  border-radius: 2px;
-  font-family: var(--current-font);
-}
-.quick-pick > input:focus {
-  border-color: var(--ansi-32);
-  outline: none;
-}
 
 .quick-pick-options:not(:empty) {
   padding: 4px 0;

@@ -1,5 +1,5 @@
 import { Emitter } from "./emitter";
-import { isSelectionCollapsed, type Loc, type Model, type Line } from "./model";
+import { isSelectionCollapsed, type Loc, type Model, type Line, type TextRange } from "./model";
 import type { EditorOptions } from "./editor";
 import type { Highlighter } from "./highlighter";
 
@@ -25,6 +25,7 @@ export class Renderer extends Emitter<{
   private _lastScrollOffset: { top: number; left: number; };
   colors: EditorOptions['colors'] & {};
   private _textMeasuring: any;
+  private _highlightRanges: HighlightRanges = [];
   private _charWidth: any;
   private _height: number;
   private _charHeight: number;
@@ -515,6 +516,28 @@ export class Renderer extends Emitter<{
         ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
       }
     }
+
+    for (const { color, range } of this._highlightRanges) {
+      ctx.fillStyle = color;
+      for (let line = range.start.line; line <= range.end.line && line < this._model.lineCount(); line++) {
+        let start = line === range.start.line ? range.start.column : 0;
+        let end = line === range.end.line ? range.end.column : this._model.line(line).text.length;
+        const point = this.pointFromLocation({ line, column: start });
+        const otherPoint = this.pointFromLocation({ line, column: end });
+        ctx.fillRect(
+          point.x,
+          point.y,
+          otherPoint.x - point.x,
+          this._lineHeight
+        );
+      }
+    }
+  }
+
+  setHighlightRanges(ranges: HighlightRanges) {
+    this._highlightRanges = ranges;
+    this._overlayLayer.invalidate();
+    this._overlayLayer.refresh();
   }
 
   _computeHasFocus() {
@@ -791,3 +814,8 @@ function getDPR() {
   }
   return window.devicePixelRatio;
 }
+
+export type HighlightRanges = {
+  range: TextRange;
+  color: string;
+}[];

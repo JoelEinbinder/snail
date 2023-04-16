@@ -1,7 +1,7 @@
 import {Emitter} from './emitter';
 import { isSelectionCollapsed, Loc, Model, TextRange } from './model';
 import { Highlighter } from './highlighter';
-import { Renderer } from './renderer';
+import { Renderer, HighlightRanges } from './renderer';
 import { CommandManager } from './commands';
 import { Input } from './input';
 import { SelectionManger } from './selections';
@@ -101,6 +101,10 @@ export class Editor extends Emitter<EditorEvents> {
   setModeOptions(options: any) {
     this._highlighter.setModeOptions(options);
   }
+
+  setHighlightRanges(highlightRanges: HighlightRanges) {
+    this._renderer.setHighlightRanges(highlightRanges);
+  }
 }
 
 type EditorEvents = {
@@ -131,3 +135,4 @@ export type EditorOptions = {
 }
 
 export type { TextRange } from './model';
+export type { HighlightRanges } from './renderer';

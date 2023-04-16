@@ -2,6 +2,7 @@ import { host } from "./host";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { LogItem } from "./LogView";
 import './progressBlock.css';
+import type { FindParams } from "./Find";
 
 export class ProgressBlock implements LogItem {
   willResizeEvent = new JoelEvent<void>(undefined);
@@ -14,6 +15,8 @@ export class ProgressBlock implements LogItem {
     this._element.classList.add('progress-block');
     this._progress.max = 1;
     this._element.append(this._leftText, this._progress, this._rightText);
+  }
+  setFind(params: FindParams): void {
   }
   async serializeForTest() {
     return (this._element.isConnected && this._element.classList.contains('visible')) ? {
