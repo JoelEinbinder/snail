@@ -441,9 +441,11 @@ export class IFrameBlock implements LogItem {
     this._cleanupAsyncWorkIfNeeded();
     this._closed = true;
     this._webContentView.didClose();
-    if (this._isFullscreen)
+    if (this._isFullscreen) {
       this.setIsFullscreen(false);
-
+      if (this._lastHeight === 0)
+        this._webContentView.element.remove();
+    }
   }
 
   debugginInfo() {
