@@ -11,6 +11,7 @@
   padding: 4px;
   border-top: none;
   border-right: none;
+  z-index: 10;
 }
 
 .find > input {
