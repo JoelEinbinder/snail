@@ -537,6 +537,8 @@ export class Renderer extends Emitter<{
   setHighlightRanges(ranges: HighlightRanges) {
     this._highlightRanges = ranges;
     this._overlayLayer.invalidate();
+    if (!this.element.isConnected)
+      return;
     this._overlayLayer.refresh();
   }
 
