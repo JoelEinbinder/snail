@@ -64,9 +64,9 @@ function RPC(transport, reciever) {
    * @param {boolean} isNotify
    */
   function send(method, params, isNotify) {
-    const id = isNotify ? null : ++lastId;
+    const id = isNotify ? undefined : ++lastId;
     transport.send({id, method, params});
-    if (id === null)
+    if (id === undefined)
       return;
     return new Promise(x => {
       callbacks.set(id, value => {

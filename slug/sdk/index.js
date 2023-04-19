@@ -20,7 +20,7 @@ class Transport {
     process.stdout.write(`\x1b\x1aP${this._secretKey}\x00`);
   }
   send(data) {
-    send(data, /* dontCache */ 'id' in data);
+    send(data, /* dontCache */ data.id !== undefined);
   }
 
   /**
