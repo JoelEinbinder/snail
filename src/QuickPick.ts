@@ -2,6 +2,7 @@ import './quickPick.css'
 import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_match_patch';
 import { availableActions, registerGlobalAction, Action } from './actions';
 import { type ParsedShortcut, shortcutParser } from './shortcutParser';
+import { rootBlock } from './GridPane';
 export let activePick: QuickPick | undefined;
 const isMac = navigator['userAgentData']?.platform === 'macOS';
 class QuickPick {
@@ -62,6 +63,8 @@ class QuickPick {
       this._element.close();
     this._element.remove();
     activePick = undefined;
+    if (document.activeElement === document.body)
+      rootBlock.block?.focus();
   }
 
   _render() {

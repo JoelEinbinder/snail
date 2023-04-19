@@ -200,6 +200,11 @@ const rpc = RPC(transport, {
     }, 0);
   },
 });
+window.addEventListener('focus', () => {
+  if (document.activeElement !== document.body)
+    return;
+  editor?.focus();
+});
 while (true)
   transport.onmessage!(await d4.waitForMessage<any>());
 } catch (e) {
