@@ -72,6 +72,19 @@ function onMessage(data) {
       sendMessageToParent({id, result: {json}});
     } else if (method === 'setActiveShortcuts') {
       activeShortcuts = params;
+    } else if (method === 'requestActions') {
+      const actions = typeof myActions === 'function' ? myActions() : myActions;
+      actionCallbacks = [];
+      for (const action of actions) {
+        const id = actionCallbacks.length;
+        actionCallbacks.push(action.callback);
+        action.callback = id;
+      }
+      sendMessageToParent({id, result: {actions}});
+    } else if (method === 'runAction') {
+      const callback = actionCallbacks[params];
+      if (callback)
+        callback();
     }
   } else {
     const {id, result} = data;
@@ -262,6 +275,12 @@ function setToJSON(toJSON) {
   _toJSON = toJSON;
 }
 
+let myActions;
+let actionCallbacks;
+function setActions(actions) {
+  myActions = actions;
+}
+
 let asyncWorkId = 0;
 function startAsyncWork(name = 'Anonymous Work') {
   const id = ++asyncWorkId;
@@ -288,6 +307,7 @@ window.d4 = {
   attachToCDP,
   openDevTools,
   setToJSON,
+  setActions,
   startAsyncWork,
   expectingUserInput,
 }

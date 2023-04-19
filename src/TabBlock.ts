@@ -1,7 +1,7 @@
 import type { Block, BlockDelegate } from "./GridPane";
 import './tabBlock.css';
 import { showContextMenu } from './contextMenu';
-import { Action } from "./actions";
+import type { Action } from "./actions";
 export class TabBlock implements Block {
   private _tabs: Block[] = [];
   private _activeTab?: Block;
@@ -242,6 +242,10 @@ export class TabBlock implements Block {
       },
       ...(this._activeTab?.actions() || []),
     ].filter(x => x);
+  }
+
+  async asyncActions(): Promise<Action[]> {
+      return this._activeTab?.asyncActions() || [];
   }
 }
 

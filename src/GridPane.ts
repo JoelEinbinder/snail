@@ -28,6 +28,7 @@ export interface Block {
   title(): string;
   close(): void;
   actions(): Action[];
+  asyncActions(): Promise<Action[]>;
 }
 class RootBlock {
   element = document.createElement('div');
@@ -76,6 +77,10 @@ class RootBlock {
 
   actions(): Action[] {
     return this.block?.actions() || [];
+  }
+
+  async asyncActions(): Promise<Action[]> {
+    return this.block?.asyncActions?.() || [];
   }
 
   async serializeForTest() {
@@ -173,6 +178,10 @@ class SplitBlock implements Block {
 
   actions() {
     return this._blocks.find(x => x.hasFocus())?.actions() || [];
+  }
+
+  async asyncActions() {
+    return this._blocks.find(x => x.hasFocus())?.asyncActions?.() || [];
   }
 
   private _dispose() {

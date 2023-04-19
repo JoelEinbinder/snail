@@ -33,10 +33,14 @@ body.vscode-dark .quick-pick {
   padding: 4px 0;
   user-select: none;
   cursor: pointer;
+  overflow: hidden auto;
 }
 .quick-pick-option {
   border-radius: 2px;
   padding: 2px 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .quick-pick-option:hover {

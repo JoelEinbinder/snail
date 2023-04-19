@@ -3,6 +3,7 @@ import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_m
 import { availableActions, registerGlobalAction, Action } from './actions';
 import { type ParsedShortcut, shortcutParser } from './shortcutParser';
 import { rootBlock } from './GridPane';
+import { startAyncWork } from './async';
 export let activePick: QuickPick | undefined;
 const isMac = navigator['userAgentData']?.platform === 'macOS';
 class QuickPick {
@@ -10,12 +11,10 @@ class QuickPick {
   private _input = document.createElement('input');
   private _optionsTray = document.createElement('div');
   private _selected?: HTMLElement;
-  private _actions: Action[];
-  constructor() {
+  constructor(private _actions: Action[]) {
     this._element.classList.add('quick-pick');
     this._optionsTray.classList.add('quick-pick-options');
     this._element.append(this._input, this._optionsTray);
-    this._actions = availableActions();
     document.body.append(this._element);
     activePick = this;
 
@@ -135,8 +134,11 @@ class QuickPick {
 }
 
 registerGlobalAction({
-  callback: () => {
-    new QuickPick();
+  callback: async () => {
+    const done = startAyncWork('loading quickpick');
+    const actions = [...availableActions(), ...await rootBlock.asyncActions()];
+    new QuickPick(actions);
+    done();
   },
   title: 'Show all actions',
   id: 'quick.action',

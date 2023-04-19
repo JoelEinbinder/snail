@@ -119,6 +119,37 @@ d4.setToJSON(() => {
     content: editor.getValue(),
   }
 });
+
+d4.setActions(() => {
+  if (!editor)
+    return [];
+  function monacoShortcutToSnailShortcut(parts) {
+    return parts.map(p => {
+      let key = '';
+      if (p.ctrlKey)
+        key += 'Ctrl+';
+      if (p.shiftKey)
+        key += 'Shift+';
+      if (p.altKey)
+        key += 'Alt+';
+      if (p.metaKey)
+        key += 'Meta+';
+      key += p.keyLabel;
+      return key;
+    }).join(' ');
+  }
+  function monacoActionToSnailAction(action) {
+    const binding = editor._standaloneKeybindingService.lookupKeybinding(action.id);
+    return {
+      title: `Edit: ${action.label}`,
+      id: 'edit.' + action.id,
+      shortcut: binding ? monacoShortcutToSnailShortcut(binding.getParts()) : undefined,
+      callback: () => action.run(),
+    }
+  }
+  return editor.getActions().map(action => monacoActionToSnailAction(action));
+});
+
 let initialDocumentLoad: (() => void) | null = d4.startAsyncWork('initial document load');
 document.title = 'foo';
 const header = new Header();

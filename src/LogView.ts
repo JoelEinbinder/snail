@@ -281,6 +281,17 @@ export class LogView implements Block, ShellDelegate, Findable {
     }];
   }
 
+  async asyncActions(): Promise<Action[]> {
+    const promises: Promise<Action[]>[] = [];
+    for (const item of this._log) {
+      if (!item.aysncActions)
+        continue;
+      promises.push(item.aysncActions());
+    }
+    const actions = await Promise.all(promises);
+    return actions.flat();
+  }
+
   setFind(params: FindParams|null): void {
     this._log.setFind(params);
   }
@@ -296,4 +307,5 @@ export interface LogItem extends Findable {
   waitForLineForTest?(regex: RegExp, signal?: AbortSignal): Promise<void>;
   isFullscreen?(): boolean;
   onScroll?(): void;
+  aysncActions?(): Promise<Action[]>;
 }

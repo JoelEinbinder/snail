@@ -39,4 +39,7 @@ export class Placeholder implements Block {
     actions(): Action[] {
         return [];
     }
+    async asyncActions(): Promise<Action[]> {
+        return [];
+    }
 }

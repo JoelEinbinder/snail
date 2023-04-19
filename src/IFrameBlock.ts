@@ -9,7 +9,7 @@ import { randomUUID } from "./uuid";
 import { expectingUserInput, startAyncWork } from "./async";
 import type { FindParams } from "./Find";
 import { getCurrentShortcutActions } from "./actions";
-
+import type { Action } from './actions';
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
 window.addEventListener('message', event => {
@@ -490,6 +490,22 @@ export class IFrameBlock implements LogItem {
       method: 'setActiveShortcuts',
       params: getCurrentShortcutActions().map(x => x.shortcut),
     });
+  }
+  async aysncActions(): Promise<Action[]> {
+    if (!this._webContentView.element.isConnected)
+      return [];
+    const id = ++this._lastMessageId;
+    const {actions} = await new Promise<any>(resolve => {
+      this._messageCallbacks.set(id, resolve);
+      this._webContentView.postMessage({id, method: 'requestActions'});
+    });
+    for (const action of actions) {
+      const callbackId = action.callback;
+      action.callback = () => {
+        this._webContentView.postMessage({method: 'runAction', params: callbackId});
+      };
+    }
+    return actions;
   }
 }
 
