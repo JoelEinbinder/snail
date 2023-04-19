@@ -73,7 +73,7 @@ function onMessage(data) {
     } else if (method === 'setActiveShortcuts') {
       activeShortcuts = params;
     } else if (method === 'requestActions') {
-      const actions = typeof myActions === 'function' ? myActions() : myActions;
+      const actions = (typeof myActions === 'function' ? myActions() : myActions) || [];
       actionCallbacks = [];
       for (const action of actions) {
         const id = actionCallbacks.length;
