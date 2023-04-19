@@ -5,9 +5,14 @@
 .log-view-scroller {
   overflow: hidden auto;
   padding: 4px;
-  position: absolute;
-  inset: 0;
+  flex: 1;
 }
+
+/* scrollbars under the iframe can mess with things. turn it off if we have one */
+.log-view-scroller:has(.fullscreen)::-webkit-scrollbar {
+  display: none;
+}
+
 .fullscreen-element {
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);

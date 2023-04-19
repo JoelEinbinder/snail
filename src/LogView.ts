@@ -60,7 +60,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     this._element.style.display = 'none';
   }
   show(): void {
-    this._element.style.display = 'block';
+    this._element.style.removeProperty('display');
   }
   title(): string {
     return this._titleThrottle.value + this._suffixThrottle.value;
