@@ -2,7 +2,7 @@ import './quickPick.css'
 import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_match_patch';
 import { availableActions, registerGlobalAction, Action } from './actions';
 import { type ParsedShortcut, shortcutParser } from './shortcutParser';
-let activePick: QuickPick | undefined;
+export let activePick: QuickPick | undefined;
 const isMac = navigator['userAgentData']?.platform === 'macOS';
 class QuickPick {
   private _element = document.createElement('dialog');
@@ -47,6 +47,8 @@ class QuickPick {
         this._selectElement(prev as HTMLElement);
       } else if (event.code === 'Enter') {
         this._selected?.click();
+      } else if (event.code === 'Escape') {
+        this.dispose();
       } else {
         return;
       }
@@ -120,6 +122,13 @@ class QuickPick {
     this._selected?.classList.add('selected');
     this._selected?.scrollIntoView();
   }
+
+  serializeForTest() {
+    return {
+      type: 'quick-pick',
+      value: this._input.value,
+    }
+  }
 }
 
 registerGlobalAction({
@@ -131,16 +140,16 @@ registerGlobalAction({
   shortcut: 'Shift+CmdOrCtrl+P',
 });
 
-declare var module: any;
-if (module.hot) {
-  if (module.hot.data?.activePick && !activePick)
-    new QuickPick();
-  module.hot.dispose(data => {
-    data.activePick = activePick;
-    activePick?.dispose();
-  });
-  module.hot.accept();
-}
+// declare var module: any;
+// if (module.hot) {
+//   if (module.hot.data?.activePick && !activePick)
+//     new QuickPick();
+//   module.hot.dispose(data => {
+//     data.activePick = activePick;
+//     activePick?.dispose();
+//   });
+//   module.hot.accept();
+// }
 function formatShortcut(shortcut: ParsedShortcut) {
   const parts = [];
   if (isMac) {

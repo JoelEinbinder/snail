@@ -1,9 +1,13 @@
 import { currentWaits, waitForAnyWorkToFinish } from './async';
 import { rootBlock } from './GridPane';
 import { LogView } from './LogView';
+import { activePick } from './QuickPick';
+
 class TestingHooks {
   rootBlock = rootBlock;
   async serializeForTest() {
+    if (activePick)
+      return activePick.serializeForTest();
     return rootBlock.serializeForTest();
   }
   async waitForAnyWorkToFinish() {

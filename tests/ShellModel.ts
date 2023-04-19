@@ -24,6 +24,15 @@ export class ShellModel {
     await this.waitForAsyncWorkToFinish();
   }
 
+  async openQuickPick() {
+    await this.page.keyboard.press('Shift+Meta+KeyP');
+    await this.waitForAsyncWorkToFinish();
+  }
+  async closeQuickPick() {
+    await this.page.keyboard.press('Escape');
+    await this.waitForAsyncWorkToFinish();
+  }
+
   async waitForAsyncWorkToFinish() {
     await this.page.evaluate(async () => {
       if (document.readyState !== 'complete')
