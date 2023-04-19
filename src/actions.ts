@@ -27,11 +27,14 @@ export type Action = {
 
 let continuationActions: {shortcut: ParsedShortcut, action: Action}[] = null;
 
-document.addEventListener('keydown', event => {
+export function getCurrentShortcutActions() {
   const isMac = navigator['userAgentData']?.platform === 'macOS';
-  const currentActions = continuationActions ? continuationActions : availableActions().filter(x => x.shortcut).map(x => {
+  return  continuationActions ? continuationActions : availableActions().filter(x => x.shortcut).map(x => {
     return {shortcut: shortcutParser(x.shortcut, isMac), action: x};
-  })
+  });
+}
+document.addEventListener('keydown', event => {
+  const currentActions = getCurrentShortcutActions();
   const matchingActions = currentActions.filter(x => {
     const parsed = x.shortcut;
     if (parsed.ctrlKey !== undefined && parsed.ctrlKey !== event.ctrlKey)

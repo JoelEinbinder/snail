@@ -13,8 +13,8 @@ test('can open quick pick', async ({ shell }) => {
   });
 });
 
-test.skip('can open quick pick when focus is on an iframe', async ({ shell }) => {
-  await shell.runCommand('html "<button>secret text</button>"');
+test('can open quick pick when focus is on an iframe', async ({ shell }) => {
+  await shell.runCommand('html "<button>hi</button>"');
   await shell.activeFrame().click('button');
   await shell.openQuickPick();
   expect(await shell.serialize()).toEqual({

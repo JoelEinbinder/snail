@@ -1,6 +1,8 @@
 /// <reference path="./types.d.ts" />
 const messages = [];
 const callbacks = [];
+/** @type {import('../../src/shortcutParser').ParsedShortcut[]} */
+let activeShortcuts = [];
 let lastMessageId = 0;
 const messasgeCallbacks = new Map();
 async function waitForMessage() {
@@ -68,6 +70,8 @@ function onMessage(data) {
     } else if (method === 'requestJSON') {
       const json = typeof _toJSON === 'function' ? _toJSON() : _toJSON;
       sendMessageToParent({id, result: {json}});
+    } else if (method === 'setActiveShortcuts') {
+      activeShortcuts = params;
     }
   } else {
     const {id, result} = data;
@@ -106,6 +110,31 @@ window.addEventListener('keydown', event => {
 window.addEventListener('keydown', event => {
   if (event.defaultPrevented)
     return;
+  const hasShortcut = activeShortcuts.some(shortcut => {
+    if (shortcut.ctrlKey !== undefined && shortcut.ctrlKey !== event.ctrlKey)
+      return false;
+    if (shortcut.metaKey !== undefined && shortcut.metaKey !== event.metaKey)
+      return false;
+    if (shortcut.altKey !== undefined && shortcut.altKey !== event.altKey)
+      return false;
+    if (shortcut.shiftKey !== undefined && shortcut.shiftKey !== event.shiftKey)
+      return false;
+    if (shortcut.key.toLowerCase() !== event.key.toLowerCase() && shortcut.key !== event.code)
+      return false;
+    return true;
+  });
+  if (hasShortcut) {
+    event.preventDefault();
+    sendMessageToParent({ method: 'keyPressed', params: {
+        key: event.key,
+        code: event.code,
+        shiftKey: event.shiftKey,
+        ctrlKey: event.ctrlKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+    }});
+    return;
+  }
   if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
     const codeMap = {
       'KeyC': '\x03',

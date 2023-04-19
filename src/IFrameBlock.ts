@@ -8,6 +8,7 @@ import { cdpManager, DebuggingInfo } from './CDPManager';
 import { randomUUID } from "./uuid";
 import { expectingUserInput, startAyncWork } from "./async";
 import type { FindParams } from "./Find";
+import { getCurrentShortcutActions } from "./actions";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -210,6 +211,9 @@ export class IFrameBlock implements LogItem {
   private _finishWorks = new Map<number, () => void>();
   private _resolveUserInputs = new Map<number, () => void>();
   private _lastHeight = 0;
+  // When the window blurs, our iframe or browserview might have focus.
+  // Update the shortcuts to make sure they come back to us from the web content.
+  private _onWindowBlur = () => this._updateShortcuts();
   constructor(
     data: string,
     delegate: IFrameBlockDelegate,
@@ -217,10 +221,12 @@ export class IFrameBlock implements LogItem {
     this._resetReadyPromise();
     // TODO reset ready promise and wait for new signal on refresh
     font.on(this._onFontChanged);
+    window.addEventListener('blur', this._onWindowBlur);
     const didDraw = delegate.antiFlicker.expectToDraw(500);
     const handler = data => {
       if (data === 'ready') {
         this._readyCallback();
+        this._updateShortcuts();
         return;
       }
       if (!data.method && data.id)
@@ -399,6 +405,7 @@ export class IFrameBlock implements LogItem {
   dispose(): void {
     this._webContentView.dispose();
     font.off(this._onFontChanged);
+    window.removeEventListener('blur', this._onWindowBlur);
     this._detachCDPIfNeeded();
     this._cleanupAsyncWorkIfNeeded();
   }
@@ -476,6 +483,13 @@ export class IFrameBlock implements LogItem {
 
   isFullscreen(): boolean {
     return this._isFullscreen;
+  }
+
+  _updateShortcuts() {
+    this._webContentView.postMessage({
+      method: 'setActiveShortcuts',
+      params: getCurrentShortcutActions().map(x => x.shortcut),
+    });
   }
 }
 
