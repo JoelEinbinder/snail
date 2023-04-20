@@ -4,6 +4,7 @@ import { availableActions, registerGlobalAction, Action } from './actions';
 import { type ParsedShortcut, shortcutParser } from './shortcutParser';
 import { rootBlock } from './GridPane';
 import { startAyncWork } from './async';
+import { setBrowserViewsHidden } from './BrowserView';
 export let activePick: QuickPick | undefined;
 const isMac = navigator['userAgentData']?.platform === 'macOS';
 class QuickPick {
@@ -11,12 +12,14 @@ class QuickPick {
   private _input = document.createElement('input');
   private _optionsTray = document.createElement('div');
   private _selected?: HTMLElement;
+  private _doFocus = () => this._input.focus();
   constructor(private _actions: Action[]) {
     this._element.classList.add('quick-pick');
     this._optionsTray.classList.add('quick-pick-options');
     this._element.append(this._input, this._optionsTray);
     document.body.append(this._element);
     activePick = this;
+    setBrowserViewsHidden(true);
 
     this._render();
     this._element.showModal();
@@ -35,6 +38,7 @@ class QuickPick {
     this._input.addEventListener('input', () => {
       this._render();
     });
+    window.addEventListener('focus', this._doFocus);
     this._input.focus();
     this._input.addEventListener('keydown', event => {
       if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
@@ -62,6 +66,8 @@ class QuickPick {
       this._element.close();
     this._element.remove();
     activePick = undefined;
+    window.removeEventListener('focus', this._doFocus);
+    setBrowserViewsHidden(false);
     if (document.activeElement === document.body)
       rootBlock.block?.focus();
   }

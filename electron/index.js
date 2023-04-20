@@ -327,6 +327,18 @@ const overrides = {
   refreshBrowserView({uuid}, client, sender) {
     browserViews.get(sender)?.get(uuid)?.webContents.reloadIgnoringCache();
   },
+  hideBrowserView({uuid}, client, sender) {
+    const window = BrowserWindow.fromWebContents(sender);
+    const view = browserViews.get(sender)?.get(uuid);
+    const focused = view.webContents.isFocused();
+    window.removeBrowserView(browserViews.get(sender)?.get(uuid));
+    if (focused)
+      window.focus();
+  },
+  showBrowserView({uuid}, client, sender) {
+    const window = BrowserWindow.fromWebContents(sender);
+    window.addBrowserView(browserViews.get(sender)?.get(uuid));
+  },
   attachToCDP({browserViewUUID}, client, sender) {
     const webContents = browserViewUUID ? browserViews.get(sender)?.get(browserViewUUID)?.webContents : sender;
     if (!webContents)

@@ -33,6 +33,9 @@ export interface ShellHost {
   destroyBrowserView(params: { uuid: string }): void;
   focusBrowserView(params: { uuid: string }): void;
   createBrowserView(uuid: string): void;
+  hideBrowserView(params: { uuid: string }): void;
+  showBrowserView(params: { uuid: string }): void;
+
   close(params: {}): void;
   positionPanel(params: { top: number, bottom: number, x: number}): void;
   closeAllPopups(params: {}): void;
