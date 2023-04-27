@@ -1,7 +1,8 @@
-import type { TargetManager, ChromiumSession } from './TargetManager';
+import type { TargetManager, ChromiumSession } from '../TargetManager';
 import './elements.css';
-import { Tree, TreeItem, handleKeyEventForTreeItem, selectTreeItem } from './ui/Tree';
-import { Protocol } from '../src/protocol';
+import { Tree, TreeItem, handleKeyEventForTreeItem, selectTreeItem } from '../ui/Tree';
+import type { Protocol } from '../../../src/protocol';
+import { ChromiumDOM, DOM, RemoteNode } from './ChromiumDOM';
 
 export class Elements {
   element = document.createElement('div');
@@ -13,7 +14,7 @@ export class Elements {
         let sessionManager: ElementsSessionManager;
         target.addListener({
           sessionUpdated: session => {
-            sessionManager = new ElementsSessionManager(session, {
+            sessionManager = new ElementsSessionManager(new ChromiumDOM(session), {
               showFrameNode: node => {
                 if (node.parent === this._tree)
                   return;
@@ -44,40 +45,23 @@ export class Elements {
   focus() {
     this._tree.focus();
   }
+
+  toJSON() {
+    return {
+      type: 'Elements',
+      tree: this._tree.children.map(x => (x as NodeView).toStringForTest()).join('\n'),
+    };
+  }
 }
 
 interface ElementsSessionManagerDelegate {
-  showFrameNode(node: RemoteNode): void;
-  hideFrameNode(node: RemoteNode): void;
+  showFrameNode(node: NodeView): void;
+  hideFrameNode(node: NodeView): void;
 }
 
 class ElementsSessionManager {
-  private _nodes = new Map<number, RemoteNode>();
-  private _frameIdToNodeID = new Map<string|undefined, number>();
-  private _nodeIdToFrameID = new Map<number, string|undefined>();
-  private _framesToShow = new Set<string|undefined>();
-  private _contentDocumentIdToFrameId = new Map<number, string|undefined>();
-  constructor(private _session: ChromiumSession, private _delegate: ElementsSessionManagerDelegate) {
-    this._session.send('DOM.enable', {});
-    this._session.send('Overlay.enable', {});
-    this._session.on('DOM.setChildNodes', (event) => {
-      const remoteNode = this._nodes.get(event.parentId)!;
-      remoteNode.populateChildren(event.nodes.map(node => this._processNode(remoteNode, node)));
-    });
-    this._session.on('DOM.childNodeCountUpdated', event => {
-      const node = this._nodes.get(event.nodeId)!;
-      node.data.childNodeCount = event.childNodeCount;
-      node._renderTitle();
-    });
-    this._session.on('DOM.childNodeRemoved', event => {
-      this.nodeRemoved(event.nodeId);
-    })
-    this._session.on('DOM.childNodeInserted', (event) => {
-      const parent = this._nodes.get(event.parentNodeId)!;
-      const previous = this._nodes.get(event.previousNodeId);
-      const newNode = this._processNode(parent, event.node);
-      parent.insertChild(newNode, previous);
-    });
+  private _hideFrame = new Map<string|undefined, () => void>();
+  constructor(private _dom: DOM, private _delegate: ElementsSessionManagerDelegate) {
     // this._session.on("DOM.documentUpdated", (x) => console.log('DOM.documentUpdated', JSON.stringify(x)));
     // this._session.on("DOM.inspect", (x) => console.log('DOM.inspect', JSON.stringify(x)));
     // this._session.on("DOM.setChildNodes", (x) => console.log('DOM.setChildNodes', JSON.stringify(x)));
@@ -99,98 +83,66 @@ class ElementsSessionManager {
     // this._session.on("DOM.didFireEvent", (x) => console.log('DOM.didFireEvent', JSON.stringify(x)));
     // this._session.on("DOM.powerEfficientPlaybackStateChanged", (x) => console.log('DOM.powerEfficientPlaybackStateChanged', JSON.stringify(x)));
   }
-
-  nodeRemoved(nodeId: number) {
-    const isContentDocument = this._contentDocumentIdToFrameId.has(nodeId);
-    let frameId: string|undefined;
-    if (isContentDocument) {
-      frameId = this._contentDocumentIdToFrameId.get(nodeId);
-      this._contentDocumentIdToFrameId.delete(nodeId);
-    }
-    const node = this._nodes.get(nodeId);
-    if (!node)
-      return;
-    this._nodes.delete(nodeId);
-    if (isContentDocument) {
-      this._delegate.hideFrameNode(node);
-      this.getFrameNodeId(frameId);
-    }
-    for (const child of node.data.children || [])
-      this.nodeRemoved(child.nodeId);
-  }
-  _processNode(parent: TreeItem|undefined, node: Protocol.DOM.Node) {
-    const remoteNode = new RemoteNode(this._session, parent, node);
-    this._nodes.set(node.nodeId, remoteNode);
-    if (node.children)
-      remoteNode.populateChildren(node.children.map(node => this._processNode(remoteNode, node)));
-    if (node.contentDocument)
-      remoteNode.populateChildren([node.contentDocument].map(node => this._processNode(remoteNode, node)));  
-    this.maybeShowFrame(node.nodeId);
-    return remoteNode;
-  }
-  showFrame(frameUUID: string|undefined) {
-    this._framesToShow.add(frameUUID);
-    if (!this._frameIdToNodeID.has(frameUUID))
-      this.getFrameNodeId(frameUUID);
-    else {
-      const nodeId = this._frameIdToNodeID.get(frameUUID)!;
-      this.maybeShowFrame(nodeId);
-    }
+  async showFrame(frameUUID: string|undefined) {
+    const frameNodes = new Map<RemoteNode, NodeView>();
+    const unsubscribe = this._dom.documentNodeForFrame(frameUUID, {
+      nodeAdded: node => {
+        const nodeView = new NodeView(node, undefined);
+        frameNodes.set(node, nodeView);
+        this._delegate.showFrameNode(nodeView);
+      },
+      nodeRemoved: node => {
+        const nodeView = frameNodes.get(node);
+        this._delegate.showFrameNode(nodeView);
+        frameNodes.delete(node);
+      },
+    });
+    this._hideFrame.set(frameUUID, () => {
+      this._hideFrame.delete(frameUUID);
+      for (const nodeView of frameNodes.values())
+        this._delegate.hideFrameNode(nodeView);
+      frameNodes.clear();
+      unsubscribe();
+    });
   }
   hideFrame(frameUUID: string|undefined) {
-    this._framesToShow.delete(frameUUID);
-    const nodeId = this._frameIdToNodeID.get(frameUUID);
-    if (!nodeId)
-      return;
-    const node = this._nodes.get(nodeId);
-    const contentDocumentId = node?.data.contentDocument?.nodeId;
-    if (!contentDocumentId)
-      return;
-    this._contentDocumentIdToFrameId.delete(contentDocumentId);
-    const contentDocument = this._nodes.get(contentDocumentId);
-    if (!contentDocument)
-      return;
-    this._delegate.hideFrameNode(contentDocument);
+    this._hideFrame.get(frameUUID)?.();
+    // this._framesToShow.delete(frameUUID);
+    // const nodeId = this._frameIdToNodeID.get(frameUUID);
+    // if (!nodeId)
+    //   return;
+    // const node = this._nodes.get(nodeId);
+    // const contentDocumentId = node?.data.contentDocument?.nodeId;
+    // if (!contentDocumentId)
+    //   return;
+    // this._contentDocumentIdToFrameId.delete(contentDocumentId);
+    // const contentDocument = this._nodes.get(contentDocumentId);
+    // if (!contentDocument)
+    //   return;
+    // this._delegate.hideFrameNode(contentDocument);
   }
-  async getFrameNodeId(frameUUID: string|undefined) {
-    const rootId = await this.getDocument();
-    const {nodeId} = await this._session.send('DOM.querySelector', {
-      nodeId: rootId,
-      selector: `iframe[name="${frameUUID}"]`,
-    });
-    if (!nodeId)
-      return; // could not find frame id. Maybe the log was cleared while querying.
-    this._frameIdToNodeID.set(frameUUID, nodeId);
-    this._nodeIdToFrameID.set(nodeId, frameUUID);
-    this.maybeShowFrame(nodeId);
-    return nodeId;
-  }
-  async maybeShowFrame(nodeId: number) {
-    const uuid = this._nodeIdToFrameID.get(nodeId);
-    if (!uuid)
-      return;
-    if (!this._framesToShow.has(uuid))
-      return;
-    const node = this._nodes.get(nodeId);
-    const contentDocumentId = node?.data.contentDocument?.nodeId;
-    if (!contentDocumentId)
-      return;
-    this._contentDocumentIdToFrameId.set(contentDocumentId, uuid);
-    const contentDocument = this._nodes.get(contentDocumentId);
-    if (!contentDocument)
-      return;
-    this._delegate.showFrameNode(contentDocument);
-  }
-  async getDocument() {
-    const { root } = await this._session.send('DOM.getDocument', {
-    });
-    this._frameIdToNodeID.set(undefined, root.nodeId);
-    this._processNode(undefined, root);
-    return root.nodeId;
+  // async maybeShowFrame(nodeId: number) {
+  //   const uuid = this._nodeIdToFrameID.get(nodeId);
+  //   if (!uuid)
+  //     return;
+  //   if (!this._framesToShow.has(uuid))
+  //     return;
+  //   const node = this._nodes.get(nodeId);
+  //   const contentDocumentId = node?.data.contentDocument?.nodeId;
+  //   if (!contentDocumentId)
+  //     return;
+  //   this._contentDocumentIdToFrameId.set(contentDocumentId, uuid);
+  //   const contentDocument = this._nodes.get(contentDocumentId);
+  //   if (!contentDocument)
+  //     return;
+  //   this._delegate.showFrameNode(contentDocument);
+  // }
+  toJSON() {
+    return {};
   }
 }
 
-class RemoteNode implements TreeItem {
+class NodeView implements TreeItem {
   element = document.createElement('div');
   private _collapsed = true;
   children: TreeItem[] = [];
@@ -203,9 +155,8 @@ class RemoteNode implements TreeItem {
     return this._parent;
   }
   constructor(
-    private _client: ChromiumSession,
-    parent: TreeItem|undefined,
-    public data: Protocol.DOM.Node) {
+    private _node: RemoteNode,
+    parent: TreeItem|undefined) {
     this._titleElement.tabIndex = -1;
     this.element.classList.add('node');
     this._childContainer.classList.add('children');
@@ -214,6 +165,13 @@ class RemoteNode implements TreeItem {
     this.element.append(this._titleElement, this._childContainer);
     this.parent = parent;
     this._renderTitle();
+    this._node.updated.on(() => {
+      if (!this.parent)
+        console.log('updated', this._node.data.childNodeCount);
+      if (this._shouldExpandByDefault() && this.collapsed)
+        this.expand();
+      this._renderTitle();
+    });
     this._titleElement.addEventListener('keydown', event => {
       if (event.target !== this._titleElement)
         return;
@@ -223,8 +181,36 @@ class RemoteNode implements TreeItem {
       selectTreeItem(this);
     });
     this._titleElement.addEventListener('mouseenter', event => {
-      highlightManager.highlight(this._client, this.data.nodeId);
+      this._node.highlight();
     });
+    this._node.addListener({
+      childNodesSet: () => {
+        // TODO set
+        this.populateChildren(this._node.children());
+      },
+      childNodeInserted: event => {
+        // TODO inserted
+      },
+      childNodeRemoved: event => {
+        // TODO removed
+        console.log('todo child  node removed');
+      },
+    });
+    if (this._shouldExpandByDefault())
+      this.expand();
+  }
+
+  private _shouldExpandByDefault() {
+    if (!this.collapsible)
+      return false;
+    // if the parent is the tree, we are the document and should expand
+    if (!this.parent || !this.parent.parent)
+      return true;
+    if (this._node.data.nodeName === 'HTML')
+      return true;
+    if (this._node.data.nodeName === 'BODY')
+      return true;
+    return false;
   }
   get depth() {
     let depth = 0;
@@ -242,23 +228,23 @@ class RemoteNode implements TreeItem {
   }
   _updateDepth() {
     this.element.style.setProperty('--depth', String(this.depth));
-    for (const child of this.children as (RemoteNode|EndTag)[])
+    for (const child of this.children as (NodeView|EndTag)[])
       child._updateDepth();
   }
   _renderTitle() {
     this.element.classList.toggle('collapsible', this.collapsible);
     this._titleElement.textContent = '';
-    if (this.data.nodeType === Node.TEXT_NODE) {
-      this._titleElement.textContent = this.data.nodeValue;
+    if (this._node.data.nodeType === Node.TEXT_NODE) {
+      this._titleElement.textContent = this._node.data.nodeValue;
       return;
     }
-    if (this.data.nodeType === Node.ELEMENT_NODE) {
-      const tagName = this.data.nodeName.toLowerCase();
+    if (this._node.data.nodeType === Node.ELEMENT_NODE) {
+      const tagName = this._node.data.nodeName.toLowerCase();
       const attributes: { name: string, value: string }[] = [];
-      for (let i = 0; i < (this.data.attributes || []).length; i += 2) {
+      for (let i = 0; i < (this._node.data.attributes || []).length; i += 2) {
         attributes.push({
-          name: this.data.attributes![i],
-          value: this.data.attributes![i + 1],
+          name: this._node.data.attributes![i],
+          value: this._node.data.attributes![i + 1],
         });
       }
       const attributeFragment = document.createDocumentFragment();
@@ -267,7 +253,7 @@ class RemoteNode implements TreeItem {
       this._titleElement.textContent = '';
       if (this._displayChildrenInline) {
         this._titleElement.append(wrapAsTag(`<${tagName}`), attributeFragment, wrapAsTag('>'));
-        for (const child of this.data.children || [])
+        for (const child of this._node.data.children || [])
           this._titleElement.append(child.nodeValue);
         this._titleElement.append(wrapAsTag(`</${tagName}>`));
       } else if (!this.collapsible) {
@@ -281,16 +267,16 @@ class RemoteNode implements TreeItem {
       }
       return;
     }
-    if (this.data.nodeType === Node.DOCUMENT_NODE) {
-      this._titleElement.textContent = `${this.data.nodeName.toLowerCase()}`;
+    if (this._node.data.nodeType === Node.DOCUMENT_NODE) {
+      this._titleElement.textContent = `${this._node.data.nodeName.toLowerCase()}`;
       return;
     }
-    if (this.data.nodeType === Node.DOCUMENT_TYPE_NODE) {
+    if (this._node.data.nodeType === Node.DOCUMENT_TYPE_NODE) {
       this._titleElement.textContent = '';
-      this._titleElement.append(wrapAsDocType(`<!DOCTYPE ${this.data.nodeName}>`));
+      this._titleElement.append(wrapAsDocType(`<!DOCTYPE ${this._node.data.nodeName}>`));
       return;
     }
-    this._titleElement.textContent = `${this.data.nodeName.toLowerCase()}`;
+    this._titleElement.textContent = `${this._node.data.nodeName.toLowerCase()}`;
   }
   focus(): void {
     this._titleElement.focus();
@@ -302,21 +288,17 @@ class RemoteNode implements TreeItem {
     this._titleElement.classList.toggle('selected', isSelected);
     this._titleElement.tabIndex = isSelected ? 0 : -1;
     if (isSelected)
-      highlightManager.highlight(this._client, this.data.nodeId);
+      this._node.highlight();
   }
   expand(): void {
     this.element.classList.toggle('collapsed', false);
     this._collapsed = false;
     this._renderTitle();
-    if (!this._populated) {
-      this._client.send('DOM.requestChildNodes', {
-        nodeId: this.data.nodeId,
-      });
-    }
+    if (!this._populated)
+      this._node.requestChildNodes();
   }
   populateChildren(children: RemoteNode[]) {
     this._populated = true;
-    this.data.children = children.map(x => x.data);
     if (children.length === 1 && children.every(child => {
       return child.data.nodeType === Node.TEXT_NODE && !child.data.nodeValue.includes('\n');
     })) {
@@ -328,15 +310,15 @@ class RemoteNode implements TreeItem {
       return;
     }
 
-    this.children = [...children];
-    if (this.data.nodeType === Node.ELEMENT_NODE)
+    this.children = [...children].map(c => new NodeView(c, this));
+    if (this._node.data.nodeType === Node.ELEMENT_NODE)
       this.children.push(new EndTag(this));
     this._childContainer.textContent = '';
 
     for (const child of this.children)
       this._childContainer.append(child.element);
   }
-  insertChild(child: RemoteNode, previous?: RemoteNode) {
+  insertChild(child: NodeView, previous?: NodeView) {
     if (!this._populated)
       return;
     const index = previous ? this.children.indexOf(previous) : -1;
@@ -355,7 +337,19 @@ class RemoteNode implements TreeItem {
     return this._collapsed || !this._populated;
   }
   get collapsible() {
-    return (!!this.data.childNodeCount || !!this.data.contentDocument) && !this._displayChildrenInline;
+    return (!!this._node.data.childNodeCount || !!this._node.data.contentDocument) && !this._displayChildrenInline;
+  }
+
+  nodeName() {
+    return this._node.data.nodeName;
+  }
+
+  toStringForTest() {
+    const text = this._titleElement.textContent;
+    if (this.collapsed)
+      return text;
+    const children = this.children.map(child => (child as NodeView).toStringForTest().split('\n').map(x => '  ' + x)).flat().join('\n');
+    return text + '\n' + children;
   }
 }
 
@@ -368,7 +362,7 @@ class EndTag implements TreeItem {
   }
 
   private _titleElement = document.createElement('div');
-  constructor(public parent: RemoteNode) {
+  constructor(public parent: NodeView) {
     this._titleElement.tabIndex = -1;
     this.element.classList.add('node');
     this._titleElement.classList.add('title');
@@ -386,7 +380,7 @@ class EndTag implements TreeItem {
   }
   _renderTitle() {
     this._titleElement.textContent = '';
-    this._titleElement.append(wrapAsTag(`</${this.parent.data.nodeName.toLowerCase()}>`));
+    this._titleElement.append(wrapAsTag(`</${this.parent.nodeName().toLowerCase()}>`));
   }
   _updateDepth() {
     this.element.style.setProperty('--depth', String(this.depth - 1));
@@ -416,6 +410,9 @@ class EndTag implements TreeItem {
   }
   collapse(): void {
     throw new Error('Method not implemented.');
+  }
+  toStringForTest() {
+    return this._titleElement.textContent;
   }
 }
 
@@ -450,34 +447,3 @@ function wrapAsString(content: string) {
   element.textContent = content;
   return element;
 }
-
-class HighlightManager {
-  private _highlightedSession?: ChromiumSession;
-  private _highlightTimeout?: any;
-  closeHighlight() {
-    if (!this._highlightedSession)
-      return;
-    this._highlightedSession.send('DOM.hideHighlight', {});
-    if (this._highlightTimeout)
-      clearTimeout(this._highlightTimeout);
-    delete this._highlightTimeout;
-    delete this._highlightedSession;
-  }
-  highlight(session: ChromiumSession, nodeId: number) {
-    this.closeHighlight();
-    this._highlightedSession = session;
-    session.send('DOM.highlightNode', {
-      nodeId,
-      highlightConfig: {
-        contentColor: { r: 0, g: 255, b: 0, a: 0.5 },
-        marginColor: { r: 0, g: 255, b: 0, a: 0.5 },
-        paddingColor: { r: 0, g: 255, b: 0, a: 0.5 },
-        borderColor: { r: 0, g: 255, b: 0, a: 0.5 },
-        showInfo: true,
-      }
-    });
-    this._highlightTimeout = setTimeout(() => this.closeHighlight(), 5000);
-  }
-}
-
-const highlightManager = new HighlightManager();

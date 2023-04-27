@@ -1,5 +1,5 @@
 /// <reference path="../iframe/types.d.ts" />
-import {RPC} from '../protocol/RPC-ts';
+import { RPC, type Transport} from '../protocol/RPC-ts';
 import type { Protocol } from '../../src/protocol';
 
 interface TargetListener {
@@ -81,10 +81,7 @@ export class Target {
   _listener: (message: any) => void;
   private _listeners = new Set<ChromiumTargetListener>();
   constructor(send: (message: any) => void) {
-    const transport: {
-      send(message: {method: string, params: any, id: number}): void;
-      onmessage?: (message: {method: string, params: any}|{id: number, result: any}) => void;
-    } = {
+    const transport: Transport = {
       send,
     };
     this.rpc = new RPC(transport);

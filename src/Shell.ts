@@ -2,7 +2,7 @@ import 'xterm/css/xterm.css';
 import { addHistory, updateHistory } from './history';
 import { makePromptEditor } from './PromptEditor';
 import { JoelEvent } from '../slug/cdp-ui/JoelEvent';
-import type { LogItem } from './LogView';
+import type { LogItem } from './LogItem';
 import { CommandBlock, CommandPrefix, computePrettyDirName } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { ExtraClientMethods, JSConnection } from './JSConnection';

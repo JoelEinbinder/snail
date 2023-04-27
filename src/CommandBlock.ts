@@ -1,6 +1,6 @@
 import { Editor, type HighlightRanges, type TextRange } from "../slug/editor/js/editor";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
-import { LogItem } from "./LogView";
+import { LogItem } from "./LogItem";
 import { setSelection } from "./selection";
 import type { Shell } from './Shell';
 import { FindParams } from "./Find";

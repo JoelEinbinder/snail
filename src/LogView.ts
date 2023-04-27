@@ -1,4 +1,3 @@
-import type { JoelEvent } from '../slug/cdp-ui/JoelEvent';
 import type { Shell, ShellDelegate } from './Shell';
 import './shell.css';
 import './logView.css';
@@ -6,7 +5,8 @@ import { Block, BlockDelegate } from './GridPane';
 import { startAyncWork } from './async';
 import { makeLazyProxy } from './LazyProxy';
 import { UIThrottle } from './UIThrottle';
-import { Action } from './actions';
+import type { Action } from './actions';
+import type { LogItem } from './LogItem';
 import { Find, Findable, FindableList, type FindParams } from './Find';
 
 export class LogView implements Block, ShellDelegate, Findable {
@@ -296,16 +296,4 @@ export class LogView implements Block, ShellDelegate, Findable {
     this._log.setFind(params);
   }
 
-}
-
-export interface LogItem extends Findable {
-  willResizeEvent: JoelEvent<void>;
-  render(): Element;
-  focus(): void;
-  dispose(): void;
-  serializeForTest(): Promise<any>;
-  waitForLineForTest?(regex: RegExp, signal?: AbortSignal): Promise<void>;
-  isFullscreen?(): boolean;
-  onScroll?(): void;
-  aysncActions?(): Promise<Action[]>;
 }

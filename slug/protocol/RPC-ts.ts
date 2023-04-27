@@ -74,7 +74,7 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
   }
 }
 
-interface Transport {
+export interface Transport {
   send(message: {method: string, params: any, id: number}): void;
   onmessage?: (message: {method: string, params: any}|{id: number, result: any}) => void;
 }

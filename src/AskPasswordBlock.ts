@@ -1,5 +1,5 @@
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
-import type { LogItem } from "./LogView";
+import type { LogItem } from "./LogItem";
 import './AskPasswordBlock.css';
 import { expectingUserInput } from './async';
 import type { FindParams } from "./Find";

@@ -132,6 +132,11 @@ export class Console {
     this._scroller.scrollTop = this._scroller.scrollHeight - this._scroller.offsetHeight - scrollBottom;
   }
 
+  toJSON() {
+    return {
+      type: 'Console',
+    };
+  }
 }
 
 function measureChar() {

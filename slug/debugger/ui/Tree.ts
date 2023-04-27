@@ -85,6 +85,10 @@ export class Tree implements TreeItem {
         else
             this.element.focus();
     }
+
+    toJSON() {
+        return this._items;
+    }
 }
 
 export function handleKeyEventForTreeItem(event: KeyboardEvent, item: TreeItem) {

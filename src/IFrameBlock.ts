@@ -3,7 +3,7 @@ import { font, fontString } from "./font";
 import { host } from "./host";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { JSConnection } from "./JSConnection";
-import { LogItem } from "./LogView";
+import { LogItem } from "./LogItem";
 import { cdpManager, DebuggingInfo } from './CDPManager';
 import { expectingUserInput, startAyncWork } from "./async";
 import type { FindParams } from "./Find";

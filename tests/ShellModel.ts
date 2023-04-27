@@ -1,16 +1,12 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 // for declare global side effect
 import type { } from '../src/TestingHooks';
-export class ShellModel {
-  private constructor(public page: Page) {
-  }
-  static async create(page: Page) {
-    const shell = new ShellModel(page);
-    await shell.waitForAsyncWorkToFinish();
-    return shell;
+
+class Split {
+  constructor(public page: Page, protected _block: Locator) {
   }
   async runCommand(command: string) {
-    const textarea = this.page.locator('textarea:enabled');
+    const textarea = this._block.locator('textarea:enabled');
     await textarea.fill(command, {
       force: true,
     });
@@ -19,7 +15,7 @@ export class ShellModel {
   }
 
   async typeInPrompt(text: string) {
-    const textarea = this.page.locator('textarea:enabled');
+    const textarea = this._block.locator('textarea:enabled');
     await textarea.type(text);
     await this.waitForAsyncWorkToFinish();
   }
@@ -46,10 +42,23 @@ export class ShellModel {
     return this.serialize();
   }
   async serialize() {
-    return await this.page.evaluate(() => {
+    return await this.page.evaluate(async blockElement => {
       const hooks = window.testingHooks;
-      return hooks.serializeForTest();
-    });
+      const serialized = await hooks.serializeForTest();
+      const path: number[] = [];
+      let cursor = blockElement!;
+      while (cursor !== hooks.rootBlock.element) {
+        if (!cursor.parentElement)
+          throw new Error('Block not found in root');
+        path.push([...cursor.parentElement.children].indexOf(cursor));
+        cursor = cursor.parentElement;
+      }
+      let selected = serialized;
+      for (const index of path.reverse()) {
+        selected = serialized.children[index];
+      }
+      return selected;
+    }, await this._block.elementHandle());
   }
 
   async currentWaits() {
@@ -78,5 +87,21 @@ export class ShellModel {
 
   activeFrame() {
     return this.page.frames()[this.page.frames().length - 1];
+  }
+}
+export class ShellModel extends Split {
+  private constructor(public page: Page) {
+    super(page, page.locator('.root-block'));
+  }
+  static async create(page: Page) {
+    const shell = new ShellModel(page);
+    await shell.waitForAsyncWorkToFinish();
+    return shell;
+  }
+  async splitHorizontally() {
+    await this.page.keyboard.press('Control+A');
+    await this.page.keyboard.press('Control+"');
+    await this.waitForAsyncWorkToFinish();
+    return [new Split(this.page, this._block.locator('> div:not(.divider)').nth(0)), new Split(this.page, this._block.locator('> div:not(.divider)').nth(1))];
   }
 }

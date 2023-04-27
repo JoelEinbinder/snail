@@ -1,6 +1,6 @@
 import { JoelEvent } from "./JoelEvent";
 import type { JSConnection } from "../../src/JSConnection";
-import type { LogItem } from "../../src/LogView";
+import type { LogItem } from "../../src/LogItem";
 import type { Protocol } from "../../src/protocol";
 import './remoteObject.css';
 import type { FindParams } from "../../src/Find";

@@ -1,13 +1,16 @@
 /// <reference path="../iframe/types.d.ts" />
 import {TargetManager} from './TargetManager';
 import { Console } from './Console';
-import { Elements } from './Elements';
+import { Elements } from './elements/Elements';
 import { Tabs } from './ui/Tabs';
 import { Sources } from './Sources';
 const targetManager = new TargetManager();
+let foundFirstTarget = d4.startAsyncWork('first target');
 targetManager.addListener({
   targetAdded(target) {
     console.log('targetAdded', target);
+    foundFirstTarget?.();
+    foundFirstTarget = null;
     target.addListener({
       sessionUpdated(session) {
         console.log('session', session);
@@ -68,3 +71,9 @@ tabs.appendTab({
   },
 }, 'Sources');
 document.body.appendChild(tabs.element);
+
+d4.setIsFullscreen(true);
+d4.expectingUserInput('debug');
+d4.setToJSON(() => {
+  return [sourcesPanel, consolePanel, elementsPanel].find(panel => panel.element.isConnected).toJSON();
+});

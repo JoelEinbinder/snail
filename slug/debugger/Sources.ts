@@ -1,7 +1,7 @@
 import './sources.css';
 import { Split } from './ui/Split';
 import type { TargetManager, ChromiumSession } from './TargetManager';
-import { Protocol } from '../src/protocol';
+import { Protocol } from '../../src/protocol';
 import { FileTree } from './FileTree';
 import { parseSourceMap } from './sourcemap';
 export class Sources {
@@ -106,6 +106,12 @@ export class Sources {
 
   focus() {
     this._fileTree.focus();
+  }
+
+  toJSON() {
+    return {
+      type: 'Sources',
+    };
   }
 }
 

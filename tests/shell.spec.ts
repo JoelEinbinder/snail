@@ -270,3 +270,26 @@ test('can clear with keyboard shortcut', async ({ shell }) => {
     },
   });
 });
+
+test('split', async ({ shell }) => {
+  await shell.runCommand('echo hello');
+  const [left, right] = await shell.splitHorizontally();
+  await right.runCommand('echo goodbye');
+  expect(await shell.serialize()).toEqual({
+    type: 'split-horizontal',
+    ratio: 0.5,
+    children: [{
+      log: [
+        '> echo hello',
+        'hello'
+      ],
+      prompt: { value: '' },
+    }, {
+      log: [
+        '> echo goodbye',
+        'goodbye'
+      ],
+      prompt: { value: '' },
+    }],
+  });
+});

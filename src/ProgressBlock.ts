@@ -1,6 +1,6 @@
 import { host } from "./host";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
-import type { LogItem } from "./LogView";
+import type { LogItem } from "./LogItem";
 import './progressBlock.css';
 import type { FindParams } from "./Find";
 
