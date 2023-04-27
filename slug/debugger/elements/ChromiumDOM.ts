@@ -69,7 +69,7 @@ export class ChromiumDOM implements DOM {
       const newNode = this._ensureNode(event.node);
       const previousNode = this._nodes.get(event.previousNodeId);
     });
-    this._client.on('DOM.documentUpdated', async event => {
+    this._client.on('DOM.documentUpdated', () => {
       this._documentUpdated();
     });
     this._documentUpdated();
@@ -80,8 +80,10 @@ export class ChromiumDOM implements DOM {
       nodeId: documentNode.data.nodeId,
       selector: `iframe[name="${frameUUID}"]`,
     });
-    if (!nodeId)
-      return; // could not find frame id. Maybe the log was cleared while querying.
+    if (!nodeId) {
+      console.warn('could not find frame id. Maybe the log was cleared while querying');
+      return;
+    }
     this._frameIdToNodeID.set(frameUUID, nodeId);
     this._nodeIdToFrameID.set(nodeId, frameUUID);
     // this.maybeShowFrame(nodeId);
@@ -89,14 +91,16 @@ export class ChromiumDOM implements DOM {
     return nodeId;
   }
   async _documentUpdated() {
+    this._nodes.clear();
+    this._nodeIdToFrameID.clear();
     const { root } = await this._client.send('DOM.getDocument', {
     });
     this._frameIdToNodeID.set(undefined, root.nodeId);
     this._rootNode.setData(root, node => this._ensureNode(node));
+    this._rootNode.requestChildNodes();
     return this._rootNode;
   }
   documentNodeForFrame(frameUUID: string, listener: NodeListener): () => void {
-    console.log('documentNodeForFrame', frameUUID);
     if (!this._frameNodeListeners.has(frameUUID))
       this._frameNodeListeners.set(frameUUID, new Set());
     this._frameNodeListeners.get(frameUUID)!.add(listener);
@@ -128,23 +132,14 @@ export class ChromiumDOM implements DOM {
       return;
     if (!this._frameNodeListeners.has(uuid))
       return;
-    if (node.data.frameId && !node.data.contentDocument) {
+    if (node.data.frameId) {
       this._attachToOopif(node);
       return;
     }
-    const contentDocumentId = node.data.contentDocument?.nodeId;
-    if (!contentDocumentId)
-      return;
-    // this._contentDocumentIdToFrameId.set(contentDocumentId, uuid);
-    const contentDocument = this._nodes.get(contentDocumentId);
-    if (!contentDocument)
-      return;
-    for (const listener of this._frameNodeListeners.get(uuid)!)
-      listener.nodeAdded(contentDocument);
+    // TODO do something for non-oopif frames
   }
 
   private async _attachToOopif(frameNode: ChromiumRemoteNode) {
-    console.log('_attachToOopif', frameNode.data.frameId)
     const uuid = this._nodeIdToFrameID.get(frameNode.data.nodeId)!;
     const {sessionId} = await this._client.send('Target.attachToTarget', {
       targetId: frameNode.data.frameId,
@@ -199,6 +194,7 @@ class ChromiumRemoteNode implements RemoteNode {
   }
 
   setData(data: Protocol.DOM.Node, nodeMaker: (node: Protocol.DOM.Node) => ChromiumRemoteNode) {
+    this._children = null;
     this.data = data;
     this.updated.dispatch();
     if (this.data.children)
@@ -208,6 +204,8 @@ class ChromiumRemoteNode implements RemoteNode {
   }
 
   async requestChildNodes() {
+    if (this._children)
+      return;
     const done = d4.startAsyncWork('requestChildNodes');
     this._session.send('DOM.requestChildNodes', {
       nodeId: this.data.nodeId,

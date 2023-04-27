@@ -86,7 +86,6 @@ export class Console {
               throw new Error('todo, deal with top level connections here');
             pendingFrames.delete(frameUUID);
             await this._processingFramesPromise;
-            console.log('delete active frame', uuidToFrameId.get(frameUUID));
             const frameId = uuidToFrameId.get(frameUUID);
             if (frameId) {
               this._activeFrameIds.delete(frameId);

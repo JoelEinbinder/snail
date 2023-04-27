@@ -146,7 +146,6 @@ class NodeView implements TreeItem {
   element = document.createElement('div');
   private _collapsed = true;
   children: TreeItem[] = [];
-  private _populated = false;
   private _titleElement = document.createElement('div');
   private _childContainer = document.createElement('div');
   private _displayChildrenInline = false;
@@ -294,11 +293,9 @@ class NodeView implements TreeItem {
     this.element.classList.toggle('collapsed', false);
     this._collapsed = false;
     this._renderTitle();
-    if (!this._populated)
-      this._node.requestChildNodes();
+    this._node.requestChildNodes();
   }
   populateChildren(children: RemoteNode[]) {
-    this._populated = true;
     if (children.length === 1 && children.every(child => {
       return child.data.nodeType === Node.TEXT_NODE && !child.data.nodeValue.includes('\n');
     })) {
@@ -319,7 +316,7 @@ class NodeView implements TreeItem {
       this._childContainer.append(child.element);
   }
   insertChild(child: NodeView, previous?: NodeView) {
-    if (!this._populated)
+    if (!this._node.children())
       return;
     const index = previous ? this.children.indexOf(previous) : -1;
     this.children.splice(index + 1, 0, child);
@@ -334,7 +331,7 @@ class NodeView implements TreeItem {
     this._renderTitle();
   }
   get collapsed() {
-    return this._collapsed || !this._populated;
+    return this._collapsed || !this._node.children();
   }
   get collapsible() {
     return (!!this._node.data.childNodeCount || !!this._node.data.contentDocument) && !this._displayChildrenInline;
