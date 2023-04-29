@@ -266,7 +266,7 @@ test('split', async ({ shell }) => {
   });
 });
 
-test.skip('clicking below the prompt should focus prompt', async ({ shell }) => {
+test('clicking below the prompt should focus prompt', async ({ shell }) => {
   await shell.page.mouse.click(100, 100);
   await shell.page.keyboard.type('echo can you see this?');
   expect((await shell.serialize()).prompt.value).toEqual('echo can you see this?');

@@ -16,7 +16,6 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _prompt?: LogItem;
   private _lockingScroll = false;
   private _undoFullscreen: () => void = null;
-  private _removeListeners: () => void;
   private _log = new FindableList<LogItem>();
   private _activeItem: LogItem | null = null;
   private _activeItemListeners = new Set<() => void>();
@@ -31,21 +30,18 @@ export class LogView implements Block, ShellDelegate, Findable {
   blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._fullscreenElement.classList.add('fullscreen-element');
-    this._removeListeners = () => {
-      document.body.removeEventListener('keydown', keyDownListener, false);
-    };  
-    const keyDownListener = (event: KeyboardEvent) => {
+    this._element.addEventListener('keydown', (event: KeyboardEvent) => {
       if (!this._prompt)
         return;
       if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey)
         return;
-      const element = event.target as HTMLElement;
+      const element = document.activeElement as HTMLElement;
       if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT' || element.isContentEditable)
         return;
       if (event.defaultPrevented)
         return;
       this._prompt.focus();
-    };
+    }, false);
     this._container.appendChild(this._element);
     this._scroller.classList.add('log-view-scroller');
     this._element.classList.add('log-view');
@@ -122,7 +118,6 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
 
   shellClosed() {
-    this._removeListeners();
     this.blockDelegate.close();
     this._element.remove();
   }

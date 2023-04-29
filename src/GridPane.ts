@@ -42,6 +42,17 @@ class RootBlock {
       this.block?.updatePosition(this.element.getBoundingClientRect().toJSON());
     });
     document.body.append(this.element);
+    document.body.addEventListener('keydown', event => {
+      console.log('rootblock keydown', event.target);
+      if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey)
+        return;
+      const element = document.activeElement as HTMLElement;
+      if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT' || element.isContentEditable)
+        return;
+      if (event.defaultPrevented)
+        return;
+      this.block?.focus();
+    });
   }
   setBlock(block: Block) {
     const hadFocus = this.block?.hasFocus();
