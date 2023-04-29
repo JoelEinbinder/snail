@@ -97,7 +97,6 @@ export class History {
   }
   async searchHistory(current: string, prefix: string, start: number, direction: -1|1): Promise<'end'|'current'|{command: string, historyIndex: number}> {
     const searchLocalHistory = () => {
-      console.log('search local history', start, direction, this._localHistory.length);
       let startIndex = start + direction - 1;
       if (direction === -1)
         startIndex = Math.min(startIndex, this._localHistory.length - 1);

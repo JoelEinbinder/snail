@@ -277,7 +277,7 @@ test.skip('should be able to switch tabs wtih cmd+number', async({ shellFactory 
   const shell2 = await shellFactory();
 });
 
-test.skip('opening a new tab should have the same working directory', async ({ shellFactory }) => {
+test('opening a new tab should have the same working directory', async ({ shellFactory }) => {
   const shell1 = await shellFactory();
   await shell1.runCommand('cd /');
   const shell2 = await shellFactory();

@@ -105,6 +105,7 @@ export class Shell {
       socketListeners.delete(socketId);
       socketCloseListeners.delete(socketId);
     });
+    const cwd = this._connections[0] ? this._connections[0].cwd : localStorage.getItem('cwd') || '';
     const core: ConnectionCore = {
       send(message) {
         host.notify({method: 'sendMessageToWebSocket', params: {socketId, message}});
@@ -127,7 +128,7 @@ export class Shell {
           params: {
             // cwd comes from the top level because it has to match the host.
             // TODO get this directly form the host?
-            cwd: this._connections[0] ? this._connections[0].cwd : localStorage.getItem('cwd') || '',
+            cwd,
             socketId,
           }
         });
