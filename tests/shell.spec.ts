@@ -265,3 +265,28 @@ test('split', async ({ shell }) => {
     }],
   });
 });
+
+test.skip('clicking below the prompt should focus prompt', async ({ shell }) => {
+  await shell.page.mouse.click(100, 100);
+  await shell.page.keyboard.type('echo can you see this?');
+  expect((await shell.serialize()).prompt.value).toEqual('echo can you see this?');
+});
+
+test.skip('should be able to switch tabs wtih cmd+number', async({ shellFactory }) => {
+  const shell1 = await shellFactory();
+  const shell2 = await shellFactory();
+});
+
+test.skip('opening a new tab should have the same working directory', async ({ shellFactory }) => {
+  const shell1 = await shellFactory();
+  await shell1.runCommand('cd /');
+  const shell2 = await shellFactory();
+  await shell2.runCommand('pwd');
+  expect(await shell2.serialize()).toEqual({
+    log: [
+      '> pwd',
+      '/',
+    ],
+    prompt: { value: '' },
+  });
+});
