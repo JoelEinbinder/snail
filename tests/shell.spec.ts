@@ -105,34 +105,6 @@ test('can ssh2 into docker', async ({ shellInDocker }) => {
   });
 });
 
-test.skip('ssh2 delete this test', async ({ shell }) => {
-  await shell.runCommand('ssh2 joeleinbinder@localhost');
-  expect(await shell.serialize()).toEqual({
-    log: [ '> ssh2 joeleinbinder@localhost' ],
-    prompt: { value: '' }
-  });
-  await shell.runCommand('whoami && pwd');
-  expect(await shell.serialize()).toEqual({
-    log: [
-      '> ssh2 joeleinbinder@localhost',
-      '> whoami && pwd',
-      'joeleinbinder\n/Users/joeleinbinder'
-    ],
-    prompt: { value: '' }
-  });
-  await shell.runCommand(`cd /Users/joeleinbinder/gap-year/tests/docker/; ls`);
-  expect(await shell.serialize()).toEqual({
-    log: [
-      '> ssh2 joeleinbinder@localhost',
-      '> whoami && pwd',
-      'joeleinbinder\n/Users/joeleinbinder',
-      '> cd /Users/joeleinbinder/gap-year/tests/docker/; ls',
-      [ 'Dockerfile' ],
-    ],
-    prompt: { value: '' }
-  });
-});
-
 test('startup', async ({ shell }) => {
   expect(await shell.serialize()).toEqual({
     log: [],
