@@ -58,6 +58,20 @@ if (useTabs) {
         shortcut: 'CmdOrCtrl+W',
         callback: () => logView.blockDelegate?.close(),
     });
+    for (let i = 0; i < 9; i++) {
+        const digit = String(i + 1);
+        registerGlobalAction({
+            id: 'switch-to-tab-' + digit,
+            title: 'Switch to tab ' + digit,
+            shortcut: 'CmdOrCtrl+' + digit,
+            callback: () => {
+                host.notify({
+                    method: 'switchToTab',
+                    params: { tabNumber: i },
+                });
+            }
+        });
+    }
 }
 await connetionPromise;
 done();

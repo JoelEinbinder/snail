@@ -406,6 +406,10 @@ const overrides = {
     url.search = '?entry';
     return 'snail://' + url.href.substring('http://'.length);;
   },
+
+  switchToTab({tabNumber}, client, sender) {
+    BrowserWindow.getAllWindows()[BrowserWindow.getAllWindows().length - tabNumber - 1]?.focus();
+  }
 };
 
 const clients = new WeakMap();

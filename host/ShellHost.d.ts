@@ -46,4 +46,5 @@ export interface ShellHost {
 
   setMaximized(params: {maximized: boolean}): void;
   minimize(): void;
+  switchToTab(params: {tabNumber: number}): void;
 }
