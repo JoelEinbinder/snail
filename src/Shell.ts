@@ -1,5 +1,5 @@
 import 'xterm/css/xterm.css';
-import { addHistory, updateHistory } from './history';
+import { History } from './history';
 import { makePromptEditor } from './PromptEditor';
 import { JoelEvent } from '../slug/cdp-ui/JoelEvent';
 import type { LogItem } from './LogItem';
@@ -73,6 +73,7 @@ export class Shell {
   private _connectionNameElement = document.createElement('div');
   private _connectionIsDaemon = new WeakMap<JSConnection, boolean>();
   private _refreshActiveIframe?: () => void;
+  private _history = new History();
   //@ts-ignore
   private _uuid: string = randomUUID();
   private _setupUnlock: () => void;
@@ -561,7 +562,7 @@ export class Shell {
     this._delegate.setTitle(command);
     const unlockPrompt = this._lockPrompt('runCommand');
     this._activeItem.dispatch(commandBlock);
-    const historyId = await this._addToHistory(command);
+    const updateHistory = await this._addToHistory(command);
     const jsCode = await this._transformCode(command);
     let error;
     const connection = this.connection;
@@ -585,10 +586,10 @@ export class Shell {
     }
     this._clearCache();
     // TODO update the prompt line here?
-    if (historyId) {
-      await updateHistory(historyId, 'end', Date.now());
+    if (updateHistory) {
+      await updateHistory('end', Date.now());
       // TODO need a new history output format that considers terminal and js
-      await updateHistory(historyId, 'output', JSON.stringify(result));
+      await updateHistory('output', JSON.stringify(result));
     }
     const {exceptionDetails} = result;
     if (exceptionDetails) {
@@ -872,8 +873,8 @@ export class Shell {
   async _addToHistory(command: string) {
     if (!command)
       return;
-    const [historyId, pwd, home, revName, dirtyState, hash] = await Promise.all([
-      addHistory(command),
+    const [updateHistory, pwd, home, revName, dirtyState, hash] = await Promise.all([
+      this._history.addHistory(command),
       this.cachedEvaluation('pwd'),
       this.cachedEvaluation('echo $HOME'),
       this.cachedEvaluation('__git_ref_name'),
@@ -881,14 +882,18 @@ export class Shell {
       this.cachedEvaluation('GIT_OPTIONAL_LOCKS=0 git rev-parse HEAD'),
     ]);
     await Promise.all([
-      updateHistory(historyId, 'home', home),
-      updateHistory(historyId, 'pwd', pwd),
-      updateHistory(historyId, 'git_branch', revName),
-      updateHistory(historyId, 'git_dirty', dirtyState),
-      updateHistory(historyId, 'git_hash', hash),
-      this.sshAddress && updateHistory(historyId, 'hostname', this.sshAddress),
+      updateHistory('home', home),
+      updateHistory('pwd', pwd),
+      updateHistory('git_branch', revName),
+      updateHistory('git_dirty', dirtyState),
+      updateHistory('git_hash', hash),
+      this.sshAddress && updateHistory('hostname', this.sshAddress),
     ]);
-    return historyId;
+    return updateHistory;
+  }
+
+  searchHistory(current: string, prefix: string, start: number, direction: number) {
+    return this._history.searchHistory(current, prefix, start, direction);
   }
 
   addItem(item: LogItem) {

@@ -215,6 +215,8 @@ const browserViewContentsToParentContents = new WeakMap();
 const overrides = {
   ...handler,
   async beep() {
+    if (headless)
+      return;
     require('electron').shell.beep();
   },
   async closeAllPopups() {

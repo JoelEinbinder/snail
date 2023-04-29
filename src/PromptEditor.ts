@@ -8,7 +8,6 @@ import './completions/npx';
 import './completions/npm';
 import './completions/apt';
 import './completions/docker';
-import { searchHistory } from "./history";
 import { setSelection } from "./selection";
 import { host } from "./host";
 import { makeHistoryCompleter } from "./historyCompleter";
@@ -64,7 +63,7 @@ export function makePromptEditor(shell: Shell) {
     if (historyIndex === 0)
       currentValue = editor.value;
     const prefix = editor.text({start: {column: 0, line: 0,}, end: editor.selections[0].start});
-    const result = await searchHistory(editor.value, prefix, historyIndex, direction);
+    const result = await shell.searchHistory(editor.value, prefix, historyIndex, direction);
     if (result === 'current' && editor.value !== currentValue) {
       editor.value = currentValue;
       historyIndex = 0;

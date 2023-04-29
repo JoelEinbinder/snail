@@ -20,6 +20,18 @@ class Split {
     await this.waitForAsyncWorkToFinish();
   }
 
+  async historyUp() {
+    const textarea = this._block.locator('textarea:enabled');
+    await textarea.press('ArrowUp');
+    await this.waitForAsyncWorkToFinish();
+  }
+
+  async historyDown() {
+    const textarea = this._block.locator('textarea:enabled');
+    await textarea.press('ArrowDown');
+    await this.waitForAsyncWorkToFinish();
+  }
+
   async openQuickPick() {
     await this.page.keyboard.press('Shift+Meta+KeyP');
     await this.waitForAsyncWorkToFinish();
