@@ -892,7 +892,7 @@ export class Shell {
     return updateHistory;
   }
 
-  searchHistory(current: string, prefix: string, start: number, direction: number) {
+  searchHistory(current: string, prefix: string, start: number, direction: 1|-1) {
     return this._history.searchHistory(current, prefix, start, direction);
   }
 
