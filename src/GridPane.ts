@@ -43,7 +43,6 @@ class RootBlock {
     });
     document.body.append(this.element);
     document.body.addEventListener('keydown', event => {
-      console.log('rootblock keydown', event.target);
       if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey)
         return;
       const element = document.activeElement as HTMLElement;
