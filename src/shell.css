@@ -19,7 +19,7 @@
 .command {
   display: flex;
   /* there is terrible wiggling on linux if this is not an integer */
-  height: 20px;
+  min-height: 20px;
 }
 
 .command.canceled {

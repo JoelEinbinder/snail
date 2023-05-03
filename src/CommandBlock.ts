@@ -41,6 +41,9 @@ export class CommandBlock implements LogItem {
     const observer = new ResizeObserver(() => {
       this._editor.layout();
     });
+    this._editor.on('might-resize', () => {
+      this.willResizeEvent.dispatch()
+    });
     observer.observe(this._editor.element);
 
   }
