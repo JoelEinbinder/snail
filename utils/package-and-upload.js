@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const package = require('electron-packager');
+const {spawn} = require('child_process');
 const toCopy = [
   'esout',
   'electron',
@@ -26,11 +27,7 @@ for (const dir of toCopy)
 const json = require('../package.json');
 delete json.devDependencies;
 fs.writeFileSync(path.join(destination, 'package.json'), JSON.stringify(json, null, 2));
-execSync('npm install --no-package-lock', {
-  stdio: 'inherit',
-  cwd: destination,
-});
-  
+
 /** @type {import('electron-packager').Options} */
 const options = {
   dir: destination,
@@ -39,29 +36,32 @@ const options = {
   appVersion: require('../package.json').version,
   out: dist,
 };
-if (os.platform() === 'darwin') {
+(async () => {
   for (const arch of ['x64', 'arm64']) {
-    package({
-      ...options,
-      platform: 'darwin',
-      arch,
-      osxSign: true,
-      icon: path.join(__dirname, '..', 'icon', 'icon.icns'),
-    }).then(folders => {
-      uploadPackage(folders[0], {platform: 'darwin', arch});
-    });
+    const tarName = `snail-${'linux'}-${arch}-${require('../package.json').version}.tar.gz`;
+    const outputFilePath = path.join(dist, tarName);
+    await packageInDocker('linux', arch === 'x64' ? 'amd64' : arch, outputFilePath);
+    console.warn('uploading', tarName);
+    execSync(`scp ${outputFilePath} joel@joel.tools:joeltools/snail/`);
   }
-}
-
-for (const arch of ['x64', 'arm64']) {
-  package({
-    ...options,
-    platform: 'linux',
-    arch,
-  }).then(folders => {
-    uploadPackage(folders[0], {platform: 'linux', arch});
-  });;
-}
+  if (os.platform() === 'darwin') {
+    execSync('npm install --no-package-lock', {
+      stdio: 'inherit',
+      cwd: destination,
+    });  
+    for (const arch of ['x64', 'arm64']) {
+      package({
+        ...options,
+        platform: 'darwin',
+        arch,
+        osxSign: true,
+        icon: path.join(__dirname, '..', 'icon', 'icon.icns'),
+      }).then(folders => {
+        uploadPackage(folders[0], {platform: 'darwin', arch});
+      });
+    }
+  }
+})();
 
 function uploadPackage(folderPath, {platform, arch}) {
   const tarName = `snail-${platform}-${arch}-${require('../package.json').version}.tar.gz`;
@@ -69,4 +69,23 @@ function uploadPackage(folderPath, {platform, arch}) {
   const outputFilePath = path.join(dist, tarName);
   execSync(`tar czf ${outputFilePath} ${path.relative(dist, folderPath)}`, { cwd: dist });
   execSync(`scp ${outputFilePath} joel@joel.tools:joeltools/snail/`);
+}
+
+/**
+ * @param {"linux"|"darwin"} platform
+ * @param {"arm64"|"amd64"} arch
+ * @param {string} outputFilePath
+ */
+async function packageInDocker(platform, arch, outputFilePath) {
+  execSync(`docker build --tag=snail:package-${platform}-${arch} --platform=${platform}/${arch} --file=${path.join(__dirname, 'package.dockerfile')} .`, {
+    cwd: path.join(__dirname, '.'),
+    stdio: 'inherit',
+  });
+  const docker = spawn('docker', ['run', `--platform=${platform}/${arch}`, '--rm', `snail:package-${platform}-${arch}`], {
+    stdio: 'pipe',
+    cwd: path.join(__dirname, '.'),
+  });
+  docker.stdout.pipe(fs.createWriteStream(outputFilePath));
+  docker.stderr.pipe(process.stderr);
+  await new Promise(x => docker.on('exit', x));
 }

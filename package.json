@@ -1,5 +1,5 @@
 {
-  "name": "gap-year",
+  "name": "snail",
   "private": true,
   "scripts": {
     "start": "SNAIL_DEBUG_URL=http://localhost/gap-year/ electron .",
