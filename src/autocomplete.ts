@@ -1,4 +1,4 @@
-import { Editor } from "../slug/editor/js/editor";
+import type { Editor } from "../slug/editor/js/editor";
 import { startAyncWork } from "./async";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import { SuggestBox } from "./SuggestBox";
@@ -12,7 +12,7 @@ export class Autocomplete {
     private _activationCode = null;
     public suggestionChanged = new JoelEvent<void>(undefined);
     constructor(private _editor: Editor, private _defaultCompleter: Completer, private _activationChars: string, private _specialCompleters: { [key: string]: Completer }) {
-        this._editor.on('selection-changed', event => {
+        this._editor.on('selection-changed', () => {
             this._abortController?.abort();
             delete this._abortController;
             if (this._editor.selections.length !== 1 || this._editor.somethingSelected() || this._editor.selections[0].start.column === 0)
@@ -107,7 +107,7 @@ export class Autocomplete {
         }
         const loc = this._editor.replaceRange(suggestion.text, rangeToReplace);
         this.hideSuggestBox();
-        this._editor.selections = [{ start: loc, end: loc }];
+        this._editor.setSelection({ start: loc, end: loc});
         if (prefix === suggestion.text)
             return false;
         if (this._activationChars.includes(suggestion.text[suggestion.text.length - 1]))

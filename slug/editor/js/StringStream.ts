@@ -7,11 +7,11 @@
 
 // Fed to the mode parsers, provides helper functions to make
 // parsers more succinct.
+const LINE_START = 0;
 export class StringStream {
   pos = 0;
   start = 0;
-  lineStart = 0;
-  lastColumnPos = 0;
+  private lastColumnPos = 0;
   lastColumnValue = 0;
   constructor(
     public string: string,
@@ -23,7 +23,7 @@ export class StringStream {
   }
 
   sol() {
-    return this.pos == this.lineStart;
+    return this.pos == LINE_START;
   }
   peek() {
     return this.string.charAt(this.pos) || undefined;
@@ -78,12 +78,12 @@ export class StringStream {
       this.lastColumnValue = countColumn(this.string, this.start, this.tabSize, this.lastColumnPos, this.lastColumnValue);
       this.lastColumnPos = this.start;
     }
-    return this.lastColumnValue - (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0);
+    return this.lastColumnValue - (LINE_START ? countColumn(this.string, LINE_START, this.tabSize) : 0);
   }
   indentation() {
     return (
       countColumn(this.string, null, this.tabSize) -
-      (this.lineStart ? countColumn(this.string, this.lineStart, this.tabSize) : 0)
+      (LINE_START ? countColumn(this.string, LINE_START, this.tabSize) : 0)
     );
   }
   match(pattern, consume, caseInsensitive) {
@@ -111,22 +111,6 @@ export class StringStream {
   }
   current() {
     return this.string.slice(this.start, this.pos);
-  }
-  hideFirstChars(n, inner) {
-    this.lineStart += n;
-    try {
-      return inner();
-    } finally {
-      this.lineStart -= n;
-    }
-  }
-  lookAhead(n) {
-    var oracle = this.lineOracle;
-    return oracle && oracle.lookAhead(n);
-  }
-  baseToken() {
-    var oracle = this.lineOracle;
-    return oracle && oracle.baseToken(this.pos);
   }
 }
 

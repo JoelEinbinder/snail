@@ -113,22 +113,6 @@ export class StringStream {
   current() {
     return this.string.slice(this.start, this.pos);
   }
-  hideFirstChars(n, inner) {
-    this.lineStart += n;
-    try {
-      return inner();
-    } finally {
-      this.lineStart -= n;
-    }
-  }
-  lookAhead(n) {
-    var oracle = this.lineOracle;
-    return oracle && oracle.lookAhead(n);
-  }
-  baseToken() {
-    var oracle = this.lineOracle;
-    return oracle && oracle.baseToken(this.pos);
-  }
 }
 
 // Counts the column offset in a string, taking tabs into account.

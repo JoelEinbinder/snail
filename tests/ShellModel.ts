@@ -6,7 +6,7 @@ class Split {
   constructor(public page: Page, protected _block: Locator) {
   }
   async runCommand(command: string) {
-    const textarea = this._block.locator('textarea:enabled');
+    const textarea = this._block.locator('.cm-content[contenteditable="true"]');
     await textarea.fill(command, {
       force: true,
     });
@@ -15,19 +15,19 @@ class Split {
   }
 
   async typeInPrompt(text: string) {
-    const textarea = this._block.locator('textarea:enabled');
+    const textarea = this._block.locator('.cm-content[contenteditable="true"]');
     await textarea.type(text);
     await this.waitForAsyncWorkToFinish();
   }
 
   async historyUp() {
-    const textarea = this._block.locator('textarea:enabled');
+    const textarea = this._block.locator('.cm-content[contenteditable="true"]');
     await textarea.press('ArrowUp');
     await this.waitForAsyncWorkToFinish();
   }
 
   async historyDown() {
-    const textarea = this._block.locator('textarea:enabled');
+    const textarea = this._block.locator('.cm-content[contenteditable="true"]');
     await textarea.press('ArrowDown');
     await this.waitForAsyncWorkToFinish();
   }

@@ -123,14 +123,6 @@ const rpc = RPC(transport, {
       lineNumbers: true,
       padBottom: true,
       backgroundColor: '#000',
-      colors: {
-        cursorColor: '#f4f4f4',
-        foreground: '#f4f4f4',
-        selectionBackground: '#525252',
-        gutterBackground: '#000',
-        gutterBorder: 'transparent',
-        gutterForeground: '#666',
-      }  
     });
     window['editorForTest'] = editor;
     updateEditorMode(true);
