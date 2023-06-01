@@ -32,6 +32,10 @@ const builtins = {
                 changes.env = {};
             changes.env.PWD = process.cwd();
         } catch (e) {
+            if (e?.code === 'ENOENT') {
+                stderr.write(`cd: No such file or directory '${e.dest}'\n`);
+                return 1;
+            }
             stderr.write(e.message + '\n');
             return 1;
         }
@@ -479,8 +483,11 @@ function execute(expression, stdout, stderr, stdin) {
                 });
                 const closePromise = new Promise(resolve => {
                     child.on('close', resolve);
-                    child.on('error', err => {
-                        stderr.write(err.message + '\n');
+                    child.on('error', (/** @type {Error & {code?: string, path?: string}} */ err) => {
+                        if (err?.code === 'ENOENT')
+                            stderr.write(`command not found: ${err?.path}\n`);
+                        else
+                            stderr.write(err.message + '\n');
                         resolve(127);
                     });
                 });
