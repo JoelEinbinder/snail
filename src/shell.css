@@ -26,11 +26,17 @@
   filter: grayscale(100%);
 }
 
-.command:not(:first-child),
+.log-item-wrapper:not(:first-child),
 .prompt:not(:first-child) {
   border-top: 1px solid var(--ansi-237);
   margin-top: 4px;
   padding-top: 4px;
+}
+.log-item-wrapper.folded > :not(:first-child) {
+  display: none;
+}
+.log-item-wrapper.folded > :first-child {
+  background-color: rgba(128,128,128,0.6);
 }
 
 .editor {

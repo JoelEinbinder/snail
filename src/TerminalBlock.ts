@@ -7,6 +7,7 @@ import { setSelection } from './selection';
 import { RendererAddon } from "./terminal/RendererAddon";
 import { startAyncWork } from "./async";
 import type { FindParams } from "./Find";
+import { attachMenuItemsToContextMenuEvent } from "./contextMenu";
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
@@ -68,6 +69,12 @@ export class TerminalBlock implements LogItem {
       fontWeightBold: 'normal',
       allowTransparency: true,
       rendererType: 'canvas',
+    });
+    this.element.addEventListener('contextmenu', event => {
+      attachMenuItemsToContextMenuEvent([{
+        title: "Copy selection",
+        callback: () => navigator.clipboard.writeText(this._terminal.getSelection()),
+      }], event);
     });
     this._terminal.open(this.element);
     this._terminal.loadAddon(this._addon);

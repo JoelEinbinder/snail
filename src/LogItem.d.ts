@@ -13,4 +13,5 @@ export interface LogItem extends Findable {
   isFullscreen?(): boolean;
   onScroll?(): void;
   aysncActions?(): Promise<Action[]>;
+  readonly acceptsChildren?: boolean;
 }

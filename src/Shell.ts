@@ -35,7 +35,7 @@ host.onEvent('websocket-closed', ({socketId}) => {
 
 export interface ShellDelegate {
   shellClosed(): void;
-  addItem(item: LogItem): void;
+  addItem(item: LogItem, parent?: LogItem): void;
   removeItem(item: LogItem): void;
   clearAllExcept(item: LogItem): void;
   togglePrompt(showPrompt: boolean): void;
@@ -76,6 +76,7 @@ export class Shell {
   private _history = new History();
   //@ts-ignore
   private _uuid: string = randomUUID();
+  private _activeCommandBlock?: CommandBlock;
   private _setupUnlock: () => void;
   constructor(private _delegate: ShellDelegate) {
     console.time('create shell');
@@ -559,7 +560,7 @@ export class Shell {
     this.addItem(commandBlock);
     if (!command)
       return;
-    
+    this._activeCommandBlock = commandBlock;
     this._delegate.setTitle(command);
     const unlockPrompt = this._lockPrompt('runCommand');
     this._activeItem.dispatch(commandBlock);
@@ -582,6 +583,7 @@ export class Shell {
         cdpManager.removeDebuggingInfoForTarget(this._uuid);
         return;
       }
+      delete this._activeCommandBlock;
       unlockPrompt();
       return;
     }
@@ -623,6 +625,7 @@ export class Shell {
       this._activeItem.dispatch(null);
     unlockPrompt();
     this._addJSBlock(result, connection, commandBlock);
+    delete this._activeCommandBlock;
   }
 
   _addJSBlock(result: Protocol.CommandReturnValues['Runtime.evaluate'], connection: JSConnection, commandBlock?: CommandBlock) {
@@ -898,7 +901,7 @@ export class Shell {
   }
 
   addItem(item: LogItem) {
-    this._delegate.addItem(item);
+    this._delegate.addItem(item, this._activeCommandBlock);
   }
 
   async jsCompletions(prefix: string): Promise<Suggestion[]> {

@@ -8,6 +8,7 @@ import { UIThrottle } from './UIThrottle';
 import type { Action } from './actions';
 import type { LogItem } from './LogItem';
 import { Find, Findable, FindableList, type FindParams } from './Find';
+import { attachMenuItemsToContextMenuEvent } from './contextMenu';
 
 export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
@@ -91,9 +92,49 @@ export class LogView implements Block, ShellDelegate, Findable {
     return this._element.contains(document.activeElement);
   }
 
-  addItem(item: LogItem) {
+  addItem(item: LogItem, parent?: LogItem) {
     this._log.push(item);
-    this._addEntry(item);
+    if (parent && !parent.acceptsChildren)
+      throw new Error('Parent does not accept children');
+    
+    const itemElement = item.render();
+    const element = !item.acceptsChildren ? itemElement : this._wrapItem(itemElement);
+    if (!element)
+      return;
+    this._itemToElement.set(item, element);
+    item.willResizeEvent.on(async () => {
+      this._lockScroll();
+    });
+    this._lockScroll();
+    if (parent) {
+      const parentWrapper = this._itemToElement.get(parent);
+      parentWrapper.appendChild(element);
+    } else {
+      if (this._prompt)
+        this._scroller.insertBefore(element, this._prompt.render());
+      else
+        this._scroller.appendChild(element);
+    }
+    if (item === this._activeItem)
+      item.focus();
+  }
+
+  private _wrapItem(itemElement?: Element): Element {
+    const element = document.createElement('div');
+    element.classList.add('log-item-wrapper');
+    let folded = false;
+    element.addEventListener('contextmenu', event => {
+      attachMenuItemsToContextMenuEvent([{
+        title: folded ? 'Unfold' : 'Fold',
+        callback: () => {
+          folded = !folded;
+          element.classList.toggle('folded', folded);
+        }
+      }], event);
+    }, false);
+    if (itemElement)
+      element.append(itemElement);
+    return element;
   }
 
   removeItem(item: LogItem) {
@@ -163,23 +204,6 @@ export class LogView implements Block, ShellDelegate, Findable {
       this._scroller.classList.remove('inert');
       this._element.classList.remove('fullscreen-entry');
     }
-  }
-
-  _addEntry(logItem: LogItem) {
-    const element = logItem.render();
-    if (!element)
-      return;
-    this._itemToElement.set(logItem, element);
-    logItem.willResizeEvent.on(async () => {
-      this._lockScroll();
-    });
-    this._lockScroll();
-    if (this._prompt)
-      this._scroller.insertBefore(element, this._prompt.render());
-    else
-      this._scroller.appendChild(element);
-    if (logItem === this._activeItem)
-      logItem.focus();
   }
 
   async _lockScroll() {

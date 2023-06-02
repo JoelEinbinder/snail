@@ -31,3 +31,24 @@ export async function showContextMenu(items: MenuItem[]) {
   callbacks.get(id)?.();
   return values.get(id);
 }
+const menuItemsForEvent = new WeakMap<MouseEvent, MenuItem[][]>();
+export function attachMenuItemsToContextMenuEvent(menuItems: MenuItem[], event: MouseEvent) {
+  if (!menuItemsForEvent.has(event))
+    menuItemsForEvent.set(event, []);
+  menuItemsForEvent.get(event).push(menuItems);
+}
+
+document.body.addEventListener('contextmenu', event => {
+  const menuItemGroups = menuItemsForEvent.get(event)?.filter(x => x.length);
+  if (!menuItemGroups?.length)
+    return;
+  const items: MenuItem[] = [];
+  for (const group of menuItemGroups) {
+    let first = !items.length;
+    if (!first)
+      items.push({ });
+    items.push(...group);
+  }
+  event.preventDefault();
+  showContextMenu(items);
+}, false);

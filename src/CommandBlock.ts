@@ -12,6 +12,7 @@ export class CommandBlock implements LogItem {
   private _editor: Editor;
   private _exitCode = document.createElement('div');
   private _commandPrefix?: CommandPrefix;
+  readonly acceptsChildren = true;
   constructor(public command: string,
     private _size: JoelEvent<{rows: number, cols: number}>,
     private _connectionName: string,
