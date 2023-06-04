@@ -8,6 +8,7 @@ import { FindParams } from "./Find";
 export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
   willResizeEvent = new JoelEvent<void>(undefined);
+  toggleFold = new JoelEvent<boolean>(false);
   public wasCanceled = false;
   private _editor: Editor;
   private _exitCode = document.createElement('div');
@@ -84,6 +85,11 @@ export class CommandBlock implements LogItem {
     command.classList.add('command');
     command.classList.toggle('canceled', this.wasCanceled);
     this._commandPrefix = new CommandPrefix(this, this._size);
+    this._commandPrefix.element.addEventListener('click', event => {
+      this.toggleFold.dispatch(!this.toggleFold.current);
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    });
     command.append(this._commandPrefix.element);
     this._commandPrefix.render();
     const editorWrapper = document.createElement('div');

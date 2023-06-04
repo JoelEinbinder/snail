@@ -5,6 +5,7 @@ import type { Action } from './actions';
 
 export interface LogItem extends Findable {
   willResizeEvent: JoelEvent<void>;
+  toggleFold?: JoelEvent<boolean>;
   render(): Element;
   focus(): void;
   dispose(): void;

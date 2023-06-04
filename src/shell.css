@@ -3,6 +3,10 @@
   display: flex;
   flex-direction: row;
 }
+.command > .prefix {
+  cursor: pointer;
+  user-select: none;
+}
 .command > .prefix,
 .editor-line > .prefix {
   white-space: pre;
@@ -35,8 +39,9 @@
 .log-item-wrapper.folded > :not(:first-child) {
   display: none;
 }
-.log-item-wrapper.folded > :first-child {
-  background-color: rgba(128,128,128,0.6);
+.log-item-wrapper.folded > :first-child .prefix {
+  background-color: rgba(128,128,128,0.5);
+  border-radius: 5px;
 }
 
 .editor {

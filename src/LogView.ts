@@ -97,8 +97,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     if (parent && !parent.acceptsChildren)
       throw new Error('Parent does not accept children');
     
-    const itemElement = item.render();
-    const element = !item.acceptsChildren ? itemElement : this._wrapItem(itemElement);
+    const element = !item.acceptsChildren ? item.render() : this._wrapItem(item);
     if (!element)
       return;
     this._itemToElement.set(item, element);
@@ -119,17 +118,20 @@ export class LogView implements Block, ShellDelegate, Findable {
       item.focus();
   }
 
-  private _wrapItem(itemElement?: Element): Element {
+  private _wrapItem(item: LogItem): Element {
+    const itemElement = item.render();
+    const toggleFold = (f) => {
+      folded = f;
+      element.classList.toggle('folded', folded);
+    };
+    item.toggleFold?.on(toggleFold);
     const element = document.createElement('div');
     element.classList.add('log-item-wrapper');
     let folded = false;
     element.addEventListener('contextmenu', event => {
       attachMenuItemsToContextMenuEvent([{
         title: folded ? 'Unfold' : 'Fold',
-        callback: () => {
-          folded = !folded;
-          element.classList.toggle('folded', folded);
-        }
+        callback: () => toggleFold(!folded),
       }], event);
     }, false);
     if (itemElement)
@@ -297,6 +299,24 @@ export class LogView implements Block, ShellDelegate, Findable {
       callback: () => {
         this._find.open(this._element);
       },
+    }, {
+      title: 'Fold all',
+      id: 'log.fold.all',
+      shortcut: 'CmdOrCtrl+K O',
+      callback: () => {
+        this._lockScroll();
+        for (const item of this._log)
+          item?.toggleFold?.dispatch(true);
+      }
+    }, {
+      title: 'Unold all',
+      id: 'log.unfold.all',
+      shortcut: 'CmdOrCtrl+K J',
+      callback: () => {
+        this._lockScroll();
+        for (const item of this._log)
+          item?.toggleFold?.dispatch(false);
+      }
     }];
   }
 
