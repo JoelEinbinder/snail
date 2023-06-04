@@ -3,7 +3,7 @@ declare var d4: {
   setHeight(height: number): void;
   setIsFullscreen(isFullscreen: boolean): void;
   sendInput(input: string): void;
-  createContextMenu(items: import('../../host/ShellHost').MenuItem[]): void;
+  createContextMenu(items: import('../../host/ShellHost').MenuItem[], noDefaultItems?: boolean): void;
   saveItem(key: string, value: any): void;
   loadItem(key: string): Promise<any>;
   getDevicePixelRatio(): Promise<number>;

@@ -10,6 +10,7 @@ import type { FindParams } from "./Find";
 import { getCurrentShortcutActions } from "./actions";
 import type { Action } from './actions';
 import { BrowserView } from "./BrowserView";
+import { attachMenuItemsToContextMenuEvent } from "./contextMenu";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -50,6 +51,7 @@ class IFrameView implements WebContentView {
     this._iframe.allowFullscreen = true;
     this._iframe.style.height = '0';
     this._iframe.name = this._uuid;
+    this._iframe.allow = 'clipboard-write';
     iframeMessageHandler.set(this._iframe, handler);
   }
 
@@ -152,12 +154,30 @@ export class IFrameBlock implements LogItem {
           break;
         }
         case 'contextMenu': {
-          host.sendMessage({method: 'contextMenu', params: data.params}).then(response => {
-            this._webContentView.postMessage({
-              method: 'contextMenuCallback',
-              params: response,
+          const { noDefaultItems, menuItems }: { noDefaultItems?: boolean, menuItems: any[]} = data.params;
+          if (noDefaultItems) {
+            host.sendMessage({method: 'contextMenu', params: data.params}).then(response => {
+              this._webContentView.postMessage({
+                method: 'contextMenuCallback',
+                params: response,
+              });
             });
-          });
+          } else {
+            const event = new MouseEvent('contextmenu', {
+              bubbles: true,
+              cancelable: true,
+            });
+            attachMenuItemsToContextMenuEvent(menuItems.map(item => ({
+              ...item,
+              callback: () => {
+                this._webContentView.postMessage({
+                  method: 'contextMenuCallback',
+                  params: { id: item.callback, data: null },
+                });
+              }
+            })), event);
+            this._webContentView.element.dispatchEvent(event);
+          }
           break;
         }
         case 'chordPressed': {

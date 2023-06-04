@@ -242,6 +242,7 @@ const overrides = {
         } : undefined,
         submenu: item.submenu ? item.submenu.map(convertItem) : undefined,
         checked: item.checked,
+        enabled: item.enabled,
         accelerator: item.accelerator,
         type: item.checked ? 'checkbox' : undefined,
       }
@@ -254,6 +255,11 @@ const overrides = {
   },
   async close(_, client, sender) {
     BrowserWindow.fromWebContents(sender).close();
+  },
+  async captureImage({ rect }, client, sender) {
+    const image = await sender.capturePage(rect, {});
+    const data = image.toDataURL();
+    return { data };
   },
   async minimize(_, client, sender) {
     BrowserWindow.fromWebContents(sender).minimize();

@@ -47,4 +47,6 @@ export interface ShellHost {
   setMaximized(params: {maximized: boolean}): void;
   minimize(): void;
   switchToTab(params: {tabNumber: number}): void;
+
+  captureImage(params: { rect: {x: number, y: number, width: number, height: number} }): { data: string };
 }

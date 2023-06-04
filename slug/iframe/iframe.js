@@ -202,10 +202,11 @@ function serializeMenuItems(menuItems) {
 }
 /**
  * @param {MenuItem[]} menuItems
+ * @param {boolean=} noDefaultItems
  */
-function createContextMenu(descriptor) {
+function createContextMenu(descriptor, noDefaultItems) {
   contextMenuCallbacks.clear();
-  const params =  {menuItems: serializeMenuItems(descriptor)};
+  const params =  {menuItems: serializeMenuItems(descriptor), noDefaultItems};
   sendMessageToParent({method: 'contextMenu', params});
 }
 function sendInput(data) {
