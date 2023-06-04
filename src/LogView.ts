@@ -21,6 +21,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _activeItem: LogItem | null = null;
   private _activeItemListeners = new Set<() => void>();
   private _itemToElement = new WeakMap<LogItem, Element>();
+  private _itemToParent = new WeakMap<LogItem, LogItem>();
   private _suffixThrottle = new UIThrottle('', () => {
     this.blockDelegate?.titleUpdated();
   });
@@ -108,6 +109,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     if (parent) {
       const parentWrapper = this._itemToElement.get(parent);
       parentWrapper.appendChild(element);
+      this._itemToParent.set(item, parent);
     } else {
       if (this._prompt)
         this._scroller.insertBefore(element, this._prompt.render());
@@ -132,6 +134,9 @@ export class LogView implements Block, ShellDelegate, Findable {
       attachMenuItemsToContextMenuEvent([{
         title: folded ? 'Unfold' : 'Fold',
         callback: () => toggleFold(!folded),
+      }, {
+        title: 'Clear command and output',
+        callback: () => this.removeItem(item),
       }], event);
     }, false);
     if (itemElement)
@@ -142,10 +147,17 @@ export class LogView implements Block, ShellDelegate, Findable {
   removeItem(item: LogItem) {
     if (!this._log.removeItem(item))
       return;
+    if (item.acceptsChildren) {
+      for (const child of this._log) {
+        if (this._itemToParent.get(child) === item)
+          this.removeItem(child);
+      }
+    }
     item.dispose();
     this._lockScroll();
     this._itemToElement.get(item)?.remove();
     this._itemToElement.delete(item);
+    this._itemToParent.delete(item);
   }
 
   clearAllExcept(savedItem: LogItem): void {
