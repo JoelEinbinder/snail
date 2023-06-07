@@ -212,8 +212,8 @@ export class Editor extends Emitter<EditorEvents> {
       update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
         this.emit('change', {
           range: {
-            start: this._offsetToLoc(fromB),
-            end: this._offsetToLoc(toB),
+            start: this._offsetToLoc(fromA, update.startState),
+            end: this._offsetToLoc(toA ,update.startState),
           },
           text: inserted.toString(),
         })
