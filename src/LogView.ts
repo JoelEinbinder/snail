@@ -22,6 +22,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _activeItemListeners = new Set<() => void>();
   private _itemToElement = new WeakMap<LogItem, Element>();
   private _itemToParent = new WeakMap<LogItem, LogItem>();
+  private _itemToRetainCount = new WeakMap<LogItem, number>();
   private _suffixThrottle = new UIThrottle('', () => {
     this.blockDelegate?.titleUpdated();
   });
@@ -110,12 +111,14 @@ export class LogView implements Block, ShellDelegate, Findable {
       const parentWrapper = this._itemToElement.get(parent);
       parentWrapper.appendChild(element);
       this._itemToParent.set(item, parent);
+      this._itemToRetainCount.set(parent, this._itemToRetainCount.get(parent) + 1);
     } else {
       if (this._prompt)
         this._scroller.insertBefore(element, this._prompt.render());
       else
         this._scroller.appendChild(element);
     }
+    this._itemToRetainCount.set(item, 1);
     if (item === this._activeItem)
       item.focus();
   }
@@ -136,7 +139,7 @@ export class LogView implements Block, ShellDelegate, Findable {
         callback: () => toggleFold(!folded),
       }, {
         title: 'Clear command and output',
-        callback: () => this.removeItem(item),
+        callback: () => this.removeItem(item, true),
       }], event);
     }, false);
     if (itemElement)
@@ -144,32 +147,48 @@ export class LogView implements Block, ShellDelegate, Findable {
     return element;
   }
 
-  removeItem(item: LogItem) {
+  removeItem(item: LogItem, force = false) {
+    // console.log(item, force);
+    if (!force) {
+      const count = this._itemToRetainCount.get(item) - 1;
+      this._itemToRetainCount.set(item, count);
+      // something needs this item to still exist
+      if (count)
+        return;
+    }
     if (!this._log.removeItem(item))
       return;
     if (item.acceptsChildren) {
       for (const child of this._log) {
         if (this._itemToParent.get(child) === item)
-          this.removeItem(child);
+          this.removeItem(child, true);
       }
+    }
+    const parent = this._itemToParent.get(item);
+    if (parent) {
+      const parentCount = this._itemToRetainCount.get(parent) - 1;
+      this._itemToRetainCount.set(parent, parentCount);
+      if (parentCount === 0)
+        this.removeItem(parent, true);
     }
     item.dispose();
     this._lockScroll();
     this._itemToElement.get(item)?.remove();
     this._itemToElement.delete(item);
     this._itemToParent.delete(item);
+    this._itemToRetainCount.delete(item);
   }
 
   clearAllExcept(savedItem: LogItem): void {
     for (const item of [...this._log]) {
       if (item !== savedItem)
-        this.removeItem(item);
+        this.removeItem(item, false);
     }
   }
 
   clearAll(): void {
     for (const item of [...this._log])
-      this.removeItem(item);
+      this.removeItem(item, true);
   }
 
   shellClosed() {

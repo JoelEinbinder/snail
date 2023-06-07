@@ -223,6 +223,7 @@ test('can clear and still show rest of terminal output', async ({ shell }) => {
   await shell.runCommand('clear && echo hello');
   expect(await shell.serialize()).toEqual({
     log: [
+      '> clear && echo hello', // the command parent must exist, so this doesn't get cleared
       'hello',
     ],
     prompt: {
