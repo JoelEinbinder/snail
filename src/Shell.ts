@@ -607,7 +607,7 @@ export class Shell {
             line: callFrame.lineNumber,
             column: Infinity
           }
-        });
+        }, '#E50000');
       } else {
         commandBlock.addSquiggly({
           start: {
@@ -618,7 +618,7 @@ export class Shell {
             line: exceptionDetails.scriptId ? exceptionDetails.lineNumber : Infinity,
             column: Infinity
           }
-        });
+        }, '#E50000');
       }
     }
     if (this._activeItem.current === commandBlock)
@@ -781,7 +781,7 @@ export class Shell {
           }
         }
         const command = editor.value;
-        editor.setSelection({start: {column: 0, line: 0}, end: {column: 0, line: 0}});
+        editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
         editor.value = '';
         await this.runCommand(command);
       } else if (event.code === 'KeyC' && event.ctrlKey) {
@@ -790,13 +790,13 @@ export class Shell {
         commandBlock.wasCanceled = true;
         this.addItem(commandBlock);
         editor.value = '';
-        editor.setSelection({start: {column: 0, line: 0}, end: {column: 0, line: 0}});
+        editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
 
         event.preventDefault();
         event.stopImmediatePropagation();
       }
       finishWork();
-    }, true);
+    }, false);
     editorLine.appendChild(editorWrapper);
     const {editor, autocomplete} = makePromptEditor(this);
     editorWrapper.appendChild(editor.element);

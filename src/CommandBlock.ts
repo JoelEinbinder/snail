@@ -75,8 +75,8 @@ export class CommandBlock implements LogItem {
     return this._sshAddress;
   }
 
-  addSquiggly(range: TextRange) {
-    this._editor.addSquiggly(range);
+  addSquiggly(range: TextRange, color: string) {
+    this._editor.addSquiggly(range, color);
   }
 
   render(): Element {

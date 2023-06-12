@@ -1,8 +1,8 @@
 import {registerMode, getMode} from '../editor/js/modeRegistry';
-import type { Mode } from '../editor/js/modeRegistry';
+import type { Mode } from '../editor/js/highlighter';
 import { parseCodeIntoTokens } from './transform';
 import '../editor/modes/javascript';
-import type { StringStream } from '@codemirror/language';
+import type { StringStream } from '../editor/js/StringStream';
 
 type State = {
   textBefore: string;

@@ -169,11 +169,6 @@ export const test = _test.extend<{
     await app.context().tracing.stop({
       path: test.info().outputPath('trace.pwtrace')
     });
-    await Promise.all(app.context().pages().map(async (p, index) => {
-      await p.screenshot({
-        path: test.info().outputPath(`page-${index}.png`),
-      });
-    }));
     if (err.length) {
       test.info().attach('electron-err', {
         body: err.map(err => err.toString('utf8')).join(''),

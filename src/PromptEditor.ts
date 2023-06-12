@@ -49,8 +49,8 @@ export function makePromptEditor(shell: Shell) {
       moveHistory(-1);
     } else if (event.code === 'KeyP' && event.ctrlKey && !event.shiftKey) {
       moveHistory(1);
-    } else if (event.key === 'Tab' && !event.ctrlKey) {
-      if (!editor.somethingSelected() && editor.selections.length === 1 && editor.selections[0].start.column === 0 && editor.selections[0].start.line === 0) 
+    } else if (event.key === 'Tab' && !event.shiftKey && !event.ctrlKey) {
+      if (!editor.somethingSelected() && editor.selections.length === 1 && editor.selections[0].start.column === 0 && editor.selections[0].start.line === 0)
         event.stopImmediatePropagation();
       return;
     } else {
