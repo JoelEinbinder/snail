@@ -192,7 +192,9 @@ function makeWindow() {
     window.excludedFromShownWindowsMenu = true;
     popups.add(window);
   })
-  if (process.env.SNAIL_DEBUG_URL)
+  if (process.argv.includes('--dev-mode'))
+    require('../electron-dev/').createDevServer().then(url => win.loadURL(url))
+  else if (process.env.SNAIL_DEBUG_URL)
     win.loadURL(process.env.SNAIL_DEBUG_URL);
   else
     win.loadFile(path.join(__dirname, 'index.html'));

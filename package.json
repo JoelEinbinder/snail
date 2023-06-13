@@ -2,7 +2,7 @@
   "name": "snail",
   "private": true,
   "scripts": {
-    "start": "SNAIL_DEBUG_URL=http://localhost/gap-year/ electron .",
+    "start": "electron . --dev-mode",
     "test": "cd slug/shjs; mocha",
     "type": "tsc --build src/tsconfig.json && tsc -p slug/shell/tsconfig.json && tsc -p slug/debugger/tsconfig.json && tsc -p slug/editor/tsconfig.json",
     "build": "node utils/esbuild.js",
