@@ -2,6 +2,7 @@ import type { Block, BlockDelegate } from "./GridPane";
 import './tabBlock.css';
 import { showContextMenu } from './contextMenu';
 import type { Action } from "./actions";
+import type { QuickPickProvider } from "./QuickPick";
 export class TabBlock implements Block {
   private _tabs: Block[] = [];
   private _activeTab?: Block;
@@ -59,6 +60,9 @@ export class TabBlock implements Block {
       };
     }
     this.setMaximized(false);
+  }
+  async quickPicks(): Promise<QuickPickProvider[]> {
+    return this._activeTab?.quickPicks() || [];
   }
   selectSiblingTab(previous: boolean) {
     let index = this._tabs.indexOf(this._activeTab);

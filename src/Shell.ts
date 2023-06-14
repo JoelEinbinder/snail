@@ -877,6 +877,20 @@ export class Shell {
       },
       setFind() {
         // TODO prompt find
+      },
+      recieveFilePath: filePath => {
+        const beforeRange = editor.selections[0] || {
+          start: { column: 0, line: 0},
+          end: { column: 0, line: 0 }
+        };
+        editor.replaceRange(filePath, beforeRange);
+        editor.setSelection({
+          start: beforeRange.start,
+          end: {
+            column: beforeRange.start.column + filePath.length,
+            line: beforeRange.start.line,
+          }
+        });
       }
     }
   }
@@ -943,6 +957,10 @@ export class Shell {
       this._cachedSuggestions.set(prefix, inner());
     }
     return this._cachedSuggestions.get(prefix);
+  }
+
+  async findAllFiles(): Promise<string[]> {
+    return (await this.evaluate('__find_all_files')).split('\n');
   }
 }
 

@@ -5,15 +5,28 @@ import { type ParsedShortcut, shortcutParser } from './shortcutParser';
 import { rootBlock } from './GridPane';
 import { startAyncWork } from './async';
 import { setBrowserViewsHidden } from './BrowserView';
+import { FilePathScoreFunction } from './FilePathScoreFunction';
 export let activePick: QuickPick | undefined;
 const isMac = navigator['userAgentData']?.platform === 'macOS';
+interface QuickPickItem {
+  title: string;
+  shortcut?: string;
+  callback: () => void;
+}
+export interface QuickPickProvider {
+  // Title for this provider in the quick pick help
+  title: string;
+  prefix: string;
+  items: (abortSignal: AbortSignal) => QuickPickItem[]|Promise<QuickPickItem[]>;
+}
 class QuickPick {
   private _element = document.createElement('dialog');
   private _input = document.createElement('input');
   private _optionsTray = document.createElement('div');
   private _selected?: HTMLElement;
   private _doFocus = () => this._input.focus();
-  constructor(private _actions: Action[]) {
+  private _abortController: AbortController|undefined;
+  constructor(initialText: string, private _providers: QuickPickProvider[]) {
     this._element.classList.add('quick-pick');
     this._optionsTray.classList.add('quick-pick-options');
     this._element.append(this._input, this._optionsTray);
@@ -21,6 +34,7 @@ class QuickPick {
     activePick = this;
     setBrowserViewsHidden(true);
 
+    this._input.value = initialText;
     this._render();
     this._element.showModal();
     this._element.addEventListener('close', event => {
@@ -72,37 +86,56 @@ class QuickPick {
       rootBlock.block?.focus();
   }
 
-  _render() {
+  async _render() {
+
+    this._abortController?.abort();
+    const {signal} = this._abortController = new AbortController();
+
     this._optionsTray.textContent = '';
     this._selectElement(undefined);
-    const query = this._input.value;
-    const sortedItems = this._actions.map(({title, callback, shortcut}) => {
-      const diff = new diff_match_patch().diff_main(query.toLowerCase(), title.toLowerCase());
-      const element = document.createElement('div');
+    const provider = this._providers.filter(x => this._input.value.startsWith(x.prefix)).sort((a, b) => b.prefix.length - a.prefix.length)[0];
+    if (!provider) {
+      this._selectElement(undefined);
+      return;
+    }
+    const query = this._input.value.substring(provider.prefix.length);
+    
+    const items = await provider.items(signal);
+    if (signal.aborted)
+      return;
+    const scorer = new FilePathScoreFunction(query);
+    const sortedItems = items.map(({title, callback, shortcut}) => {
+      // const diff = new diff_match_patch().diff_main(query.toLowerCase(), title.toLowerCase());
       let total = 0;
-      for (const {0: type, 1: text} of diff) {
-        if (type === DIFF_EQUAL)
-          total += text.length;
-      }
-      if (total < query.length)
+      // for (const {0: type, 1: text} of diff) {
+      //   if (type === DIFF_EQUAL)
+      //     total += text.length;
+      // }
+      // if (total < query.length)
+      //   return null;
+      // let score = 0;
+      // let index = 0;
+      // for (const {0: type, 1: text} of diff) {
+      //   if (type === DIFF_EQUAL) {
+      //     score += text.length ** 2;
+      //     const span = document.createElement('span');
+      //     const sliced = title.slice(index, index + text.length);
+      //     span.textContent = sliced;
+      //     span.classList.add('match');
+      //     element.append(span);
+      //   } else if (type === DIFF_INSERT) {
+      //     const sliced = title.slice(index, index + text.length);
+      //     element.append(sliced);
+      //   }
+      //   index += text.length;
+      // }
+      const score = scorer.calculateScore(title, null);
+      if (score <= 0 && query)
         return null;
-      let score = 0;
-      let index = 0;
-      for (const {0: type, 1: text} of diff) {
-        if (type === DIFF_EQUAL) {
-          score += text.length ** 2;
-          const span = document.createElement('span');
-          const sliced = title.slice(index, index + text.length);
-          span.textContent = sliced;
-          span.classList.add('match');
-          element.append(span);
-        } else if (type === DIFF_INSERT) {
-          const sliced = title.slice(index, index + text.length);
-          element.append(sliced);
-        }
-        index += text.length;
-      }
-
+      return {title, callback, shortcut, score};
+    }).filter(x => x).sort((a, b) => b.score - a.score).slice(0, 100).map(({title, callback, shortcut}) => {
+      const element = document.createElement('div');
+      element.append(title);
       if (shortcut) {
         const shortcutElement = document.createElement('span');
         shortcutElement.classList.add('shortcut');
@@ -115,12 +148,12 @@ class QuickPick {
         this.dispose();
         callback();
       });
-      return {element, score};
-    }).filter(x => x).sort((a, b) => b.score - a.score);
-    for (const item of sortedItems) {
-      this._optionsTray.append(item.element);
+      return element;
+    });
+    for (const element of sortedItems) {
+      this._optionsTray.append(element);
       if (!this._selected)
-        this._selectElement(item.element);
+        this._selectElement(element);
     }
   }
 
@@ -128,7 +161,9 @@ class QuickPick {
     this._selected?.classList.remove('selected');
     this._selected = element;
     this._selected?.classList.add('selected');
-    this._selected?.scrollIntoView();
+    this._selected?.scrollIntoView({
+      block: 'nearest'
+    });
   }
 
   serializeForTest() {
@@ -139,12 +174,38 @@ class QuickPick {
   }
 }
 
+export async function showQuickPick(prefix: string) {
+  const done = startAyncWork('loading quickpick');
+  const actions = [...availableActions(), ...await rootBlock.asyncActions()];
+  const providers: QuickPickProvider[] = [
+    ...await rootBlock.quickPicks(), {
+    prefix: '?',
+    title: 'Help',
+    items: () => {
+      return providers.map(provider => ({
+        callback: () => {
+          showQuickPick(provider.prefix);
+        },
+        title: provider.title,
+      }))
+    }
+  }, {
+    prefix: '>',
+    title: 'Actions',
+    items: () => {
+      return actions.map(({title, callback, shortcut}) => {
+        return {title, callback, shortcut}
+      });
+    }
+  }];
+
+  const quickPick = new QuickPick(prefix, providers);
+  done();
+}
+
 registerGlobalAction({
   callback: async () => {
-    const done = startAyncWork('loading quickpick');
-    const actions = [...availableActions(), ...await rootBlock.asyncActions()];
-    new QuickPick(actions);
-    done();
+    await showQuickPick('>');
   },
   title: 'Show all actions',
   id: 'quick.action',

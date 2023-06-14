@@ -1,3 +1,4 @@
+import { QuickPickProvider } from './QuickPick';
 import type { Action } from './actions';
 import { font } from './font';
 import './gridPane.css';
@@ -29,6 +30,7 @@ export interface Block {
   close(): void;
   actions(): Action[];
   asyncActions(): Promise<Action[]>;
+  quickPicks(): Promise<QuickPickProvider[]>;
 }
 class RootBlock {
   element = document.createElement('div');
@@ -90,7 +92,11 @@ class RootBlock {
   }
 
   async asyncActions(): Promise<Action[]> {
-    return this.block?.asyncActions?.() || [];
+    return this.block?.asyncActions() || [];
+  }
+
+  async quickPicks(): Promise<QuickPickProvider[]> {
+    return this.block?.quickPicks?.();
   }
 
   async serializeForTest() {
@@ -243,6 +249,10 @@ class SplitBlock implements Block {
       ratio: this._ratio,
       children: await Promise.all(this._blocks.map(x => x.serializeForTest())),
     };
+  }
+
+  async quickPicks(): Promise<QuickPickProvider[]> {
+    return (await Promise.all(this._blocks.map(block => block.quickPicks()))).flat();
   }
 }
 

@@ -9,6 +9,7 @@ import type { Action } from './actions';
 import type { LogItem } from './LogItem';
 import { Find, Findable, FindableList, type FindParams } from './Find';
 import { attachMenuItemsToContextMenuEvent } from './contextMenu';
+import { QuickPickProvider, showQuickPick } from './QuickPick';
 
 export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
@@ -340,13 +341,41 @@ export class LogView implements Block, ShellDelegate, Findable {
           item?.toggleFold?.dispatch(true);
       }
     }, {
-      title: 'Unold all',
+      title: 'Unfold all',
       id: 'log.unfold.all',
       shortcut: 'CmdOrCtrl+K J',
       callback: () => {
         this._lockScroll();
         for (const item of this._log)
           item?.toggleFold?.dispatch(false);
+      }
+    }, {
+      title: 'Select file',
+      id: 'log.file',
+      shortcut: 'CmdOrCtrl+P',
+      callback: () => {
+        showQuickPick('');
+      }
+    }];
+  }
+
+  async quickPicks(): Promise<QuickPickProvider[]> {
+    let filesPromise: Promise<string[]>|undefined;
+    return [{
+      title: 'Select file',
+      prefix: '',
+      items: async () => {
+        if (!filesPromise)
+          filesPromise = this._shell.findAllFiles();
+        const files = await filesPromise;
+        console.log(files)
+        return files.map(file => ({
+          callback: () => {
+            const active = this._activeItem || this._prompt;
+            active?.recieveFilePath?.(file);    
+          },
+          title: file,
+        }));
       }
     }];
   }

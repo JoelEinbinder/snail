@@ -7,7 +7,13 @@ export type ParsedShortcut = {
   continuation?: ParsedShortcut;
 }
 export function shortcutParser(shortcut: string, isMac: boolean): ParsedShortcut {
-  const parsed: ParsedShortcut = { key: '' };
+  const parsed: ParsedShortcut = {
+    key: '',
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    shiftKey: false,
+  };
   let buffer = '';
   for (let i = 0; i < shortcut.length; i++) {
     const char = shortcut[i];

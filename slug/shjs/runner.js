@@ -300,6 +300,13 @@ const builtins = {
         stdout.write(JSON.stringify(env) + '\n');
         return 0;
     },
+    __find_all_files: async (args, stdout, stderr, stdin, env) => {
+        const glob = require('fast-glob');
+        const files = glob.sync('**/*');
+        for (const file of files)
+            stdout.write(file + '\n');
+        return 0;
+    },
 };
 
 /**

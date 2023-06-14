@@ -1,5 +1,6 @@
 import type { Action } from "./actions";
 import type { Block, BlockDelegate } from "./GridPane";
+import type { QuickPickProvider } from "./QuickPick";
 import './placeholder.css';
 
 export class Placeholder implements Block {
@@ -40,6 +41,9 @@ export class Placeholder implements Block {
         return [];
     }
     async asyncActions(): Promise<Action[]> {
+        return [];
+    }
+    async quickPicks(): Promise<QuickPickProvider[]> {
         return [];
     }
 }
