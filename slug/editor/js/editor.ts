@@ -123,6 +123,7 @@ export type EditorOptions = {
   highlightWordOccurrences?: boolean;
   backgroundColor?: string;
   padding?: number;
+  wordWrap?: boolean;
   underlay?: (lineNumber: number, text: string) => Array<import('./highlighter').Token>;
   colors?: {
     foreground: string;

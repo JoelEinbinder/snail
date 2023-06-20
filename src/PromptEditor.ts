@@ -18,6 +18,7 @@ export function makePromptEditor(shell: Shell) {
     lineNumbers: false,
     language: 'shjs',
     padding: 0,
+    wordWrap: true,
     colors: {
       cursorColor: '#f4f4f4',
       foreground: '#f4f4f4',

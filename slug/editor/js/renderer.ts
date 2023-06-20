@@ -24,13 +24,14 @@ export class Renderer extends Emitter<{
   private _fillerElement: HTMLDivElement;
   private _lastScrollOffset: { top: number; left: number; };
   colors: EditorOptions['colors'] & {};
-  private _textMeasuring: any;
+  private _textMeasuring: TextMeasuring;
   private _highlightRanges: HighlightRanges = [];
   private _charWidth: any;
   private _height: number;
   private _charHeight: number;
   private _hoverTimer?: ReturnType<typeof setTimeout>;
   private _hoverElement = document.createElement('div');
+  private _lineWrappings = new WeakMap<Line, { indent: number, length: number }[]>();
   constructor(
     private _model: Model,
     public element: HTMLElement,
@@ -73,8 +74,8 @@ export class Renderer extends Emitter<{
       else {
         const from = Math.min(lineCount, this._model.lineCount());
         const to = Math.max(lineCount, this._model.lineCount());
-        const y = Math.floor(from * this._lineHeight - this.scrollTop) - 1;
-        const height = Math.ceil((to + 1) * this._lineHeight - this.scrollTop - y) + 2;
+        const y = Math.floor(this._yOffsetFromLocation({line: from, column: 0}) - this.scrollTop) - 1;
+        const height = Math.ceil(this._yOffsetFromLocation({ line: to + 1, column: 0}) - this.scrollTop - y) + 2;
         this._textLayer.invalidate({ x: 0, y, width: this._width, height });
         this.scheduleRefresh();
       }
@@ -96,8 +97,8 @@ export class Renderer extends Emitter<{
     this._highlighter.on('highlight', ({ from, to }) => {
       var viewport = this.viewport();
       if (viewport.from <= to && from <= viewport.to) {
-        var y = Math.floor(from * this._lineHeight - this.scrollTop) - 1;
-        var height = Math.ceil((to + 1) * this._lineHeight - this.scrollTop - y) + 2;
+        var y = Math.floor(this._yOffsetFromLocation({line: from, column: 0})  - this.scrollTop) - 1;
+        var height = Math.ceil(this._yOffsetFromLocation({ line: to + 1, column: 0}) - this.scrollTop - y) + 2;
         this._textLayer.invalidate({
           x: 0,
           y,
@@ -213,25 +214,39 @@ export class Renderer extends Emitter<{
 
   locationFromPoint(offsetX: number, offsetY: number): Loc {
     var rect = this._scrollingElement.getBoundingClientRect();
-    var y = Math.floor((offsetY + this.scrollTop - rect.top) / this._lineHeight);
-    if (y >= this._model.lineCount()) {
-      return {
-        line: this._model.lineCount() - 1,
-        column: this._model.line(this._model.lineCount() - 1).length
-      };
-    }
-    if (y < 0) {
+    offsetY += this._scrollTop - rect.top;
+    if (offsetY < 0) {
       return {
         line: 0,
         column: 0
       };
     }
+    let lineNumber = 0;
+    let lineOffset = 0;
+    for (; lineNumber < this._model.lineCount(); lineNumber++) {
+      lineOffset += this._heightForLine(lineNumber);
+      if (lineOffset >= offsetY)
+        break;
+    }
+    if (lineNumber >= this._model.lineCount()) {
+      return {
+        line: this._model.lineCount() - 1,
+        column: this._model.line(this._model.lineCount() - 1).length
+      };
+    }
 
-    var lineNumber = y;
-    var line = this._model.line(lineNumber);
-    var x = offsetX - this._padding + this._scrollLeft - rect.left;
-    var alpha = 0;
-    var beta = line.length;
+    const line = this._model.line(lineNumber);
+    const wrapping = this._wrappingForLine(lineNumber);
+    const wrappedLine = Math.min(wrapping.length - 1, wrapping.length - Math.ceil((lineOffset - offsetY) / this._lineHeight));
+    let wrappedStart = 0;
+    for (let i = 0; i < wrappedLine; i++) {
+      wrappedStart += wrapping[i].length;
+    }
+    const wrappedXAmount = this._textMeasuring.xOffsetFromLocation(line, wrappedStart);
+    
+    var x = offsetX - this._padding + this._scrollLeft - rect.left + wrappedXAmount;
+    var alpha = wrappedStart;
+    var beta = wrappedStart + wrapping[wrappedLine].length;
     var column;
     while (Math.abs(alpha - beta) > 1) {
       column = Math.floor((alpha + beta) / 2);
@@ -272,10 +287,9 @@ export class Renderer extends Emitter<{
 
   pointFromLocation(location: Loc): { x: number; y: number; } {
     if (location.line >= this._model.lineCount()) location = this._model.fullRange().end;
-    var line = this._model.line(location.line);
     return {
-      x: this._textMeasuring.xOffsetFromLocation(line, location.column) + this._leftOffset(),
-      y: location.line * this._lineHeight - this._scrollTop
+      x: this._xOffsetFromLocation(location) + this._leftOffset(),
+      y: this._yOffsetFromLocation(location) - this._scrollTop
     };
   }
 
@@ -323,10 +337,12 @@ export class Renderer extends Emitter<{
   }
 
   _innerHeight() {
-    return this._model.lineCount() * this._lineHeight;
+    return this._yOffsetFromLocation({ line: this._model.lineCount(), column: 0 });
   }
 
   _innerWidth() {
+    if (this._options.wordWrap)
+      return this._width;
     return this._textMeasuring.longestLineLength() + this._padding * 2;
   }
 
@@ -371,7 +387,18 @@ export class Renderer extends Emitter<{
   }
 
   _lineForOffset(y: number) {
-    return Math.floor(y / this._lineHeight);
+    if (!this._options.wordWrap)
+      return Math.floor(y / this._lineHeight);
+    if (y < 0)
+      return 0;
+    let lineNumber = 0;
+    let lineOffset = 0;
+    for (; lineNumber < this._model.lineCount(); lineNumber++) {
+      lineOffset += this._heightForLine(lineNumber);
+      if (lineOffset >= y)
+        break;
+    }
+    return Math.min(this._model.lineCount() - 1, lineNumber);
   }
 
   _drawText(ctx: CanvasRenderingContext2D, clipRects: Rect[]) {
@@ -395,40 +422,59 @@ export class Renderer extends Emitter<{
     var farRight = Math.max(...clipRects.map(clipRect => clipRect.x + clipRect.width));
     var lineNumbersWidth = this._lineNumbersWidth();
     var CHUNK_SIZE = 100;
+    const farLeft = lineNumbersWidth + this._padding - this.scrollLeft;
     for (var i = viewport.from; i <= viewport.to; i++) {
       var rect = {
-        x: lineNumbersWidth + this._padding - this.scrollLeft,
-        y: i * this._lineHeight - this.scrollTop,
+        x: farLeft,
+        y: this._yOffsetFromLocation({ line: i, column: 0 }),
         width: Infinity,
-        height: this._lineHeight
+        height: this._lineHeight,
       };
       if (!clipRects.some(clipRect => intersects(rect, clipRect))) continue;
       rect.width = 0;
       var text = this._model.line(i).text;
-      var index = 0;
-      var lastX = this._textMeasuring.xOffsetFromLocation(this._model.line(i), 0);
-      var count = 0;
-      outer: for (var token of this._highlighter.tokensForLine(i)) {
-        // we dont want too overdraw too much for big tokens
-        for (var j = 0; j < token.length; j += CHUNK_SIZE) {
-          var start = index + j;
-          var end = index + Math.min(j + CHUNK_SIZE, token.length);
-          var chunk = text.substring(start, end).replace(/\t/g, this.TAB);
-          rect.width = this._textMeasuring.xOffsetFromLocation(this._model.line(i), end) - lastX;
-          if (clipRects.some(clipRect => intersects(rect, clipRect))) {
-            if (token.background) {
-              ctx.fillStyle = token.background;
-              ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      let index = 0;
+      const wrapping = this._wrappingForLine(i);
+      const tokens = [...this._highlighter.tokensForLine(i)].reverse();
+      outer: for (const wrap of wrapping) {
+        let lastX = this._textMeasuring.xOffsetFromLocation(this._model.line(i), index);
+        let charsLeftInWrap = wrap.length;
+        tokenLoop: while (true) {
+          const token = tokens.pop();
+          if (!token)
+            break;
+          for (var j = 0; j < token.length; j += CHUNK_SIZE) {
+            var start = index + j;
+            var end = index + Math.min(j + CHUNK_SIZE, token.length, charsLeftInWrap);
+            var chunk = text.substring(start, end).replace(/\t/g, this.TAB);
+            rect.width = this._textMeasuring.xOffsetFromLocation(this._model.line(i), end) - lastX;
+            if (clipRects.some(clipRect => intersects(rect, clipRect))) {
+              if (token.background) {
+                ctx.fillStyle = token.background;
+                ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+              }
+              ctx.fillStyle = token.color || this.colors.foreground;
+              ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
             }
-            ctx.fillStyle = token.color || this.colors.foreground;
-            count += chunk.length;
-            ctx.fillText(chunk, rect.x, rect.y + this._charHeight);
+            rect.x += rect.width;
+            lastX += rect.width;
+            if (!this._options.wordWrap && rect.x > farRight) break outer;
+            charsLeftInWrap -= end - start;
+            if (charsLeftInWrap === 0) {
+              const tokenRemaining = token.length - (end - start);
+              if (tokenRemaining > 0)
+                tokens.push({
+                  ...token,
+                  length: tokenRemaining,
+                });
+              index = end;
+              break tokenLoop;
+            }
           }
-          rect.x += rect.width;
-          lastX += rect.width;
-          if (rect.x > farRight) break outer;
+          index += token.length;
         }
-        index += token.length;
+        rect.y += this._lineHeight;
+        rect.x = farLeft;
       }
     }
     if (this._options.lineNumbers) this._drawLineNumbers(ctx);
@@ -569,7 +615,7 @@ export class Renderer extends Emitter<{
       ctx.fillText(
         String(i + 1),
         width - ctx.measureText(String(i + 1)).width - this._padding,
-        i * this._lineHeight + this._charHeight - this.scrollTop
+        this._yOffsetFromLocation({ line: i, column: 0}) + this._charHeight - this.scrollTop
       );
     }
   }
@@ -589,6 +635,7 @@ export class Renderer extends Emitter<{
     var rect = this.element.getBoundingClientRect();
     this._width = rect.width;
     this._height = rect.height;
+    this._lineWrappings = new WeakMap();
     this._overlayLayer.layout(rect.width, rect.height);
     this._textLayer.layout(rect.width, rect.height);
     var last = this._charWidth;
@@ -605,6 +652,66 @@ export class Renderer extends Emitter<{
 
   get lineHeight() {
     return this._lineHeight;
+  }
+
+  _wrappingForLine(lineNumber: number) {
+    const line = this._model.line(lineNumber);
+    if (!line)
+      return [{ indent: 0, length: 0 }];
+    if (!this._options.wordWrap)
+      return [{ indent: 0, length: line.length }];
+    const computeLineWrapping = () => {
+      const containerWidth = Math.floor(this._width / this._charWidth);
+      if (containerWidth >= line.length)
+        return [{indent: 0, length: line.length}];
+      const wrapping: {indent: number, length: number}[] = [];
+      for (let i = 0; i < line.length; i += containerWidth) {
+        const end = Math.min(line.length, i + containerWidth);
+        wrapping.push({ indent: 0, length: end - i });
+      }
+      return wrapping;
+    }
+    if (!this._lineWrappings.has(line)) {
+      this._lineWrappings.set(line, computeLineWrapping());
+    }
+    return this._lineWrappings.get(line)!;
+  }
+
+  _heightForLine(lineNumber: number) {
+    if (!this._options.wordWrap)
+      return this._lineHeight;
+    return this._wrappingForLine(lineNumber).length * this._lineHeight;
+  }
+
+  _yOffsetFromLocation(location: Loc) {
+    if (!this._options.wordWrap)
+      return location.line * this._lineHeight;
+    let totalHeight = 0;
+    for (let i = 0; i < location.line; i++)
+      totalHeight += this._heightForLine(i);
+    const wrapping = this._wrappingForLine(location.line);
+    let lineEnd = 0;
+    for (let i = 0; i < wrapping.length - 1; i++) {
+      lineEnd += wrapping[i].length;
+      if (lineEnd > location.column)
+        break;
+      totalHeight += this._lineHeight;
+    }
+    return totalHeight;
+  }
+
+  _xOffsetFromLocation(location: Loc) {
+    const line = this._model.line(location.line);
+    if (!this._options.wordWrap)
+      return this._textMeasuring.xOffsetFromLocation(line, location.column);
+    const wrapping = this._wrappingForLine(location.line);
+    let lineStart = 0;
+    for (let i = 0; i < wrapping.length; i++) {
+      if (i === wrapping.length - 1 || lineStart + wrapping[i].length > location.column)
+        return this._textMeasuring.xOffsetFromLocation(line, location.column) - this._textMeasuring.xOffsetFromLocation(line, lineStart);
+      lineStart += wrapping[i].length;
+    }
+    throw new Error('unreachable');
   }
 }
 
@@ -695,7 +802,7 @@ class Layer {
 }
 
 class TextMeasuring {
-  private _lineMetrics = new WeakMap<object, any>();
+  private _lineMetrics = new WeakMap<Line, { column: number; offset: number; }[]>();
   private _charWidths = {};
   private _measure: (text: string) => number;
   private _longestLineLength: number;
@@ -748,7 +855,7 @@ class TextMeasuring {
   }
 
   _computeLineMetrics(line: Line): { column: number; offset: number; }[] {
-    if (this._lineMetrics.has(line)) return this._lineMetrics.get(line);
+    if (this._lineMetrics.has(line)) return this._lineMetrics.get(line)!;
     var metrics = [{ column: 0, offset: 0 }];
     var text = line.text;
     var offset = 0;

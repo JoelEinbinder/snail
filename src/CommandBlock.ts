@@ -26,6 +26,7 @@ export class CommandBlock implements LogItem {
       lineNumbers: false,
       language: 'shjs',
       padding: 0,
+      wordWrap: true,
       colors: {
         cursorColor: '#f4f4f4',
         foreground: '#f4f4f4',
