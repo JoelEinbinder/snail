@@ -138,7 +138,13 @@ global.bootstrap = (args) => {
       if (wroteToStdin.has(shell)) {
         // Don't reuse a shell if it had stdin written to it, because it might leak into the next command.
         // We could do something fancy to flush it out, but its probably easier to just leave it alone.
-        shell.kill();        
+        const stdinEndToken = String(Math.random()) + '\n';
+        await connectionDonePromise;
+        connection.sendString(JSON.stringify({method: 'fush-stdin', params: {stdinEndToken}}));
+        shell.write(stdinEndToken);
+        const data = await new Promise(x => connection.onmessage = x);
+        notify('leftoverStdin', {id, data})
+        shell.kill();
       } else {
         // This is where we reuse shells.
         disposeDataListener.dispose();

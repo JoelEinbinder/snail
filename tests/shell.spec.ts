@@ -181,7 +181,8 @@ test('stdin doesnt leak to the next command', async ({ shell }) => {
   await shell.waitForLine(/Command Running/);
   await shell.page.keyboard.type('abcdefghijklmnopqrstuvwxy');
   await firstCommandPromise;
-  
+  // the unread stdin text should appear in the prompt
+  expect((await shell.serialize()).prompt.value).toEqual('abcdefghijklmnopqrstuvwxy');
   // make sure that the next command does not read it
   function innerCommand() {
     const received: Buffer[] = [];

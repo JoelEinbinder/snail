@@ -78,6 +78,7 @@ export class Shell {
   private _uuid: string = randomUUID();
   private _activeCommandBlock?: CommandBlock;
   private _setupUnlock: () => void;
+  private _leftoverStdin = '';
   constructor(private _delegate: ShellDelegate) {
     console.time('create shell');
     this._setupUnlock = this._lockPrompt('setupInitialConnection');
@@ -193,6 +194,9 @@ export class Shell {
         this._activeItem.dispatch(null);
         await cleanup();
         this._delegate.setTitle('');
+      },
+      leftoverStdin: ({id,data}) => {
+        this._leftoverStdin += data;
       },
       startTerminal:({id}: {id: number}) => {
         const progressBlock = new ProgressBlock();
@@ -799,6 +803,9 @@ export class Shell {
     }, false);
     editorLine.appendChild(editorWrapper);
     const {editor, autocomplete} = makePromptEditor(this);
+    const loc = editor.replaceRange(this._leftoverStdin, { start: { line: 0, column: 0 }, end: { line: 0, column: 0 } });
+    editor.selections = [{ start: loc, end: loc }];
+    this._leftoverStdin = '';
     editorWrapper.appendChild(editor.element);
     editorLine.appendChild(this._connectionNameElement);
     container.appendChild(element);

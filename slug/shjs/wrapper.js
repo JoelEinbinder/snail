@@ -13,8 +13,22 @@ async function listenToWebSocket() {
   await new Promise(x => socket.once('connect', x));
   transport.sendString(JSON.stringify({id: parseInt(idStr), uuid}));
   while (true) {
-    const {command, magicToken, changes} = await new Promise(x => transport.onmessage = x);
-    if (changes) {
+    const {command, magicToken, changes, method, params} = await new Promise(x => transport.onmessage = x);
+    if (method === 'fush-stdin') {
+      
+      const leftoverData = await new Promise(resolve => {
+        let buffer = '';
+        const ondata = data => {
+          buffer += data.toString();
+          if (buffer.endsWith(params.stdinEndToken)) {
+            resolve(buffer.substring(0, buffer.length - params.stdinEndToken.length));
+            process.stdin.off('data', ondata);
+          }
+        };
+        process.stdin.on('data', ondata);
+      });
+      transport.sendString(JSON.stringify(leftoverData));
+    } else if (changes) {
       if (changes.cwd)
         process.chdir(changes.cwd);
       if (changes.env) {
@@ -33,8 +47,10 @@ async function listenToWebSocket() {
   }
 }
 async function runCommand(command, magicToken) {
+  process.stdin.setRawMode(false);
   const {stdin, closePromise, kill} = execute(command);
   const c = await closePromise;
+  process.stdin.setRawMode(true);
   process.exitCode = c;
   if (magicToken) {
     const magicString = `\x1B[JOELMAGIC${magicToken}]\n`;
