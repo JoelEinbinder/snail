@@ -75,6 +75,14 @@ export class Editor extends Emitter<EditorEvents> {
     return this._renderer.lineHeight;
   }
 
+  charWidth() {
+    return this._renderer.charWidth;
+  }
+
+  gutterWidth() {
+    return this._renderer.gutterWidth;
+  }
+
   line(index: number) {
     return this._model.line(index);  
   }

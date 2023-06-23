@@ -654,6 +654,14 @@ export class Renderer extends Emitter<{
     return this._lineHeight;
   }
 
+  get charWidth() {
+    return this._charWidth;
+  }
+
+  get gutterWidth() {
+    return this._lineNumbersWidth() + this._padding;
+  }
+
   _wrappingForLine(lineNumber: number) {
     const line = this._model.line(lineNumber);
     if (!line)

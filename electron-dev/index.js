@@ -3,10 +3,10 @@ const http = require('http');
 /** @type {Map<string, import('esbuild').OutputFile>} */
 const compiledFiles = new Map();
 
-async function createDevServer() {
+async function createDevServer(entryPoint = path.join(__dirname, '..', 'src', 'index.ts')) {
   const server = http.createServer(async (req, res) => {
     try {
-      const response = await getFileForURL(new URL('http://localhost' + req.url));
+      const response = await getFileForURL(new URL('http://localhost' + req.url), entryPoint);
       const headers = response.headers || {};
       headers['Content-Type'] = response.mimeType;
       res.writeHead(response.statusCode, headers);
@@ -17,21 +17,25 @@ async function createDevServer() {
       res.end();
     }
   });
-  return new Promise(resolve => {
+  const url = await new Promise(resolve => {
     server.listen(undefined, '127.0.0.1', () => {
       const address = server.address();
       resolve(`http://127.0.0.1:${address.port}/?entry`);
     });
   });
+  return {
+    url,
+    close: () => server.close(),
+  }
 }
 
 /**
  * @param {URL} url
+ * @param {string} entryPoint
  */
-async function getFileForURL(url) {
+async function getFileForURL(url, entryPoint) {
   const {searchParams, pathname} = url;
   if (searchParams.has('entry')) {
-    const entryPoint = path.join(__dirname, '..', 'src', 'index.ts');
     const esbuild = require('esbuild');
     const server = await esbuild.build({
       bundle: true,

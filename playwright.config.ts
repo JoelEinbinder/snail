@@ -16,6 +16,7 @@ const config: PlaywrightTestConfig = {
     actionTimeout: 0,
     trace: 'retain-on-failure',
     video: 'retain-on-failure',
+    deviceScaleFactor: 2,
   },
 
   projects: [
