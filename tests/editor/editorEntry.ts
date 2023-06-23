@@ -3,6 +3,7 @@ import './editorEntry.css';
 let editor = new Editor('', {
   lineNumbers: true,
   padBottom: true,
+  wordWrap: true,
   backgroundColor: '#000',
   colors: {
     cursorColor: '#f4f4f4',

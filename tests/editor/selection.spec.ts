@@ -21,3 +21,12 @@ test('should be able to select a line with a triple click', async ({ editor }) =
     'hello world\n' +
     '[----------]');
 });
+test.describe('word wrap', () => {
+  test.beforeEach(async ({ editor }) => {
+    editor.setEditorColumns(10);
+  });
+  test('should wrap', async ({ editor }) => {
+    await editor.setValue('1234567890\nabcdefghijklmnopqrstuvwxyz\nABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    expect(await editor.screenshot()).toMatchSnapshot();
+  });
+});

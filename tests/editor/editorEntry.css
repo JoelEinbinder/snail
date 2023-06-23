@@ -4,6 +4,7 @@
   cursor: text;
   position: absolute;
   inset: 0;
+  height: 300px;
   color: white;
 }
 

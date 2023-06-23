@@ -13,7 +13,7 @@ export class EditorModel {
   }
   async setEditorColumns(columns: number) {
     await this._editor.evaluate((editor, columns) => {
-      const width = editor.gutterWidth() + editor.charWidth() * columns;
+      const width = Math.ceil(editor.gutterWidth() + editor.charWidth() * columns);
       editor.element.style.width = width + 'px';
       editor.layout();
     }, columns);
@@ -68,5 +68,9 @@ export class EditorModel {
     return this._editor.evaluate((editor, location) => {
       return editor.pointFromLocation(location);
     }, location);
+  }
+  async screenshot() {
+    const element = await this._editor.evaluateHandle(editor => editor.element);
+    return element.screenshot();
   }
 }
