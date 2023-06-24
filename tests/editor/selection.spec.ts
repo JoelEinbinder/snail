@@ -21,6 +21,71 @@ test('should be able to select a line with a triple click', async ({ editor }) =
     'hello world\n' +
     '[----------]');
 });
+test('should be able to move horizontally with the arrow keys', async ({ editor }) => {
+  await editor.setValue('hello world');
+  expect(await editor.serialize()).toEqual(
+    'hello world\n' +
+    '^           ');
+  await editor.page.keyboard.press('ArrowRight');
+  await editor.page.keyboard.press('ArrowRight');
+  expect(await editor.serialize()).toEqual(
+      'hello world\n' +
+      '  ^         ');
+  await editor.page.keyboard.press('ArrowLeft');
+  expect(await editor.serialize()).toEqual(
+      'hello world\n' +
+      ' ^          ');
+});
+test('should be able to move vertically with the arrow keys', async ({ editor }) => {
+  await editor.setValue('hello world\n1234567890\nabcdefghijklmnopqrstuvwxyz');
+  await editor.page.keyboard.press('ArrowRight');
+  await editor.page.keyboard.press('ArrowRight');
+  expect(await editor.serialize()).toEqual(
+      'hello world\n' +
+      '  ^         \n' + 
+      '1234567890\n' + 
+      'abcdefghijklmnopqrstuvwxyz');
+  await editor.page.keyboard.press('ArrowDown');
+  await editor.page.keyboard.press('ArrowDown');
+  expect(await editor.serialize()).toEqual(
+      'hello world\n' +
+      '1234567890\n' + 
+      'abcdefghijklmnopqrstuvwxyz\n' +
+      '  ^                        ');
+  await editor.page.keyboard.press('ArrowUp');
+  expect(await editor.serialize()).toEqual(
+    'hello world\n' +
+    '1234567890\n' + 
+    '  ^        \n' + 
+    'abcdefghijklmnopqrstuvwxyz');
+});
+test('should keep preserved x position when moving vertically', async ({ editor }) => {
+  await editor.setValue('a short line\na very very very long line\nanother short line\nanother very very long line');
+  await editor.page.keyboard.press('ArrowDown');
+  for (let i = 0; i < 22; i++)
+    await editor.page.keyboard.press('ArrowRight');
+  expect(await editor.serialize()).toEqual(
+      'a short line\n' +
+      'a very very very long line\n' + 
+      '                      ^    \n' + 
+      'another short line\n' +
+      'another very very long line');
+  await editor.page.keyboard.press('ArrowDown');
+  expect(await editor.serialize()).toEqual(
+    'a short line\n' +
+    'a very very very long line\n' + 
+    'another short line\n' +
+    '                  ^\n' + 
+    'another very very long line');
+  await editor.page.keyboard.press('ArrowDown');
+  expect(await editor.serialize()).toEqual(
+    'a short line\n' +
+    'a very very very long line\n' + 
+    'another short line\n' +
+    'another very very long line\n' +
+    '                      ^     ');
+  await editor.page.keyboard.press('ArrowDown');
+});
 test.describe('word wrap', () => {
   test.beforeEach(async ({ editor }) => {
     editor.setEditorColumns(10);
