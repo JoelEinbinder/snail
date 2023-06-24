@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import os from 'os';
 test('should start with selection at the start', async ({ editor }) => {
   await editor.setValue('hello world');
   expect(await editor.serialize()).toEqual(
@@ -85,6 +86,65 @@ test('should keep preserved x position when moving vertically', async ({ editor 
     'another very very long line\n' +
     '                      ^     ');
   await editor.page.keyboard.press('ArrowDown');
+});
+
+test('should move by word', async ({ editor }) => {
+  const rightKey = os.platform() === 'darwin' ? 'Alt+ArrowRight' : 'Control+ArrowRight';
+  const leftKey = os.platform() === 'darwin' ? 'Alt+ArrowLeft' : 'Control+ArrowLeft';
+  await editor.setValue('these are my words');
+  await editor.page.keyboard.press(rightKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '     ^             ');
+  await editor.page.keyboard.press(rightKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '         ^         ');
+  await editor.page.keyboard.press(rightKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '            ^      ');
+  await editor.page.keyboard.press(leftKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '          ^        ');
+  await editor.page.keyboard.press(leftKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '      ^            ');
+  await editor.page.keyboard.press(leftKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '^                  ');
+});
+test('should select by word', async ({ editor }) => {
+  const rightKey = os.platform() === 'darwin' ? 'Shift+Alt+ArrowRight' : 'Shift+Control+ArrowRight';
+  const leftKey = os.platform() === 'darwin' ? 'Shift+Alt+ArrowLeft' : 'Shift+Control+ArrowLeft';
+  await editor.setValue('these are my words');
+  await editor.page.keyboard.press(rightKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '[----]             ');
+  await editor.page.keyboard.press(rightKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '[--------]         ');
+  await editor.page.keyboard.press(rightKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '[-----------]      ');
+  await editor.page.keyboard.press(leftKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '[---------]        ');
+  await editor.page.keyboard.press(leftKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '[-----]            ');
+  await editor.page.keyboard.press(leftKey);
+  expect(await editor.serialize()).toEqual(
+    'these are my words\n' +
+    '^                  ');
 });
 test.describe('word wrap', () => {
   test.beforeEach(async ({ editor }) => {

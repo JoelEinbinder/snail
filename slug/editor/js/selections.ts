@@ -29,11 +29,11 @@ export class SelectionManger extends Emitter {
       'Meta+A'
     );
 
-    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, 0, false), 'moveLeft', 'ArrowLeft');
-    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, 0, false), 'moveRight', 'ArrowRight');
-    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, 0, true), 'extendLeft', 'Shift+ArrowLeft');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, { extend: false }), 'moveLeft', 'ArrowLeft');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, { extend: false }), 'moveRight', 'ArrowRight');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, { extend: true }), 'extendLeft', 'Shift+ArrowLeft');
     this._commandManager.addCommand(
-      this.moveCursorHorizontal.bind(this, 1, 0, true),
+      this.moveCursorHorizontal.bind(this, 1, { extend: true }),
       'extendRight',
       'Shift+ArrowRight'
     );
@@ -183,6 +183,10 @@ export class SelectionManger extends Emitter {
       'Ctrl+Y',
       'Meta+Shift+Z'
     );
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, { extend: false, byWord: true }), 'moveWordLeft', 'Ctrl+ArrowLeft', 'Alt+ArrowLeft');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, { extend: false, byWord: true }), 'moveWordRight', 'Ctrl+ArrowRight', 'Alt+ArrowRight');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, { extend: true, byWord: true }), 'extendWordLeft', 'Shift+Ctrl+ArrowLeft', 'Alt+Shift+ArrowLeft');
+    this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, { extend: true, byWord: true }), 'extendWordRight', 'Shift+Ctrl+ArrowRight', 'Alt+Shift+ArrowRight');
   }
 
   _contentMouseDown(event: MouseEvent) {
@@ -332,13 +336,33 @@ export class SelectionManger extends Emitter {
     return !anchorIsStart;
   }
 
-  moveCursorHorizontal(direction: 1 | -1, increment: 0, extend: boolean): boolean {
+  moveCursorHorizontal(direction: 1 | -1, {extend, byWord}: {extend: boolean, byWord?: boolean}): boolean {
     var selection = this._model.selections[0];
     var modifyStart = this._startIsHead(direction, extend);
 
     var point = modifyStart ? copyLocation(selection.start) : copyLocation(selection.end);
     var { text } = this._model.line(point.line);
-    if ((isSelectionCollapsed(selection) || extend) && increment === 0) point.column += direction;
+    if (isSelectionCollapsed(selection) || extend) {
+      if (byWord) {
+        let seenWordChar = false;
+        point.column += direction;
+        while (point.column >= 0 && point.column < text.length) {
+          const isWordChar = /[A-Za-z0-9_]/.test(text[point.column]);
+          if (!isWordChar) {
+            if (seenWordChar) {
+              if (direction === -1)
+                point.column += 1;
+              break;
+            }
+          } else {
+            seenWordChar = true;
+          }
+          point.column += direction;
+        }
+      } else {
+        point.column += direction;
+      }
+    }
     if (point.column < 0) {
       point.line--;
       if (point.line < 0) {
