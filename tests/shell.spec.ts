@@ -245,6 +245,26 @@ test('can clear with keyboard shortcut', async ({ shell }) => {
   });
 });
 
+test('should report uncaught node errors', async ({ shell }) => {
+  await shell.runCommand(`const socket = net.connect({ path: './not-a-real-path.txt' });`);
+  await shell.runCommand('echo still alive');
+  const serialized = await shell.serialize();
+  serialized.log = serialized.log.map(x => x.replace(/^\s*at .*$/gm, '<readacted>'))
+  expect(serialized).toEqual({
+    log:[
+      "> const socket = net.connect({ path: './not-a-real-path.txt' });",
+      "Error: connect ENOENT ./not-a-real-path.txt\n" +
+      "<readacted>",
+      "undefined",
+      "> echo still alive",
+      "still alive",
+    ],
+    prompt: {
+      value: '',
+    },
+  });
+});
+
 test('split', async ({ shell }) => {
   await shell.runCommand('echo hello');
   const [left, right] = await shell.splitHorizontally();

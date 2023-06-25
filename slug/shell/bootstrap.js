@@ -252,3 +252,7 @@ async function launchServer() {
 process.on('unhandledRejection', e => {
   console.error(e);
 });
+
+process.on('uncaughtException', e => {
+  console.error(e);
+});
