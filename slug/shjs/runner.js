@@ -147,10 +147,15 @@ const builtins = {
     reconnect: async (args, stdout, stderr) => {
         if (!changes)
             changes = {};
-        if (args.length) {
+        const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
+        if (args.includes('--list')) {
+            const entries = (await fs.promises.readdir(socketDir)).filter(x => x.endsWith('.socket'));
+            for (const entry of entries)
+                stderr.write(path.join(socketDir, entry) + '\n');
+            return 0;
+        } else if (args.length) {
             changes.reconnect = path.resolve(process.cwd(), args[0]);
         } else {
-            const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
             const entries = (await fs.promises.readdir(socketDir)).filter(x => x.endsWith('.socket'));
             if (entries.length === 0) {
                 stderr.write('No daemons found to reconnect to.\n');
