@@ -121,7 +121,8 @@ function parseArgsAndRedirects(tokens) {
         while (eatSpaces(tokens) && tokens[0].type !== 'operator') {
             args.push(parseWord(tokens));
         }
-        if (tokens.length && tokens[0].type === 'operator' && tokens[0].value === '>') {
+        const isOperator = tokens[0]?.type === 'operator';
+        if (isOperator && tokens[0].value === '>') {
             tokens.shift();
             eatSpaces(tokens);
             redirects.push({
@@ -129,6 +130,14 @@ function parseArgsAndRedirects(tokens) {
                 from: 1,
                 to: parseWord(tokens),
             });
+        } else if (isOperator && tokens[0].value === '<') {
+            tokens.shift();
+            eatSpaces(tokens);
+            redirects.push({
+                type: 'read',
+                from: 0,
+                to: parseWord(tokens),
+            });            
         } else {
             break;
         }

@@ -32,6 +32,7 @@ function tokenize(code, processTemplateParameter = null) {
         ';',
         '*',
         '>',
+        '<',
     ]);
     for (; i < code.length; i++) {
         const char = code[i];

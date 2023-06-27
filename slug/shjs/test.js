@@ -447,4 +447,10 @@ describe('redirect', () => {
         expect(output).toEqual([]);
         expect(await fs.promises.readFile(helloFile, 'utf8')).toEqual('hello\n');
     });
+    it('should do a redirect from a text file', async () => {
+        const helloFile = path.join(tempDir, 'hello.txt');
+        fs.writeFileSync(helloFile, "hello world\n", "utf8");
+        const output = await sh`cat < ${helloFile}`;
+        expect(output).toEqual(['hello world']);
+    });
 })

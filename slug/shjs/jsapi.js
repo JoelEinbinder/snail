@@ -66,7 +66,7 @@ function executeAndGetLines(expression) {
       lines.push(line);
   }
   const {closePromise, stdin} = execute(expression, outStream, process.stderr);
-  stdin.end();
+  stdin?.end();
   closePromise.then(async () => {
     addLine(currentLine);
     done = true;

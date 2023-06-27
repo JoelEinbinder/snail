@@ -453,7 +453,7 @@ function computeReplacement(replacement) {
  * @param {Writable} stdout
  * @param {Writable} stderr
  * @param {Readable=} stdin
- * @return {{stdin: Writable, kill: (signal: number) => boolean, closePromise: Promise<number>}}
+ * @return {{stdin: Writable|null, kill: (signal: number) => boolean, closePromise: Promise<number>}}
  */
 function execute(expression, stdout, stderr, stdin) {
     try {
@@ -481,7 +481,11 @@ function execute(expression, stdout, stderr, stdin) {
                 const openFds = [];
                 for (const redirect of redirects || []) {
                     const file = processWord(redirect.to)[0];
-                    const fd = fs.openSync(file, redirect.type === 'write' ? 'w' : 'a');
+                    const fd = fs.openSync(file, {
+                        'write': 'w',
+                        'append': 'a',
+                        'read': 'r',
+                    }[redirect.type]);
 
                     stdio[redirect.from] = fd;
                     openFds.push(fd);
