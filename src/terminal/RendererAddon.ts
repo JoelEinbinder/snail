@@ -143,6 +143,11 @@ class Renderer implements IRenderer {
   }
   onCursorMove(): void {
     this._updateCursor();
+    if (isAncesetorOf(this._terminal.element, this._terminal.element.ownerDocument.activeElement)) {
+      // TODO make this work for firefox?
+      // @ts-ignore
+      this._cursor.scrollIntoViewIfNeeded?.();
+    }
   }
   private _updateCursor() {
     const cursorPosition = this._cursorPosition();
@@ -166,18 +171,13 @@ class Renderer implements IRenderer {
     }
     const bufferService: IBufferService = (this._core as any)._bufferService;
     const cursorY = bufferService.buffer.ybase + bufferService.buffer.y;
-    const viewportRelativeCursorY = cursorY - bufferService.buffer.ydisp;
-
-    // Don't draw the cursor if it's off-screen
-    if (viewportRelativeCursorY < 0 || viewportRelativeCursorY >= bufferService.rows)
-      return null;
 
     // in case cursor.x == cols adjust visual cursor to cols - 1
     const cursorX = Math.min(bufferService.buffer.x, bufferService.cols - 1);
     bufferService.buffer.lines.get(cursorY)!.loadCell(cursorX, this._workCell);
     if (this._workCell.content === undefined)
       return null;
-    return { x: cursorX, y: viewportRelativeCursorY, width: this._workCell.getWidth() };
+    return { x: cursorX, y: cursorY, width: this._workCell.getWidth() };
   }
 
 
@@ -481,4 +481,12 @@ function combineRects(...rects: Rect[]): Rect {
   var width = Math.max(...rects.map(rect => rect.x + rect.width)) - x;
   var height = Math.max(...rects.map(rect => rect.y + rect.height)) - y;
   return { x, y, width, height };
+}
+
+function isAncesetorOf(ancestor: Node, child: Node) {
+  while (child) {
+    if (child === ancestor) return true;
+    child = child.parentNode!;
+  }
+  return false;
 }
