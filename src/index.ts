@@ -10,7 +10,7 @@ import { host } from './host';
 import './QuickPick';
 import { registerGlobalAction } from './actions';
 document.title = 'Loading...';
-const useTabs = navigator['userAgentData'].platform !== 'macOS';
+const useTabs = navigator['userAgentData']?.platform !== 'macOS';
 console.time('load shell module');
 const done = startAyncWork('load shell module');
 const lazyLogView = makeLazyProxy<ShellDelegate>();

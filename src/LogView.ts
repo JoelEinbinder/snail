@@ -22,7 +22,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _activeItemListeners = new Set<() => void>();
   private _itemToElement = new WeakMap<LogItem, Element>();
   private _itemToParent = new WeakMap<LogItem, LogItem>();
-  private _itemToRetainCount = new WeakMap<LogItem, number>();
+  private _itemToRetainers = new WeakMap<LogItem, Set<LogItem>>();
   private _suffixThrottle = new UIThrottle('', () => {
     this.blockDelegate?.titleUpdated();
   });
@@ -111,14 +111,14 @@ export class LogView implements Block, ShellDelegate, Findable {
       const parentWrapper = this._itemToElement.get(parent);
       parentWrapper.appendChild(element);
       this._itemToParent.set(item, parent);
-      this._itemToRetainCount.set(parent, this._itemToRetainCount.get(parent) + 1);
+      this._itemToRetainers.get(parent).add(item);
     } else {
       if (this._prompt)
         this._scroller.insertBefore(element, this._prompt.render());
       else
         this._scroller.appendChild(element);
     }
-    this._itemToRetainCount.set(item, 1);
+    this._itemToRetainers.set(item, new Set([item]));
     if (item === this._activeItem)
       item.focus();
   }
@@ -150,10 +150,10 @@ export class LogView implements Block, ShellDelegate, Findable {
   removeItem(item: LogItem, force = false) {
     // console.log(item, force);
     if (!force) {
-      const count = this._itemToRetainCount.get(item) - 1;
-      this._itemToRetainCount.set(item, count);
+      const retainers = this._itemToRetainers.get(item);
+      retainers.delete(item);
       // something needs this item to still exist
-      if (count)
+      if (retainers.size > 0)
         return;
     }
     if (!this._log.removeItem(item))
@@ -166,9 +166,9 @@ export class LogView implements Block, ShellDelegate, Findable {
     }
     const parent = this._itemToParent.get(item);
     if (parent) {
-      const parentCount = this._itemToRetainCount.get(parent) - 1;
-      this._itemToRetainCount.set(parent, parentCount);
-      if (parentCount === 0)
+      const retainers = this._itemToRetainers.get(parent);
+      retainers.delete(item);
+      if (retainers.size === 0)
         this.removeItem(parent, true);
     }
     item.dispose();
@@ -176,7 +176,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     this._itemToElement.get(item)?.remove();
     this._itemToElement.delete(item);
     this._itemToParent.delete(item);
-    this._itemToRetainCount.delete(item);
+    this._itemToRetainers.delete(item);
   }
 
   clearAllExcept(savedItem: LogItem): void {
