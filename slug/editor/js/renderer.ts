@@ -69,7 +69,7 @@ export class Renderer extends Emitter<{
     var lineCount = 1;
     this._model.on('change', () => {
       this._clearHover();
-      if (this._model.lineCount() === lineCount) return;
+      if (this._model.lineCount() === lineCount && !this._options.wordWrap) return;
       if (this._options.inline) this.layout();
       else {
         const from = Math.min(lineCount, this._model.lineCount());
@@ -625,13 +625,6 @@ export class Renderer extends Emitter<{
       return;
     this._charHeight = parseInt(window.getComputedStyle(this._textLayer.canvas).fontSize);
     this._lineHeight = Math.max(parseInt(window.getComputedStyle(this._textLayer.canvas).lineHeight || '0'), this._charHeight);
-    if (this._options.inline) {
-      const newHeight = this._innerHeight() + 'px';
-      if (newHeight !== this.element.style.height) {
-        this.emit('might-resize', undefined);
-        this.element.style.height = newHeight;
-      }
-    }
     var rect = this.element.getBoundingClientRect();
     this._width = rect.width;
     this._height = rect.height;
@@ -645,7 +638,15 @@ export class Renderer extends Emitter<{
       this._textMeasuring = new TextMeasuring(
         char => ctx.measureText(char === '\t' ? this.TAB : char).width
       );
-    
+
+    if (this._options.inline) {
+      const newHeight = this._innerHeight() + 'px';
+      if (newHeight !== this.element.style.height) {
+        this.emit('might-resize', undefined);
+        this.element.style.height = newHeight;
+      }
+    }
+
     if (this._lineHeight && this._charWidth)
       this.refresh();
   }
