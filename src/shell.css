@@ -16,6 +16,13 @@
   user-select: none;
 }
 
+.command > .prefix.prefix:hover {
+  background: linear-gradient(rgba(128,128,128,0.35) 75%, transparent);
+  border-radius: 5px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
 .terminal {
   position: relative;
   top: -2px;
@@ -40,7 +47,7 @@
   display: none;
 }
 .log-item-wrapper.folded > :first-child .prefix {
-  background-color: rgba(128,128,128,0.5);
+  background: rgba(128,128,128,0.5);
   border-radius: 5px;
 }
 
