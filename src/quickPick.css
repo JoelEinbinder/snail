@@ -41,6 +41,7 @@ body.vscode-dark .quick-pick {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+  display: flex;
 }
 
 .quick-pick-option:hover {
@@ -49,15 +50,32 @@ body.vscode-dark .quick-pick {
 .quick-pick-option.selected {
   background-color: var(--ansi-237);
 }
-.quick-pick-option > .match {
+.quick-pick-option > .title > .match {
   font-weight: bold;
   color: var(--ansi-32);
 }
-
+.quick-pick-option > .title {
+  direction: rtl;
+  unicode-bidi: plaintext;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .quick-pick-option > .shortcut {
   color: var(--ansi-245);
   display: block;
   float: right;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  flex: 1;
+  text-align: right;
 }
 
+.quick-pick-warning {
+  border: 1px solid var(--color-3);
+  margin: 4px;
+  padding: 4px;
+  background: rgba(255,255,0,0.2);
+}
+
+.quick-pick-warning:empty {
+  display: none;
+}

@@ -10,6 +10,9 @@ type ExtraServerMethods = {
   'Shell.subshellDestroyed': { id: number };
   'Shell.messageFromSubshell': { id: number, message: any };
   'Shell.askPassword': { id: number, message: string };
+
+  'Shell.evaluateStreamingData': { streamId: number, data: string };
+  'Shell.evaluateStreamingEnd': { streamId: number };
 }
 type ServerMethods = Protocol.Events & ExtraServerMethods;
 
@@ -18,6 +21,7 @@ export type ExtraClientMethods = {
   'Shell.disable': () => void;
   'Shell.setIsDaemon': (params: {isDaemon: boolean}) => void;
   'Shell.evaluate': (params: {code: string}) => {result: string};
+  'Shell.evaluateStreaming': (params: {code: string}) => {streamId: number};
   'Shell.runCommand': (params: {command: string, expression: string}) => Protocol.CommandReturnValues['Runtime.evaluate'];
   'Shell.restore': () => Protocol.CommandReturnValues['Runtime.evaluate']|null;
 

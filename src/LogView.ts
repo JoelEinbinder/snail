@@ -149,7 +149,6 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
 
   removeItem(item: LogItem, force = false) {
-    // console.log(item, force);
     if (!force) {
       const retainers = this._itemToRetainers.get(item);
       retainers.delete(item);
@@ -360,22 +359,35 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
 
   async quickPicks(): Promise<QuickPickProvider[]> {
-    let filesPromise: Promise<string[]>|undefined;
+    let filesPromise: Promise<void>|undefined;
+    const listeners = new Set<(file: string) => void>();
+    const cachedFiles: string[] = [];
+    const maxFiles = 10000;
     return [{
       title: 'Select file',
       prefix: '',
-      items: async () => {
-        if (!filesPromise)
-          filesPromise = this._shell.findAllFiles();
-        const files = await filesPromise;
-        console.log(files)
-        return files.map(file => ({
+      items: async (signal, callback, warn) => {
+        if (!filesPromise) {
+          filesPromise = this._shell.findAllFiles(maxFiles, file => {
+            cachedFiles.push(file);
+            for (const listener of listeners)
+              listener(file);
+          });
+        }
+        const reportFile = (file: string) => callback({
           callback: () => {
             const active = this._activeItem || this._prompt;
             active?.recieveFilePath?.(file);    
           },
-          title: file,
-        }));
+          title: file,  
+        });
+        for (const file of cachedFiles)
+          reportFile(file);
+        listeners.add(reportFile);
+        await filesPromise;
+        if (cachedFiles.length >= maxFiles)
+          warn(`File limit reached, only searching first ${maxFiles.toLocaleString()} files.`)
+        listeners.delete(reportFile);
       }
     }];
   }

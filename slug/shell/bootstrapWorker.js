@@ -28,6 +28,7 @@ let objectIdPromise;
 let lastCommandPromise;
 let lastSubshellId = 0;
 let lastAskPassId = 0;
+let lastStreamId = 0;
 /** @type {Map<number, (password: string) => void>} */
 const passwordCallbacks = new Map();
 /** @type {Map<number, import('../protocol/ProtocolProxy').ProtocolProxy>} */
@@ -55,6 +56,24 @@ const handler = {
     const {getResult} = require('../shjs/index');
     const {output} = await getResult(code);
     return { result: output };
+  },
+  'Shell.evaluateStreaming': async (params) => {
+    const streamId = ++lastStreamId;
+    const { code } = params;
+    const { execute } = require('../shjs/index');
+    const { Writable } = require('stream');
+    // make sure the streamId is sent before any evaluateStreamData comes in.
+    setTimeout(async () => {
+      const { closePromise, kill, stdin } = execute(code, new Writable({
+        write(chunk, encoding, callback) {
+          transport?.send({ method: 'Shell.evaluateStreamingData', params: {streamId, data: chunk.toString()}});
+          callback();
+        }
+      }));
+      await closePromise;
+      transport?.send({ method: 'Shell.evaluateStreamingEnd', params: {streamId}});
+    }, 0);
+    return { streamId };
   },
   'Shell.restore': async () => {
     shellState.restore(message => transport.send(message));

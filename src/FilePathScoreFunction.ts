@@ -37,6 +37,7 @@ export class FilePathScoreFunction {
   private fileNameIndex: number;
   private lastDataUpperCase: string;
 
+  private _filterRegex: RegExp;
   constructor(query: string) {
     this.query = query;
     this.queryUpperCase = query.toUpperCase();
@@ -45,10 +46,11 @@ export class FilePathScoreFunction {
     this.dataUpperCase = '';
     this.fileNameIndex = 0;
     this.lastDataUpperCase = '';
+    this._filterRegex = makeFilterRegex(query);
   }
 
   calculateScore(data: string, matchIndexes: number[]|null): number {
-    if (!data || !this.query) {
+    if (!data || !this.query || !this._filterRegex.test(data)) {
       return 0;
     }
     const n = this.query.length;
@@ -169,3 +171,19 @@ export class FilePathScoreFunction {
     return this.sequenceCharScore(query, data, i, j - consecutiveMatch, consecutiveMatch);
   }
 }
+
+const SPECIAL_REGEX_CHARACTERS = '^[]{}()\\.^$*+?|-,';
+export function makeFilterRegex(query: string): RegExp {
+  let regexString = '';
+  for (let i = 0; i < query.length; ++i) {
+    let c = query.charAt(i);
+    if (SPECIAL_REGEX_CHARACTERS.indexOf(c) !== -1) {
+      c = '\\' + c;
+    }
+    if (i) {
+      regexString += '[^\\0' + c + ']*';
+    }
+    regexString += c;
+  }
+  return new RegExp(regexString, 'i');
+};

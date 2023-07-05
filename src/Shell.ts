@@ -649,6 +649,42 @@ export class Shell {
     return result.trim();
   }
 
+  async evaluateStream(code: string, callback: (chunk: string) => void): Promise<void> {
+    let tick: (data?: string) => void;
+    const dataListener = (event: { streamId: number, data: string}) => {
+      if (event.streamId !== streamId)
+        return;
+      bufferedData.push(event.data);
+      tick();
+    };
+    let ended = false;
+    const endListener = (event: {streamId: number}) => {
+      if (event.streamId !== streamId)
+        return;
+      ended = true;
+      tick();
+    };
+    let bufferedData: string[] = [];
+    let dataIndex = 0;
+    this.connection.on('Shell.evaluateStreamingData', dataListener);
+    this.connection.on('Shell.evaluateStreamingEnd', endListener);
+    const {streamId} = await this.connection.send('Shell.evaluateStreaming', {
+      code,
+    });
+    while (true) {
+      if (ended)
+        break;
+      if (bufferedData.length <= dataIndex) {
+        await new Promise(x => tick = x);
+        continue;
+      }
+      callback(bufferedData[dataIndex]);
+      dataIndex++;
+    }
+    this.connection.off('Shell.evaluateStreamingData', dataListener);
+    this.connection.off('Shell.evaluateStreamingEnd', endListener);
+  }
+
   updateSize(width: number, height: number) {
     const char = measureChar();
     const PADDING = 4;
@@ -884,13 +920,13 @@ export class Shell {
           end: { column: 0, line: 0 }
         };
         editor.replaceRange(filePath, beforeRange);
-        editor.setSelection({
+        editor.selections = [{
           start: beforeRange.start,
           end: {
             column: beforeRange.start.column + filePath.length,
             line: beforeRange.start.line,
           }
-        });
+        }];
       }
     }
   }
@@ -959,8 +995,14 @@ export class Shell {
     return this._cachedSuggestions.get(prefix);
   }
 
-  async findAllFiles(): Promise<string[]> {
-    return (await this.evaluate('__find_all_files')).split('\n');
+  async findAllFiles(maxFiles: number, callback: (path: string) => void) {
+    let prefix = '';
+    await this.evaluateStream(`__find_all_files ${maxFiles}`, chunk => {
+      const lines = (prefix + chunk).split('\n');
+      prefix = lines.pop();
+      for (const line of lines)
+        callback(line);
+    });
   }
 }
 

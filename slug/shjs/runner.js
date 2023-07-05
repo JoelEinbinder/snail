@@ -301,10 +301,92 @@ const builtins = {
         return 0;
     },
     __find_all_files: async (args, stdout, stderr, stdin, env) => {
-        const glob = require('fast-glob');
-        const files = glob.sync('**/*');
-        for (const file of files)
-            stdout.write(file + '\n');
+        const maxFiles = parseInt(args[0] || '1');
+        let filesSeen = 0;
+        try {
+            /**
+             * Originally from globby
+             * Copyright (c) Sindre Sorhus
+             * MIT License
+             * Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+             */
+            const isNegativePattern = pattern => pattern[0] === '!';
+
+            const applyBaseToPattern = (pattern, base) => isNegativePattern(pattern)
+                ? '!' + path.posix.join(base, pattern.slice(1))
+                : path.posix.join(base, pattern);
+
+            const slash = (path) => {
+                const isExtendedLengthPath = path.startsWith('\\\\?\\');
+            
+                if (isExtendedLengthPath) {
+                    return path;
+                }
+            
+                return path.replace(/\\/g, '/');
+            };
+
+            const parseIgnoreFile = (file, cwd) => {
+                const base = slash(path.relative(cwd, path.dirname(file.filePath)));
+
+                return file.content
+                    .split(/\r?\n/)
+                    .filter(line => line && !line.startsWith('#'))
+                    .map(pattern => applyBaseToPattern(pattern, base));
+            };
+
+            const { default: ignore } = require('ignore');
+            const gitignore = ignore();
+            gitignore.ignores('foo/bar');
+            const root = process.cwd();
+            const {walkStream} = require('@nodelib/fs.walk');
+            const seenIgnores = new Set();
+            const updateIgnores = current => {
+                while (current !== '/') {
+                    current = path.dirname(current);
+                    const ignoreFile = path.join(current, '.gitignore');
+                    if (seenIgnores.has(ignoreFile))
+                        continue;
+                    seenIgnores.add(ignoreFile);
+                    try {
+                        const content = fs.readFileSync(ignoreFile, 'utf8');
+                        const parsed = parseIgnoreFile({ content , filePath: ignoreFile }, root);
+                        gitignore.add(parsed);
+                    } catch {
+                        // if the ignore file doesn't exist or something this will throw
+                    }
+                }
+            };
+            const stream = walkStream(root, {
+                errorFilter: () => true,
+                concurrency: 4 * require('os').cpus().length,
+                deepFilter: value => {
+                    if (value.name === '.git')
+                        return false;
+                    updateIgnores(value.path);
+                    return !gitignore.ignores(path.relative(root, value.path));
+                },
+                entryFilter: value => {
+                    if (value.dirent.isDirectory())
+                        return false;
+                    updateIgnores(value.path);
+                    return !gitignore.ignores(path.relative(root, value.path));
+                },
+                basePath: root,
+            });
+            stdin?.once('finish', () => {
+                stream.destroy();
+            });
+            for await (const file of stream) {
+                stdout.write(path.relative(root, file.path) + '\n');
+                filesSeen++;
+                if (filesSeen >= maxFiles)
+                    break;
+            }
+            stream.destroy();
+        } catch (e) {
+            stdout.write(e.message + '\n');
+        }
         return 0;
     },
 };

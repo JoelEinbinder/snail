@@ -6,6 +6,7 @@ import { rootBlock } from './GridPane';
 import { startAyncWork } from './async';
 import { setBrowserViewsHidden } from './BrowserView';
 import { FilePathScoreFunction } from './FilePathScoreFunction';
+import { setSelection } from './selection';
 export let activePick: QuickPick | undefined;
 const isMac = navigator['userAgentData']?.platform === 'macOS';
 interface QuickPickItem {
@@ -17,19 +18,21 @@ export interface QuickPickProvider {
   // Title for this provider in the quick pick help
   title: string;
   prefix: string;
-  items: (abortSignal: AbortSignal) => QuickPickItem[]|Promise<QuickPickItem[]>;
+  items: (abortSignal: AbortSignal, callback: (item: QuickPickItem) => void, warn: (message: string) => void) => QuickPickItem[]|Promise<void>;
 }
 class QuickPick {
   private _element = document.createElement('dialog');
   private _input = document.createElement('input');
   private _optionsTray = document.createElement('div');
+  private _warningContainer = document.createElement('div');
   private _selected?: HTMLElement;
   private _doFocus = () => this._input.focus();
   private _abortController: AbortController|undefined;
   constructor(initialText: string, private _providers: QuickPickProvider[]) {
     this._element.classList.add('quick-pick');
     this._optionsTray.classList.add('quick-pick-options');
-    this._element.append(this._input, this._optionsTray);
+    this._warningContainer.classList.add('quick-pick-warning');
+    this._element.append(this._input, this._warningContainer, this._optionsTray);
     document.body.append(this._element);
     activePick = this;
     setBrowserViewsHidden(true);
@@ -52,8 +55,12 @@ class QuickPick {
     this._input.addEventListener('input', () => {
       this._render();
     });
+    this._input.addEventListener('focus', () => {
+      setSelection(() => window.getSelection().toString());
+    });
     window.addEventListener('focus', this._doFocus);
     this._input.focus();
+    setSelection(() => window.getSelection().toString());
     this._input.addEventListener('keydown', event => {
       if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)
         return;
@@ -76,6 +83,8 @@ class QuickPick {
   }
 
   dispose() {
+    if (!this._element.isConnected)
+      return;
     if (this._element.open)
       this._element.close();
     this._element.remove();
@@ -92,6 +101,7 @@ class QuickPick {
     const {signal} = this._abortController = new AbortController();
 
     this._optionsTray.textContent = '';
+    this._warningContainer.textContent = '';
     this._selectElement(undefined);
     const provider = this._providers.filter(x => this._input.value.startsWith(x.prefix)).sort((a, b) => b.prefix.length - a.prefix.length)[0];
     if (!provider) {
@@ -99,62 +109,90 @@ class QuickPick {
       return;
     }
     const query = this._input.value.substring(provider.prefix.length);
-    
-    const items = await provider.items(signal);
+    const doUpdate = () => {
+      this._optionsTray.textContent = '';
+      const scorer = new FilePathScoreFunction(query);
+      const sortedItems = items.map(({title, callback, shortcut}) => {
+        // const diff = new diff_match_patch().diff_main(query.toLowerCase(), title.toLowerCase());
+        // let total = 0;
+        // for (const {0: type, 1: text} of diff) {
+        //   if (type === DIFF_EQUAL)
+        //     total += text.length;
+        // }
+        // if (total < query.length)
+        //   return null;
+        // let score = 0;
+        // let index = 0;
+        // for (const {0: type, 1: text} of diff) {
+        //   if (type === DIFF_EQUAL)
+        //     score += text.length ** 2;
+        //   index += text.length;
+        // }
+        const score = scorer.calculateScore(title, null);
+        if (score <= 0 && query)
+          return null;
+        return {title, callback, shortcut, score};
+      }).filter(x => x).sort((a, b) => b.score - a.score).slice(0, 100).map(({title, callback, shortcut}) => {
+        const element = document.createElement('div');
+        const diff = new diff_match_patch().diff_main(query.toLowerCase(), title.toLowerCase());
+
+        let index = 0;
+        const titleElement = document.createElement('span');
+        titleElement.classList.add('title');
+        element.append(titleElement);
+        for (const {0: type, 1: text} of diff) {
+          if (type === DIFF_EQUAL) {
+            const span = document.createElement('span');
+            const sliced = title.slice(index, index + text.length);
+            span.textContent = sliced;
+            span.classList.add('match');
+            titleElement.append(span);
+          } else if (type === DIFF_INSERT) {
+            const sliced = title.slice(index, index + text.length);
+            titleElement.append(sliced);
+          }
+          index += text.length;
+        }
+
+        element.classList.add('quick-pick-option');
+        if (shortcut) {
+          const shortcutElement = document.createElement('span');
+          shortcutElement.classList.add('shortcut');
+          shortcutElement.textContent = formatShortcut(shortcutParser(shortcut, isMac));
+          element.append(shortcutElement);
+        }
+        element.addEventListener('click', () => {
+          this.dispose();
+          callback();
+        });
+        return element;
+      });
+      for (const element of sortedItems) {
+        this._optionsTray.append(element);
+        if (!this._selected)
+          this._selectElement(element);
+      }
+    }
+    const items: QuickPickItem[] = [];
+    let lastUpdate = Date.now();
+    const retVal = provider.items(signal, item => {
+      if (signal.aborted)
+        return;
+      items.push(item);
+      if (Date.now() - lastUpdate > 100 && items.length > 100) {
+        doUpdate();
+        lastUpdate = Date.now();
+      }
+    }, warningMessage => {
+      this._warningContainer.textContent = warningMessage;
+    });
+    if (Array.isArray(retVal))
+      items.push(...retVal);
+    else
+      await retVal;
     if (signal.aborted)
       return;
-    const scorer = new FilePathScoreFunction(query);
-    const sortedItems = items.map(({title, callback, shortcut}) => {
-      // const diff = new diff_match_patch().diff_main(query.toLowerCase(), title.toLowerCase());
-      let total = 0;
-      // for (const {0: type, 1: text} of diff) {
-      //   if (type === DIFF_EQUAL)
-      //     total += text.length;
-      // }
-      // if (total < query.length)
-      //   return null;
-      // let score = 0;
-      // let index = 0;
-      // for (const {0: type, 1: text} of diff) {
-      //   if (type === DIFF_EQUAL) {
-      //     score += text.length ** 2;
-      //     const span = document.createElement('span');
-      //     const sliced = title.slice(index, index + text.length);
-      //     span.textContent = sliced;
-      //     span.classList.add('match');
-      //     element.append(span);
-      //   } else if (type === DIFF_INSERT) {
-      //     const sliced = title.slice(index, index + text.length);
-      //     element.append(sliced);
-      //   }
-      //   index += text.length;
-      // }
-      const score = scorer.calculateScore(title, null);
-      if (score <= 0 && query)
-        return null;
-      return {title, callback, shortcut, score};
-    }).filter(x => x).sort((a, b) => b.score - a.score).slice(0, 100).map(({title, callback, shortcut}) => {
-      const element = document.createElement('div');
-      element.append(title);
-      if (shortcut) {
-        const shortcutElement = document.createElement('span');
-        shortcutElement.classList.add('shortcut');
-        shortcutElement.textContent = formatShortcut(shortcutParser(shortcut, isMac));
-        element.append(shortcutElement);
-      }
-
-      element.classList.add('quick-pick-option');
-      element.addEventListener('click', () => {
-        this.dispose();
-        callback();
-      });
-      return element;
-    });
-    for (const element of sortedItems) {
-      this._optionsTray.append(element);
-      if (!this._selected)
-        this._selectElement(element);
-    }
+    doUpdate();
   }
 
   _selectElement(element?: HTMLElement) {
@@ -174,6 +212,7 @@ class QuickPick {
   }
 }
 
+let lastQuickPick: QuickPick | undefined;
 export async function showQuickPick(prefix: string) {
   const done = startAyncWork('loading quickpick');
   const actions = [...availableActions(), ...await rootBlock.asyncActions()];
@@ -198,8 +237,9 @@ export async function showQuickPick(prefix: string) {
       });
     }
   }];
-
-  const quickPick = new QuickPick(prefix, providers);
+  if (lastQuickPick)
+    lastQuickPick.dispose();
+  lastQuickPick = new QuickPick(prefix, providers);
   done();
 }
 
