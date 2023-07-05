@@ -7,6 +7,7 @@ import { startAyncWork } from './async';
 import { setBrowserViewsHidden } from './BrowserView';
 import { FilePathScoreFunction } from './FilePathScoreFunction';
 import { setSelection } from './selection';
+import { AntiFlicker } from './AntiFlicker';
 export let activePick: QuickPick | undefined;
 const isMac = navigator['userAgentData']?.platform === 'macOS';
 interface QuickPickItem {
@@ -28,11 +29,16 @@ class QuickPick {
   private _selected?: HTMLElement;
   private _doFocus = () => this._input.focus();
   private _abortController: AbortController|undefined;
+  private _didDraw: () => void;
   constructor(initialText: string, private _providers: QuickPickProvider[]) {
     this._element.classList.add('quick-pick');
     this._optionsTray.classList.add('quick-pick-options');
     this._warningContainer.classList.add('quick-pick-warning');
     this._element.append(this._input, this._warningContainer, this._optionsTray);
+    const antiFlicker = new AntiFlicker(
+      () => this._element.style.opacity = '0',
+      () => this._element.style.opacity = '1');
+    this._didDraw = antiFlicker.expectToDraw(1000);
     document.body.append(this._element);
     activePick = this;
     setBrowserViewsHidden(true);
@@ -111,23 +117,9 @@ class QuickPick {
     const query = this._input.value.substring(provider.prefix.length);
     const doUpdate = () => {
       this._optionsTray.textContent = '';
+      this._selectElement(undefined);
       const scorer = new FilePathScoreFunction(query);
       const sortedItems = items.map(({title, callback, shortcut}) => {
-        // const diff = new diff_match_patch().diff_main(query.toLowerCase(), title.toLowerCase());
-        // let total = 0;
-        // for (const {0: type, 1: text} of diff) {
-        //   if (type === DIFF_EQUAL)
-        //     total += text.length;
-        // }
-        // if (total < query.length)
-        //   return null;
-        // let score = 0;
-        // let index = 0;
-        // for (const {0: type, 1: text} of diff) {
-        //   if (type === DIFF_EQUAL)
-        //     score += text.length ** 2;
-        //   index += text.length;
-        // }
         const score = scorer.calculateScore(title, null);
         if (score <= 0 && query)
           return null;
@@ -172,6 +164,7 @@ class QuickPick {
         if (!this._selected)
           this._selectElement(element);
       }
+      this._didDraw();
     }
     const items: QuickPickItem[] = [];
     let lastUpdate = Date.now();
