@@ -16,7 +16,7 @@
   user-select: none;
 }
 
-.log-item-wrapper {
+.log-item-wrapper:not(:has(.fullscreen)) {
   position: relative;
 }
 .log-item-wrapper:not(.folded):has(.prefix:hover)::before {
