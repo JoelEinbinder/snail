@@ -377,12 +377,16 @@ const builtins = {
             stdin?.once('finish', () => {
                 stream.destroy();
             });
-            for await (const file of stream) {
-                stdout.write(path.relative(root, file.path) + '\n');
-                filesSeen++;
-                if (filesSeen >= maxFiles)
-                    break;
-            }
+            const endPromise = new Promise(x => stream.once('end', x));
+            const readPromise = (async () => {
+                for await (const file of stream) {
+                    stdout.write(path.relative(root, file.path) + '\n');
+                    filesSeen++;
+                    if (filesSeen >= maxFiles)
+                        break;
+                }    
+            })();
+            await Promise.race([endPromise, readPromise]);
             stream.destroy();
         } catch (e) {
             stdout.write(e.message + '\n');
