@@ -2701,7 +2701,12 @@ const extensionToLanguage = {
   ".di": "d",
   ".nginx": "nginx"
 };
-const fontFace = new FontFace('seti', `url('${setiWoffUrl}')`);
+declare global {
+	interface ImportMeta {
+		resolve: (moduleName: string) => string;
+	}
+}
+const fontFace = new FontFace('seti', `url('${import.meta.resolve(setiWoffUrl)}')`);
 document.fonts.add(fontFace);
 const readyPromise = document.fonts.load('16px seti');
 export function iconPathForPath(fullPath: string, info: {dir: string, mode: number, size: number, isDirectory: boolean}) {

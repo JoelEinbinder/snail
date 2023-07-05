@@ -11,6 +11,7 @@ try {
     bundle: true,
     loader: {
       '.svg': 'dataurl',
+      '.woff': 'file',
     },
     // TODO, splitting breaks on shjs
     splitting: false,

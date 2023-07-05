@@ -10,6 +10,8 @@ import type { LogItem } from './LogItem';
 import { Find, Findable, FindableList, type FindParams } from './Find';
 import { attachMenuItemsToContextMenuEvent } from './contextMenu';
 import { QuickPickProvider, showQuickPick } from './QuickPick';
+import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_match_patch';
+import { iconPathForPath } from '../slug/icon_service/iconService';
 
 export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
@@ -388,6 +390,46 @@ export class LogView implements Block, ShellDelegate, Findable {
         if (cachedFiles.length >= maxFiles)
           warn(`File limit reached, only searching first ${maxFiles.toLocaleString()} files.`)
         listeners.delete(reportFile);
+      },
+      renderItem: (item, query) => {
+        const { title } = item;
+        const element = document.createElement('div');
+        const icon = iconPathForPath(title, { isDirectory: false, dir: title, mode: 0o644, size: 0 });
+        element.append(icon.element);
+        const diff = new diff_match_patch().diff_main(query.toLowerCase(), title.toLowerCase());
+
+        let index = 0;
+        const titleElement = document.createElement('span');
+        titleElement.classList.add('title');
+        const subtitleElement = document.createElement('span');
+        subtitleElement.classList.add('subtitle');
+        element.append(titleElement, subtitleElement);
+        const lastSlash = title.lastIndexOf('/');
+        for (const {0: type, 1: text} of diff) {
+          if (lastSlash !== -1) {
+            const subtitleText = title.slice(index, Math.min(index + text.length, lastSlash));
+            addText(subtitleText, type === DIFF_EQUAL, subtitleElement);
+          }
+          const titleText = title.slice(Math.max(lastSlash + 1, index), index + text.length);
+          addText(titleText, type === DIFF_EQUAL, titleElement);
+          
+          index += text.length;
+        }
+        function addText(text: string, isMatch: boolean, target: Element) {
+          if (!text)
+            return;
+          if (isMatch) {
+            const span = document.createElement('span');
+            span.textContent = text;
+            span.classList.add('match');
+            target.append(span);
+          } else {
+            target.append(text);
+          }
+        }
+
+        element.classList.add('quick-pick-option');
+        return element;
       }
     }];
   }

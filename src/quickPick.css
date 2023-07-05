@@ -41,7 +41,7 @@ body.vscode-dark .quick-pick {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  display: flex;
+  color: var(--ansi-245);
 }
 
 .quick-pick-option:hover {
@@ -54,11 +54,22 @@ body.vscode-dark .quick-pick {
   font-weight: bold;
   color: var(--ansi-32);
 }
+.quick-pick-option > .subtitle > .match {
+  font-weight: bold;
+  color: var(--ansi-32);
+}
+.quick-pick-option > .subtitle:not(:empty)::before {
+  content: ' ';
+  white-space: pre;
+}
+.quick-pick-option > .subtitle {
+  color: var(--ansi-245);
+}
 .quick-pick-option > .title {
-  direction: rtl;
-  unicode-bidi: plaintext;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+.quick-pick-option > .seti-icon::before {
+  margin-left: -4px;
 }
 .quick-pick-option > .shortcut {
   color: var(--ansi-245);
