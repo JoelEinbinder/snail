@@ -53,6 +53,21 @@ document.addEventListener('keydown', event => {
     continuationActions = null;
   if (!matchingActions.length)
     return;
+  matchingActions.sort((a, b) => {
+    function scoreShortcut(shortcut: ParsedShortcut) {
+      let score = 0;
+      if (shortcut.shiftKey !== undefined)
+        score++;
+      if (shortcut.ctrlKey !== undefined)
+        score++;
+      if (shortcut.altKey !== undefined)
+        score++;
+      if (shortcut.metaKey !== undefined)
+        score++;
+      return score;
+    }
+    return scoreShortcut(b.shortcut) - scoreShortcut(a.shortcut);
+  });
   event.preventDefault();
   event.stopImmediatePropagation();
   const completeAction = matchingActions.find(x => !x.shortcut.continuation);

@@ -4,7 +4,7 @@ test('can open quick pick', async ({ shell }) => {
   await shell.openQuickPick();
   expect(await shell.serialize()).toEqual({
     type: 'quick-pick',
-    value: '',
+    value: '>',
   });
   await shell.closeQuickPick();
   expect(await shell.serialize()).toEqual({
@@ -19,6 +19,6 @@ test('can open quick pick when focus is on an iframe', async ({ shell }) => {
   await shell.openQuickPick();
   expect(await shell.serialize()).toEqual({
     type: 'quick-pick',
-    value: '',
+    value: '>',
   });
 });

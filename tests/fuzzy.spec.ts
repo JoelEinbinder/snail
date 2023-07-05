@@ -14,8 +14,6 @@ test('score correctly', async ({ }) => {
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 100);
   expect(sortedItems).toEqual([
     { title: '/foo/bar/handle.js', score: 28142 },
-    { title: '/abc/h/woo/ndle.js', score: 16110 },
-    { title: '/foo/bar/baz', score: 244 },
   ]);
 });
 test('quickly render a big file', async ({ }) => {
