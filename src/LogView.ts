@@ -153,10 +153,13 @@ export class LogView implements Block, ShellDelegate, Findable {
   removeItem(item: LogItem, force = false) {
     if (!force) {
       const retainers = this._itemToRetainers.get(item);
-      retainers.delete(item);
-      // something needs this item to still exist
-      if (retainers.size > 0)
-        return;
+      // The retainers might not exist if we don't own this item
+      if (retainers) {
+        retainers.delete(item);
+        // something needs this item to still exist
+        if (retainers.size > 0)
+          return;
+      }
     }
     if (!this._log.removeItem(item))
       return;
