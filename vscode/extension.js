@@ -68,10 +68,10 @@ function activate(context) {
 				enableForms: true,
 				enableCommandUris: true,
 			};
-			const {PipeTransport} = require(path.join(os.homedir(), '/gap-year/slug/protocol/pipeTransport'));
+			const {PipeTransport} = require(path.join(os.homedir(), '/snail/slug/protocol/pipeTransport'));
 			let ready = false;
 			let buffer = [];
-			const child = spawn('/usr/local/bin/node', [require.resolve(path.join(os.homedir(), '/gap-year/node_host/'))], {
+			const child = spawn('/usr/local/bin/node', [require.resolve(path.join(os.homedir(), '/snail/node_host/'))], {
 				env: {
 					HOME: os.homedir(),
 					PATH: process.env.PATH,
@@ -83,11 +83,11 @@ function activate(context) {
 			webview.webview.html = `
 				<!DOCTYPE html>
 				<head>
-				<base href="http://localhost/gap-year/">
+				<base href="http://localhost/snail/">
 					<script>localStorage.setItem("cwd", ${JSON.stringify(cwd)})</script>
 				</head>
 				<body>
-					<script src="http://localhost/gap-year/main.bundle.js"></script>
+					<script src="http://localhost/snail/main.bundle.js"></script>
 				</body>`;
 			const progressBar = new ProgressBar();
 			webview.webview.onDidReceiveMessage(message => {

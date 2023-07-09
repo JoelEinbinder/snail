@@ -71,12 +71,12 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "TERMINAL_HOST_PATH"
-            value = "/Users/joeleinbinder/gap-year/node_host/"
+            value = "/Users/joeleinbinder/snail/node_host/"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "TERMINAL_WEB_URL"
-            value = "http://localhost/gap-year/"
+            value = "http://localhost/snail/"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

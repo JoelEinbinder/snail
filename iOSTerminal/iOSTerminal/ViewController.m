@@ -71,7 +71,7 @@ NSString* show_remote_processes(ssh_session session)
     NSString* rawSSHAddress = [NSString stringWithFormat:@"%@@%@", userInfo[@"location"][@"username"], userInfo[@"location"][@"hostname"]];
     NSString* sshAddress = [rawSSHAddress stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
     NSString* socketPath = [userInfo[@"location"][@"socketPath"] stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
-    NSString* urlStr = [NSString stringWithFormat:@"http://Joels-Mac-mini.local/gap-year/?sshAddress=%@&socketPath=%@", sshAddress, socketPath];
+    NSString* urlStr = [NSString stringWithFormat:@"http://Joels-Mac-mini.local/snail/?sshAddress=%@&socketPath=%@", sshAddress, socketPath];
     [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:urlStr]]];
     completionHandler();
 }
@@ -89,7 +89,7 @@ NSString* show_remote_processes(ssh_session session)
     // prevents a white flash
     [webView setOpaque: NO];
     [webView setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
-    [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://Joels-Mac-mini.local/gap-year/"]]];
+    [webView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://Joels-Mac-mini.local/snail/"]]];
     [self.view addSubview:webView];
     // Do any additional setup after loading the view.
     //    ssh_session my_ssh_session = ssh_new();
