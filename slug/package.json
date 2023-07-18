@@ -9,6 +9,7 @@
     "@nodelib/fs.walk": "^1.2.8",
     "acorn": "^8.7.0",
     "esbuild": "^0.15.12",
+    "fast-glob": "^3.3.0",
     "ignore": "^5.2.4",
     "mime-types": "^2.1.35",
     "node-pty": "^0.10.1",
