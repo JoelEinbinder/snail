@@ -298,14 +298,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
 
   actions(): Action[] {
-    if (this._isFullscreen)
-      return [];
-    return [{
-      title: 'Clear log',
-      shortcut: 'Ctrl+L',
-      id: 'log.clear',
-      callback: () => this.clearAll(),
-    }, {
+    const fullscreenActions: Action[] = [{
       title: 'Split vertically',
       shortcut: 'Ctrl+A %',
       id: 'log.split.vertical',
@@ -336,6 +329,21 @@ export class LogView implements Block, ShellDelegate, Findable {
         this._find.open(this._element);
       },
     }, {
+      title: 'Select file',
+      id: 'log.file',
+      shortcut: 'CmdOrCtrl+P',
+      callback: () => {
+        showQuickPick('');
+      }
+    },]
+    if (this._isFullscreen)
+      return fullscreenActions;
+    return [...fullscreenActions, {
+      title: 'Clear log',
+      shortcut: 'Ctrl+L',
+      id: 'log.clear',
+      callback: () => this.clearAll(),
+    }, {
       title: 'Fold all',
       id: 'log.fold.all',
       shortcut: 'CmdOrCtrl+K O',
@@ -352,13 +360,6 @@ export class LogView implements Block, ShellDelegate, Findable {
         this._lockScroll();
         for (const item of this._log)
           item?.toggleFold?.dispatch(false);
-      }
-    }, {
-      title: 'Select file',
-      id: 'log.file',
-      shortcut: 'CmdOrCtrl+P',
-      callback: () => {
-        showQuickPick('');
       }
     }];
   }
