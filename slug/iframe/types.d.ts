@@ -13,4 +13,5 @@ declare var d4: {
   setActions(actions: import('../../src/actions').Action[] | (()=>import('../../src/actions').Action[])): void;
   startAsyncWork(name?: string): () => void;
   expectingUserInput(name?: string): () => void;
+  tryToRunCommand(command: string): Promise<void>;
 };

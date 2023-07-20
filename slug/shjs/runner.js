@@ -149,9 +149,25 @@ const builtins = {
             changes = {};
         const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
         if (args.includes('--list')) {
-            const entries = (await fs.promises.readdir(socketDir)).filter(x => x.endsWith('.socket'));
-            for (const entry of entries)
-                stderr.write(path.join(socketDir, entry) + '\n');
+            const quiet = args.includes('--quiet');
+            const metadataStrings = (await fs.promises.readdir(socketDir)).filter(x => x.endsWith('.json'));
+            /** @type {import('../shell/metadata').Metadata[]} */
+            const metadatas = [];
+            for (const metadataString of metadataStrings) {
+                /** @type {import('../shell/metadata').Metadata} */
+                const metadata = JSON.parse(await fs.promises.readFile(path.join(socketDir, metadataString), 'utf8'));
+                if (quiet) {
+                    if (!metadata.connected)
+                        return 0;
+                } else {
+                    metadatas.push(metadata);
+                }
+            }
+            if (quiet)
+                return 1;
+            const sdk = require('../sdk');
+            sdk.display(path.join(__dirname, '..', 'apps', 'reconnect', 'web.ts'));
+            sdk.send(metadatas);
             return 0;
         } else if (args.length) {
             changes.reconnect = path.resolve(process.cwd(), args[0]);

@@ -28,6 +28,7 @@ export type IFrameBlockDelegate = {
   antiFlicker?: AntiFlicker;
   urlForIframe(filePath: string): Promise<string>;
   browserView: boolean;
+  tryToRunCommand(command: string): void;
 }
 
 export interface WebContentView {
@@ -281,6 +282,11 @@ export class IFrameBlock implements LogItem {
           const resolve = this._resolveUserInputs.get(data.params.id);
           this._resolveUserInputs.delete(data.params.id);
           resolve();
+          break;
+        }
+        case 'tryToRunCommand': {
+          const { command } = data.params;
+          delegate.tryToRunCommand(command);
           break;
         }
       }

@@ -1,0 +1,17 @@
+.metadata {
+  display: flex;
+  margin: 2px;
+  gap: 10px;
+}
+
+.metadata > .title {
+  flex: 1;
+}
+
+.metadata > .time {
+  flex: 1;
+}
+
+.metadata > button {
+  flex: 1;
+}

@@ -8,7 +8,12 @@ const worker_threads = require('node:worker_threads');
 const { ShellState } = require('./ShellState');
 const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
 const socketPath = path.join(socketDir, `${process.pid}.socket`);
-
+const metadataPath = path.join(socketDir, `${process.pid}.json`);
+/** @type {import('./metadata').Metadata} */
+const metadata = {
+  connected: false,
+  socketPath,
+};
 worker_threads.parentPort.on('message', changes => {
   if (changes.env) {
     for (const key in changes.env)
@@ -52,10 +57,9 @@ const handler = {
     enabledTransports.delete(transport);
   },
   'Shell.evaluate': async (params) => {
-    const {code} = params;
     const {getResult} = require('../shjs/index');
-    const {output} = await getResult(code);
-    return { result: output };
+    const {output, code} = await getResult(params.code);
+    return { result: output, exitCode: code };
   },
   'Shell.evaluateStreaming': async (params) => {
     const streamId = ++lastStreamId;
@@ -92,8 +96,17 @@ const handler = {
       replMode: true,
       allowUnsafeEvalBlockedByCSP: true,
     });
+    /** @type {import('./metadata').Task} */
+    const task = {
+      command,
+      started: Date.now(),
+    };
+    metadata.task = task;
+    writeMetadata();
     const senderTransport = transport;
     const result = await lastCommandPromise;
+    task.ended = Date.now();
+    writeMetadata();
     if (senderTransport === transport)
       clearStoredMessages();
     else if (!transport) {
@@ -241,6 +254,8 @@ function waitForConnection() {
     detached = false;
     fs.unlinkSync(socketPath);
     transport = new PipeTransport(s, s);
+    metadata.connected = true;
+    writeMetadata();
     transport.onmessage = (/** @type {import('../protocol/pipeTransport').ProtocolRequest} */ message) => {
       if (message.method in handler) {
         dispatchToHandler(message, transport);
@@ -257,6 +272,8 @@ function waitForConnection() {
     s.on('close', () => {
       enabledTransports.delete(transport);
       transport = null;
+      metadata.connected = false;
+      writeMetadata();  
       if (isDaemon)
         waitForConnection();
       else
@@ -267,6 +284,7 @@ function waitForConnection() {
 process.on('exit', () => {
   if (detached)
     fs.unlinkSync(socketPath);
+  fs.unlinkSync(metadataPath);
 })
 
 const session = new inspector.Session();
@@ -363,4 +381,11 @@ async function globalObjectId() {
   return objectId;
 }
 
+async function writeMetadata() {
+  await fs.promises.writeFile(metadataPath, JSON.stringify(metadata, null, 2), {
+    mode: 0o600,
+  });
+}
+
+writeMetadata();
 waitForConnection();

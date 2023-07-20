@@ -242,6 +242,12 @@ export class Shell {
                     urlForIframe: filePath => core.urlForIframe(filePath, []),
                     antiFlicker: this._antiFlicker,
                     browserView: !!(dataObj.browserView),
+                    tryToRunCommand: (command: string) => {
+                      const commandLooksSafe = /^reconnect [\/\w\-\.]*$/.test(command);
+                      if (!commandLooksSafe && !confirm('Run potentially dangerous command?\n\n' + command))
+                        return;
+                      this.runCommand(command);
+                    },
                   });
                   activeIframeBlock = iframeBlock;
                   this.addItem(iframeBlock);
@@ -489,6 +495,11 @@ export class Shell {
     if (this.connection)
       throw new Error('already has a connection');
     await this._setupConnection([]);
+    const { exitCode } = await this.connection.send('Shell.evaluate', {
+      code: 'reconnect --list --quiet',
+    });
+    if (exitCode === 0)
+      await this.runCommand('reconnect --list');
     console.timeEnd('create shell');
     this._setupUnlock(); // prompt starts locked
   }

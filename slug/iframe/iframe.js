@@ -249,6 +249,13 @@ function openDevTools() {
   sendMessageToParent({method: 'openDevTools'});  
 }
 
+const ua = navigator.userActivation;
+function tryToRunCommand(command) {
+  if (!ua.isActive)
+    return;
+  sendMessageToParent({method: 'tryToRunCommand', params: {command}});
+}
+
 /** @param {typeof cdpListener} listener */
 async function attachToCDP(listener) {
   cdpListener = listener;
@@ -311,5 +318,6 @@ window.d4 = {
   setActions,
   startAsyncWork,
   expectingUserInput,
+  tryToRunCommand,
 }
 sendMessageToParent('ready')
