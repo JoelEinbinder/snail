@@ -5,6 +5,21 @@ const worker = new worker_threads.Worker(require.resolve('./bootstrapWorker'));
 worker.on('exit', code => {
   process.exit(code);
 });
+
+process.on('exit', () => {
+  try {
+    // The worker might not be able to clean up the metadata path
+    const path = require('path');
+    const pathService = require('../path_service/');
+    const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
+    const metadataPath = path.join(socketDir, `${process.pid}.json`);
+    const fs = require('fs');
+    fs.unlinkSync(metadataPath);
+  } catch {
+    
+  }
+});
+
 /**
  * @typedef {{
  * env?: {[key: string]: string},

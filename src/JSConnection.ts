@@ -30,6 +30,8 @@ export type ExtraClientMethods = {
   'Shell.sendMessageToSubshell': (params: {id: number, message: {method: string, params: any, id?: number}}) => void;
   'Shell.destroySubshell': (params: {id: number}) => void;
   'Shell.providePassword': (params: { id: number, password: string }) => void;
+
+  'Shell.kill': () => void;
 }
 
 type ClientMethods = {

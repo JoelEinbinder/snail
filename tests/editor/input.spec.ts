@@ -41,4 +41,5 @@ test('input events come in correctly', async ({ shell }) => {
     content: 'aa',
     title: 'a.txt*',
   });
+  await shell.kill();
 });

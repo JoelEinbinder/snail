@@ -671,7 +671,7 @@ export class Renderer extends Emitter<{
       return [{ indent: 0, length: line.length }];
     const computeLineWrapping = () => {
       const containerWidth = Math.floor((this._width - this._lineNumbersWidth() - this._padding) / this._charWidth);
-      if (containerWidth >= line.length)
+      if (containerWidth >= line.length || containerWidth < 1)
         return [{indent: 0, length: line.length}];
       const wrapping: {indent: number, length: number}[] = [];
       for (let i = 0; i < line.length; i += containerWidth) {

@@ -93,6 +93,12 @@ class Split {
     await this.waitForAsyncWorkToFinish();
   }
 
+  async kill() {    
+    await this.page.keyboard.press('Control+A');
+    await this.page.keyboard.press('KeyK');
+    await this.waitForAsyncWorkToFinish();
+  }
+
   async close() {
     await this.page.close();
   }

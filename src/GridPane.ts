@@ -81,7 +81,7 @@ class RootBlock {
     block?.show();
     this._layout();
     if (hadFocus)
-      block.focus();
+      block?.focus();
   }
   private _layout() {
     this.block?.updatePosition(this.element.getBoundingClientRect());

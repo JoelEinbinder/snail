@@ -569,6 +569,10 @@ export class Shell {
       this._connectionToDestroy.get(connection)();
   }
 
+  async kill() {
+    await Promise.all(this._connections.map(connection => connection.send('Shell.kill', undefined).catch(e => {})));
+  }
+
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command, this._size, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;

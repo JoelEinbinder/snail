@@ -39,6 +39,8 @@ export const test = _test.extend<{
     const entries = await fs.promises.readdir(path.join(tmpDir, '1d4-sockets'));
     if (entries.length)
       console.warn('some sockets still open', entries);
+    for (const entry of entries.filter(x => x.endsWith('.json')))
+      console.log(await fs.readFileSync(path.join(tmpDir, '1d4-sockets', entry), 'utf8'));
     await fs.promises.rm(tmpDir, { recursive: true, force: true });
   },
   imageId: [async ({ }, use) => {
@@ -208,6 +210,8 @@ export const test = _test.extend<{
         body: logs.join('\n'),
       });      
     }
+    for (const shell of shells)
+      await shell.kill();
   },
   shell: async ({ shellFactory }, use) => {
     await use(await shellFactory());

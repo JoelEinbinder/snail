@@ -29,6 +29,8 @@ worker_threads.parentPort.on('message', changes => {
 const shellState = new ShellState();
 let isDaemon = false;
 const enabledTransports = new Set();
+/** @type {Set<string>} */
+const retainers = new Set();
 let objectIdPromise;
 let lastCommandPromise;
 let lastSubshellId = 0;
@@ -43,6 +45,11 @@ const subshells = new Map();
 const handler = {
   'Shell.setIsDaemon': async (params) => {
     isDaemon = !!params.isDaemon;
+    if (isDaemon)
+      retainers.add('daemon mode');
+    else
+      retainers.delete('daemon mode');
+    maybeExit(); // can never actually exit here beacuse the connection is still open
     for (const transport of enabledTransports)
       transport.send({method: 'Shell.daemonStatus', params: {isDaemon}});
   },
@@ -83,11 +90,15 @@ const handler = {
     shellState.restore(message => transport.send(message));
     const senderTransport = transport;
     const result = await lastCommandPromise;
-    if (transport === senderTransport)
+    if (transport === senderTransport) {
       clearStoredMessages();
+      retainers.delete('witness me');
+      maybeExit(); // can never actually exit here because the connection is still open
+    }
     return result;
   },
   'Shell.runCommand': async ({expression, command}) => {
+    retainers.add('runCommand');
     lastCommandPromise = send('Runtime.evaluate', {
       expression,
       returnByValue: false,
@@ -107,9 +118,12 @@ const handler = {
     const result = await lastCommandPromise;
     task.ended = Date.now();
     writeMetadata();
-    if (senderTransport === transport)
+    retainers.add('witness me');
+    if (senderTransport === transport) {
       clearStoredMessages();
-    else if (!transport) {
+      retainers.delete('witness me');
+      maybeExit(); // can never actually exit here because the connection is still open
+    } else if (!transport) {
       // nobody is connected, so maybe send a notification
       const request = require('http').request('http://Joels-Mac-mini.local:26394/notify', {
         method: 'POST',
@@ -129,6 +143,8 @@ const handler = {
         }
       }));
     }
+    retainers.delete('runCommand');
+    maybeExit(); // can never actually exit here because the connection is still open or we haven't been witnessed
     return result;
   },
   'Shell.resolveFileForIframe': async (params) => {
@@ -219,6 +235,9 @@ const handler = {
     passwordCallbacks.get(id)(password);
     passwordCallbacks.delete(id);
   },
+  'Shell.kill': async () => {
+    process.exit(0);
+  },
   // @ts-ignore
   __proto__: null,
 };
@@ -252,6 +271,7 @@ function waitForConnection() {
   });
   unixSocketServer.on('connection', (s) => {
     detached = false;
+    retainers.add('connected transport');
     fs.unlinkSync(socketPath);
     transport = new PipeTransport(s, s);
     metadata.connected = true;
@@ -274,17 +294,18 @@ function waitForConnection() {
       transport = null;
       metadata.connected = false;
       writeMetadata();  
-      if (isDaemon)
-        waitForConnection();
-      else
-        process.exit(0);
+
+      retainers.delete('connected transport');
+      maybeExit();
+
+      waitForConnection();
     });
   });
 }
 process.on('exit', () => {
   if (detached)
-    fs.unlinkSync(socketPath);
-  fs.unlinkSync(metadataPath);
+    try {fs.unlinkSync(socketPath); } catch {}
+  try {fs.unlinkSync(metadataPath); } catch {}
 })
 
 const session = new inspector.Session();
@@ -387,5 +408,10 @@ async function writeMetadata() {
   });
 }
 
+function maybeExit() {
+  if (retainers.size)
+    return;
+  process.exit(0);
+}
 writeMetadata();
 waitForConnection();

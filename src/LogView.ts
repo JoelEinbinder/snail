@@ -12,6 +12,7 @@ import { attachMenuItemsToContextMenuEvent } from './contextMenu';
 import { QuickPickProvider, showQuickPick } from './QuickPick';
 import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_match_patch';
 import { iconPathForPath } from '../slug/icon_service/iconService';
+import { Placeholder } from './Placeholder';
 
 export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
@@ -197,7 +198,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
 
   shellClosed() {
-    this.blockDelegate.close();
+    this.blockDelegate?.close();
     this._element.remove();
   }
 
@@ -335,7 +336,19 @@ export class LogView implements Block, ShellDelegate, Findable {
       callback: () => {
         showQuickPick('');
       }
-    },]
+    }, {
+      title: 'Kill process',
+      shortcut: 'Ctrl+A K',
+      id: 'log.kill',
+      callback: async () => {
+        const done = startAyncWork('kill process');
+        // TODO do this in the shell and preserve the log
+        this.blockDelegate.replaceWith(new Placeholder('killed'));
+        delete this.blockDelegate;
+        await this._shell.kill();
+        done();
+      },
+    }]
     if (this._isFullscreen)
       return fullscreenActions;
     return [...fullscreenActions, {

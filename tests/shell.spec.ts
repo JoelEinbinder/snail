@@ -150,8 +150,20 @@ test('can reconnect', async ({ shellFactory }) => {
   await shell2.page.keyboard.press('Enter');
   await reconnect;
   await shell2.runCommand('console.log(foo)');
-  expect(await shell2.serialize()).toEqual({
+  const serialized = await shell2.serialize();
+  serialized.log[1][0].socketPath = '<redacted>';
+  serialized.log[1][0].task.started = '<redacted>'
+  expect(serialized).toEqual({
     log: [
+      '> reconnect --list',
+      [{
+        connected: false,
+        socketPath: '<redacted>',
+        task: {
+          command: 'bash -c \'read -p "Yes or no?" yn\'',
+          started: '<redacted>',
+        },
+      }],
       '> reconnect',
       'Yes or no?y',
       '> console.log(foo)',
@@ -163,6 +175,8 @@ test('can reconnect', async ({ shellFactory }) => {
     },
   });
   await shell2.runCommand('exit');
+  const shell3 = await shellFactory();
+  expect(await shell3.serialize()).toEqual({ log: [], prompt: { value: '' } })
 });
 
 test('stdin doesnt leak to the next command', async ({ shell }) => {
