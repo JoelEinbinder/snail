@@ -87,7 +87,6 @@ const handler = {
     return { streamId };
   },
   'Shell.restore': async () => {
-    shellState.restore(message => transport.send(message));
     const senderTransport = transport;
     const result = await lastCommandPromise;
     if (transport === senderTransport) {
@@ -300,6 +299,7 @@ function waitForConnection() {
 
       waitForConnection();
     });
+    shellState.restore(message => transport.send(message));
   });
 }
 process.on('exit', () => {

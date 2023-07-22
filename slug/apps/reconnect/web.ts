@@ -5,7 +5,7 @@ import './reconnect.css';
 const metadatas = await d4.waitForMessage<Metadata[]>();
 const now = new Date(Date.now());
 
-const seenMetadatas: Metadata[] = []
+const seenMetadatas: Metadata[] = [];
 for (const metadata of metadatas) {
   if (metadata.connected)
     continue;
@@ -39,6 +39,9 @@ d4.setToJSON(() => {
   return seenMetadatas;
 });
 updateSize();
+
+if (!seenMetadatas.length)
+  d4.close();
 
 function renderTime(timestamp: number) {
   const span = document.createElement('span');

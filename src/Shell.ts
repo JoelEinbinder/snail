@@ -199,9 +199,11 @@ export class Shell {
         this._leftoverStdin += data;
       },
       startTerminal:({id}: {id: number}) => {
+        if (terminals.has(id))
+          console.error('terminal already exists', id);
         const progressBlock = new ProgressBlock();
         this.addItem(progressBlock);
-        const unlockPrompt = this._lockPrompt('startTerminal');
+        const unlockPrompt = this._lockPrompt('startTerminal ' + id);
         let activeTerminalBlock: TerminalBlock = null;
         let activeIframeBlock: IFrameBlock = null;
         this._refreshActiveIframe = () => {

@@ -139,6 +139,12 @@ export class IFrameBlock implements LogItem {
             didDraw();
           break;
         }
+        case 'close': {
+          this.didClose();
+          this._webContentView.element.remove();
+          didDraw();
+          break;
+        }
         case 'setIsFullscreen': {
           if (this._closed)
             return;

@@ -256,6 +256,10 @@ function tryToRunCommand(command) {
   sendMessageToParent({method: 'tryToRunCommand', params: {command}});
 }
 
+function close() {
+  sendMessageToParent({method: 'close'});
+}
+
 /** @param {typeof cdpListener} listener */
 async function attachToCDP(listener) {
   cdpListener = listener;
@@ -319,5 +323,6 @@ window.d4 = {
   startAsyncWork,
   expectingUserInput,
   tryToRunCommand,
+  close,
 }
 sendMessageToParent('ready')

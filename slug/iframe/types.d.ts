@@ -14,4 +14,5 @@ declare var d4: {
   startAsyncWork(name?: string): () => void;
   expectingUserInput(name?: string): () => void;
   tryToRunCommand(command: string): Promise<void>;
+  close(): void;
 };
