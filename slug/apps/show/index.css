@@ -35,3 +35,40 @@ body .excalidraw .App-bottom-bar {
 body .excalidraw.theme--dark {
   --theme-filter: hue-rotate(180deg) invert(100%);
 }
+
+.json.string {
+  color: var(--color-2);
+}
+.json.boolean,
+.json.number {
+  color: var(--color-3);
+}
+
+.json.null {
+  color: var(--color-8);
+}
+
+::marker {
+  color: var(--color-8);
+}
+
+details > .content {
+  padding-left: 13px;
+}
+
+details > .content > .property {
+  padding-left: 10.59px;
+}
+
+details > .content > .property {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.add-left-padding::before {
+  content: '▶';
+  color: var(--ansi-245);
+  width: 10.59px;
+  display: inline-block;
+}
