@@ -445,7 +445,7 @@ export class Renderer extends Emitter<{
             break;
           for (var j = 0; j < token.length; j += CHUNK_SIZE) {
             var start = index + j;
-            var end = index + Math.min(j + CHUNK_SIZE, token.length, charsLeftInWrap);
+            var end = index + Math.min(j + CHUNK_SIZE, token.length, j + charsLeftInWrap);
             var chunk = text.substring(start, end).replace(/\t/g, this.TAB);
             rect.width = this._textMeasuring.xOffsetFromLocation(this._model.line(i), end) - lastX;
             if (clipRects.some(clipRect => intersects(rect, clipRect))) {
