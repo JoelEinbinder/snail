@@ -441,7 +441,16 @@ export class Shell {
       connection.cwd = result.value.cwd;
     }
     if (core.isRestoration) {
-      const result = await connection.send('Shell.restore', undefined);
+      let error;
+      const result = await connection.send('Shell.restore', undefined).catch(e => {
+        error = e;
+        return null;
+      });
+      // the script could cause the shell to be destroyed
+      if (error) {
+        this._connectionToDestroy.get(connection)();
+        return;
+      }
       if (result)
         this._addJSBlock(result, connection);
     }
@@ -572,7 +581,8 @@ export class Shell {
   }
 
   async kill() {
-    await Promise.all(this._connections.map(connection => connection.send('Shell.kill', undefined).catch(e => {})));
+    for (const connection of this._connections.reverse())
+      await connection.send('Shell.kill', undefined).catch(e => {});
   }
 
   async runCommand(command: string) {
@@ -596,7 +606,7 @@ export class Shell {
       error = e;
       return null;
     });
-    // thes script could cause the shell to be destroyed
+    // the script could cause the shell to be destroyed
     if (error) {
       this._connectionToDestroy.get(connection)();
       if (this._connections.length === 0) {
