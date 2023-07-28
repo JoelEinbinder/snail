@@ -426,7 +426,7 @@ export class Renderer extends Emitter<{
     for (var i = viewport.from; i <= viewport.to; i++) {
       var rect = {
         x: farLeft,
-        y: this._yOffsetFromLocation({ line: i, column: 0 }),
+        y: this._yOffsetFromLocation({ line: i, column: 0 }) - this.scrollTop,
         width: Infinity,
         height: this._lineHeight,
       };
