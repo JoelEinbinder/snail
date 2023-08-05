@@ -71,6 +71,12 @@ test('sees aliases in autocomplete', async ({ shell }) => {
   expect((await shell.serialize()).prompt.autocomplete).toEqual(['my_alias_for_test']);
 });
 
+test('find the right anchor if the predicate contains a copy of the prefix', async ({ shell }) => {
+  await shell.runCommand('const r = { hello: 1, world: 2, __proto__: null };');
+  await shell.typeInPrompt('r.wor');
+  expect((await shell.serialize()).prompt.autocomplete).toEqual(['world']);
+});
+
 
 test('can regular ssh into docker', async ({ shell, docker }) => {
   shell.waitForLine(/password: /).then(async () => {

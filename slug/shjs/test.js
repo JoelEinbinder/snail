@@ -387,14 +387,22 @@ await sh("bar foo")`);
         expect(transformCode(code)).toEqual(`if (Math.random() < 0.5) await sh("echo 123")`);
     });
     it('should get autocomplete prefix', () => {
-        expect(getAutocompletePrefix('this.')).toEqual(`this`);
-        expect(getAutocompletePrefix('this.bar.baz.')).toEqual(`this.bar.baz`);
-        expect(getAutocompletePrefix('this.foo(); this.bar(); this.baz().')).toEqual(`this.baz()`);
-        expect(getAutocompletePrefix('')).toEqual('');
-        expect(getAutocompletePrefix('this.foo();')).toEqual('');
-        expect(getAutocompletePrefix('const x = "')).toEqual(null);
-        expect(getAutocompletePrefix('git st')).toEqual({shPrefix: 'git st'});
-        expect(getAutocompletePrefix('if (true) echo')).toEqual({shPrefix: 'echo'});
+        expect(autocompleteToString('this.')).toEqual(`this`);
+        expect(autocompleteToString('this.bar.baz.')).toEqual(`this.bar.baz`);
+        expect(autocompleteToString('this.foo(); this.bar(); this.baz().')).toEqual(`this.baz()`);
+        expect(autocompleteToString('')).toEqual('');
+        expect(autocompleteToString('this.foo();')).toEqual('');
+        expect(autocompleteToString('const x = "')).toEqual(null);
+        expect(autocompleteToString('git st', true)).toEqual('git st');
+        expect(autocompleteToString('if (true) echo', true)).toEqual('echo');
+        function autocompleteToString(code, shouldBeSH = false) {
+            const result = getAutocompletePrefix(code);
+            if (!result)
+                return result;
+            const { start, end, isSh } = result;
+            expect(isSh).toEqual(shouldBeSH)
+            return code.slice(start, end);
+        }
     });
     it('should transform template parameters', () => {
         const code = 'echo foo${123}';

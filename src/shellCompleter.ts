@@ -26,36 +26,35 @@ export function makeShellCompleter(shell: Shell): Completer {
     let result: CompletionResult;
     if (prefix === null)
       return null;
-    if (prefix === '' || (typeof prefix !== 'string' && !prefix.shPrefix.includes(' '))) {
+    const prefixText = line.slice(prefix.start, prefix.end);
+    if (prefixText === '' || (prefix.isSh && !prefixText.includes(' '))) {
       if (line.includes('/'))
         result = await fileCompleter(shell, line, true);
       else
         result = await commandCompleter(shell, line);
-      const offset = typeof prefix === 'string' ? prefix.length : prefix.shPrefix.length;
       return {
-        anchor: result.anchor + line.length - offset,
+        anchor: result.anchor + line.length - prefixText.length,
         suggestions: result.suggestions,
         exact: result.exact,
       }
     }
-    if (typeof prefix === 'string') {
-      const suggestions = await shell.jsCompletions(prefix);
-      const anchor = line.lastIndexOf(prefix) + prefix.length + 1;
+    if (!prefix.isSh) {
+      const suggestions = await shell.jsCompletions(prefixText);
+      const anchor = prefix.end + 1;
       return {
         anchor,
         suggestions: suggestions,
         exact: true,
       }
     }
-    const offset = line.lastIndexOf(prefix.shPrefix);
-    const command = prefix.shPrefix.split(' ')[0];
+    const command = prefixText.split(' ')[0];
     result = await envCompleter(shell, line);
     if (!result && registry.has(command))
-      result = await registry.get(command)(shell, prefix.shPrefix, abortSignal);
+      result = await registry.get(command)(shell, prefixText, abortSignal);
     if (!result)
-      result = await fileCompleter(shell, prefix.shPrefix, false);
+      result = await fileCompleter(shell, prefixText, false);
     return {
-      anchor: offset + result.anchor,
+      anchor: prefix.end + result.anchor,
       suggestions: result.suggestions,
       exact: result.exact,
     };

@@ -131,19 +131,20 @@ function getAutocompletePrefix(code, globalVars = new Set()) {
   const tokens = [];
   let before = gv;
   gv = globalVars;
-  /** @type {null|string|{shPrefix: string}} */
+  /** @type {null|{start: number, end: number, isSh: boolean}} */
   let found = null;
   try {
     const fullCode = code + magicString;
     onNode = node => {
       if (node.type === 'MemberExpression' && node.property.type === 'Identifier' && node.property.name.includes(magicString)) {
-        found = fullCode.slice(node.object.start, node.object.end);
+        found = {start: node.object.start, end: node.object.end, isSh: false};
       } else if (node.type === 'ShStatement') {
         const shText = fullCode.slice(node.start, node.end);
         if (shText.trim() === magicString)
-          found = '';
-        else if (shText.includes(magicString))
-          found = {shPrefix: shText.split(magicString)[0]};
+          found = {start: code.length, end: code.length, isSh: false};
+        else if (shText.includes(magicString)) {
+          found = {start: node.start, end: node.start + shText.lastIndexOf(magicString), isSh: true};
+        }
       }
     };
     MyParser.parse(fullCode, {ecmaVersion: 'latest', allowAwaitOutsideFunction: true, onToken: t => tokens.push(t) });
