@@ -368,6 +368,51 @@ function inlineMode() {
     });
   });
 }
+let undoFind: (() => void) | null = null;
+d4.setFindHandler(params => {
+  undoFind?.();
+  if (!params)
+    return;
+  const { regex, report } = params;
+  let count = 0;
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let currentNode: Node | null = null;
+  const undos: (() => void)[] = [];
+  const applies: (() => void)[] = [];
+  while (currentNode = walker.nextNode()) {
+    const text = currentNode.textContent!;
+    const matches = [...text.matchAll(regex)];
+    if (!matches.length)
+      continue;
+    const fragment = document.createDocumentFragment();
+    let cursor = 0;
+    const parent = currentNode.parentNode!;
+    const current = currentNode;
+    for (const match of matches) {
+      fragment.append(text.slice(cursor, match.index));
+      const span = document.createElement('span');
+      span.classList.add('find-match');
+      span.textContent = match[0];
+      fragment.append(span);
+      undos.push(() => {
+        parent.replaceChild(document.createTextNode(match[0]), span);
+        parent.normalize();
+      });
+      cursor = match.index! + match[0].length;
+      count++;
+    }
+    fragment.append(text.slice(cursor));
+    applies.push(() => parent.replaceChild(fragment, current));
+  }
+  for (const apply of applies)
+    apply();
+  report(count);
+  undoFind = () => {
+    for (const undo of undos)
+      undo();
+    undoFind = null;
+  };
+});
 
 function makeImageForPath(fullPath: string, info: Entry) {
   if (!looksLikeImageOrVideo(info) || platform !== 'darwin')

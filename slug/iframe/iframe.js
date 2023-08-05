@@ -85,6 +85,19 @@ function onMessage(data) {
       const callback = actionCallbacks[params];
       if (callback)
         callback();
+    } else if (method === 'setFind') {
+      if (!params) {
+        findParams = null;
+      } else {
+        const regex = new RegExp(params.regex.source, params.regex.flags);
+        findParams = {
+          regex,
+          report: matches => {
+            sendMessageToParent({ method: 'reportFindMatches', params: { matches }});
+          }
+        };
+      }
+      findHandler?.(findParams);
     }
   } else {
     const {id, result} = data;
@@ -307,6 +320,18 @@ function expectingUserInput(name = 'Anonymous Work Context') {
   return () => sendMessageToParent({method: 'resolveUserInput', params: {id}});
 }
 
+/** @type {(params: import('../../src/Find').FindParams) => void} */
+let findHandler;
+/** @type {import('../../src/Find').FindParams|null} */
+let findParams = null;
+/**
+ * @param {string} message
+ */
+function setFindHandler(_findHandler) {
+  findHandler = _findHandler;
+  findHandler?.(findParams);
+}
+
 window.d4 = {
   waitForMessage,
   setHeight,
@@ -324,5 +349,6 @@ window.d4 = {
   expectingUserInput,
   tryToRunCommand,
   close,
+  setFindHandler,
 }
 sendMessageToParent('ready')

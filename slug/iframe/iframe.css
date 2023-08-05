@@ -320,3 +320,7 @@ body.d4-host {
 ::selection {
   background: rgba(82,82,82,0.99);
 }
+
+.find-match {
+  background: rgba(255, 255, 0, 0.3);
+}

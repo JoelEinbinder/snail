@@ -110,6 +110,7 @@ export class IFrameBlock implements LogItem {
   private _finishWorks = new Map<number, () => void>();
   private _resolveUserInputs = new Map<number, () => void>();
   private _lastHeight = 0;
+  private _findParams: FindParams|null = null;
   // When the window blurs, our iframe or browserview might have focus.
   // Update the shortcuts to make sure they come back to us from the web content.
   private _onWindowBlur = () => this._updateShortcuts();
@@ -295,6 +296,11 @@ export class IFrameBlock implements LogItem {
           delegate.tryToRunCommand(command);
           break;
         }
+        case 'reportFindMatches': {
+          const { matches } = data.params;
+          this._findParams?.report(matches);
+          break;
+        }
       }
     };
     this._webContentView = delegate.browserView ? new BrowserView(handler) : new IFrameView(handler);
@@ -310,7 +316,12 @@ export class IFrameBlock implements LogItem {
     if (delegate.browserView)
       this.setIsFullscreen(true);
   }
-  setFind(params: FindParams): void {
+  setFind(params: FindParams|null): void {
+    this._findParams = params;
+    this._webContentView.postMessage({
+      method: 'setFind',
+      params: params ? { regex: { source: params.regex.source, flags: params.regex.flags } } : null,
+    });
   }
 
   private _resetReadyPromise() {

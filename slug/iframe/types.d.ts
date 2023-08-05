@@ -15,4 +15,5 @@ declare var d4: {
   expectingUserInput(name?: string): () => void;
   tryToRunCommand(command: string): Promise<void>;
   close(): void;
+  setFindHandler(findHandler: (params: import('../../src/Find').FindParams|null) => void);
 };
