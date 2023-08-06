@@ -21,4 +21,7 @@
 
 .find > .find-count {
   margin-left: 4px;
+  min-width: 100px;
+  text-align: center;
+  display: inline-block;
 }

@@ -17,6 +17,7 @@ export class ProgressBlock implements LogItem {
     this._element.append(this._leftText, this._progress, this._rightText);
   }
   setFind(params: FindParams): void {
+    params?.report(0);
   }
   async serializeForTest() {
     return (this._element.isConnected && this._element.classList.contains('visible')) ? {
