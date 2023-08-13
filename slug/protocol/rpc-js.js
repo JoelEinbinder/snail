@@ -20,7 +20,7 @@
  */
 function RPC(transport, reciever) {
   let lastId = 0;
-  /** @type {Map<number, (value: any) => void>} */
+  /** @type {Map<number, {resolve: (value: any) => void, reject: (error: any) => void}>} */
   const callbacks = new Map();
   transport.onmessage = async message => {
     if ('method' in message) {
@@ -36,10 +36,14 @@ function RPC(transport, reciever) {
     } else {
       const {id, result, error} = message;
       const callback = callbacks.get(id);
-      if (error)
+      if (callback) {
+        if (error)
+          callback.reject(error);
+        else
+          callback.resolve(result);
+      } else if (error) {
         console.error(error);
-      if (callback)
-        callback(result);
+      }
     }
   };
   return {
@@ -68,10 +72,16 @@ function RPC(transport, reciever) {
     transport.send({id, method, params});
     if (id === undefined)
       return;
-    return new Promise(x => {
-      callbacks.set(id, value => {
-        callbacks.delete(id);
-        x(value);
+    return new Promise((resolve, reject) => {
+      callbacks.set(id, {
+        resolve: value => {
+          callbacks.delete(id);
+          resolve(value);
+        },
+        reject: error => {
+          callbacks.delete(id);
+          reject(error);
+        }
       });
     });
   }
