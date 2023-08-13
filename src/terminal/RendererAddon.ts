@@ -312,6 +312,9 @@ class Renderer implements IRenderer {
         break;
       blankRows++;
     }
+    // TODO: Do something here to fix docker flickering
+    // if (this._terminal.enabled)
+    //   blankRows = Math.min(blankRows, this._bottomBlankRows);
     this._bottomBlankRows = blankRows;
   }
 
