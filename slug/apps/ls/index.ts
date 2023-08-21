@@ -137,12 +137,26 @@ async function renderTable() {
       span.textContent = item.size.toLocaleString(undefined, {
         unit: 'byte',
         notation: 'compact',
-      })
+        style: 'unit',
+        unitDisplay: 'narrow',
+      });
+      span.title = item.size.toString();
       return span;
     },
     compare(a, b) {
       return a.size - b.size;
     }
+  }, {
+    title: 'Bytes',
+    render(item) {
+      const span = document.createElement('span');
+      span.textContent = item.size.toString();
+      return span;
+    },
+    compare(a, b) {
+      return a.size - b.size;
+    },
+    defaultHidden: true,
   }, {
     title: 'Date Modified',
     render(item) {
