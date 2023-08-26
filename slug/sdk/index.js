@@ -64,4 +64,52 @@ function makeRPC(handler) {
   process.stdin.setRawMode(true);
   return RPC(new Transport(), handler);
 }
-module.exports = { display, send, makeRPC};
+const PROGRESS_THROTTLE_SPEED = 16;
+
+class ThrottleProgress {
+  constructor() {
+    process.on('exit', () => {
+      if (this.timer)
+        this.fire();
+    });
+  }
+  progress = null;
+  lastFired = null;
+  timer = null;
+  fire() {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    process.stdout.write(`\x1b\x1a\x4e${JSON.stringify(typeof this.progress === 'function' ? this.progress() : this.progress)}\x00`);
+    this.lastFired = Date.now();
+  }
+
+  scheduleFire() {
+    if (this.timer)
+      return;
+    this.timer = setTimeout(() => {
+      this.fire();
+    }, PROGRESS_THROTTLE_SPEED);
+    this.timer.unref();
+  }
+
+  update(progress) {
+    this.progress = progress;
+    if (this.lastFired === null || Date.now() - this.lastFired > PROGRESS_THROTTLE_SPEED) {
+      this.fire();
+    } else {
+      this.scheduleFire();
+    }
+  }
+}
+const progressThrottle = new ThrottleProgress();
+/** @typedef {{ progress: number, leftText?: string, rightText?: string }|number} ProgressOptions */
+/**
+ * @param {ProgressOptions|() => ProgressOptions} progress
+ */
+function setProgress(progress) {
+  progressThrottle.update(progress);
+}
+
+module.exports = { display, send, makeRPC, setProgress};
