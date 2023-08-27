@@ -77,6 +77,31 @@ test('find the right anchor if the predicate contains a copy of the prefix', asy
   expect((await shell.serialize()).prompt.autocomplete).toEqual(['world']);
 });
 
+test('log a js object', async ({ shell }) => {
+  await shell.runCommand('{ abc: 123, def: 456 }');
+  expect((await shell.serialize())).toEqual({
+    log: [
+      '> { abc: 123, def: 456 }',
+      '{ abc: 123, def: 456 }',
+    ],
+    prompt: { value: '' }
+  });
+  // expand the object
+  await shell.page.click('details');
+  await shell.waitForAsyncWorkToFinish();
+  expect((await shell.serialize())).toEqual({
+    log: [
+      '> { abc: 123, def: 456 }',
+      ['{',
+      'abc: 123',
+      'def: 456',
+      '[[Prototype]]: [Object]',
+      '}'].join('\n'),
+    ],
+    prompt: { value: '' }
+  });
+});
+
 
 test('can regular ssh into docker', async ({ shell, docker }) => {
   shell.waitForLine(/password: /).then(async () => {
