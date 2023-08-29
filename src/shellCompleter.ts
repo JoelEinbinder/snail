@@ -102,7 +102,9 @@ async function commandCompleter(shell: Shell, line: string) {
     'switch', 'typeof', 'instanceof',
     'true', 'false', 'null',
     'undefined', 'NaN', 'Infinity',
-    'this', 'class', 'await', 'async'];
+    'this', 'class', 'await', 'async',
+    'continue', 'break', 'return',
+  ];
   for (const text of keywords)
     addItem({text});
   function addItem(item: Suggestion) {
