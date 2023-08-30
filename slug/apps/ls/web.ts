@@ -1,5 +1,5 @@
 /// <reference path="../../iframe/types.d.ts" />
-import './index.css';
+import './web.css';
 import {iconPathForPath, looksLikeImageOrVideo} from '../../icon_service/iconService';
 import {DataGrid} from '../../datagrid/datagrid';
 type Entry = {

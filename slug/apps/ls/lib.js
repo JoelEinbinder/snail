@@ -7,7 +7,7 @@ const mimeTypes = require('mime-types');
  * @return {Promise<number>}
  */
 async function run(args, stdout, stderr) {
-  stdout.write(`\x1b\x1aL${path.join(__dirname, 'index.ts')}\x00`);
+  stdout.write(`\x1b\x1aL${path.join(__dirname, 'web.ts')}\x00`);
 
   /**
    * @param {any} data
