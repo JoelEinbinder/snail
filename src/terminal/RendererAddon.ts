@@ -182,7 +182,8 @@ class Renderer implements IRenderer {
 
 
   onOptionsChanged(): void {
-    throw new Error('Method not implemented: onOptionsChanged');
+    this.onResize(this._terminal.cols, this._terminal.rows);
+    this._requestRedraw();
   }
   clear(): void {
     throw new Error('Method not implemented: clear');
