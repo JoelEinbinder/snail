@@ -1,10 +1,7 @@
-const {execute, getAndResetChanges, setAlias} = require('./index');
+const {execute, getAndResetChanges, setAllAliases} = require('./index');
 const net = require('net');
 const {PipeTransport} = require('../protocol/pipeTransport');
-const [socketPath, uuid, idStr, aliasesStr] = process.argv.slice(2);
-const aliases = JSON.parse(aliasesStr);
-for (const key in aliases)
-  setAlias(key, aliases[key]);
+const [socketPath, uuid, idStr] = process.argv.slice(2);
 listenToWebSocket()
 
 async function listenToWebSocket() {
@@ -13,7 +10,7 @@ async function listenToWebSocket() {
   await new Promise(x => socket.once('connect', x));
   transport.sendString(JSON.stringify({id: parseInt(idStr), uuid}));
   while (true) {
-    const {command, magicToken, changes, method, params} = await new Promise(x => transport.onmessage = x);
+    const {method, params} = await new Promise(x => transport.onmessage = x);
     if (method === 'fush-stdin') {
       
       const leftoverData = await new Promise(resolve => {
@@ -28,19 +25,15 @@ async function listenToWebSocket() {
         process.stdin.on('data', ondata);
       });
       transport.sendString(JSON.stringify(leftoverData));
-    } else if (changes) {
-      if (changes.cwd)
-        process.chdir(changes.cwd);
-      if (changes.env) {
-        for (const key in changes.env)
-          process.env[key] = changes.env[key];
+    } else if (method === 'command') {
+      const { command, env, dir, magicToken, aliases } = params;
+      process.env = env;
+      try {
+        process.chdir(dir);
+      } catch (e) {
       }
-      if (changes.aliases) {
-        for (const key of Object.keys(changes.aliases))
-          setAlias(key, changes.aliases[key]);
-      }
+      setAllAliases(aliases)
       getAndResetChanges();
-    } else if (command) {
       const result = await runCommand(command.toString(), magicToken);
       transport.sendString(JSON.stringify(result));
     }

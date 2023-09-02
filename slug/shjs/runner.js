@@ -476,8 +476,15 @@ function setAlias(name, value) {
     aliases[name] = value;
 }
 
+function setAllAliases(newAliases) {
+    for (const key in aliases)
+        delete aliases[key];
+    for (const key in newAliases)
+        aliases[key] = newAliases[key];
+}
+
 function getAliases() {
-    return JSON.stringify(aliases);
+    return {...aliases};
 }
 
 /**
@@ -706,4 +713,4 @@ function getAndResetChanges() {
     return c;
 }
 
-module.exports = {execute, getResult, getAndResetChanges, setAlias, getAliases};
+module.exports = {execute, getResult, getAndResetChanges, setAlias, getAliases, setAllAliases};

@@ -63,8 +63,8 @@ global.bootstrap = (args) => {
       const {socketPath, uuid} = await getServerUrl();
       /** @type {Promise<import('../protocol/pipeTransport').PipeTransport>|import('../protocol/pipeTransport').PipeTransport} */
       const connectionPromise = new Promise(x => resolveShellConnection.set(id, x));
-      const shell = require('node-pty').spawn(process.execPath, [require('path').join(__dirname, '..', 'shjs', 'wrapper.js'), socketPath, uuid, id, getAliases()], {
-        env: process.env,
+      const shell = require('node-pty').spawn(process.execPath, [require('path').join(__dirname, '..', 'shjs', 'wrapper.js'), socketPath, uuid, id], {
+        env: {},
         rows,
         cols,
         cwd: process.cwd(),
@@ -83,11 +83,8 @@ global.bootstrap = (args) => {
     const before = process.cwd();
     const returnValue = origChangeDir.apply(this, arguments);
     const after = process.cwd();
-    if (before !== after) {
-      if (freeShell)
-        freeShell.then(x => x.connection.sendString(JSON.stringify({changes: {cwd: after}})));
+    if (before !== after)
       notify('cwd', after);
-    }
 
     return returnValue;
   }
@@ -109,7 +106,16 @@ global.bootstrap = (args) => {
         x(data);
       };
     });
-    connection.sendString(JSON.stringify({command, magicToken}));
+    connection.sendString(JSON.stringify({
+      method: 'command',
+      params: {
+        command,
+        magicToken,
+        env: process.env,
+        dir: process.cwd(),
+        aliases: getAliases(),
+      }
+    }));
     const id = ++shellId;
     notify('startTerminal', {id});
     shells.set(id, shell);
@@ -147,8 +153,6 @@ global.bootstrap = (args) => {
     if (freeShell) {
       if (!returnValue.died)
         shell.kill();
-      if (returnValue.changes)
-        freeShell.then(x => x.connection.sendString(JSON.stringify({changes: returnValue.changes})));
     } else if (!returnValue.died) {
       if (wroteToStdin.has(shell)) {
         // Don't reuse a shell if it had stdin written to it, because it might leak into the next command.

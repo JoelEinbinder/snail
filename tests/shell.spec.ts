@@ -366,3 +366,41 @@ test('opening a new tab should have the same working directory', async ({ shellF
     prompt: { value: '' },
   });
 });
+
+test('aliases', async ({ shell }) => {
+  await shell.runCommand('alias abc echo hello; alias def echo world');
+  await shell.runCommand('abc');
+  await shell.runCommand('def');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> alias abc echo hello; alias def echo world',
+      '> abc',
+      'hello',
+      '> def',
+      'world',
+    ],
+    prompt: { value: '' },
+  });
+});
+
+
+test('aliases should still work even if shell was killed', async ({ shell }) => {
+  await shell.runCommand('alias abc echo hello');
+  const commandPromise = shell.runCommand('echo set; sleep 10');
+  await shell.waitForLine(/set/);
+  await shell.page.keyboard.press('Control+C');
+  await commandPromise;
+  await shell.runCommand('abc');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> alias abc echo hello',
+      '> echo set; sleep 10',
+      'set',
+      '^C',
+      '> abc',
+      'hello',
+    ],
+    prompt: { value: '' },
+  });
+});
+
