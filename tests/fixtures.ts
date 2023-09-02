@@ -24,7 +24,7 @@ export const test = _test.extend<{
   shellInDocker: ShellModel;
   populateFilesystem: (files: { [filePath: string]: string }) => Promise<void>;
 }, {
-  imageId: string;
+  imageId: string|null;
   slugURL: string;
   nodeURL: string;
 }>({
@@ -51,7 +51,8 @@ export const test = _test.extend<{
         stdio: 'ignore',
       });
     } catch {
-      test.skip();
+      await use(null);
+      return;
     }
     await use(imageId);
   }, { scope: 'worker' }],
@@ -135,7 +136,11 @@ export const test = _test.extend<{
     await use(`http://localhost:${port}`);
     server.close();
   }, { scope: 'worker', option: true, timeout: 30_000 }],
-  docker: async ({ imageId, waitForPort }, use) => {
+  docker: async ({ imageId, waitForPort }, use, info) => {
+    if (!imageId) {
+      info.skip();
+      return;
+    }
     const port = await getPort();
     const docker = spawn('docker', ['run', '--rm', '-p', `${port}:22`, imageId], {
       stdio: 'pipe',
