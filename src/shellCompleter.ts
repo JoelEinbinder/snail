@@ -54,7 +54,7 @@ export function makeShellCompleter(shell: Shell): Completer {
     if (!result)
       result = await fileCompleter(shell, prefixText, false);
     return {
-      anchor: prefix.end + result.anchor,
+      anchor: prefix.start + result.anchor,
       suggestions: result.suggestions,
       exact: result.exact,
     };

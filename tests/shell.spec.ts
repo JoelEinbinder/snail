@@ -71,6 +71,12 @@ test('sees aliases in autocomplete', async ({ shell }) => {
   expect((await shell.serialize()).prompt.autocomplete).toEqual(['my_alias_for_test']);
 });
 
+test('sees filter autocomplete properly', async ({ shell }) => {
+  await shell.runCommand('export FOO_BAR=123; export FOO_BAZ=456; export NOT_THIS=789;');
+  await shell.typeInPrompt('echo $FOO_');
+  expect((await shell.serialize()).prompt.autocomplete).toEqual(['$FOO_BAR', '$FOO_BAZ']);
+});
+
 test('find the right anchor if the predicate contains a copy of the prefix', async ({ shell }) => {
   await shell.runCommand('const r = { hello: 1, world: 2, __proto__: null };');
   await shell.typeInPrompt('r.wor');
