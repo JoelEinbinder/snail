@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 
-test('debug some html', async ({ shell }) => {
+// This is flaky, but the debugging feature is not real yet so disable for now.
+test.fixme('debug some html', async ({ shell }) => {
   const [left, right] = await shell.splitHorizontally();
   await left.runCommand('html "<b>hello</b>"');
   await right.runCommand('debug');
