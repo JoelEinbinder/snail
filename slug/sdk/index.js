@@ -106,7 +106,7 @@ class ThrottleProgress {
 const progressThrottle = new ThrottleProgress();
 /** @typedef {{ progress: number, leftText?: string, rightText?: string }|number} ProgressOptions */
 /**
- * @param {ProgressOptions|() => ProgressOptions} progress
+ * @param {ProgressOptions|(() => ProgressOptions)} progress
  */
 function setProgress(progress) {
   progressThrottle.update(progress);
