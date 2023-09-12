@@ -146,6 +146,34 @@ test('should select by word', async ({ editor }) => {
     'these are my words\n' +
     '^                  ');
 });
+test.fixme('should mutli select and edit and move', async ({ editor }) => {
+  const selectWord = os.platform() === 'darwin' ? 'Meta+D' : 'Control+D';
+  editor.setValue('a cat and a cat saw a cat');
+  await editor.setSelection({ start: {line: 0, column: 2}, end: {line: 0, column: 2}});
+  expect(await editor.serialize()).toEqual(
+    'a cat and a cat saw a cat\n' +
+    '  ^                       ');
+  await editor.page.keyboard.press(selectWord);
+  expect(await editor.serialize()).toEqual(
+    'a cat and a cat saw a cat\n' +
+    '  [--]                    ');
+  await editor.page.keyboard.press(selectWord);
+  expect(await editor.serialize()).toEqual(
+    'a cat and a cat saw a cat\n' +
+    '  [--]      [--]          ');
+  await editor.page.keyboard.press(selectWord);
+  expect(await editor.serialize()).toEqual(
+    'a cat and a cat saw a cat\n' +
+    '  [--]      [--]      [--]');
+  await editor.page.keyboard.type('dog');
+  expect(await editor.serialize()).toEqual(
+    'a dog and a dog saw a dog\n' +
+    '     ^         ^         ^');
+  await editor.page.keyboard.press('ArrowLeft');
+  expect(await editor.serialize()).toEqual(
+    'a dog and a dog saw a dog\n' +
+    '    ^         ^         ^ ');
+});
 test.describe('word wrap', () => {
   test.beforeEach(async ({ editor }) => {
     editor.setEditorColumns(10);
