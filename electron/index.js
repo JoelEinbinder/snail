@@ -158,21 +158,9 @@ function makeWindow() {
     clientForSender(win.webContents).send({ method: 'maximizeStateChanged', params: { maximized: false }});
   });
 
-  win.webContents.setWindowOpenHandler((details) => {
-    return {
-      action: 'allow', 
-      overrideBrowserWindowOptions: {
-        transparent: true,
-        roundedCorners: false,
-        frame: false,
-        focusable: false,
-        alwaysOnTop: true,
-        hasShadow: false,
-        resizable: false,
-        height: 200,
-        width: 150,
-      }
-    };
+  win.webContents.setWindowOpenHandler(details => {
+    require('electron').shell.openExternal(details.url);
+    return { action: 'deny' };
   });
   let lastBounds = win.getBounds();
   win.on('move', () => {
