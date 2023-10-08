@@ -268,10 +268,17 @@ async function launchServer() {
   return {socketPath, uuid};
 }
 
+let errorCount = 0;
 process.on('unhandledRejection', e => {
+  errorCount++;
+  if (errorCount > 4)
+    return;
   console.error(e);
 });
 
 process.on('uncaughtException', e => {
+  errorCount++;
+  if (errorCount > 4)
+    return;
   console.error(e);
 });
