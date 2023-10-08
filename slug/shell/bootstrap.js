@@ -64,7 +64,13 @@ global.bootstrap = (args) => {
       /** @type {Promise<import('../protocol/pipeTransport').PipeTransport>|import('../protocol/pipeTransport').PipeTransport} */
       const connectionPromise = new Promise(x => resolveShellConnection.set(id, x));
       const shell = require('node-pty').spawn(process.execPath, [require('path').join(__dirname, '..', 'shjs', 'wrapper.js'), socketPath, uuid, id], {
-        env: {},
+        env: {
+          // node won't read these later from the process.env, so we need to set them now
+          TMP: process.env.TMP,
+          TEMP: process.env.TEMP,
+          TMPDIR: process.env.TMPDIR,
+          NODE_PATH: process.env.NODE_PATH,
+        },
         rows,
         cols,
         cwd: process.cwd(),
