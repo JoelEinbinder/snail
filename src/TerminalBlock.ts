@@ -27,7 +27,6 @@ export class TerminalBlock implements LogItem {
   private _terminal: Terminal;
   private element: HTMLDivElement;
   private _listeners: IDisposable[] = [];
-  private _data: (string|Uint8Array)[] = [];
   private _trailingNewline = false;
   private _lastWritePromise = Promise.resolve();
   private _addon = new RendererAddon();
@@ -151,7 +150,6 @@ export class TerminalBlock implements LogItem {
 
   addData(data: string|Uint8Array) {
     this.empty = false;
-    this._data.push(data);
     if (data.length !== 0)
       this._trailingNewline = typeof data === 'string' ? data.endsWith('\n') : data[data.length - 1] === '\n'.charCodeAt(0);
     const wroteData = startAyncWork('write terminal data');
@@ -205,10 +203,6 @@ export class TerminalBlock implements LogItem {
     this._closed = true;
     this._terminal.blur();
     this._terminal.disable();
-  }
-
-  allData() {
-    return this._data;
   }
 
   async serializeForTest(): Promise<any> {
