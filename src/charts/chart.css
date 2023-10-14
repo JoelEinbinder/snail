@@ -1,0 +1,51 @@
+
+.toolbar {
+  display: flex;
+  justify-content: center;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  align-self: center;
+  height: 16px;
+  background: none;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #3a3a3a;
+}
+input[type="range"]::-webkit-slider-thumb {
+  position: relative;
+  top: -6px;
+  background-color: #0087d7;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+input[type="range"]:not(.active)::-webkit-slider-thumb {
+  background-color: #3a3a3a;
+}
+
+
+.chart {
+  text-align: center;
+  color: #f4f4f4;
+  font: 10px monaco;
+  overflow: hidden;
+  display: flex;
+  height: 50vh;
+  height: 300px;
+  flex-direction: column;
+}
+
+.chart > .title {
+  font-size: 12px;
+  margin: 10px;
+}
+
+.chart > .canvas-container {
+  flex: 1;
+  height: 0px;
+  display: block;
+}

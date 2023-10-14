@@ -1,0 +1,19 @@
+.tooltip {
+  position: absolute;
+  background: rgb(32, 32, 32, 0.9);
+  left: 0;
+  right: 0;
+  width: fit-content;
+  z-index: 10;
+  pointer-events: none;
+}
+.tooltip td,
+.tooltip th {
+  min-width: 75px;
+  text-align: left;
+  color: white;
+  font: 10px monaco;
+}
+.tooltip th {
+  font-weight: bold;
+}

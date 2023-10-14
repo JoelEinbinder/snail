@@ -112,4 +112,8 @@ function setProgress(progress) {
   progressThrottle.update(progress);
 }
 
-module.exports = { display, send, makeRPC, setProgress};
+function chart(data) {
+  process.stdout.write(`\x1b\x1aC${JSON.stringify(data)}\x00`);
+}
+
+module.exports = { display, send, makeRPC, setProgress, chart};

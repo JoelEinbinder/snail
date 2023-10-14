@@ -22,6 +22,7 @@ import { cdpManager } from './CDPManager';
 import { randomUUID } from './uuid';
 import { startAyncWork } from './async';
 import { AskPasswordBlock } from './AskPasswordBlock';
+import { ChartBlock } from './ChartBlock';
 
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
 const socketCloseListeners = new Map<number, () => void>();
@@ -209,10 +210,25 @@ export class Shell {
         this._refreshActiveIframe = () => {
           activeIframeBlock?.refresh();
         };
+        let activeChartBlock: ChartBlock = null;
         const terminalTaskQueue = new TaskQueue();
         const processor = new TerminalDataProcessor({
           htmlTerminalMessage: data => {
             switch(data[0]) {
+              case 67: {
+                // chart data
+                if (!activeChartBlock) {
+                  activeChartBlock = new ChartBlock();
+                  terminalTaskQueue.queue(async () => {
+                    await closeActiveTerminalBlock();
+                    this.addItem(activeChartBlock);
+                    await addTerminalBlock();
+                  });
+                }
+                const dataStr = new TextDecoder().decode(data.slice(1));
+                activeChartBlock.appendUserData(JSON.parse(dataStr));
+                break;
+              }
               case 75:
                 // legacy unimplemented
                 // lets try to do everything the new way

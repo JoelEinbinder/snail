@@ -1,0 +1,31 @@
+input.icon {
+  appearance: none;
+  background-color: #3a3a3a;
+  width: 24px;
+  height: 24px;
+  mask: var(--mask-url);
+  cursor: pointer;
+  -webkit-mask: var(--mask-url);
+}
+
+input.icon:checked {
+  background-color: #0087d7;
+}
+
+input.icon.overscan {
+  --mask-url: url('./icons/overscan.svg');
+}
+
+input.icon.yLog {
+  --mask-url: url('./icons/format-line-weight.svg');
+}
+
+input.icon.xLog {
+  --mask-url: url('./icons/format-line-weight.svg');
+  transform: rotateZ(-90deg);
+}
+
+input.icon.selection-drag {
+  --mask-url: url('./icons/selection-drag.svg');
+  transform: rotateZ(-90deg);
+}
