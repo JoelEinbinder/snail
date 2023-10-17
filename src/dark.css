@@ -314,14 +314,14 @@ body, html {
   background: var(--color-selection);
 }
 
-input {
+input:not([type="range"]):not([type="checkbox"]) {
   border: 1px solid rgb(133, 133, 133);
   padding: 2px;
   background-color: var(--ansi-237);
   border-radius: 2px;
   font-family: var(--current-font);
 }
-input:focus {
+input:not([type="range"]):not([type="checkbox"]):focus {
   border-color: var(--ansi-32);
   outline: none;
 }

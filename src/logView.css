@@ -1,6 +1,8 @@
 .log-view {
   position: fixed;
   display: flex;
+  container-name: log-view;
+  container-type: inline-size;
 }
 .log-view-scroller {
   overflow: hidden auto;

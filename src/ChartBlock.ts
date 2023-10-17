@@ -3,13 +3,16 @@ import type { FindParams } from "./Find";
 import type { LogItem } from "./LogItem";
 import type { Action } from "./actions";
 import { Chart, Line } from './charts/Chart';
-
+import './chartBlock.css';
 export class ChartBlock implements LogItem {
   willResizeEvent = new JoelEvent<void>(undefined);
   element = document.createElement('div');
   private _charts = new Map<string, Chart>();
   private _lines = new Map<string, Line>();
   private _nextStep = 0;
+  constructor() {
+    this.element.classList.add('chart-block');
+  }
   render() {
     return this.element;
   }
@@ -48,7 +51,7 @@ export class ChartBlock implements LogItem {
         allowNormalScrolling: true,
       });
       this._charts.set(name, chart);
-      const line = new Line({ color: 'green' });
+      const line = new Line({ color: Line.colorForIndex(0) });
       chart.addLine(line);
       this._lines.set(name, line);
       this.element.appendChild(chart.element);

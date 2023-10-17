@@ -1,0 +1,12 @@
+
+.chart-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+
+@container log-view (max-width: 800px) {
+  .chart-block {
+    grid-template-columns: 1fr;
+  }
+}

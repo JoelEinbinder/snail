@@ -366,7 +366,7 @@ export class Chart {
       ctx.translate(-this.dataRect.left, -this.dataRect.top);
       for (const line of this.lines) {
         if (this.smooth > 0)
-          ctx.globalAlpha = 0.1;
+          ctx.globalAlpha = 0.25;
         ctx.beginPath();
         ctx.strokeStyle = line.color;
         ctx.lineWidth = 1;
