@@ -21,9 +21,18 @@ if (isDevMode) {
 /** @type {Set<BrowserWindow>} */
 const windows = new Set();
 const menu = new Menu();
+app.setAboutPanelOptions({
+  applicationName: app.name,
+  applicationVersion: app.getVersion(),
+  website: 'https://github.com/JoelEinbinder/snail/',
+  copyright: '© 2023 Joel Einbinder',
+  credits: 'xterm.js used under the MIT license\nElectron used under the MIT license\nseti-ui used under the MIT license\n',
+});
 menu.append(new MenuItem({
-  label: 'Electron',
+  label: app.name,
   submenu: [{
+    role: 'about',
+  }, {
     role: 'quit'
   }]
 }));
