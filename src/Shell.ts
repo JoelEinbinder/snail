@@ -202,11 +202,10 @@ export class Shell {
       startTerminal:({id}: {id: number}) => {
         if (terminals.has(id))
           console.error('terminal already exists', id);
-        const progressBlock = new ProgressBlock();
-        this.addItem(progressBlock);
         const unlockPrompt = this._lockPrompt('startTerminal ' + id);
         let activeTerminalBlock: TerminalBlock = null;
         let activeIframeBlock: IFrameBlock = null;
+        let activeProgressBlock: ProgressBlock = null;
         this._refreshActiveIframe = () => {
           activeIframeBlock?.refresh();
         };
@@ -288,8 +287,16 @@ export class Shell {
                 break;
               case 78:
                 // progress
+                if (!activeProgressBlock) {
+                  activeProgressBlock = new ProgressBlock();
+                  terminalTaskQueue.queue(async () => {
+                    await closeActiveTerminalBlock();
+                    this.addItem(activeProgressBlock);
+                    await addTerminalBlock();
+                  });
+                }
                 const dataStr = new TextDecoder().decode(data.slice(1));
-                progressBlock.setProgress(JSON.parse(dataStr));
+                activeProgressBlock.setProgress(JSON.parse(dataStr));
                 break;
               case 79:
                 // end
@@ -325,9 +332,8 @@ export class Shell {
           processor,
           cleanup: async () => {
             await terminalTaskQueue.queue(async () => {
-              if (activeIframeBlock)
-                activeIframeBlock.didClose();
-              progressBlock.deactivate();
+              activeIframeBlock?.didClose();
+              activeProgressBlock?.deactivate();
               await closeActiveTerminalBlock();
               unlockPrompt();
             });
