@@ -9,7 +9,15 @@ if (headless)
   app.dock?.hide();
 if (process.env.SNAIL_TEST_USER_DATA_DIR)
   app.setPath('userData', process.env.SNAIL_TEST_USER_DATA_DIR);
-app.setName('Terminal');
+app.setName('snail');
+const isDevMode = process.argv.includes('--dev-mode');
+
+if (isDevMode) {
+  const nativeImage = require('electron').nativeImage
+  const image = nativeImage.createFromPath(path.join(__dirname, '..', 'icon', 'icon.png'))
+  app.dock.setIcon(image);
+}
+
 /** @type {Set<BrowserWindow>} */
 const windows = new Set();
 const menu = new Menu();
@@ -136,7 +144,7 @@ function makeWindow() {
   const win = new BrowserWindow({
     width: 490,
     height: 371,
-    title: 'Terminal',
+    title: 'snail',
     tabbingIdentifier: (++windowNumber).toString(),
     webPreferences: {
       preload: __dirname + '/preload.js',
@@ -180,7 +188,7 @@ function makeWindow() {
     window.excludedFromShownWindowsMenu = true;
     popups.add(window);
   })
-  if (process.argv.includes('--dev-mode'))
+  if (isDevMode)
     require('../electron-dev/').createDevServer().then(({url}) => win.loadURL(url))
   else if (process.env.SNAIL_DEBUG_URL)
     win.loadURL(process.env.SNAIL_DEBUG_URL);

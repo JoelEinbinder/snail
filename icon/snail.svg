@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 100">
+  <!-- shell -->
+  <circle cx="50" cy="40" r="15" fill="transparent" stroke="#fff" stroke-width="10"/>
+  <circle cx="50" cy="40" r="35" fill="transparent" stroke="#fff" stroke-width="10"/>
+  <!-- body -->
+  <!-- <path fill="transparent" stroke="#FFF" stroke-width="10" d="M 5,90
+    l 70,0
+    c 30,0 15,-50 40,-55"
+    stroke-linecap="round" /> -->
+  <path fill="transparent" stroke="#fff" stroke-width="10" d="M 5,95
+    l 45,0
+    a 55 55 0 0 0 50,-30
+    a 35 35 0 0 1 20,-20
+    "
+    stroke-linecap="round" />
+  <!-- eyes -->
+  <path fill="transparent" stroke="#FFF" stroke-width="4" d="M 110, 45 l -3, -12" stroke-linecap="round" />
+  <path fill="transparent" stroke="#FFF" stroke-width="4" d="M 115, 45 l 3, -12" stroke-linecap="round" />
+  <circle cx="106" cy="30" r="4" fill="#FFF"/>
+  <circle cx="118.5" cy="30" r="4" fill="#FFF"/>
+</svg>
