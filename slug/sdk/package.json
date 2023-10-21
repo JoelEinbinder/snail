@@ -1,6 +1,6 @@
 {
   "name": "snail-sdk",
-  "version": "0.7.4-post",
+  "version": "0.7.5",
   "description": "SDK for snail",
   "main": "index.js",
   "author": "Joel Einbinder",
