@@ -7,7 +7,7 @@
     "type": "tsc --build src/tsconfig.json && tsc -p slug/shell/tsconfig.json && tsc -p slug/debugger/tsconfig.json && tsc -p slug/editor/tsconfig.json",
     "build": "node utils/esbuild.js",
     "bundle": "node utils/bundle.js",
-    "release": "npm run check && node utils/bundle-and-upload-slugs.js && node utils/package-and-upload.js",
+    "release": "npm run check && node utils/publish-sdk.js && node utils/bundle-and-upload-slugs.js && node utils/package-and-upload.js",
     "check": "npm run type && npm run build && npm run test && playwright test --forbid-only --workers 1"
   },
   "version": "0.7.4-post",
