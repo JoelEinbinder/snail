@@ -1,4 +1,14 @@
-import type {Data} from '../shared/protocol';
+export type Data = {
+  wallTime: number,
+  step: string,
+  summary?: {
+    value: {
+      tag: string,
+      simpleValue: number
+    }[]
+  }
+}[];
+
 export type ProcessedData = {step: number, wallTime: number, value: number}[];
 export class Dataset {
   private values = new Map<string, ProcessedData>();

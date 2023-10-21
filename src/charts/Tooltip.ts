@@ -16,9 +16,3 @@ export function showTooltip({x, y}, content: Node) {
     tooltip.remove();
   }
 }
-
-if (typeof module !== 'undefined' && module.hot) {
-  module.hot.dispose(() => {
-    tooltip.remove();
-  });
-}
