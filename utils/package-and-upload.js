@@ -3,6 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const package = require('electron-packager');
 const {spawn} = require('child_process');
+const read = require('read');
 const toCopy = [
   'esout',
   'electron',
@@ -48,13 +49,23 @@ const options = {
     execSync('npm install --no-package-lock', {
       stdio: 'inherit',
       cwd: destination,
-    });  
-    for (const arch of ['x64', 'arm64']) {
+    });
+    const appleId = await read({prompt: 'Apple ID: ', default: 'joel.einbinder@gmail.com'});
+    const teamId = await read({prompt: 'Team ID: ', default: 'KM96MU7G7A'});
+    const appleIdPassword = await read({prompt: 'Apple ID Password: ', silent: true, replace: '*'});
+    for (const arch of ['arm64']) {
       package({
         ...options,
+        appBundleId: 'tools.joel.snail',
         platform: 'darwin',
         arch,
-        osxSign: true,
+        osxSign: {},
+        osxNotarize: {
+          tool: 'notarytool',
+          appleId,
+          appleIdPassword,
+          teamId,
+        },
         icon: path.join(__dirname, '..', 'icon', 'icon.icns'),
       }).then(folders => {
         uploadPackage(folders[0], {platform: 'darwin', arch});
