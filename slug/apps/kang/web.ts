@@ -1,6 +1,6 @@
 /// <reference path="../../iframe/types.d.ts" />
 import './web.css';
-import { RPC } from '../../protocol/rpc-js';
+import { RPC } from '../../sdk/rpc-js';
 import { Editor } from '../../editor/js/editor';
 import '../../editor/modes/javascript';
 import '../../editor/modes/python';

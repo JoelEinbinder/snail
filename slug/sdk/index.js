@@ -7,7 +7,7 @@ function send(data, dontCache) {
   });
   process.stdout.write(`\x1b\x1a${dontCache ? 'Q' : 'M'}${str}\x00`);
 }
-const {RPC} = require('../protocol/rpc-js');
+const {RPC} = require('./rpc-js');
 const crypto = require('node:crypto');
 class Transport {
   constructor() {

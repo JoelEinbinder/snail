@@ -1,5 +1,5 @@
 /// <reference path="../../iframe/types.d.ts" />
-import { RPC } from '../../protocol/rpc-js';
+import { RPC } from '../../sdk/rpc-js';
 import { LogBookView } from './LogBookView';
 d4.setIsFullscreen(true);
 document.addEventListener('keydown', event => {

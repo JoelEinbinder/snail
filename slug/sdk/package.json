@@ -1,0 +1,9 @@
+{
+  "name": "snail-sdk",
+  "version": "0.7.4-post",
+  "description": "SDK for snail",
+  "main": "index.js",
+  "author": "Joel Einbinder",
+  "license": "MIT",
+  "dependencies": {}
+}

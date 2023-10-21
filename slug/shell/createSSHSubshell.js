@@ -63,7 +63,7 @@ async function createSSHSubshell(delegate) {
     }
   });
   child.stderr.on('data', data => delegate.ondata(data));
-  const {RPC} = require('../protocol/rpc-js');
+  const {RPC} = require('../sdk/rpc-js');
   const {PipeTransport} = require('../protocol/pipeTransport');
   const pipeTransport = new PipeTransport(child.stdin, child.stdout);
   const rpc = RPC(pipeTransport, {
