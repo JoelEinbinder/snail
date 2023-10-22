@@ -53,7 +53,7 @@ const options = {
     const appleId = await read({prompt: 'Apple ID: ', default: 'joel.einbinder@gmail.com'});
     const teamId = await read({prompt: 'Team ID: ', default: 'KM96MU7G7A'});
     const appleIdPassword = await read({prompt: 'Apple ID Password: ', silent: true, replace: '*'});
-    for (const arch of ['arm64']) {
+    for (const arch of ['x64', 'arm64']) {
       package({
         ...options,
         appBundleId: 'tools.joel.snail',
