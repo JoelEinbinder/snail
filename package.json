@@ -10,7 +10,7 @@
     "release": "npm run check && node utils/publish-sdk.js && node utils/bundle-and-upload-slugs.js && node utils/package-and-upload.js",
     "check": "npm run type && npm run build && npm run test && playwright test --forbid-only --workers 1"
   },
-  "version": "0.7.5",
+  "version": "0.7.5-post",
   "workspaces": [
     "slug",
     "xterm.js"
