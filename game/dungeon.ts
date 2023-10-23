@@ -26,6 +26,7 @@ const adventurer: DungeonDescriptor = {
         atk: 10,
         bytes: 10,
         element: 'none',
+        image: 'ghost1',
       },
       children: {
         left_room: {
@@ -40,11 +41,12 @@ const adventurer: DungeonDescriptor = {
         right_room: {
           type: 'directory',
           monster: {
-            name: 'Frost Slime',
+            name: 'Frost Ghost',
             hp: 50,
             atk: 15,
             bytes: 20,
             element: 'ice',
+            image: 'ghost3',
           },
           children: {
             vestibule: {
@@ -56,6 +58,14 @@ const adventurer: DungeonDescriptor = {
                 },
                 boss_room: {
                   type: 'directory',
+                  monster: {
+                    name: 'Fire Ghost',
+                    hp: 50,
+                    atk: 15,
+                    bytes: 20,
+                    element: 'fire',
+                    image: 'ghost2',
+                  },
                   children: {}
                 }
               }
@@ -92,12 +102,13 @@ type Room = {
   children: { [key: string]: DungeonDescriptor },
 }
 
-type Monster = {
+export type Monster = {
   name: string;
   hp: number;
   atk: number;
   bytes: number;
   element: 'none' | 'fire' | 'water' | 'ice';
+  image: string;
 }
 
 
@@ -123,6 +134,12 @@ class Dungeon {
       current = current.children?.[part];
     }
     return current;
+  }
+  currentMonster() {
+    const descriptor = this._pathToDescriptor(this.cwd.current);
+    if (descriptor?.type !== 'directory')
+      return null;
+    return descriptor.monster || null;
   }
   reset() {
     this.root = JSON.parse(JSON.stringify(this._descriptor));
@@ -182,8 +199,17 @@ class Dungeon {
       return 1;
     }
     this.cwd.dispatch(dir);
-    if (descriptor.monster)
+    if (descriptor.monster) {
       stderr.write(`${descriptor.monster.name} appears!\r\n`);
+      stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'monster'})}\x00`);
+      send(descriptor.monster);
+      function send(data) {
+        const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
+            return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
+        });
+        stdout.write(`\x1b\x1aM${str}\x00`);
+      }
+    }
     return 0;
   }
   attack(stdout, stderr) {

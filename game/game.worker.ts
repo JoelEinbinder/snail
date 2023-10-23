@@ -74,6 +74,15 @@ self.player = Object.freeze({
   get bytes() { return dungeon.player.bytes },
 });
 
+Object.defineProperty(self, 'enemy', {
+  get() {
+    const monster = dungeon.currentMonster();
+    if (!monster)
+      return null;
+    return Object.freeze({...monster});
+  },
+})
+
 self['bootstrap'] = function() {
   return (message) => {
     // TODO do something with 'resize'?
