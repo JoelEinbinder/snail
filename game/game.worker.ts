@@ -67,9 +67,17 @@ const { execute, aliases, env } = makeWebExecutor();
 process.env = env;
 //@ts-ignore
 self.process = process;
+//@ts-ignore
+self.player = Object.freeze({
+  get hp() { return dungeon.player.hp },
+  get atk() { return dungeon.player.atk },
+  get bytes() { return dungeon.player.bytes },
+});
 
 self['bootstrap'] = function() {
   return (message) => {
+    // TODO do something with 'resize'?
+    // TODO handle 'input'
   };
 };
 let shellId = 0;

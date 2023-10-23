@@ -80,25 +80,8 @@ export function makeWebExecutor() {
         return 0;
     },
     cd: async (args, stdout, stderr) => {
-      try {
-          const [dir = process.env.HOME] = args;
-          dungeon.chdir(pathResolve(dungeon.cwd.current, dir), stdout, stderr);
-          // if (!changes)
-          //     changes = {};
-          // changes.cwd = process.cwd();
-          // process.env.PWD = process.cwd();
-          // if (!changes.env)
-          //     changes.env = {};
-          // changes.env.PWD = process.cwd();
-        } catch (e) {
-            if (e?.code === 'ENOENT') {
-                stderr.write(`cd: No such file or directory '${e.dest}'\n`);
-                return 1;
-            }
-            stderr.write(e.message + '\n');
-            return 1;
-        }
-        return 0;
+      const [dir = process.env.HOME] = args;
+      return dungeon.chdir(pathResolve(dungeon.cwd.current, dir), stdout, stderr);
     },
     cat: async (args, stdout, stderr, stdin, env ) => {
       for (const arg of args) {
@@ -205,6 +188,9 @@ export function makeWebExecutor() {
         return readDir();
       }
       
+    },
+    attack: async (args, stdout, stderr, stdin, env) => {
+      return dungeon.attack(stdout, stderr);
     },
   };
   const env: {[key: string]: string} = { HOME: '/home/adventurer' };
