@@ -2703,10 +2703,12 @@ const extensionToLanguage = {
 };
 declare global {
 	interface ImportMeta {
+		//@ts-ignore
 		resolve: (moduleName: string) => string;
 	}
 }
-const fontFace = new FontFace('seti', `url('${import.meta.resolve(setiWoffUrl)}')`);
+let resolve = import.meta.resolve || ((path: string) => path);
+const fontFace = new FontFace('seti', `url('${resolve(setiWoffUrl)}')`);
 document.fonts.add(fontFace);
 const readyPromise = document.fonts.load('16px seti');
 export function iconPathForPath(fullPath: string, info: {dir: string, mode: number, size: number, isDirectory: boolean}) {

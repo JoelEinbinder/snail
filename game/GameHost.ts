@@ -5,9 +5,6 @@ import { RPC, type Transport } from '../slug/protocol/RPC-ts';
 import makeWorker from 'worker-loader!./game.worker';
 import { preprocessTopLevelAwaitExpressions } from './top-level-await';
 import { } from '../slug/shjs/execute';
-import { tokenize } from '../slug/shjs/tokenizer';
-import { parse } from '../slug/shjs/parser';
-import { makeWebExecutor } from './makeWebExecutor';
 
 export class GameHost implements IHostAPI {
   private _game: Game = new Game((eventName, events) => {
@@ -32,7 +29,6 @@ export class GameHost implements IHostAPI {
     return 'game';
   }  
 }
-const {execute} = makeWebExecutor();
 type ShellHostInterface = {
   [Key in keyof ShellHost]?: (params: Parameters<ShellHost[Key]>[0]) => Promise<ReturnType<ShellHost[Key]>>;
 };
@@ -79,6 +75,12 @@ class Game implements ShellHostInterface {
   }
   async close() { }
   async beep() { }
+  async urlForIFrame(params: {shellIds: number[], filePath: string}) {
+    const url = new URL('game-iframe.html', self.location.href);
+    url.searchParams.set('game', '1');
+    url.searchParams.set('iframe', params.filePath);
+    return url.href;
+  };
 }
 type ShellHandler = {
   [Key in keyof ClientMethods]?: (params: Parameters<ClientMethods[Key]>[0]) => Promise<ReturnType<ClientMethods[Key]>>;
@@ -94,7 +96,7 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
   worker.addEventListener('message', event => {
     transport.onmessage(event.data);
   });
-  for (const event of ['Runtime.consoleAPICalled', 'Runtime.executionContextCreated', 'Runtime.exceptionThrown', 'Shell.notify'])
+  for (const event of ['Runtime.consoleAPICalled', 'Runtime.executionContextCreated', 'Runtime.exceptionThrown', 'Shell.notify', 'Shell.cwdChanged'])
     workerRPC.on(event as never, data => sendEvent(event, data));
   
   return {
@@ -108,26 +110,18 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
       return { objectId };
     },
     'Shell.evaluate': async ({code}) => {
-      const {tokens} = tokenize(code);
-      const ast = parse(tokens);
-      const chunks = [];
-      const {closePromise, kill, stdin} = execute(ast, {
-        write(chunk, encoding, callback) {
-          chunks.push(chunk);
-          callback?.();
-        },
-        end() {
-        },
-      }, {
-        write(chunk, encoding, callback) {
-          console.error(chunk.toString());
-          callback?.();
-        },
-        end() {
-        },
+      const expression = `__getResult__(${JSON.stringify(code)})`;
+      const {result, exceptionDetails} = await workerRPC.send('Runtime.evaluate', {
+        expression,
+        returnByValue: true,
+        generatePreview: false,
+        userGesture: false,
+        awaitPromise: true,
+        allowUnsafeEvalBlockedByCSP: true,
       });
-      await closePromise;
-      return { result: chunks.join('')};
+      if (exceptionDetails)
+        throw new Error(exceptionDetails.exception.description);
+      return result.value;
     },
     'Shell.runCommand': async ({command, expression}) => {
       let transformedExpression =  expression;

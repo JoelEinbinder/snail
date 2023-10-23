@@ -1,4 +1,6 @@
 import { makeExecute } from '../slug/shjs/execute';
+import { pathResolve, pathJoin, pathBasename, pathRelative } from './path';
+import { dungeon } from './dungeon';
 export function makeWebExecutor() {
     type Writable = {
     write: (chunk: any, encoding?: BufferEncoding, callback?: (error?: Error) => void) => void;
@@ -32,24 +34,155 @@ export function makeWebExecutor() {
       // }));
       return 0;
     },
+    __file_completions: async (args, stdout, stderr) => {
+      const type = args[0];
+      const dir = pathResolve(process.cwd(), args[1] || '');
+      const names = await dungeon.readdir(dir).catch(e => []);
+      for (const name of names) {
+          if (type === 'all') {
+              stdout.write(name + '\n');
+          } else {
+              try {
+                  const stat = await dungeon.lstat(pathJoin(dir, name));
+                  if (type === 'directory' && stat.isDirectory())
+                      stdout.write(name + '\n');
+                  else if (type === 'executable' && stat.mode & 0o111)
+                      stdout.write(name + '\n');
+              } catch {}
+          }
+      }
+      return 0;
+    },
+    __environment_variables: async (args, stdout, stderr, stdin, env) => {
+        stdout.write(JSON.stringify(env) + '\n');
+        return 0;
+    },
+    cd: async (args, stdout, stderr) => {
+      try {
+          const [dir = process.env.HOME] = args;
+          dungeon.chdir(pathResolve(dungeon.cwd.current, dir), stdout, stderr);
+          // if (!changes)
+          //     changes = {};
+          // changes.cwd = process.cwd();
+          // process.env.PWD = process.cwd();
+          // if (!changes.env)
+          //     changes.env = {};
+          // changes.env.PWD = process.cwd();
+        } catch (e) {
+            if (e?.code === 'ENOENT') {
+                stderr.write(`cd: No such file or directory '${e.dest}'\n`);
+                return 1;
+            }
+            stderr.write(e.message + '\n');
+            return 1;
+        }
+        return 0;
+    },
     echo: async (args, stdout, stderr, stdin, env) => {
       stdout.write(args.join(' ') + '\n');
       return 0;
     },
+    reconnect: async (args, stdout, stderr, stdin, env) => {
+      return 1;
+    },
+    pwd: async (args, stdout, stderr, stdin, env) => {
+      stdout.write(dungeon.cwd.current + '\n');
+      return 0;
+    },
+    clear: async (args, stdout, stderr, stdin, env) => {
+      stdout.write('\x1b[H\x1b[2J');
+      return 0;
+    },
+    ls: async (args, stdout, stderr, stdin, env) => {
+      stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'ls'})}\x00`);
+      function send(data) {
+        const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
+            return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
+        });
+        stdout.write(`\x1b\x1aM${str}\x00`);
+      }
+      let directoryArgs = args.filter(arg => !arg.startsWith('-'));
+      if (directoryArgs.length === 0)
+        directoryArgs = ['.'];
+      const cwd = directoryArgs.length === 1 ? pathResolve(process.cwd(), directoryArgs[0]) : process.cwd();
+      if (directoryArgs.length === 1)
+        directoryArgs = ['.']
+      try {
+        send({
+            args,
+            dirs: await Promise.all(directoryArgs.map(dir => {
+              return buildItemInfo(cwd, pathResolve(cwd, dir), 1);
+            })),
+            cwd,
+            showHidden: args.some(a => a.startsWith('-') && a.includes('a')),
+            platform: 'game',
+        });
+      } catch (error) {
+        stderr.write(String(error) + '\n');
+        return 1;
+      }
+      return 0;
+      async function buildItemInfo(parentDir: string, filePath: string, depth: number) {
+        async function readDir() {
+          const resolved = filePath;
+          const stat = await dungeon.lstat(resolved).catch(e => {
+            if (e.errno === -2)
+              throw `ls: ${pathRelative(process.cwd(), resolved)}: No such file or directory`;
+            return e;
+          });
+          const isDirectory = stat.isDirectory();
+          return {
+            dir: resolved === parentDir ? pathBasename(resolved) : pathRelative(parentDir, resolved),
+            fullPath: resolved,
+            nlink: stat.nlink,
+            uid: stat.uid,
+            gid: stat.gid,
+            username: 'game', //userid.username(stat.uid),
+            groupname: 'game', //userid.groupname(stat.gid),
+            mtime: stat.mtime.toJSON(),
+            atime: stat.atime.toJSON(),
+            birthtime: stat.birthtime.toJSON(),
+            mode: stat.mode,
+            size: stat.size,
+            isSymbolicLink: stat.isSymbolicLink(),
+            isDirectory,
+            isFIFO: stat.isFIFO(),
+            isSocket: stat.isSocket(),
+            isBlockDevice: stat.isBlockDevice(),
+            isCharacterDevice: stat.isCharacterDevice(),
+            isFile: stat.isFile(),
+            mimeType: '', //mimeTypes.lookup(resolved) || '',
+            children: isDirectory ? await makeChildrenForDirectory() : undefined,
+          }
+        }
+        async function makeChildrenForDirectory() {
+          if (depth === 0)
+            return undefined;
+          const items = await dungeon.readdir(filePath);
+          return Promise.all(items.map(item => {
+            return buildItemInfo(filePath, pathJoin(filePath, item), depth - 1);
+          }));
+        }
+        return readDir();
+      }
+      
+    },
   };
-  const env: {[key: string]: string} = { HOME: '/home/user' };
+  const env: {[key: string]: string} = { HOME: '/home/adventurer' };
   const { execute } = makeExecute<any, Writable>({
     aliases,
     builtins,
     getEnv: () => env,
-    homedir: () => '/home/user',
-    isDirectory: path => false,
+    homedir: () => '/home/adventurer',
+    isDirectory: path => {
+      return dungeon.isDirectory(path);
+    },
     isExecutable: path => false,
     makeWritable: write => null as any,
     runExecutable: ({args, env, executable, inputs}) => {
-      console.warn('runExecutable', {args, env, executable, inputs})
+      inputs[2].write(`command not found: ${executable}\n`);	
       return {
-        closePromise: Promise.resolve(0),
+        closePromise: Promise.resolve(1),
         kill: () => void 0,
         stdin: undefined,
       }

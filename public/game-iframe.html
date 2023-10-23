@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Game Iframe</title>
+</head>
+<body>
+  <script>
+    const params = new URL(location.href).searchParams;
+    document.body.setAttribute('class', params.get('class'));
+    document.body.setAttribute('style', params.get('css'));
+  </script>
+</body>
+</html>

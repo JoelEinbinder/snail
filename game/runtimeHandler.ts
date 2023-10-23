@@ -35,7 +35,7 @@ export const runtimeHandler: ProtocolInterface = {
       if (awaitPromise)
         result = await result;
       return {
-        result: returnByValue ? serializeValue(result) : makeRemoteObject(result)
+        result: returnByValue ? serializeValue(result) : makeRemoteObject(result, generatePreview)
       };
     } catch (error) {
       return {
@@ -135,7 +135,22 @@ export const runtimeHandler: ProtocolInterface = {
 function relaseObject(id: string) {
   objectGroups.delete(id);
 }
-function makeRemoteObject(value): Protocol.Runtime.RemoteObject {
+function makePreview(value: any): Protocol.Runtime.ObjectPreview {
+  const properties = Object.entries(value);
+  const maxProperties = 3;
+  return {
+    type: typeof value,
+    overflow: properties.length > maxProperties,
+    properties: properties.slice(0, maxProperties).map(([name, value]) => {
+      if (value === null)
+        return { name, type: 'object', subtype: 'null', value: 'null' };
+      if (typeof value !== 'object')
+        return { name, type: typeof value, value: String(value) };
+      return { name, type: 'object', value: value.constructor.name };
+    }),
+  }
+}
+function makeRemoteObject(value, generatePreview=false): Protocol.Runtime.RemoteObject {
   if (value === null || !['object', 'function', 'symbol'].includes(typeof value))
     return serializeValue(value);
   const id = String(++lastObjectId);
@@ -148,6 +163,7 @@ function makeRemoteObject(value): Protocol.Runtime.RemoteObject {
     className,
     description: typeof value === 'object' && className ? className : String(value),
     objectId: id,
+    preview: generatePreview ? makePreview(value) : undefined,
   }
 }
 
@@ -157,5 +173,19 @@ function serializeValue(value): Protocol.Runtime.RemoteObject {
     subtype: value === null ? 'null' : undefined,
     description: Object.is(value, -0) ? "-0" : String(value),
     value: value
+  }
+}
+
+export function hookConsole(dispatch: (message: {method: string, params: any}) => void) {
+  console.log = makeConsoleHook('log');
+  console.error = makeConsoleHook('error');
+  console.warn = makeConsoleHook('warning');
+  console.debug = makeConsoleHook('debug');
+  console.info = makeConsoleHook('info');  
+
+  function makeConsoleHook(type: Protocol.Runtime.consoleAPICalledPayload['type']) {
+    return (...args) => {
+      dispatch({ method: 'Runtime.consoleAPICalled', params: { type: type, args: args.map(arg => makeRemoteObject(arg, true)), executionContextId: 1, timestamp: Date.now() } });
+    }
   }
 }

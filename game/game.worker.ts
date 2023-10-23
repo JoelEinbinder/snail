@@ -1,12 +1,14 @@
 import { parse } from '../slug/shjs/parser';
 import { tokenize } from '../slug/shjs/tokenizer';
 import { makeWebExecutor } from './makeWebExecutor';
-import { runtimeHandler } from './runtimeHandler';
-console.log('game bundle');
+import { runtimeHandler, hookConsole } from './runtimeHandler';
+import { dungeon } from './dungeon';
 
 function dispatch(message) {
   self.postMessage(message);
 }
+
+hookConsole(dispatch);
 
 self.addEventListener('message', event => {
   protocol(event.data);
@@ -60,16 +62,14 @@ async function protocol(message) {
 // overrideConsoleAPI('count', 'count');
 // overrideConsoleAPI('timeEnd', 'timeEnd');
 
+const process = { cwd: () => dungeon.cwd.current, env: {} };
 const { execute, aliases, env } = makeWebExecutor();
+process.env = env;
 //@ts-ignore
-self.process = {
-  env,
-  cwd: () => '/', 
-};
+self.process = process;
 
 self['bootstrap'] = function() {
   return (message) => {
-    console.log('bootstrap message', message);
   };
 };
 let shellId = 0;
@@ -132,6 +132,39 @@ self['pty'] = async function(command) {
   // worker.postMessage(changes);
   stdout.end();
   return 'this is the secret secret string:' + returnValue.exitCode;
+}
+
+dungeon.cwd.on(cwd => {
+  dispatch({ method: 'Shell.cwdChanged', params: { cwd }});
+})
+
+self['__getResult__'] = async function (command) {
+  const outStream = {
+    write(data, encoding, callback?) {
+      datas.push(data);
+      callback?.();
+    },
+    end() {
+    },
+  };
+  const errStream = {
+    write(data, encoding, callback?) {
+      errs.push(data);
+      callback?.();
+    },
+    end() {
+    },
+  };
+  const errs = [];
+  const datas = [];
+  const {tokens} = tokenize(command);
+  const ast = parse(tokens);
+  const {closePromise, stdin} = execute(ast, outStream, errStream);
+  stdin?.end();
+  const code = await closePromise;
+  const result = datas.join('');
+  const stderr = errs.join('');
+  return {result, stderr, exitCode: code};
 }
 function notify(method: string, params: any) {
   dispatch({ method: 'Shell.notify', params: { payload: {method, params} }});
