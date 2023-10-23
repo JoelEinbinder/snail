@@ -891,6 +891,7 @@ export class Shell {
       if (event.streamId !== streamId)
         return;
       bufferedData.push(event.data);
+      pushDataIfNeeded();
       tick();
     };
     let ended = false;
@@ -914,6 +915,11 @@ export class Shell {
         await new Promise(x => tick = x);
         continue;
       }
+      pushDataIfNeeded();
+    }
+    function pushDataIfNeeded() {
+      if (bufferedData.length <= dataIndex)
+        return;
       callback(bufferedData[dataIndex]);
       dataIndex++;
     }

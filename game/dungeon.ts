@@ -2,17 +2,60 @@ import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 
 const storage_room: DungeonDescriptor = {
   type: 'directory',
-  children: {},
+  children: {
+    'treasure.chest': {
+      type: 'file',
+      content: 'A treasure chest.',
+    }
+  },
 }
 
 const adventurer: DungeonDescriptor = {
   type: 'directory',
-  children: { storage_room },
+  children: {
+    storage_room,
+    'help.txt': {
+      type: 'file',
+      content: 'You are in a dungeon.',
+    },
+    cramped_hallway: {
+      type: 'directory',
+      children: {
+        left_room: {
+          type: 'directory',
+          children: {
+            blessing: {
+              type: 'file',
+              content: 'Open to pick a blessing.',
+            }
+          },
+        },
+        right_room: {
+          type: 'directory',
+          children: {
+            vestibule: {
+              type: 'directory',
+              children: {
+                'hint.txt': {
+                  type: 'file',
+                  content: 'Sorry, hints are not implemented yet.'
+                },
+                boss_room: {
+                  type: 'directory',
+                  children: {}
+                }
+              }
+            }
+          },
+        },
+      },
+    }
+  },
 }
 
 const home: DungeonDescriptor = {
   type: 'directory',
-  children: {adventurer},
+  children: { adventurer },
 };
 
 const root: DungeonDescriptor = {
@@ -22,11 +65,11 @@ const root: DungeonDescriptor = {
   },
 };
 
-
 type DungeonDescriptor = Room | Item;
 
 type Item = {
   type: 'file';
+  content: string;
 }
 
 type Room = {
@@ -62,6 +105,15 @@ class Dungeon {
   attack(stdout, stderr) {
     stderr.write('cannot attack\n');
     return 1;
+  }
+
+  async readFile(path: string) {
+    const descriptor = this._pathToDescriptor(path);
+    if (!descriptor)
+      throw { errno: -2 };
+    if (descriptor.type !== 'file')
+      throw { errno: -21 };
+    return descriptor.content;
   }
 
   async lstat(path: string) {

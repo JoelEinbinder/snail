@@ -85,6 +85,7 @@ class Game implements ShellHostInterface {
 type ShellHandler = {
   [Key in keyof ClientMethods]?: (params: Parameters<ClientMethods[Key]>[0]) => Promise<ReturnType<ClientMethods[Key]>>;
 };
+let lastStreamId = 0;
 function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void): ShellHandler {
   const worker = makeWorker();
   const transport: Transport = {
@@ -123,6 +124,27 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
         throw new Error(exceptionDetails.exception.description);
       return result.value;
     },
+
+  'Shell.evaluateStreaming': async (params) => {
+    console.log(params);
+    const streamId = ++lastStreamId;
+    const { code } = params;
+    // make sure the streamId is sent before any evaluateStreamData comes in.
+    setTimeout(async () => {
+      const expression = `__getResult__(${JSON.stringify(code)})`;
+      const {result, exceptionDetails} = await workerRPC.send('Runtime.evaluate', {
+        expression,
+        returnByValue: true,
+        generatePreview: false,
+        userGesture: false,
+        awaitPromise: true,
+        allowUnsafeEvalBlockedByCSP: true,
+      });
+      sendEvent('Shell.evaluateStreamingData', {streamId, data: result.value.result});
+      sendEvent('Shell.evaluateStreamingEnd', {streamId});
+    }, 0);
+    return { streamId };
+  },
     'Shell.runCommand': async ({command, expression}) => {
       let transformedExpression =  expression;
       if (expression.includes('await')) {

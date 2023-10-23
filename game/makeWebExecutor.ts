@@ -36,7 +36,7 @@ export function makeWebExecutor() {
     },
     __file_completions: async (args, stdout, stderr) => {
       const type = args[0];
-      const dir = pathResolve(process.cwd(), args[1] || '');
+      const dir = pathResolve(dungeon.cwd.current, args[1] || '');
       const names = await dungeon.readdir(dir).catch(e => []);
       for (const name of names) {
           if (type === 'all') {
@@ -46,13 +46,35 @@ export function makeWebExecutor() {
                   const stat = await dungeon.lstat(pathJoin(dir, name));
                   if (type === 'directory' && stat.isDirectory())
                       stdout.write(name + '\n');
-                  else if (type === 'executable' && stat.mode & 0o111)
+                  else if (type === 'executable' && stat.isDirectory())
                       stdout.write(name + '\n');
               } catch {}
           }
       }
       return 0;
     },
+  
+    __find_all_files: async (args, stdout, stderr, stdin, env) => {
+      const maxFiles = parseInt(args[0] || '1');
+      let filesSeen = 0;
+      async function traverse(path: string) {
+        if (filesSeen >= maxFiles)
+          return;
+        if (path !== dungeon.cwd.current) {
+          filesSeen++;
+          stdout.write(pathRelative(dungeon.cwd.current, path) + '\n');
+        }
+        const stat = await dungeon.lstat(path);
+        if (!stat.isDirectory())
+          return;
+        const names = await dungeon.readdir(path);
+        for (const name of names)
+          await traverse(pathJoin(path, name));
+      }
+      await traverse(dungeon.cwd.current);
+      return 0;
+    },
+
     __environment_variables: async (args, stdout, stderr, stdin, env) => {
         stdout.write(JSON.stringify(env) + '\n');
         return 0;
@@ -77,6 +99,23 @@ export function makeWebExecutor() {
             return 1;
         }
         return 0;
+    },
+    cat: async (args, stdout, stderr, stdin, env ) => {
+      for (const arg of args) {
+        const dir = pathResolve(dungeon.cwd.current, arg);
+        const stat = await dungeon.lstat(dir).catch(e => e);
+        if (stat.errno == -2) {
+          stderr.write(`cat: ${arg}: No such file or directory`);
+          return 1;
+        }
+        if (stat.isDirectory()) {
+          stderr.write(`cat: ${arg}: Is a directory`);
+          return 1;
+        }
+        const content = await dungeon.readFile(dir);
+        stdout.write(content);
+      }
+      return 0;
     },
     echo: async (args, stdout, stderr, stdin, env) => {
       stdout.write(args.join(' ') + '\n');
@@ -175,7 +214,7 @@ export function makeWebExecutor() {
     getEnv: () => env,
     homedir: () => '/home/adventurer',
     isDirectory: path => {
-      return dungeon.isDirectory(path);
+      return dungeon.isDirectory(pathResolve(dungeon.cwd.current, path));
     },
     isExecutable: path => false,
     makeWritable: write => null as any,
