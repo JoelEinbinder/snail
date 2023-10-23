@@ -192,6 +192,22 @@ export function makeWebExecutor() {
     attack: async (args, stdout, stderr, stdin, env) => {
       return dungeon.attack(stdout, stderr);
     },
+    open: async (args, stdout, stderr, stdin, env) => {
+      for (const arg of args) {
+        const ret = dungeon.open(pathResolve(dungeon.cwd.current, arg), stdout, stderr);
+        if (ret !== 0)
+          return ret;
+      }
+      return 0;
+    },
+    use: async (args, stdout, stderr, stdin, env) => {
+      for (const arg of args) {
+        const ret = dungeon.useItem(arg, stdout, stderr);
+        if (ret !== 0)
+          return ret;
+      }
+      return 0;
+    },
   };
   const env: {[key: string]: string} = { HOME: '/home/adventurer' };
   const { execute } = makeExecute<any, Writable>({

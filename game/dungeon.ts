@@ -6,6 +6,11 @@ const storage_room: DungeonDescriptor = {
     'treasure.chest': {
       type: 'file',
       content: 'A treasure chest.',
+      open: (stdout, stderr) => {
+        stdout.write('You open the chest and find a healing_potion!\r\n');
+        dungeon.giveItem('healing_potion');
+        return 0;
+      }
     }
   },
 }
@@ -94,6 +99,7 @@ type DungeonDescriptor = Room | Item;
 type Item = {
   type: 'file';
   content: string;
+  open?: (stdout, stderr) => number;
 }
 
 type Room = {
@@ -111,6 +117,34 @@ export type Monster = {
   image: string;
 }
 
+class LiveDungeon {
+  children: { [key: string]: LiveDungeon } = {};
+  monster?: Monster;
+  constructor(private readonly _descriptor: DungeonDescriptor) {
+    if (this._descriptor.type === 'directory') {
+      for (const key in this._descriptor.children)
+        this.children[key] = new LiveDungeon(this._descriptor.children[key]);
+      if (this._descriptor.monster)
+        this.monster = {...this._descriptor.monster};
+    }
+  }
+  get type() {
+    return this._descriptor.type;
+  }
+  get content() {
+    if (this._descriptor.type !== 'file')
+      return '<not a file>';
+    return this._descriptor.content;
+  }
+  open(stderr, stdout) {
+    if (this._descriptor.type !== 'file')
+      return;
+    if (!this._descriptor.open)
+      return;
+    return this._descriptor.open(stderr, stdout);  
+  }
+}
+
 
 class Dungeon {
   player = {
@@ -118,9 +152,10 @@ class Dungeon {
     atk: 0,
     bytes: 0,
     element: 'none',
+    items: new Map<string, number>(),
   }
   cwd = new JoelEvent('/');
-  private root: DungeonDescriptor;
+  private root: LiveDungeon;
   constructor(private _descriptor: DungeonDescriptor) {
     this.reset();
   }
@@ -131,7 +166,7 @@ class Dungeon {
       const part = parts.shift();
       if (!part)
         continue;
-      current = current.children?.[part];
+      current = current.children[part];
     }
     return current;
   }
@@ -142,14 +177,54 @@ class Dungeon {
     return descriptor.monster || null;
   }
   reset() {
-    this.root = JSON.parse(JSON.stringify(this._descriptor));
+    this.root = new LiveDungeon(this._descriptor);
     this.cwd.dispatch('/home/adventurer');
     this.player = {
       hp: 100,
       atk: 10,
       bytes: this.player.bytes,
+      items: new Map(),
       element: 'none',
     };
+  }
+
+  giveItem(item: string) {
+    this.player.items.set(item, (this.player.items.get(item) || 0) + 1);
+  }
+
+  useItem(item: string, stdout, stderr): number {
+    const count = this.player.items.get(item) || 0;
+    if (count <= 0) {
+      stderr.write(`you don't have any ${item}\r\n`);
+      return 1;
+    }
+    if (item === 'healing_potion') {
+      if (this.player.hp >= 100) {
+        stderr.write('you are already at full health\r\n');
+        return 1;
+      }
+      const before = this.player.hp;
+      this.player.hp = Math.min(this.player.hp + 50, 100);
+      stdout.write(`healed for ${this.player.hp - before} hp\r\n`);
+    } else {
+      stderr.write(`you can't use ${item}\r\n`);
+      return 1;
+    }
+    this.player.items.set(item, count - 1);
+    return 0;
+  }
+
+  open(path: string, stdout, stderr) {
+    const descriptor = this._pathToDescriptor(path);
+    if (!descriptor) {
+      stderr.write(`no such file or directory: ${path}\r\n`);
+      return 1;
+    }
+    if (descriptor.type !== 'file' || !descriptor.open) {
+      stderr.write(`cannot open ${path}\r\n`);
+      return 1;
+    }
+    return descriptor.open(stdout, stderr);
   }
 
   _isPathObstructed(from: string, to: string) {
@@ -219,16 +294,17 @@ class Dungeon {
       return 1;
     }
     current.monster.hp -= this.player.atk;
-    stderr.write(`you hit ${current.monster.name} for 10 damage\r\n`);
+    stdout.write(`you hit ${current.monster.name} for 10 damage\r\n`);
     if (current.monster.hp <= 0) {
-      stderr.write(`${current.monster.name} dies!\r\n`);
+      stdout.write(`${current.monster.name} dies!\r\n`);
       this.player.bytes += current.monster.bytes;
+      stdout.write(`${'adventurer'} obtained ${current.monster.bytes} bytes\r\n`);
       delete current.monster;
     } else {
       this.player.hp -= current.monster.atk;
-      stderr.write(`${current.monster.name} hits you for ${current.monster.atk} damage\r\n`);
+      stdout.write(`${current.monster.name} hits you for ${current.monster.atk} damage\r\n`);
       if (this.player.hp <= 0) {
-        stderr.write('you die!\r\n');
+        stdout.write('you die!\r\n');
         this.reset();
       }
     }
