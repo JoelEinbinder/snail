@@ -85,6 +85,7 @@ class Game implements ShellHostInterface {
 type ShellHandler = {
   [Key in keyof ClientMethods]?: (params: Parameters<ClientMethods[Key]>[0]) => Promise<ReturnType<ClientMethods[Key]>>;
 };
+let bytes = parseInt(localStorage.getItem('snail_game_bytes') || '0');
 let lastStreamId = 0;
 function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void): ShellHandler {
   const worker = makeWorker();
@@ -100,11 +101,15 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
   for (const event of ['Runtime.consoleAPICalled', 'Runtime.executionContextCreated', 'Runtime.exceptionThrown', 'Shell.notify', 'Shell.cwdChanged'])
     workerRPC.on(event as never, data => sendEvent(event, data));
   
+  workerRPC.on('Game.setBytes' as never, data => {
+    bytes = data as number;
+    localStorage.setItem('snail_game_bytes', String(bytes));
+  });
   return {
     'Shell.enable': async params => {
       await workerRPC.send('Runtime.enable', {});
       const {result: {objectId}} = await workerRPC.send('Runtime.evaluate', {
-        expression: `bootstrap(${JSON.stringify(params.args)})`,
+        expression: `bootstrap(${JSON.stringify(params.args)}, ${JSON.stringify({ bytes })})`,
         returnByValue: false,
       });
     

@@ -3,12 +3,13 @@ import { tokenize } from '../slug/shjs/tokenizer';
 import { makeWebExecutor } from './makeWebExecutor';
 import { runtimeHandler, hookConsole } from './runtimeHandler';
 import { dungeon } from './dungeon';
+import { JoelEvent } from '../slug/cdp-ui/JoelEvent';
 
 function dispatch(message) {
   self.postMessage(message);
 }
 
-hookConsole(dispatch);
+// hookConsole(dispatch);
 
 self.addEventListener('message', event => {
   protocol(event.data);
@@ -72,6 +73,8 @@ self.player = Object.freeze({
   get hp() { return dungeon.player.hp },
   get atk() { return dungeon.player.atk },
   get bytes() { return dungeon.player.bytes },
+  get abilities() { return [...dungeon.player.abilities] },
+  get element() { return dungeon.player.element },
 });
 
 Object.defineProperty(self, 'enemy', {
@@ -82,17 +85,28 @@ Object.defineProperty(self, 'enemy', {
     return Object.freeze({...monster});
   },
 })
-
-self['bootstrap'] = function() {
+const stdin = new JoelEvent<string>('');
+self['bootstrap'] = function(args, { bytes }) {
+  dungeon.player.bytes = bytes;
+  
+  const stdout = createTerminalStream();
+  setTimeout(async () => {
+    await dungeon.reset(stdout, stdout, stdin);
+    stdout.end();
+  }, 0)
   return (message) => {
     // TODO do something with 'resize'?
     // TODO handle 'input'
+    if (message.method === 'input' && message.params.id === terminalId)
+      stdin.dispatch(message.params.data);
   };
 };
-let shellId = 0;
-self['pty'] = async function(command) {
-  const id = ++shellId;
-  const stdout = {
+
+let terminalId = 0;
+function createTerminalStream() {
+  const id = ++terminalId;
+  notify('startTerminal', {id});
+  return {
     _ended: false,
     write(data, encoding, callback?) {
       notify('data', {id, data});
@@ -105,11 +119,15 @@ self['pty'] = async function(command) {
       notify('endTerminal', {id});
     },
   };
+}
+
+self['pty'] = async function(command) {
   const {tokens} = tokenize(command);
   const ast = parse(tokens);
-  notify('startTerminal', {id});
-  const { closePromise, kill, stdin } = execute(ast, stdout, stdout);
+  const stdout = createTerminalStream();
+  const { closePromise, kill } = execute(ast, stdout, stdout, stdin);
   let waitForDoneCallback;
+  
   const waitForDonePromise = new Promise(x => waitForDoneCallback = x);
   // /** @type {{exitCode: number, died?: boolean, signal?: number, changes?: Changes}} */
   // const returnValue = await Promise.race([
@@ -154,6 +172,10 @@ self['pty'] = async function(command) {
 dungeon.cwd.on(cwd => {
   dispatch({ method: 'Shell.cwdChanged', params: { cwd }});
 })
+dungeon.bytesEvent.on(() => {
+  dispatch({ method: 'Game.setBytes', params: dungeon.player.bytes });
+});
+
 
 self['__getResult__'] = async function (command) {
   const outStream = {

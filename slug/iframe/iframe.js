@@ -284,6 +284,9 @@ function openDevTools() {
 }
 
 const ua = navigator.userActivation;
+/**
+ * @param {string} command
+ */
 async function tryToRunCommand(command) {
   if (!ua.isActive)
     return;
@@ -346,7 +349,7 @@ let findHandler;
 /** @type {import('../sdk/web').FindParams|null} */
 let findParams = null;
 /**
- * @param {(params: import('../sdk/web').FindParams|null) => void} _findHandler
+ * @param {typeof findHandler} _findHandler
  */
 function setFindHandler(_findHandler) {
   findHandler = _findHandler;

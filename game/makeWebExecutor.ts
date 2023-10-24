@@ -190,7 +190,7 @@ export function makeWebExecutor() {
       
     },
     attack: async (args, stdout, stderr, stdin, env) => {
-      return dungeon.attack(stdout, stderr);
+      return await dungeon.attack(stdout, stderr, stdin);
     },
     open: async (args, stdout, stderr, stdin, env) => {
       for (const arg of args) {

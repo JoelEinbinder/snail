@@ -153,11 +153,12 @@ class Dungeon {
     bytes: 0,
     element: 'none',
     items: new Map<string, number>(),
+    abilities: new Set<string>(),
   }
   cwd = new JoelEvent('/');
+  bytesEvent = new JoelEvent<void>(undefined);
   private root: LiveDungeon;
   constructor(private _descriptor: DungeonDescriptor) {
-    this.reset();
   }
   private _pathToDescriptor(path: string) {
     const parts = path.split('/');
@@ -176,7 +177,7 @@ class Dungeon {
       return null;
     return descriptor.monster || null;
   }
-  reset() {
+  async reset(stdout, stderr, stdin: JoelEvent<string>) {
     this.root = new LiveDungeon(this._descriptor);
     this.cwd.dispatch('/home/adventurer');
     this.player = {
@@ -184,8 +185,34 @@ class Dungeon {
       atk: 10,
       bytes: this.player.bytes,
       items: new Map(),
+      abilities: new Set(),
       element: 'none',
     };
+    if (this.player.bytes) {
+      stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'reset'})}\x00`);
+      send({ bytes: this.player.bytes });
+      function send(data) {
+        const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
+            return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
+        });
+        stdout.write(`\x1b\x1aM${str}\x00`);
+      }
+      console.log('waiting for input', stdin);
+      const data = await stdin.once();
+      try {
+        const parsed = JSON.parse(data);
+        this.player.abilities = new Set(parsed);
+        if (this.player.abilities.has('increased_attack'))
+          this.player.atk += 3;
+        if (this.player.abilities.has('starting_element')) {
+          const elements = ['fire', 'water', 'ice'];
+          this.player.element = elements[Math.floor(Math.random() * elements.length)];
+        }
+      } catch {
+        return 1;
+      }
+    }
+    return 0;
   }
 
   giveItem(item: string) {
@@ -287,7 +314,7 @@ class Dungeon {
     }
     return 0;
   }
-  attack(stdout, stderr) {
+  async attack(stdout, stderr, stdin) {
     const current = this._pathToDescriptor(this.cwd.current) as Room;
     if (!current.monster) {
       stderr.write('you swat at the air in vain\n');
@@ -298,6 +325,7 @@ class Dungeon {
     if (current.monster.hp <= 0) {
       stdout.write(`${current.monster.name} dies!\r\n`);
       this.player.bytes += current.monster.bytes;
+      this.bytesEvent.dispatch();
       stdout.write(`${'adventurer'} obtained ${current.monster.bytes} bytes\r\n`);
       delete current.monster;
     } else {
@@ -305,7 +333,7 @@ class Dungeon {
       stdout.write(`${current.monster.name} hits you for ${current.monster.atk} damage\r\n`);
       if (this.player.hp <= 0) {
         stdout.write('you die!\r\n');
-        this.reset();
+        await this.reset(stdout, stderr, stdin);
       }
     }
     return 0;
