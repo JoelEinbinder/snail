@@ -165,7 +165,15 @@ class LiveDungeon {
   }
 }
 
+async function writeTextSlowly(text:string, stdout) {
+  for (const char of text) {
+    stdout.write(char);
+    await new Promise(x => setTimeout(x, 50));
+  }
+}
 
+
+let resets = 0;
 class Dungeon {
   player = {
     hp: 0,
@@ -198,6 +206,20 @@ class Dungeon {
     return descriptor.monster || null;
   }
   async reset(stdout, stderr, stdin: JoelEvent<string>) {
+    stdout.write('\u001b[32m');
+    if (resets === 0) {
+      await writeTextSlowly('Connecting to the Halloween Server.\r\n', stdout);
+    } else {
+      await writeTextSlowly('Reconnecting to the Halloween Server.\r\n', stdout);
+    }
+    await writeTextSlowly('Beware of traps.\r\n', stdout);
+    await writeTextSlowly('Beware of monsters.\r\n', stdout);
+    await writeTextSlowly('Find the key.\r\n', stdout);
+    stdout.write('\u001b[0m');
+    if (resets === 0) {
+      stdout.write('type help to view available commands\r\n');
+    }
+    resets++;
     this.root = new LiveDungeon(this._descriptor);
     this.cwd.dispatch('/home/adventurer');
     this.player = {
@@ -352,7 +374,10 @@ class Dungeon {
       this.player.hp -= current.monster.atk;
       stdout.write(`${current.monster.name} hits you for ${current.monster.atk} damage\r\n`);
       if (this.player.hp <= 0) {
-        stdout.write('you die!\r\n');
+        stdout.write('\u001b[31m');
+        await writeTextSlowly('You died!\r\n', stdout);
+        stdout.write('\u001b[0m'); 
+        await new Promise(x => setTimeout(x, 300)); 
         await this.reset(stdout, stderr, stdin);
       }
     }

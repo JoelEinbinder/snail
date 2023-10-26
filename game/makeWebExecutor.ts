@@ -79,6 +79,33 @@ export function makeWebExecutor() {
         stdout.write(JSON.stringify(env) + '\n');
         return 0;
     },
+    help: async(args, stdout, stderr) => {
+      const command = args[0];
+      if (!command) {
+        stdout.write('cd: traverse directories\r\n');
+        stdout.write('ls: view the contents of a directory\r\n');
+        stdout.write('cat: view the contents of a file\r\n');
+        stdout.write('open: some things can be opened\r\n');
+        stdout.write('use: use an item\r\n');
+        stdout.write('help: view this help\r\n');
+        stdout.write('\r\n');
+        stdout.write('For further detail on a command, use `help <command>`\r\n');
+      } else {
+        if (command === 'cd') {
+          stdout.write('`cd <directory_name>` to travel to that directory\r\n');
+          stdout.write('`cd ..` to travel up a level\r\n');
+        } else if (command === 'ls') {
+          stdout.write('`ls` to view the current directory contents\r\n');
+          stdout.write('`ls <directory_name>` to view the contents of some other directory\r\n');
+        } else if (command === 'help') {
+          stdout.write('A fan of recursion?');
+        } else {
+          stdout.write(`sorry, no help available for ${JSON.stringify(command)}\r\n`);
+          return 1;
+        }
+      }
+      return 0;
+    },
     cd: async (args, stdout, stderr) => {
       const [dir = process.env.HOME] = args;
       return dungeon.chdir(pathResolve(dungeon.cwd.current, dir), stdout, stderr);
