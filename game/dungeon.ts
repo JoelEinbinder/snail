@@ -26,8 +26,30 @@ const monster_room: DungeonDescriptor = {
     image: 'ghost3',
   },
   children: {
-    vestibule: {
+    precarious_pathway: {
       type: 'directory',
+      challenge: async (stdout, stderr, stdin) => {
+        stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'pathway'})}\x00`);
+        // send({ });
+        // function send(data) {
+        //   const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
+        //       return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
+        //   });
+        //   stdout.write(`\x1b\x1aM${str}\x00`);
+        // }
+        try {
+          const data = JSON.parse(await stdin.once());
+          if (data === 'succeed')
+            return 'succeed';
+          if (data === 'cancel')
+            return 'cancel';
+          if (data === 'die')
+            return 'die';
+          return 'cancel';
+        } catch {
+          return 'cancel';
+        }
+      },
       children: {
         'hint.txt': {
           type: 'file',
@@ -43,7 +65,12 @@ const monster_room: DungeonDescriptor = {
             element: 'Fire',
             image: 'ghost2',
           },
-          children: {}
+          children: {
+            'end.txt': {
+              type: 'file',
+              content: 'End of demo!',
+            }
+          }
         }
       }
     }
@@ -56,6 +83,10 @@ const blessing_room: DungeonDescriptor = {
     blessing: {
       type: 'file',
       content: 'Open to pick a blessing.',
+      open: (stdout, stderr) => {
+        stderr.write('not implemented yet\n');
+        return 1;
+      },
     }
   },
 };
@@ -118,6 +149,7 @@ type Children = { [key: string]: DungeonDescriptor | (() => DungeonDescriptor) }
 type Room = {
   type: 'directory';
   monster?: Monster;
+  challenge?: (stdout, stderr, stdin: JoelEvent<string>) => Promise<'succeed'|'die'|'cancel'>;
   children: Children | (() => Children),
 }
 
@@ -137,6 +169,7 @@ function unwrapCallable<T extends object>(callable: T | (() => T)) {
 class LiveDungeon {
   children: { [key: string]: LiveDungeon } = {};
   monster?: Monster;
+  challenge?: (stdout, stderr, stdin: JoelEvent<string>) => Promise<'succeed'|'die'|'cancel'>;
   private opened = false;
   constructor(private readonly _descriptor: DungeonDescriptor) {
     if (this._descriptor.type === 'directory') {
@@ -147,6 +180,8 @@ class LiveDungeon {
       }
       if (this._descriptor.monster)
         this.monster = {...this._descriptor.monster};
+      if (this._descriptor.challenge)
+        this.challenge = this._descriptor.challenge;
     }
   }
   get type() {
@@ -316,6 +351,8 @@ class Dungeon {
         return false;
       if (descriptor.monster)
         return true;
+      if (descriptor.challenge)
+        return true;
       fromParts.pop();
     }
     const sharedRoot = fromParts.join('/');
@@ -327,6 +364,8 @@ class Dungeon {
         return false;
       if (descriptor.monster)
         return true;
+      if (descriptor.challenge)
+        return true;
       if (!current.endsWith('/'))
         current += '/';
       current += toParts.shift();
@@ -335,8 +374,8 @@ class Dungeon {
 
   }
   
-  chdir(dir: string, stdout, stderr): number {
-    const current = this._pathToDescriptor(this.cwd.current) as Room;
+  async chdir(dir: string, stdout, stderr, stdin: JoelEvent<string>): Promise<number> {
+    const current = this._pathToDescriptor(this.cwd.current);
     if (current.monster) {
       stderr.write(`${current.monster.name} blocks your escape!\r\n`);
       return 1;
@@ -349,6 +388,15 @@ class Dungeon {
     if (descriptor?.type !== 'directory') {
       stderr.write(`no such directory: ${dir}\r\n`);
       return 1;
+    }
+    if (descriptor.challenge) {
+      const result = await descriptor.challenge(stdout, stderr, stdin);
+      if (result === 'cancel')
+        return 1;
+      if (result === 'die')
+        return this.reset(stdout, stderr, stdin);
+      console.assert(result === 'succeed');
+      delete descriptor.challenge;
     }
     this.cwd.dispatch(dir);
     if (descriptor.monster) {
@@ -381,6 +429,11 @@ class Dungeon {
       this.player.bytes += current.monster.bytes;
       this.bytesEvent.dispatch();
       stdout.write(`${'adventurer'} obtained ${current.monster.bytes} bytes\r\n`);
+      if (this.player.abilities.has('heal_after_battle')) {
+        const before = this.player.hp;
+        this.player.hp = Math.min(this.player.hp + 10, 100);
+        stdout.write(`healed for ${this.player.hp - before} hp\r\n`);
+      }
       delete current.monster;
     } else {
       const typeEffect = pokemonTypeEffect(current.monster.element, this.player.element);
@@ -448,7 +501,7 @@ class Dungeon {
     const descriptor = this._pathToDescriptor(path);
     if (descriptor.type !== 'directory')
       throw new Error(`${path} is not a directory`);
-    if (descriptor.monster)
+    if (descriptor.monster || descriptor.challenge)
       return [];
     return Object.keys(descriptor.children);
   }

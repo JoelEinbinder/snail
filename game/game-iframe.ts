@@ -9,6 +9,8 @@ if (iframeType === 'ls') {
   await import('./monster-iframe');
 } else if (iframeType === 'reset') {
   await import('./reset-iframe');
+} else if (iframeType === 'pathway') {
+  await import('./pathway-iframe');
 } else {
   document.body.textContent = 'iframe not found: ' + iframeType;
   d4.setHeight(document.body.offsetHeight);

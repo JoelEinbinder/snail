@@ -106,9 +106,9 @@ export function makeWebExecutor() {
       }
       return 0;
     },
-    cd: async (args, stdout, stderr) => {
+    cd: async (args, stdout, stderr, stdin) => {
       const [dir = process.env.HOME] = args;
-      return dungeon.chdir(pathResolve(dungeon.cwd.current, dir), stdout, stderr);
+      return dungeon.chdir(pathResolve(dungeon.cwd.current, dir), stdout, stderr, stdin);
     },
     cat: async (args, stdout, stderr, stdin, env ) => {
       for (const arg of args) {
