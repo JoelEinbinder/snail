@@ -87,6 +87,9 @@ export function makeWebExecutor() {
         stdout.write('cat: view the contents of a file\r\n');
         stdout.write('open: some things can be opened\r\n');
         stdout.write('use: use an item\r\n');
+        stdout.write('attack: attack a monster\r\n');
+        stdout.write('player: see info about your stats\r\n');
+        stdout.write('enemy: see info about the monster you are fighting\r\n');
         stdout.write('help: view this help\r\n');
         stdout.write('\r\n');
         stdout.write('For further detail on a command, use `help <command>`\r\n');
@@ -97,6 +100,9 @@ export function makeWebExecutor() {
         } else if (command === 'ls') {
           stdout.write('`ls` to view the current directory contents\r\n');
           stdout.write('`ls <directory_name>` to view the contents of some other directory\r\n');
+        } else if (command === 'attack') {
+          stdout.write('`attack` to attack the monster in the current directory\r\n');
+          stdout.write('does more damage if you have an elemental advantage\r\n');
         } else if (command === 'help') {
           stdout.write('A fan of recursion?');
         } else {
@@ -254,6 +260,9 @@ export function makeWebExecutor() {
         kill: () => void 0,
         stdin: undefined,
       }
+    },
+    globFiles: parts => {
+      return [];
     },
   });
   return {execute, aliases, env};

@@ -88,20 +88,7 @@ function makeHostAPI(): IHostAPI {
     window['webkit_callback'] = callback;
     return host;
   }
-  if (new URL(window.location.href).searchParams.has('game')) {
-    return new GameHost();
-  }
-  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://'
-  const socket = new WebSocket(`${protocol + window.location.host + window.location.pathname}`);
-  const openPromise = new Promise(x => socket.onopen = x);
-  const {host, callback} = hostApiHelper('web', async message => {
-    await openPromise;
-    socket.send(JSON.stringify(message));
-  });
-  socket.onmessage = event => {
-    callback(JSON.parse(event.data));
-  };
-  return host;
+  return new GameHost();
 }
 
 function hostApiHelper(type: string, postMessage: (message: any) => void) {
