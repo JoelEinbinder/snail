@@ -22,7 +22,7 @@ const monster_room: DungeonDescriptor = {
     hp: 50,
     atk: 15,
     bytes: 20,
-    element: 'ice',
+    element: 'Ice',
     image: 'ghost3',
   },
   children: {
@@ -40,7 +40,7 @@ const monster_room: DungeonDescriptor = {
             hp: 50,
             atk: 15,
             bytes: 20,
-            element: 'fire',
+            element: 'Fire',
             image: 'ghost2',
           },
           children: {}
@@ -75,7 +75,7 @@ const adventurer: DungeonDescriptor = {
         hp: 50,
         atk: 10,
         bytes: 10,
-        element: 'none',
+        element: 'Normal',
         image: 'ghost1',
       },
       children: oneOf({
@@ -126,7 +126,7 @@ export type Monster = {
   hp: number;
   atk: number;
   bytes: number;
-  element: 'none' | 'fire' | 'water' | 'ice';
+  element: (typeof types)[number];
   image: string;
 }
 
@@ -137,6 +137,7 @@ function unwrapCallable<T extends object>(callable: T | (() => T)) {
 class LiveDungeon {
   children: { [key: string]: LiveDungeon } = {};
   monster?: Monster;
+  private opened = false;
   constructor(private readonly _descriptor: DungeonDescriptor) {
     if (this._descriptor.type === 'directory') {
       const children = unwrapCallable(this._descriptor.children);
@@ -158,10 +159,17 @@ class LiveDungeon {
   }
   open(stderr, stdout) {
     if (this._descriptor.type !== 'file')
-      return;
+      return 1;
     if (!this._descriptor.open)
-      return;
-    return this._descriptor.open(stderr, stdout);  
+      return 1;
+    if (this.opened) {
+      stderr.write('It is empty.\r\n');
+      return 1;
+    }
+    const retVal = this._descriptor.open(stderr, stdout);
+    if (retVal === 0)
+      this.opened = true;
+    return retVal;
   }
 }
 
@@ -179,7 +187,7 @@ class Dungeon {
     hp: 0,
     atk: 0,
     bytes: 0,
-    element: 'none',
+    element: 'Normal' as (typeof types)[number],
     items: new Map<string, number>(),
     abilities: new Set<string>(),
   }
@@ -228,7 +236,7 @@ class Dungeon {
       bytes: this.player.bytes,
       items: new Map(),
       abilities: new Set(),
-      element: 'none',
+      element: 'Normal',
     };
     if (this.player.bytes) {
       stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'reset'})}\x00`);
@@ -247,7 +255,7 @@ class Dungeon {
         if (this.player.abilities.has('increased_attack'))
           this.player.atk += 3;
         if (this.player.abilities.has('starting_element')) {
-          const elements = ['fire', 'water', 'ice'];
+          const elements = ['Fire', 'Water', 'Ice'] as const;
           this.player.element = elements[Math.floor(Math.random() * elements.length)];
         }
       } catch {
@@ -362,8 +370,12 @@ class Dungeon {
       stderr.write('you swat at the air in vain\n');
       return 1;
     }
-    current.monster.hp -= this.player.atk;
-    stdout.write(`you hit ${current.monster.name} for 10 damage\r\n`);
+    {
+      const typeEffect = pokemonTypeEffect(this.player.element, current.monster.element);
+      const damage = typeEffect * this.player.atk;
+      current.monster.hp -= damage;
+      stdout.write(`you hit ${current.monster.name} for ${damage} damage\r\n`);
+    }
     if (current.monster.hp <= 0) {
       stdout.write(`${current.monster.name} dies!\r\n`);
       this.player.bytes += current.monster.bytes;
@@ -371,8 +383,10 @@ class Dungeon {
       stdout.write(`${'adventurer'} obtained ${current.monster.bytes} bytes\r\n`);
       delete current.monster;
     } else {
-      this.player.hp -= current.monster.atk;
-      stdout.write(`${current.monster.name} hits you for ${current.monster.atk} damage\r\n`);
+      const typeEffect = pokemonTypeEffect(current.monster.element, this.player.element);
+      const damage = typeEffect * current.monster.atk;
+      this.player.hp -= damage;
+      stdout.write(`${current.monster.name} hits you for ${damage} damage\r\n`);
       if (this.player.hp <= 0) {
         stdout.write('\u001b[31m');
         await writeTextSlowly('You died!\r\n', stdout);
@@ -438,6 +452,30 @@ class Dungeon {
       return [];
     return Object.keys(descriptor.children);
   }
+}
+
+const types = ["Normal", "Fire", "Water", "Grass", "Electr", "Ice", "Fight", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel"] as const;
+function pokemonTypeEffect(moveType: (typeof types)[number], victType: (typeof types)[number]) {
+  var typeEffect = [
+  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.5],
+  [1.0, 0.5, 0.5, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.5, 1.0, 0.5, 1.0, 2.0],
+  [1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5, 1.0, 1.0],
+  [1.0, 0.5, 2.0, 0.5, 1.0, 1.0, 1.0, 0.5, 2.0, 0.5, 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 0.5],
+  [1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0],
+  [1.0, 0.5, 0.5, 2.0, 1.0, 0.5, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5],
+  [2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5, 2.0, 0.0, 2.0, 2.0],
+  [1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 1.0, 0.0],
+  [1.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 2.0, 1.0, 0.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 2.0],
+  [1.0, 1.0, 1.0, 2.0, 0.5, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0, 1.0, 0.5],
+  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.0, 0.5],
+  [1.0, 0.5, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.5, 2.0, 1.0, 1.0, 0.5, 1.0, 2.0, 0.5],
+  [1.0, 2.0, 1.0, 1.0, 1.0, 2.0, 0.5, 1.0, 0.5, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5],
+  [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 0.5, 0.5],
+  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5],
+  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 0.5, 0.5],
+  [1.0, 0.5, 0.5, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 0.5]];
+
+  return typeEffect[types.indexOf(moveType)][types.indexOf(victType)];
 }
 
 
