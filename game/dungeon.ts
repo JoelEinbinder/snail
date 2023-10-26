@@ -15,6 +15,51 @@ const storage_room: DungeonDescriptor = {
   },
 }
 
+const monster_room: DungeonDescriptor = {
+  type: 'directory',
+  monster: {
+    name: 'Frost Ghost',
+    hp: 50,
+    atk: 15,
+    bytes: 20,
+    element: 'ice',
+    image: 'ghost3',
+  },
+  children: {
+    vestibule: {
+      type: 'directory',
+      children: {
+        'hint.txt': {
+          type: 'file',
+          content: 'Sorry, hints are not implemented yet.'
+        },
+        boss_room: {
+          type: 'directory',
+          monster: {
+            name: 'Fire Ghost',
+            hp: 50,
+            atk: 15,
+            bytes: 20,
+            element: 'fire',
+            image: 'ghost2',
+          },
+          children: {}
+        }
+      }
+    }
+  },
+};
+
+const blessing_room: DungeonDescriptor = {
+  type: 'directory',
+  children: {
+    blessing: {
+      type: 'file',
+      content: 'Open to pick a blessing.',
+    }
+  },
+};
+
 const adventurer: DungeonDescriptor = {
   type: 'directory',
   children: {
@@ -33,53 +78,19 @@ const adventurer: DungeonDescriptor = {
         element: 'none',
         image: 'ghost1',
       },
-      children: {
-        left_room: {
-          type: 'directory',
-          children: {
-            blessing: {
-              type: 'file',
-              content: 'Open to pick a blessing.',
-            }
-          },
-        },
-        right_room: {
-          type: 'directory',
-          monster: {
-            name: 'Frost Ghost',
-            hp: 50,
-            atk: 15,
-            bytes: 20,
-            element: 'ice',
-            image: 'ghost3',
-          },
-          children: {
-            vestibule: {
-              type: 'directory',
-              children: {
-                'hint.txt': {
-                  type: 'file',
-                  content: 'Sorry, hints are not implemented yet.'
-                },
-                boss_room: {
-                  type: 'directory',
-                  monster: {
-                    name: 'Fire Ghost',
-                    hp: 50,
-                    atk: 15,
-                    bytes: 20,
-                    element: 'fire',
-                    image: 'ghost2',
-                  },
-                  children: {}
-                }
-              }
-            }
-          },
-        },
-      },
+      children: oneOf({
+        left_room: blessing_room,
+        right_room: monster_room,
+      }, {
+        left_room: monster_room,
+        right_room: blessing_room,
+      }),
     }
   },
+}
+
+function oneOf<T>(...items: T[]) {
+  return () => items[Math.floor(Math.random() * items.length)];
 }
 
 const home: DungeonDescriptor = {
@@ -102,10 +113,12 @@ type Item = {
   open?: (stdout, stderr) => number;
 }
 
+type Children = { [key: string]: DungeonDescriptor | (() => DungeonDescriptor) };
+
 type Room = {
   type: 'directory';
   monster?: Monster;
-  children: { [key: string]: DungeonDescriptor },
+  children: Children | (() => Children),
 }
 
 export type Monster = {
@@ -117,13 +130,20 @@ export type Monster = {
   image: string;
 }
 
+function unwrapCallable<T extends object>(callable: T | (() => T)) {
+  return typeof callable === 'function' ? callable() : callable;
+}
+
 class LiveDungeon {
   children: { [key: string]: LiveDungeon } = {};
   monster?: Monster;
   constructor(private readonly _descriptor: DungeonDescriptor) {
     if (this._descriptor.type === 'directory') {
-      for (const key in this._descriptor.children)
-        this.children[key] = new LiveDungeon(this._descriptor.children[key]);
+      const children = unwrapCallable(this._descriptor.children);
+      for (const key in children) {
+        const child = children[key];
+        this.children[key] = new LiveDungeon(unwrapCallable(child));
+      }
       if (this._descriptor.monster)
         this.monster = {...this._descriptor.monster};
     }
