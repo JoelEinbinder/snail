@@ -260,6 +260,8 @@ class Dungeon {
     await writeTextSlowly('Find the key.\r\n', stdout);
     stdout.write('\u001b[0m');
     if (resets === 0) {
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+        stdout.write('\u001b[31mWARNING: this game is not designed for mobile devices. It will almost certainly not work properly.\u001b[0m\r\n')
       stdout.write('type help to view available commands\r\n');
     }
     resets++;

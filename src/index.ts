@@ -13,7 +13,7 @@ document.title = 'Loading...';
 const isMac = navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
 declare var IS_REPL: boolean|undefined;
 const isRepl = typeof IS_REPL !== 'undefined' && IS_REPL;
-const useTabs = !isRepl && !isMac;
+const useTabs = host.type() === 'electron' && !isRepl && !isMac;
 console.time('load shell module');
 const done = startAsyncWork('load shell module');
 const lazyLogView = makeLazyProxy<ShellDelegate>();
