@@ -11,6 +11,8 @@ if (iframeType === 'ls') {
   await import('./reset-iframe');
 } else if (iframeType === 'pathway') {
   await import('./pathway-iframe');
+} else if (iframeType === 'battle') {
+  await import('./battle/battle-iframe');
 } else {
   document.body.textContent = 'iframe not found: ' + iframeType;
   d4.setHeight(document.body.offsetHeight);

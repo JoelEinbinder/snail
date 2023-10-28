@@ -1,0 +1,27 @@
+body{
+    background:#f1f1f1;
+    -webkit-tap-highlight-color: transparent;
+    margin:0;
+    display:flex;
+    height:100vh;
+    overflow:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+    flex-direction: column;
+}
+#gamearea canvas{
+    transition: width .3s,
+                height .3s;
+    margin: auto;
+}
+
+#gamearea canvas:focus {
+    outline: none;
+}
+
+#gamearea {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}

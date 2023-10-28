@@ -1,5 +1,6 @@
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
-
+import { createPokemon } from "./battle/battle/js/logic";
+import { moves } from './battle/battle/js/moves';
 const storage_room: DungeonDescriptor = {
   type: 'directory',
   children: {
@@ -15,16 +16,102 @@ const storage_room: DungeonDescriptor = {
   },
 }
 
+function createMonster(params: { image: string, name: string, element: (typeof types)[number], level: number }): Monster {
+  const bst = 500;
+  const stats = [];
+  let total = 0;
+  for (let i = 0; i < 6; i++) {
+    const number = Math.random();
+    total += number;
+    stats.push(number);
+  }
+  for (let i = 0; i < 6; i++)
+    stats[i] = Math.floor(stats[i] / total * bst) + 1;
+  const completeMoves = moves.filter(x => !x.incomplete);
+  function pickRandomMove(predicate: (move: Move) => boolean) {
+    const filtered = completeMoves.filter(predicate);
+    const move = filtered[Math.floor(Math.random() * filtered.length)];
+    const index = completeMoves.indexOf(move);
+    completeMoves.splice(index, 1);
+    return move.name;
+  }
+  return {
+    bytes: params.level,
+    element: params.element,
+    image: params.image,
+    stats: createPokemon({
+      name: params.name,
+      attack: stats[0],
+      defense: stats[1],
+      spAttack: stats[2],
+      spDefense: stats[3],
+      speed: stats[4],
+      hp: stats[5],
+      baseExp: 267,
+      genderRatio: null,
+      levelType: 1,
+      learnable: [],
+      type: [params.element],
+      id: 1,
+      levelUp: [
+        [1, pickRandomMove(move => move.type === params.element)],
+        [1, pickRandomMove(move => move.power !== null)],
+        [1, pickRandomMove(move => move.power === null)],
+      ],
+    }, params.level),
+  }
+}
+
+function createPlayer(params: { name: string, element: (typeof types)[number], level: number }): Pokemon {
+  const bst = 250;
+  const stats = [];
+  let total = 0;
+  for (let i = 0; i < 6; i++) {
+    const number = Math.random();
+    total += number;
+    stats.push(number);
+  }
+  for (let i = 0; i < 6; i++)
+    stats[i] = Math.floor(stats[i] / total * bst) + 42;
+  const completeMoves = moves.filter(x => !x.incomplete);
+  function pickRandomMove(predicate: (move: Move) => boolean) {
+    const filtered = completeMoves.filter(predicate);
+    const move = filtered[Math.floor(Math.random() * filtered.length)];
+    const index = completeMoves.indexOf(move);
+    completeMoves.splice(index, 1);
+    return move.name;
+  }
+  return createPokemon({
+    name: params.name,
+    attack: stats[0],
+    defense: stats[1],
+    spAttack: stats[2],
+    spDefense: stats[3],
+    speed: stats[4],
+    hp: stats[5],
+    baseExp: 267,
+    genderRatio: null,
+    levelType: 1,
+    learnable: [],
+    type: [params.element],
+    id: 1,
+    levelUp: [
+      [1, pickRandomMove(move => move.power !== null)],
+      [1, pickRandomMove(move => move.power !== null)],
+      [1, pickRandomMove(move => move.power === null)],
+      [1, pickRandomMove(move => move.power === null)],
+    ],
+  }, params.level);
+}
+
 const monster_room: DungeonDescriptor = {
   type: 'directory',
-  monster: {
+  monster: createMonster({
     name: 'Frost Ghost',
-    hp: 50,
-    atk: 15,
-    bytes: 20,
+    level: 8,
     element: 'Ice',
     image: 'ghost3',
-  },
+  }),
   children: {
     precarious_pathway: {
       type: 'directory',
@@ -57,14 +144,12 @@ const monster_room: DungeonDescriptor = {
         },
         boss_room: {
           type: 'directory',
-          monster: {
+          monster: createMonster({
             name: 'Fire Ghost',
-            hp: 50,
-            atk: 15,
-            bytes: 20,
+            level: 10,
             element: 'Fire',
             image: 'ghost2',
-          },
+          }),
           children: {
             'end.txt': {
               type: 'file',
@@ -101,14 +186,12 @@ const adventurer: DungeonDescriptor = {
     },
     cramped_hallway: {
       type: 'directory',
-      monster: {
-        name: 'Mischevious Ghost',
-        hp: 50,
-        atk: 10,
-        bytes: 10,
+      monster: createMonster({
+        name: 'Tricky Ghost',
+        level: 5,
         element: 'Normal',
         image: 'ghost1',
-      },
+      }),
       children: oneOf({
         left_room: blessing_room,
         right_room: monster_room,
@@ -154,9 +237,7 @@ type Room = {
 }
 
 export type Monster = {
-  name: string;
-  hp: number;
-  atk: number;
+  stats: Pokemon;
   bytes: number;
   element: (typeof types)[number];
   image: string;
@@ -219,8 +300,7 @@ async function writeTextSlowly(text:string, stdout) {
 let resets = 0;
 class Dungeon {
   player = {
-    hp: 0,
-    atk: 0,
+    stats: {} as Pokemon,
     bytes: 0,
     element: 'Normal' as (typeof types)[number],
     items: new Map<string, number>(),
@@ -268,8 +348,7 @@ class Dungeon {
     this.root = new LiveDungeon(this._descriptor);
     this.cwd.dispatch('/home/adventurer');
     this.player = {
-      hp: 100,
-      atk: 10,
+      stats: createPlayer({ element: this.player.element, level: 5, name: 'adventurer' }),
       bytes: this.player.bytes,
       items: new Map(),
       abilities: new Set(),
@@ -290,7 +369,7 @@ class Dungeon {
         const parsed = JSON.parse(data);
         this.player.abilities = new Set(parsed);
         if (this.player.abilities.has('increased_attack'))
-          this.player.atk += 3;
+          this.player.stats.attack += 3;
         if (this.player.abilities.has('starting_element')) {
           const elements = ['Fire', 'Water', 'Ice'] as const;
           this.player.element = elements[Math.floor(Math.random() * elements.length)];
@@ -313,13 +392,13 @@ class Dungeon {
       return 1;
     }
     if (item === 'healing_potion') {
-      if (this.player.hp >= 100) {
+      if (this.player.stats.hp >= this.player.stats.max) {
         stderr.write('you are already at full health\r\n');
         return 1;
       }
-      const before = this.player.hp;
-      this.player.hp = Math.min(this.player.hp + 50, 100);
-      stdout.write(`healed for ${this.player.hp - before} hp\r\n`);
+      const before = this.player.stats.hp;
+      this.player.stats.hp = Math.min(this.player.stats.hp + 50, this.player.stats.max);
+      stdout.write(`healed for ${this.player.stats.hp - before} hp\r\n`);
     } else {
       stderr.write(`you can't use ${item}\r\n`);
       return 1;
@@ -379,7 +458,7 @@ class Dungeon {
   async chdir(dir: string, stdout, stderr, stdin: JoelEvent<string>): Promise<number> {
     const current = this._pathToDescriptor(this.cwd.current);
     if (current.monster) {
-      stderr.write(`${current.monster.name} blocks your escape!\r\n`);
+      stderr.write(`${current.monster.stats.name} blocks your escape!\r\n`);
       return 1;
     }
     if (this._isPathObstructed(this.cwd.current, dir)) {
@@ -400,11 +479,27 @@ class Dungeon {
       console.assert(result === 'succeed');
       delete descriptor.challenge;
     }
-    this.cwd.dispatch(dir);
     if (descriptor.monster) {
-      stderr.write(`${descriptor.monster.name} appears!\r\n`);
-      stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'monster'})}\x00`);
-      send(descriptor.monster);
+      // stderr.write(`${descriptor.monster.name} appears!\r\n`);
+      stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'battle'})}\x00`);
+      send({ 
+        player: this.player.stats,
+        enemy: descriptor.monster.stats,
+      });
+      const data: {player: Pokemon, enemy: Pokemon} = JSON.parse(await stdin.once());
+      this.player.stats = data.player;
+      descriptor.monster.stats = data.enemy;
+      if (this.player.stats.hp <= 0) {
+        stdout.write('\u001b[31m');
+        await writeTextSlowly('You died!\r\n', stdout);
+        stdout.write('\u001b[0m'); 
+        return await this.reset(stdout, stderr, stdin);
+      }
+      if (data.enemy.hp <= 0) {
+        delete descriptor.monster;
+      } else {
+        return 1;
+      }
       function send(data) {
         const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
             return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
@@ -412,6 +507,7 @@ class Dungeon {
         stdout.write(`\x1b\x1aM${str}\x00`);
       }
     }
+    this.cwd.dispatch(dir);
     return 0;
   }
   async attack(stdout, stderr, stdin) {
@@ -422,27 +518,27 @@ class Dungeon {
     }
     {
       const typeEffect = pokemonTypeEffect(this.player.element, current.monster.element);
-      const damage = typeEffect * this.player.atk;
-      current.monster.hp -= damage;
-      stdout.write(`you hit ${current.monster.name} for ${damage} damage\r\n`);
+      const damage = typeEffect * this.player.stats.attack;
+      current.monster.stats.hp -= damage;
+      stdout.write(`you hit ${current.monster.stats.name} for ${damage} damage\r\n`);
     }
-    if (current.monster.hp <= 0) {
-      stdout.write(`${current.monster.name} dies!\r\n`);
+    if (current.monster.stats.hp <= 0) {
+      stdout.write(`${current.monster.stats.name} dies!\r\n`);
       this.player.bytes += current.monster.bytes;
       this.bytesEvent.dispatch();
       stdout.write(`${'adventurer'} obtained ${current.monster.bytes} bytes\r\n`);
       if (this.player.abilities.has('heal_after_battle')) {
-        const before = this.player.hp;
-        this.player.hp = Math.min(this.player.hp + 10, 100);
-        stdout.write(`healed for ${this.player.hp - before} hp\r\n`);
+        const before = this.player.stats.hp;
+        this.player.stats.hp = Math.min(this.player.stats.hp + 5, this.player.stats.max);
+        stdout.write(`healed for ${this.player.stats.hp - before} hp\r\n`);
       }
       delete current.monster;
     } else {
       const typeEffect = pokemonTypeEffect(current.monster.element, this.player.element);
-      const damage = typeEffect * current.monster.atk;
-      this.player.hp -= damage;
-      stdout.write(`${current.monster.name} hits you for ${damage} damage\r\n`);
-      if (this.player.hp <= 0) {
+      const damage = typeEffect * current.monster.stats.attack;
+      this.player.stats.hp -= damage;
+      stdout.write(`${current.monster.stats.name} hits you for ${damage} damage\r\n`);
+      if (this.player.stats.hp <= 0) {
         stdout.write('\u001b[31m');
         await writeTextSlowly('You died!\r\n', stdout);
         stdout.write('\u001b[0m'); 
