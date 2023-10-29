@@ -153,7 +153,6 @@ interface Heals {
 
 interface Item {
   name: string;
-  catchRate?: number;
   price?: number;
   pocket: "balls"|"key"|"items";
   evolves?: boolean;

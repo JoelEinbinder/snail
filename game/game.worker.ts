@@ -70,10 +70,13 @@ process.env = env;
 self.process = process;
 //@ts-ignore
 self.player = Object.freeze({
-  get hp() { return dungeon.player.hp },
-  get atk() { return dungeon.player.atk },
-  get bytes() { return dungeon.player.bytes },
-  get abilities() { return [...dungeon.player.abilities] },
+  get hp() { return dungeon.player.stats.hp },
+  get attack() { return dungeon.player.stats.attack },
+  get spAttack() { return dungeon.player.stats.spAttack },
+  get defense() { return dungeon.player.stats.defense },
+  get spDefense() { return dungeon.player.stats.spDefense },
+  get speed() { return dungeon.player.stats.speed },
+  // get abilities() { return [...dungeon.player.abilities] },
   get element() { return dungeon.player.element },
 });
 

@@ -10,10 +10,14 @@ import ghost2 from '../monsters/ghost2.png';
 import ghost3 from '../monsters/ghost3.png';
 import werewolf_front from '../monsters/werewolf_front.png';
 import werewolf_back from '../monsters/werewolf_back.png';
+import dragon_front from '../monsters/dragon_front.png';
+import dragon_back from '../monsters/dragon_back.png';
+import fish_front from '../monsters/fish_front.png';
+import fish_back from '../monsters/fish_back.png';
 const monsterImages = new Map();
 
 function monsterImage(name) {
-    const monsterUrls = { ghost1, ghost2, ghost3, werewolf_front, werewolf_back };
+    const monsterUrls = { ghost1, ghost2, ghost3, werewolf_front, werewolf_back, dragon_front, dragon_back, fish_front, fish_back };
     if (!monsterImages.has(name)) {
         const img = new Image();
         img.src = monsterUrls[name];
@@ -610,7 +614,7 @@ function drawPokemon(number, front, x, y, scale, overlay) {
     ctx.restore();
 
     function draw() {
-        etx.drawImage(monsterImage(front ? "ghost2" : "werewolf_back"), 0, 0, 64, 64);
+        etx.drawImage(monsterImage(front ? "ghost2" : "fish_back"), 0, 0, 64, 64);
     }
 }
 
@@ -691,7 +695,7 @@ export async function animateDamage(pokemon, amount) {
  */
 export async function animateExp(pokemon, amount) {
     await displayText(pokemon.name + ' gained\n' + amount + ' EXP!');
-    const sound = playSound('firered_001B');
+    const sound = playSound('exp');
     var increment = Math.floor(amount / 16);
     var speed = Math.floor(Math.log10(amount));
     for (var i = 0; i < amount && pokemon.level < 100; i++) {
@@ -700,7 +704,7 @@ export async function animateExp(pokemon, amount) {
             await waitFor(1);
         if (pokemon.exp >= pokemon.nextExp) {
             sound.pause();
-            playSound('firered_0054');
+            playSound('levelup');
             await displayText(pokemon.name + ' grew\nto level ' + (pokemon.level + 1) + '!');
             await forceLevelUp(pokemon, true);
             sound.play().catch(() => { });
@@ -713,14 +717,11 @@ export async function animateExp(pokemon, amount) {
 async function toggleSelfPokemon(value) {
     showSelfInfo.direction = value ? 1 : -1;
     var promise = /** @type {Promise<void>} */ (new Promise(x => showSelfInfo.resolve = x));
-    if (value)
+    if (value) {
         await displayText("Go! " + battleState.self.pokemon.name + "!");
-    else if (battleState.self.pokemon.hp <= 0) {
-        await displayText(battleState.self.pokemon.name + "\nfainted!", true);
-        playSound('firered_0010');
     } else {
-        await displayText(battleState.self.pokemon.name + " that's enough!\nCome back!");
-        playSound('firered_000F');
+        await displayText(battleState.self.pokemon.name + "\nwas defeated!", true);
+        playSound('faint');
     }
     await promise;
 }
@@ -734,13 +735,8 @@ async function toggleEnemyPokemon(value) {
         else
             showEnemyInfo.duration = showEnemyInfo.direction < 0 ? 0 : showEnemyInfo.max;
     } else {
-        if (battleState.enemy.pokemon.hp <= 0) {
-            playSound('firered_0010');
-            await displayText(battleState.enemy.pokemon.name + "\nfainted!", true);
-        } else {
-            playSound('firered_000F');
-            await displayText(battleState.enemy.pokemon.name + " that's enough!\nCome back!");
-        }
+        playSound('faint');
+        await displayText(battleState.enemy.pokemon.name + "\nwas defeated!", true);
     }
     await promise;
 }
@@ -806,7 +802,7 @@ export async function startBattle() {
             } else if (pickedOption === "escape") {
                 const escapeSucceeded = !!battleState.enemy.trainerName || attemptEscape(battleState.self.pokemon, battleState.enemy.pokemon, ++battleState.escapeAttempt);
                 if (escapeSucceeded) {
-                    setTimeout(() => playSound('firered_0011'), 200);
+                    setTimeout(() => playSound('escape'), 200);
                     await displayText('Got away safely!');
                     return true;
                 }
@@ -821,7 +817,7 @@ export async function startBattle() {
             await toggleSelfPokemon(false);
             battleState.self.pokemon = battleState.self.party.find(p => p.hp > 0);
             if (!battleState.self.pokemon) {
-                await displayText(battleState.self.trainerName + '\nloses!', true);
+                await displayText(battleState.self.party[0].name + '\nloses!', true);
                 await displayText('');
                 return false;
             }
@@ -833,7 +829,7 @@ export async function startBattle() {
             battleState.enemy.pokemon = battleState.enemy.party.find(p => p.hp > 0);
             if (!battleState.enemy.pokemon) {
                 if (battleState.enemy.trainerName) {
-                    await displayText(battleState.self.trainerName + '\nis victorious!', true);
+                    await displayText(battleState.self.pokemon.name + '\nis victorious!', true);
                 }
 
                 await displayText('');
@@ -971,7 +967,7 @@ keyManager.listenKeydown(button => {
                     menuInfo = null;
                     await Promise.resolve(); // prevent this key event from taking it
                     while (true) {
-                        var item = await pickItem(item => !!item.heals || !!item.catchRate);
+                        var item = await pickItem(item => !!item.heals);
                         if (!item) {
                             menuInfo = tempMenu;
                             bottomTextInfo = tempText;
@@ -998,7 +994,7 @@ keyManager.listenKeydown(button => {
                             });
                             if (!pokemon)
                                 continue;
-                            await displayText(battleState.self.trainerName + ' used ' + item.name + '\non ' + pokemon.name + '.');
+                            await displayText(pokemon.name + ' used ' + item.name + '.');
                             if (item.heals.burn && pokemon.burn) {
                                 pokemon.burn = 0;
                                 await displayText(pokemon.name + ' was\ncured of it\'s burn!');
@@ -1028,25 +1024,6 @@ keyManager.listenKeydown(button => {
                         }
                         /** @type {"escape"|"capture"} */
                         var resolve = null;
-                        if (item.catchRate) {
-                            await displayText(battleState.self.trainerName + '\nthrew a ' + item.name + '!');
-                            playSound('firered_0036');
-                            throwBallInfo.direction = 1;
-                            throwBallInfo.duration = 0;
-                            await waitFor(65);
-                            var stats = [1, 1.5, 1.5, 1.5, 2, 2][statusForPokemon(battleState.enemy.pokemon)];
-                            var a = stats * (3 * battleState.enemy.pokemon.max - 2 * battleState.enemy.pokemon.hp) * item.catchRate * definition(battleState.enemy.pokemon).catchRate / (3 * battleState.enemy.pokemon.max)
-                            var caught = (!battleState.enemy.trainerName && Math.random() * 255 < a);
-                            if (!caught)
-                                throwBallInfo.direction = -1;
-                            await /** @type {Promise<void>} */ (new Promise(x => throwBallInfo.resolve = x));
-                            if (battleState.enemy.trainerName) {
-                                await displayText(battleState.enemy.trainerName + '\nblocked the ball!');
-                                await displayText('Don\'t be a thief!');
-                            } else {
-                                await displayText(`Aww!\nIt rejected the ${item.name}!`)
-                            }
-                        }
 
                         var count = battleState.self.items.get(item) - 1;
                         if (count)

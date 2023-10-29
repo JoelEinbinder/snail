@@ -10,8 +10,10 @@ const abilities = [
 let bytesAvailable = bytes;
 const listeners = [];
 const enabled = new Set();
+const inputs = [];
 for (const power of abilities) {
   const input = document.createElement('input');
+  inputs.push(input);
   input.type = 'checkbox';
   const label = document.createElement('label');
   if (power.cost > bytesAvailable)
@@ -40,7 +42,23 @@ for (const listener of listeners)
 const doneButton = document.createElement('button');
 doneButton.textContent = 'Done';
 document.body.append(doneButton);
-doneButton.addEventListener('click', () => {
+const done = () => {
   d4.sendInput(JSON.stringify([...enabled]));
+};
+doneButton.addEventListener('click', done);
+document.addEventListener('keydown', event => {
+  if (event.key === 'Enter')
+    done();
+  else if (event.key === 'Escape')
+    d4.sendInput('[]');
+  else if (event.key === 'ArrowUp')
+    inputs[inputs.indexOf(document.activeElement) - 1]?.focus();
+  else if (event.key === 'ArrowDown')
+    inputs[inputs.indexOf(document.activeElement) + 1]?.focus();
+  else
+    return;
+  event.preventDefault();
+  event.stopPropagation();
 });
+inputs[0].focus();
 d4.setHeight(document.body.offsetHeight);

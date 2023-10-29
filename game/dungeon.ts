@@ -17,7 +17,7 @@ const storage_room: DungeonDescriptor = {
 }
 
 function createMonster(params: { image: string, name: string, element: (typeof types)[number], level: number }): Monster {
-  const bst = 500;
+  const bst = 300;
   const stats = [];
   let total = 0;
   for (let i = 0; i < 6; i++) {
@@ -289,10 +289,13 @@ class LiveDungeon {
   }
 }
 
-async function writeTextSlowly(text:string, stdout) {
+async function writeTextSlowly(text:string, stdout, stdin?: JoelEvent<string>) {
+  let skipping = false;
+  stdin?.once().then(() => skipping = true);
   for (const char of text) {
     stdout.write(char);
-    await new Promise(x => setTimeout(x, 50));
+    if (!skipping)
+      await new Promise(x => setTimeout(x, 50));
   }
 }
 
@@ -331,13 +334,14 @@ class Dungeon {
   async reset(stdout, stderr, stdin: JoelEvent<string>) {
     stdout.write('\u001b[32m');
     if (resets === 0) {
-      await writeTextSlowly('Connecting to the Halloween Server.\r\n', stdout);
+      await writeTextSlowly('Connecting to the Halloween Server.\r\n', stdout, stdin);
     } else {
-      await writeTextSlowly('Reconnecting to the Halloween Server.\r\n', stdout);
+      await writeTextSlowly('Reconnecting to the Halloween Server.\r\n', stdout, stdin);
     }
-    await writeTextSlowly('Beware of traps.\r\n', stdout);
-    await writeTextSlowly('Beware of monsters.\r\n', stdout);
-    await writeTextSlowly('Find the key.\r\n', stdout);
+    await writeTextSlowly(
+      'Beware of traps.\r\n' +
+      'Beware of monsters.\r\n' +
+      'Find the key.\r\n', stdout, stdin);
     stdout.write('\u001b[0m');
     if (resets === 0) {
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))

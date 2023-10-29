@@ -452,11 +452,11 @@ async function doDamage(move, attacker, victim, critical) {
     await waitFor(30);
     if (damage > 0) {
         if (typeMult >= 2.0)
-            playSound('firered_000E');
+            playSound('hit_super');
         else if (typeMult >= 1.0)
-            playSound('firered_000D');
+            playSound('hit_regular');
         else
-            playSound('firered_000C');
+            playSound('hit_weak');
     }
 
     await animateDamage(victim, damage);
@@ -492,7 +492,7 @@ async function doStatusEffects(pokemon, other) {
         return;
     if (pokemon.poison) {
         await log(pokemon.name + ' is hurt\nby poison!');
-        playSound('firered_0048');
+        playSound('poison');
         await animateDamage(pokemon, Math.round(pokemon.max / 8));
     }
     if (pokemon.hp <= 0)
