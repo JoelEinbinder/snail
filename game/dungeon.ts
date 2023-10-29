@@ -62,7 +62,7 @@ function createMonster(params: { name: string, element: (typeof types)[number], 
 }
 
 function createPlayer(params: { name: string, level: number }): Pokemon {
-  const elements = ['Fire', 'Water', 'Fighting'] as const;
+  const elements = ['Fire', 'Water', 'Fight'] as const;
   const element = elements[Math.floor(Math.random() * elements.length)];
 
   const bst = 500;

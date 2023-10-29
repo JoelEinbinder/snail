@@ -235,7 +235,6 @@ function drawMainPokemon() {
 }
 
 function drawBattle() {
-    // drawBg();
     drawPlatforms();
 
     incrementInfo(showEnemyInfo);
@@ -245,21 +244,16 @@ function drawBattle() {
         drawEnemyTrainer();
     }
 
-    if (battleState.enemy.pokemon)
+    if (battleState.enemy.pokemon) {
         drawEnemyPokemon();
-
-    if (battleState.enemy.pokemon)
         drawEnemyHp();
+    }
 
-    incrementInfo(showSelfInfo);
 
-    // drawSelfBalls();
-    if (battleState.self.pokemon)
-        drawSelfHp();
-
-    // drawSelfTrainer();
-    if (battleState.self.pokemon)
+    if (battleState.self.pokemon) {
         drawSelfPokemon();
+        drawSelfHp();
+    }
 
     drawBox(1, 0, 112, 240, 48);
     drawBottomText();
@@ -417,13 +411,6 @@ function drawEnemyHp() {
     ctx.restore();
 }
 
-var showSelfInfo = {
-    direction: 0,
-    resolve: function () { },
-    duration: 0,
-    max: 180
-}
-
 var showEnemyInfo = {
     direction: 0,
     resolve: function () { },
@@ -439,7 +426,7 @@ var throwBallInfo = {
 }
 
 function drawSelfHp() {
-    var x = 120 - calcNewFrame(showSelfInfo, 40)*3;
+    var x = 0;
 
     var dance = 0;
     if (menuInfo)
@@ -483,15 +470,8 @@ function drawSelfPokemon() {
     var dance = 0;
     if (menuInfo)
         dance = (((frame + 8)/16)%2)|0;
-    var f = Math.max(showSelfInfo.duration,0);
-    drawPokemon(battleState.self.pokemon, false, 40, 48 + dance, Math.min(f/32, 1), function (ctx){
-        ctx.fillStyle = "#F6F";
-        ctx.save();
-        ctx.globalAlpha = Math.max(1-f/32,0);
-        ctx.fillRect(0,0,64,64);
-        ctx.restore();
-        ctx.globalCompositeOperation = "destination-in";
-    });
+    var a = calcFrame(120, 0) * 2;
+    drawPokemon(battleState.self.pokemon, false, 40+240-a, 48 + dance, 1);
 }
 
 var flashingEnemy = false;
@@ -773,15 +753,15 @@ export async function animateExp(pokemon, amount) {
 }
 
 async function toggleSelfPokemon(value) {
-    showSelfInfo.direction = value ? 1 : -1;
-    var promise = /** @type {Promise<void>} */ (new Promise(x => showSelfInfo.resolve = x));
-    if (value) {
-        await displayText("Go! " + battleState.self.pokemon.name + "!");
-    } else {
-        await displayText(battleState.self.pokemon.name + "\nwas defeated!", true);
-        playSound('faint');
-    }
-    await promise;
+    // showSelfInfo.direction = value ? 1 : -1;
+    // var promise = /** @type {Promise<void>} */ (new Promise(x => showSelfInfo.resolve = x));
+    // if (value) {
+    //     await displayText("Go! " + battleState.self.pokemon.name + "!");
+    // } else {
+    //     await displayText(battleState.self.pokemon.name + "\nwas defeated!", true);
+    //     playSound('faint');
+    // }
+    // await promise;
 }
 
 async function toggleEnemyPokemon(value) {
@@ -806,12 +786,12 @@ export async function startBattle() {
     // init
     frame = 0;
     scene = 0;
-    showSelfInfo = {
-        direction: 0,
-        resolve: function () { },
-        duration: 0,
-        max: 120
-    }
+    // showSelfInfo = {
+    //     direction: 0,
+    //     resolve: function () { },
+    //     duration: 0,
+    //     max: 120
+    // }
 
     showEnemyInfo = {
         direction: 0,
