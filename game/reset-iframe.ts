@@ -4,7 +4,8 @@ const {bytes} = await d4.waitForMessage<{bytes: number}>();
 document.body.append('You have ' + bytes + ' bytes.');
 const abilities = [
   { name: 'heal_after_battle', cost: 10, description: 'Heal a small amount after each battle' },
-  { name: 'increased_attack', cost: 300, description: 'Increase your attack by 3' },
+  { name: 'starting_item', cost: 10, description: 'Start with an item' },
+  { name: 'increased_level', cost: 300, description: 'Increase your starting level' },
 ];
 let bytesAvailable = bytes;
 const listeners = [];

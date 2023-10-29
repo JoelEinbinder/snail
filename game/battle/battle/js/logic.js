@@ -1,5 +1,4 @@
 import { moves } from "./moves";
-import { pokemon } from "./pokemon";
 
 /**
  * @param {PokemonDef} base
@@ -113,14 +112,7 @@ function recalcHP(pokemon) {
  * @param {string} stat
  */
  export function baseStat(pkm, stat) {
-  return pokemon[pkm.id][stat];
-}
-
-/**
-* @param {Pokemon} pkm
-*/
-export function definition(pkm) {
-  return pokemon[pkm.id];
+  return pkm[stat];
 }
 
 /**

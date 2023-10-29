@@ -1,5 +1,5 @@
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
-import { createPokemon } from "./battle/battle/js/logic";
+import { createPokemon, forceLevelUp } from "./battle/battle/js/logic";
 import { moves } from './battle/battle/js/moves';
 const storage_room: DungeonDescriptor = {
   type: 'directory',
@@ -17,7 +17,7 @@ const storage_room: DungeonDescriptor = {
 }
 
 function createMonster(params: { name: string, element: (typeof types)[number], level: number }): Monster {
-  const bst = 300;
+  const bst = 450;
   const stats = [];
   let total = 0;
   for (let i = 0; i < 6; i++) {
@@ -106,13 +106,21 @@ function createPlayer(params: { name: string, level: number }): Pokemon {
   }, params.level);
 }
 
-const monster_room: DungeonDescriptor = {
+const monster_room: () => DungeonDescriptor = () => { return {
   type: 'directory',
-  monster: createMonster({
+  monster: createMonster(oneOf({
     name: 'Frost Slime',
     level: 8,
     element: 'Ice',
-  }),
+  } as const,{
+    name: 'Rock Slime',
+    level: 8,
+    element: 'Rock',
+  } as const,{
+    name: 'Wind Slime',
+    level: 8,
+    element: 'Flying',
+  } as const,)()),
   children: {
     precarious_pathway: {
       type: 'directory',
@@ -147,7 +155,7 @@ const monster_room: DungeonDescriptor = {
           type: 'directory',
           monster: createMonster({
             name: 'Great Pumpkin',
-            level: 10,
+            level: 12,
             element: 'Fire',
           }),
           children: {
@@ -160,7 +168,7 @@ const monster_room: DungeonDescriptor = {
       }
     }
   },
-};
+} };
 
 const blessing_room: DungeonDescriptor = {
   type: 'directory',
@@ -178,27 +186,35 @@ const blessing_room: DungeonDescriptor = {
 
 const adventurer: DungeonDescriptor = {
   type: 'directory',
-  children: {
-    storage_room,
-    'help.txt': {
-      type: 'file',
-      content: 'You are in a dungeon.',
-    },
-    cramped_hallway: {
-      type: 'directory',
-      monster: createMonster({
-        name: 'Fire Ghost',
-        level: 5,
-        element: 'Fire',
-      }),
-      children: oneOf({
-        left_room: blessing_room,
-        right_room: monster_room,
-      }, {
-        left_room: monster_room,
-        right_room: blessing_room,
-      }),
-    }
+  children: () => {
+    const playerElement = dungeon.player.stats.type[0];
+    const monsterElement = {
+      Water: ['Fire', 'Fire Ghost'],
+      Fire: ['Ice', 'Frost Ghost'],
+      Fight: ['Normal', 'Ordinary Ghost'],
+    }[playerElement];
+    return {
+      storage_room,
+      'help.txt': {
+        type: 'file',
+        content: 'You are in a dungeon.',
+      },
+      cramped_hallway: {
+        type: 'directory',
+        monster: createMonster({
+          name: monsterElement[1],
+          level: 5,
+          element: monsterElement[0],
+        }),
+        children: oneOf({
+          left_room: blessing_room,
+          right_room: monster_room(),
+        }, {
+          left_room: monster_room(),
+          right_room: blessing_room,
+        }),
+      }
+    };
   },
 }
 
@@ -346,14 +362,14 @@ class Dungeon {
       stdout.write('type help to view available commands\r\n');
     }
     resets++;
-    this.root = new LiveDungeon(this._descriptor);
-    this.cwd.dispatch('/home/adventurer');
     this.player = {
       stats: createPlayer({ level: 5, name: 'adventurer' }),
       bytes: this.player.bytes,
       items: new Map(),
       abilities: new Set(),
     };
+    this.root = new LiveDungeon(this._descriptor);
+    this.cwd.dispatch('/home/adventurer');
     if (this.player.bytes) {
       stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'reset'})}\x00`);
       send({ bytes: this.player.bytes });
@@ -363,13 +379,16 @@ class Dungeon {
         });
         stdout.write(`\x1b\x1aM${str}\x00`);
       }
-      console.log('waiting for input', stdin);
       const data = await stdin.once();
       try {
         const parsed = JSON.parse(data);
         this.player.abilities = new Set(parsed);
-        if (this.player.abilities.has('increased_attack'))
-          this.player.stats.attack += 3;
+        if (this.player.abilities.has('increased_level')) {
+          for (let i = 0; i < 2; i++)
+            forceLevelUp(this.player.stats, false);
+        }
+        if (this.player.abilities.has('starting_item'))
+          this.giveItem('healing_potion');
       } catch {
         return 1;
       }
@@ -498,6 +517,11 @@ class Dungeon {
         this.bytesEvent.dispatch();
         stdout.write(`${'adventurer'} obtained ${descriptor.monster.bytes} bytes\r\n`);
         delete descriptor.monster;
+        if (this.player.abilities.has('heal_after_battle')) {
+          const before = this.player.stats.hp;
+          this.player.stats.hp = Math.min(this.player.stats.hp + 5, this.player.stats.max);
+          stdout.write(`healed for ${this.player.stats.hp - before} hp\r\n`);
+        }
       } else {
         return 1;
       }

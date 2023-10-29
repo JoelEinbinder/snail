@@ -1,5 +1,5 @@
 import { attemptEscape, rewardKill, statusForPokemon, turn } from "./battle/js/battle";
-import { forceLevelUp, definition, moveByName } from "./battle/js/logic";
+import { forceLevelUp, moveByName } from "./battle/js/logic";
 import { ctx, gamescreen } from "./gamescreen";
 import { keyManager } from "./keys";
 import { clickSound, playSound } from "./sounds";
@@ -635,7 +635,7 @@ function drawPokemon(pokemon, front, x, y, scale, overlay) {
         if (front) {
             image = {
                 'Fire Ghost': 'fire_ghost',
-                'Frost Ghost': 'ice_ghost',
+                'Frost Ghost': 'frost_ghost',
                 'Frost Slime': 'ice_blob',
                 'Rock Slime': 'leaf_blob',
                 'Ordinary Ghost': 'normal_ghost',
@@ -823,8 +823,6 @@ export async function startBattle() {
     bumpScene();
     if (battleState.enemy.trainerName)
         await displayText(battleState.enemy.trainerName + "\nwould like to battle!", true);
-    else if (definition(battleState.enemy.pokemon).zombie)
-        await displayText('A crazed ' + battleState.enemy.pokemon.name + ' appeared!', true);
     else
         await displayText('A wild ' + battleState.enemy.pokemon.name + ' appeared!', true);
     await toggleEnemyPokemon(true),
