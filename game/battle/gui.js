@@ -14,10 +14,39 @@ import dragon_front from '../monsters/dragon_front.png';
 import dragon_back from '../monsters/dragon_back.png';
 import fish_front from '../monsters/fish_front.png';
 import fish_back from '../monsters/fish_back.png';
+import fire_blob from '../monsters/fire_blob.png';
+import fire_ghost from '../monsters/fire_ghost.png';
+import frost_ghost from '../monsters/frost_ghost.png';
+import ice_blob from '../monsters/ice_blob.png';
+import leaf_blob from '../monsters/leaf_blob.png';
+import normal_ghost from '../monsters/normal_ghost.png';
+import pumpkin from '../monsters/pumpkin.png';
+import wind_slime from '../monsters/wind_slime.png';
+import yeti_front from '../monsters/yeti_front.png';
+
 const monsterImages = new Map();
 
 function monsterImage(name) {
-    const monsterUrls = { ghost1, ghost2, ghost3, werewolf_front, werewolf_back, dragon_front, dragon_back, fish_front, fish_back };
+    const monsterUrls = {
+        ghost1,
+        ghost2,
+        ghost3,
+        werewolf_front,
+        werewolf_back,
+        dragon_front,
+        dragon_back,
+        fish_front,
+        fish_back,
+        fire_blob,
+        fire_ghost,
+        frost_ghost,
+        ice_blob,
+        leaf_blob,
+        normal_ghost,
+        pumpkin,
+        wind_slime,
+        yeti_front,
+    };
     if (!monsterImages.has(name)) {
         const img = new Image();
         img.src = monsterUrls[name];
@@ -455,7 +484,7 @@ function drawSelfPokemon() {
     if (menuInfo)
         dance = (((frame + 8)/16)%2)|0;
     var f = Math.max(showSelfInfo.duration,0);
-    drawPokemon(battleState.self.pokemon.id, false, 40, 48 + dance, Math.min(f/32, 1), function (ctx){
+    drawPokemon(battleState.self.pokemon, false, 40, 48 + dance, Math.min(f/32, 1), function (ctx){
         ctx.fillStyle = "#F6F";
         ctx.save();
         ctx.globalAlpha = Math.max(1-f/32,0);
@@ -482,7 +511,7 @@ function drawEnemyPokemon(){
         f = Math.min(f, 1 - (calcNewFrame(throwBallInfo, 90) - 65) / 25);
         dY = -64 * ( 1- f);
     }
-    drawPokemon(battleState.enemy.pokemon.id, true, 144 - 240 + goIn, 8 + dY, f, function (ctx){
+    drawPokemon(battleState.enemy.pokemon, true, 144 - 240 + goIn, 8 + dY, f, function (ctx){
         ctx.fillStyle = "#F6F";
         ctx.save();
         ctx.globalAlpha = 1-f;
@@ -593,7 +622,15 @@ effectCanvas.width = 1024;
 effectCanvas.height = 1024;
 var etx = effectCanvas.getContext("2d");
 etx.scale(1024/64, 1024/64);
-function drawPokemon(number, front, x, y, scale, overlay) {
+/**
+ * @param {Pokemon} pokemon
+ * @param {boolean} front
+ * @param {number} x
+ * @param {number} y
+ * @param {number} scale
+ * @param {function(CanvasRenderingContext2D):void=} overlay
+ */
+function drawPokemon(pokemon, front, x, y, scale, overlay) {
 
     // if (number >= pokemon.length || number <= 0)
     //     throw new Error("unknown pokemon" + number);
@@ -614,7 +651,28 @@ function drawPokemon(number, front, x, y, scale, overlay) {
     ctx.restore();
 
     function draw() {
-        etx.drawImage(monsterImage(front ? "ghost2" : "fish_back"), 0, 0, 64, 64);
+        let image;
+        if (front) {
+            image = {
+                'Fire Ghost': 'fire_ghost',
+                'Frost Ghost': 'ice_ghost',
+                'Frost Slime': 'ice_blob',
+                'Rock Slime': 'leaf_blob',
+                'Ordinary Ghost': 'normal_ghost',
+                'Wind Slime': 'wind_slime',
+                'Great Pumpkin': 'pumpkin',
+            }[pokemon.name] || 'ghost1';
+        } else {
+            if (pokemon.type.includes('Water'))
+                image = "fish_back";
+            else if (pokemon.type.includes('Fire'))
+                image = "dragon_back";
+            else if (pokemon.type.includes('Ice'))
+                image = "yeti_back";
+            else
+                image = "werewolf_back";
+        }
+        etx.drawImage(monsterImage(image), 0, 0, 64, 64);
     }
 }
 

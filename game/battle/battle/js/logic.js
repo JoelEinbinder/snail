@@ -42,7 +42,6 @@ export function createPokemon(base, level=5) {
       IV, EV,
       PP: {}
   }, base);
-  p.name = p.name.toUpperCase();
   for (var i = 0; i < level; i++)
       forceLevelUp(p, true);
   p.hp = p.max;

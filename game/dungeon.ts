@@ -16,12 +16,12 @@ const storage_room: DungeonDescriptor = {
   },
 }
 
-function createMonster(params: { image: string, name: string, element: (typeof types)[number], level: number }): Monster {
+function createMonster(params: { name: string, element: (typeof types)[number], level: number }): Monster {
   const bst = 300;
   const stats = [];
   let total = 0;
   for (let i = 0; i < 6; i++) {
-    const number = Math.random();
+    const number = Math.random() + 1;
     total += number;
     stats.push(number);
   }
@@ -38,7 +38,6 @@ function createMonster(params: { image: string, name: string, element: (typeof t
   return {
     bytes: params.level,
     element: params.element,
-    image: params.image,
     stats: createPokemon({
       name: params.name,
       attack: stats[0],
@@ -55,24 +54,27 @@ function createMonster(params: { image: string, name: string, element: (typeof t
       id: 1,
       levelUp: [
         [1, pickRandomMove(move => move.type === params.element)],
-        [1, pickRandomMove(move => move.power !== null)],
-        [1, pickRandomMove(move => move.power === null)],
+        [1, pickRandomMove(move => move.power !== null && (move.type === 'Normal' || move.type === params.element))],
+        [1, pickRandomMove(move => move.power === null && (move.type === 'Normal' || move.type === params.element))],
       ],
     }, params.level),
   }
 }
 
-function createPlayer(params: { name: string, element: (typeof types)[number], level: number }): Pokemon {
-  const bst = 250;
+function createPlayer(params: { name: string, level: number }): Pokemon {
+  const elements = ['Fire', 'Water', 'Fighting'] as const;
+  const element = elements[Math.floor(Math.random() * elements.length)];
+
+  const bst = 500;
   const stats = [];
   let total = 0;
   for (let i = 0; i < 6; i++) {
-    const number = Math.random();
+    const number = Math.random() + 1;
     total += number;
     stats.push(number);
   }
   for (let i = 0; i < 6; i++)
-    stats[i] = Math.floor(stats[i] / total * bst) + 42;
+    stats[i] = Math.floor(stats[i] / total * bst) + 1;
   const completeMoves = moves.filter(x => !x.incomplete);
   function pickRandomMove(predicate: (move: Move) => boolean) {
     const filtered = completeMoves.filter(predicate);
@@ -93,12 +95,12 @@ function createPlayer(params: { name: string, element: (typeof types)[number], l
     genderRatio: null,
     levelType: 1,
     learnable: [],
-    type: [params.element],
+    type: [element],
     id: 1,
     levelUp: [
+      [1, pickRandomMove(move => move.type === element && move.power !== null)],
+      [1, pickRandomMove(move => move.type === element)],
       [1, pickRandomMove(move => move.power !== null)],
-      [1, pickRandomMove(move => move.power !== null)],
-      [1, pickRandomMove(move => move.power === null)],
       [1, pickRandomMove(move => move.power === null)],
     ],
   }, params.level);
@@ -107,10 +109,9 @@ function createPlayer(params: { name: string, element: (typeof types)[number], l
 const monster_room: DungeonDescriptor = {
   type: 'directory',
   monster: createMonster({
-    name: 'Frost Ghost',
+    name: 'Frost Slime',
     level: 8,
     element: 'Ice',
-    image: 'ghost3',
   }),
   children: {
     precarious_pathway: {
@@ -145,10 +146,9 @@ const monster_room: DungeonDescriptor = {
         boss_room: {
           type: 'directory',
           monster: createMonster({
-            name: 'Fire Ghost',
+            name: 'Great Pumpkin',
             level: 10,
             element: 'Fire',
-            image: 'ghost2',
           }),
           children: {
             'end.txt': {
@@ -187,10 +187,9 @@ const adventurer: DungeonDescriptor = {
     cramped_hallway: {
       type: 'directory',
       monster: createMonster({
-        name: 'Tricky Ghost',
+        name: 'Fire Ghost',
         level: 5,
-        element: 'Normal',
-        image: 'ghost1',
+        element: 'Fire',
       }),
       children: oneOf({
         left_room: blessing_room,
@@ -240,7 +239,6 @@ export type Monster = {
   stats: Pokemon;
   bytes: number;
   element: (typeof types)[number];
-  image: string;
 }
 
 function unwrapCallable<T extends object>(callable: T | (() => T)) {
@@ -305,7 +303,6 @@ class Dungeon {
   player = {
     stats: {} as Pokemon,
     bytes: 0,
-    element: 'Normal' as (typeof types)[number],
     items: new Map<string, number>(),
     abilities: new Set<string>(),
   }
@@ -352,11 +349,10 @@ class Dungeon {
     this.root = new LiveDungeon(this._descriptor);
     this.cwd.dispatch('/home/adventurer');
     this.player = {
-      stats: createPlayer({ element: this.player.element, level: 5, name: 'adventurer' }),
+      stats: createPlayer({ level: 5, name: 'adventurer' }),
       bytes: this.player.bytes,
       items: new Map(),
       abilities: new Set(),
-      element: 'Normal',
     };
     if (this.player.bytes) {
       stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'reset'})}\x00`);
@@ -374,10 +370,6 @@ class Dungeon {
         this.player.abilities = new Set(parsed);
         if (this.player.abilities.has('increased_attack'))
           this.player.stats.attack += 3;
-        if (this.player.abilities.has('starting_element')) {
-          const elements = ['Fire', 'Water', 'Ice'] as const;
-          this.player.element = elements[Math.floor(Math.random() * elements.length)];
-        }
       } catch {
         return 1;
       }
@@ -486,7 +478,7 @@ class Dungeon {
     if (descriptor.monster) {
       // stderr.write(`${descriptor.monster.name} appears!\r\n`);
       stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'battle'})}\x00`);
-      send({ 
+      send({
         player: this.player.stats,
         enemy: descriptor.monster.stats,
       });
@@ -497,9 +489,14 @@ class Dungeon {
         stdout.write('\u001b[31m');
         await writeTextSlowly('You died!\r\n', stdout);
         stdout.write('\u001b[0m'); 
+        await new Promise(x => setTimeout(x, 300)); 
         return await this.reset(stdout, stderr, stdin);
       }
       if (data.enemy.hp <= 0) {
+        stdout.write(`${descriptor.monster.stats.name} dies!\r\n`);
+        this.player.bytes += descriptor.monster.bytes;
+        this.bytesEvent.dispatch();
+        stdout.write(`${'adventurer'} obtained ${descriptor.monster.bytes} bytes\r\n`);
         delete descriptor.monster;
       } else {
         return 1;
@@ -512,44 +509,6 @@ class Dungeon {
       }
     }
     this.cwd.dispatch(dir);
-    return 0;
-  }
-  async attack(stdout, stderr, stdin) {
-    const current = this._pathToDescriptor(this.cwd.current) as Room;
-    if (!current.monster) {
-      stderr.write('you swat at the air in vain\n');
-      return 1;
-    }
-    {
-      const typeEffect = pokemonTypeEffect(this.player.element, current.monster.element);
-      const damage = typeEffect * this.player.stats.attack;
-      current.monster.stats.hp -= damage;
-      stdout.write(`you hit ${current.monster.stats.name} for ${damage} damage\r\n`);
-    }
-    if (current.monster.stats.hp <= 0) {
-      stdout.write(`${current.monster.stats.name} dies!\r\n`);
-      this.player.bytes += current.monster.bytes;
-      this.bytesEvent.dispatch();
-      stdout.write(`${'adventurer'} obtained ${current.monster.bytes} bytes\r\n`);
-      if (this.player.abilities.has('heal_after_battle')) {
-        const before = this.player.stats.hp;
-        this.player.stats.hp = Math.min(this.player.stats.hp + 5, this.player.stats.max);
-        stdout.write(`healed for ${this.player.stats.hp - before} hp\r\n`);
-      }
-      delete current.monster;
-    } else {
-      const typeEffect = pokemonTypeEffect(current.monster.element, this.player.element);
-      const damage = typeEffect * current.monster.stats.attack;
-      this.player.stats.hp -= damage;
-      stdout.write(`${current.monster.stats.name} hits you for ${damage} damage\r\n`);
-      if (this.player.stats.hp <= 0) {
-        stdout.write('\u001b[31m');
-        await writeTextSlowly('You died!\r\n', stdout);
-        stdout.write('\u001b[0m'); 
-        await new Promise(x => setTimeout(x, 300)); 
-        await this.reset(stdout, stderr, stdin);
-      }
-    }
     return 0;
   }
 

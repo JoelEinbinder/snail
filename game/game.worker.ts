@@ -77,17 +77,9 @@ self.player = Object.freeze({
   get spDefense() { return dungeon.player.stats.spDefense },
   get speed() { return dungeon.player.stats.speed },
   // get abilities() { return [...dungeon.player.abilities] },
-  get element() { return dungeon.player.element },
+  get element() { return dungeon.player.stats.type.join('/') },
 });
 
-Object.defineProperty(self, 'enemy', {
-  get() {
-    const monster = dungeon.currentMonster();
-    if (!monster)
-      return null;
-    return Object.freeze({...monster});
-  },
-})
 const stdin = new JoelEvent<string>('');
 self['bootstrap'] = function(args, { bytes }) {
   dungeon.player.bytes = bytes;
