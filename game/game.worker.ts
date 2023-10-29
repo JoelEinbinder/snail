@@ -78,6 +78,7 @@ self.player = Object.freeze({
   get speed() { return dungeon.player.stats.speed },
   get moves() { return [...dungeon.player.stats.moves.map(x => x.name)] },
   get element() { return dungeon.player.stats.type.join('/') },
+  get items() { return Object.fromEntries(dungeon.player.items.entries()) },
 });
 
 const stdin = new JoelEvent<string>('');

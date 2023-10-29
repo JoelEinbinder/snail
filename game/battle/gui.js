@@ -79,16 +79,6 @@ export var battleState = {
 var fast = document.location.search.indexOf('fast') !== -1;
 
 /**
- * @type {{resolve: function({pokemon: Pokemon, action?: string}|null):void,
- *  condition:function(Pokemon):boolean,
- *  selected: number,
- *  rightSource: number,
- *  message: string,
- *  showOnly?: boolean,
- * }}
- */
-var pickPokemonInfo = null;
-/**
  * @type {{resolve: function(Item|null):void, condition:function(Item):boolean, selected: number, showAll: boolean}}
  */
 var pickItemInfo = null;
@@ -111,9 +101,7 @@ export function drawBattleGUI() {
     ctx.save();
     ctx.clearRect(0, 0, 240, 160);
 
-    if (pickPokemonInfo) {
-        drawPickPokemon();
-    } else if (pickItemInfo) {
+    if (pickItemInfo) {
         drawPickItem();
     } else {
         drawBattle();
@@ -126,35 +114,6 @@ export function drawBattleGUI() {
     ctx.restore();
 }
 
-
-
-function drawPickPokemon() {
-    ctx.drawImage(getImage("pickbg"), 0, 0);
-    const main = battleState.self.pokemon || battleState.self.party[0];
-    drawMainPokemon();
-    var i = 0;
-    for (var pokemon of battleState.self.party) {
-        if (pokemon === main)
-            continue;
-        drawPokemonCard(pokemon, i);
-        i++;
-
-    }
-    for (i; i < 5; i++) {
-        ctx.drawImage(getImage("emptycard"), 88, 10 + i * 24);
-    }
-
-    drawBox(2, 0, 128, 184, 32);
-    drawText(pickPokemonInfo.message, 8, 140, ActionText);
-    if (!pickPokemonInfo.showOnly) {
-        if (pickPokemonInfo.selected < 0)
-            ctx.drawImage(getImage("cancelselected"), 184, 132);
-        else
-            ctx.drawImage(getImage("cancel"), 184, 134);
-        drawText("CANCEL", 204, 140, PickText);
-    }
-
-}
 
 function drawPickItem() {
     ctx.drawImage(getImage("itemsbg"), 0, 0);
@@ -185,53 +144,6 @@ function drawPickItem() {
         }
     }
     drawWidget(7, 8, 12 + 16 * (fakeSelected - offset));
-}
-
-function drawPokemonCard(pokemon, i) {
-    ctx.save();
-    ctx.translate(0, i * 24);
-    if (!pickPokemonInfo.condition(pokemon))
-        ctx.globalAlpha = 0.5;
-    if (availablePokemonToPick()[pickPokemonInfo.selected] === pokemon)
-        ctx.drawImage(getImage("pkmncardselected"), 88, 9);
-    else
-        ctx.drawImage(getImage("pkmncard"), 88, 10);
-    ctx.drawImage(getImage("mini"), 32 * (Math.floor(frame / 8) % 2), (pokemon.id - 1) * 32, 32, 32, 84, 2, 32, 32);
-    drawHPBar(pokemon, 184, 18);
-    drawText(pokemon.name, 118, 14, PickText);
-    drawText("℀" + pokemon.level, 128, 23, PickText);
-
-    drawText(String(pokemon.hp), 213, 23, PickText, true);
-    drawText(String(pokemon.max), 233, 23, PickText, true);
-    ctx.restore();
-}
-
-function drawMainPokemon() {
-    ctx.save();
-    const pokemon = battleState.self.pokemon || battleState.self.party[0];
-    if (!pokemon)
-        return;
-    if (!pickPokemonInfo.condition(pokemon))
-        ctx.globalAlpha = 0.5;
-    if (availablePokemonToPick()[pickPokemonInfo.selected] === pokemon)
-        ctx.drawImage(getImage("mainpkmnselected"), 2, 18);
-    else
-        ctx.drawImage(getImage("mainpkm"), 2, 20);
-
-    ctx.drawImage(getImage("mini"), 32*(Math.floor(frame / 8) %2), (pokemon.id - 1) * 32, 32, 32, 0, 20, 32, 32);
-
-    drawText(pokemon.name, 32, 38, PickText);
-    var str = "";
-    for (var i = 0; i < 5; i++) {
-        str += String.fromCharCode(i+95);
-    }
-    drawText("℀" + pokemon.level, 40, 47, PickText);
-
-    drawHPBar(pokemon, 32, 59);
-
-    drawText(String(pokemon.hp), 61, 63, PickText, true);
-    drawText(String(pokemon.max), 81, 63, PickText, true);
-    ctx.restore();
 }
 
 function drawBattle() {
@@ -806,7 +718,6 @@ export async function startBattle() {
         direction: 0
     };
     bottomTextInfo = null;
-    pickPokemonInfo = null;
     menuInfo = null;
 
 
@@ -889,24 +800,9 @@ export function setBattleMode(b) {
  * @return {Promise<{pokemon: Pokemon, action?: string}>}
  */
 async function pickPokemon(condition = () => true, message = "Choose a POKéMON.") {
-    const beforeMode = battleMode;
-    battleMode = true; 
-    var resolve;
-    /** @type {Promise<{pokemon: Pokemon, action?: string}>} */
-    var promise = new Promise(x => resolve = x)
-    pickPokemonInfo = {
-        resolve: /** @type {function({pokemon: Pokemon, action?: string}|null):void} */ (resolve),
-        condition,
-        selected: 0,
-        rightSource: 1,
-        message
-    };
-    if (!availablePokemonToPick().length)
-        pickPokemonInfo.selected = -1;
-    var result = await promise;
-    pickPokemonInfo = null;
-    battleMode = beforeMode;
-    return result;
+    if (condition(battleState.self.pokemon))
+        return {pokemon: battleState.self.pokemon};
+    return { pokemon: null };
 }
 
 /**
@@ -1130,37 +1026,6 @@ keyManager.listenKeydown(button => {
         if (menuInfo.actionSelected !== before)
             clickSound();
     }
-    if (pickPokemonInfo && !pickPokemonInfo.showOnly) {
-        const all = availablePokemonToPick();
-        switch (button) {
-            case 'Right':
-                if (pickPokemonInfo.selected === 0)
-                    pickPokemonInfo.selected = pickPokemonInfo.rightSource;
-                break;
-            case 'Left':
-                if (pickPokemonInfo.selected > 0) {
-                    pickPokemonInfo.rightSource = pickPokemonInfo.selected;
-                    pickPokemonInfo.selected = 0;
-                }
-                break;
-            case 'Down':
-                pickPokemonInfo.selected++;
-                break
-            case 'Up':
-                pickPokemonInfo.selected--;
-                break;
-            case 'B':
-                pickPokemonInfo.resolve({pokemon: null});
-                break;
-            case 'A':
-                pickPokemonInfo.resolve({pokemon: all[pickPokemonInfo.selected] || null});
-                break;
-        }
-        const before = pickPokemonInfo.selected;
-        pickPokemonInfo.selected = ((pickPokemonInfo.selected + 1 + all.length + 1) % (all.length + 1)) - 1;
-        if (before !== pickPokemonInfo.selected)
-            clickSound();
-    }
     if (pickItemInfo) {
         const all = availableItemsToPick();
         switch (button) {
@@ -1220,23 +1085,6 @@ document.addEventListener('touchstart', e => {
         }
     }
 }, {passive: false});
-
-/**
- * @return {Array<Pokemon>}
- */
-function availablePokemonToPick() {
-    var all = [];
-    if (pickPokemonInfo.condition(battleState.self.pokemon))
-        all.push(battleState.self.pokemon);
-    for (var pokemon of battleState.self.party) {
-        if (!pickPokemonInfo.condition(pokemon))
-            continue;
-        if (pokemon === battleState.self.pokemon)
-            continue;
-        all.push(pokemon);
-    }
-    return all;
-}
 
 /**
  * @return {Array<Item>}

@@ -8,8 +8,8 @@ const storage_room: DungeonDescriptor = {
       type: 'file',
       content: 'A treasure chest.',
       open: (stdout, stderr) => {
-        stdout.write('You open the chest and find a healing_potion!\r\n');
-        dungeon.giveItem('healing_potion');
+        stdout.write('You open the chest and find a POTION!\r\n');
+        dungeon.giveItem('POTION');
         return 0;
       }
     }
@@ -110,15 +110,15 @@ const monster_room: () => DungeonDescriptor = () => { return {
   type: 'directory',
   monster: createMonster(oneOf({
     name: 'Frost Slime',
-    level: 8,
+    level: 7,
     element: 'Ice',
   } as const,{
     name: 'Rock Slime',
-    level: 8,
+    level: 7,
     element: 'Rock',
   } as const,{
     name: 'Wind Slime',
-    level: 8,
+    level: 7,
     element: 'Flying',
   } as const,)()),
   children: {
@@ -386,9 +386,10 @@ class Dungeon {
         if (this.player.abilities.has('increased_level')) {
           for (let i = 0; i < 2; i++)
             forceLevelUp(this.player.stats, false);
+          this.player.stats.hp = this.player.stats.max;
         }
         if (this.player.abilities.has('starting_item'))
-          this.giveItem('healing_potion');
+          this.giveItem('POTION');
       } catch {
         return 1;
       }
@@ -406,7 +407,7 @@ class Dungeon {
       stderr.write(`you don't have any ${item}\r\n`);
       return 1;
     }
-    if (item === 'healing_potion') {
+    if (item === 'POTION') {
       if (this.player.stats.hp >= this.player.stats.max) {
         stderr.write('you are already at full health\r\n');
         return 1;
@@ -500,8 +501,10 @@ class Dungeon {
       send({
         player: this.player.stats,
         enemy: descriptor.monster.stats,
+        items: Object.fromEntries(this.player.items.entries()),
       });
-      const data: {player: Pokemon, enemy: Pokemon} = JSON.parse(await stdin.once());
+      const data: {player: Pokemon, enemy: Pokemon, items: {[key: string]: number}} = JSON.parse(await stdin.once());
+      this.player.items = new Map(Object.entries(data.items));
       this.player.stats = data.player;
       descriptor.monster.stats = data.enemy;
       if (this.player.stats.hp <= 0) {
@@ -617,4 +620,4 @@ function pokemonTypeEffect(moveType: (typeof types)[number], victType: (typeof t
 }
 
 
-export const dungeon = new Dungeon(root);
+export const dungeon: Dungeon = new Dungeon(root);
