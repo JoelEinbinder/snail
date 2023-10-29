@@ -76,7 +76,7 @@ self.player = Object.freeze({
   get defense() { return dungeon.player.stats.defense },
   get spDefense() { return dungeon.player.stats.spDefense },
   get speed() { return dungeon.player.stats.speed },
-  // get abilities() { return [...dungeon.player.abilities] },
+  get moves() { return [...dungeon.player.stats.moves.map(x => x.name)] },
   get element() { return dungeon.player.stats.type.join('/') },
 });
 

@@ -59,7 +59,7 @@ export const runtimeHandler: ProtocolInterface = {
           continue;
         try {
           properties.push({
-            name, value: makeRemoteObject(obj[name]), configurable: false, enumerable: true
+            name, value: makeRemoteObject(obj[name], generatePreview), configurable: false, enumerable: true
           });
           seen.add(name);
         } catch(e) { }
@@ -135,27 +135,38 @@ export const runtimeHandler: ProtocolInterface = {
 function relaseObject(id: string) {
   objectGroups.delete(id);
 }
-function makePreview(value: any): Protocol.Runtime.ObjectPreview {
+function makePreview(value: any, depth = 1): Protocol.Runtime.ObjectPreview {
   const properties = Object.entries(value);
-  const maxProperties = 3;
+  const maxProperties = 4;
   return {
     type: typeof value,
+    subtype: subtypeOfObject(value),
     overflow: properties.length > maxProperties,
     properties: properties.slice(0, maxProperties).map(([name, value]) => {
       if (value === null)
         return { name, type: 'object', subtype: 'null', value: 'null' };
       if (typeof value !== 'object')
         return { name, type: typeof value, value: String(value) };
-      return { name, type: 'object', value: value.constructor.name };
+      const subtype = subtypeOfObject(value);
+      return { name, type: 'object', value: value.constructor.name, subtype, valuePreview: depth > 0 ? makePreview(value, depth - 1) : undefined };
     }),
   }
+}
+function subtypeOfObject(value) {
+  if (typeof value !== 'object')
+    return undefined;
+  if (value === null)
+    return 'null';
+  if (Array.isArray(value))
+    return 'array';
+  return undefined;
 }
 function makeRemoteObject(value, generatePreview=false): Protocol.Runtime.RemoteObject {
   if (value === null || !['object', 'function', 'symbol'].includes(typeof value))
     return serializeValue(value);
   const id = String(++lastObjectId);
   objects.set(id, value);
-  const subtype = Array.isArray(value) ? 'array' : undefined;
+  const subtype = subtypeOfObject(value);
   const className = (typeof value === 'object' && value.constructor) ? value.constructor.name : undefined;
   return {
     type: typeof value,
