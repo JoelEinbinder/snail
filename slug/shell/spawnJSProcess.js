@@ -20,7 +20,7 @@ function spawnJSProcess({cwd, nodePath, bootstrapPath}) {
   if (!cwd || !fs.existsSync(cwd))
     cwd = require('../path_service/').homedir();
   const pathService = require('../path_service/');
-  const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
+  const socketDir = path.join(pathService.tmpdir(), 'snail-sockets');
   if (socketDir.length > 90)
     throw new Error(`Cannot create socket in ${JSON.stringify(socketDir)} (path too long)`);
   fs.mkdirSync(socketDir, {recursive: true, mode: 0o700});

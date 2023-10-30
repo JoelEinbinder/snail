@@ -36,11 +36,11 @@ export const test = _test.extend<{
   tmpDirForTest: async ({ workingDir }, use) => {
     const tmpDir = await fs.promises.mkdtemp(path.join(require('os').tmpdir(), 'snail-temp-'));
     await use(tmpDir);
-    const entries = await fs.promises.readdir(path.join(tmpDir, '1d4-sockets'));
+    const entries = await fs.promises.readdir(path.join(tmpDir, 'snail-sockets'));
     if (entries.length)
       console.warn('some sockets still open', entries);
     for (const entry of entries.filter(x => x.endsWith('.json')))
-      console.log(await fs.readFileSync(path.join(tmpDir, '1d4-sockets', entry), 'utf8'));
+      console.log(await fs.readFileSync(path.join(tmpDir, 'snail-sockets', entry), 'utf8'));
     await fs.promises.rm(tmpDir, { recursive: true, force: true });
   },
   imageId: [async ({ }, use) => {

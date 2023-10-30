@@ -337,7 +337,7 @@ document.body.tabIndex = -1;
 document.body.focus();
 document.body.removeAttribute('tabIndex');
 
-window.d4 = {
+window.snail = {
   waitForMessage,
   setHeight,
   setIsFullscreen,

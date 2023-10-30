@@ -147,7 +147,7 @@ const builtins = {
     reconnect: async (args, stdout, stderr) => {
         if (!changes)
             changes = {};
-        const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
+        const socketDir = path.join(pathService.tmpdir(), 'snail-sockets');
         if (args.includes('--list')) {
             const quiet = args.includes('--quiet');
             const metadataStrings = (await fs.promises.readdir(socketDir)).filter(x => x.endsWith('.json'));

@@ -90,9 +90,9 @@ export class DataGrid<T extends object> {
           this._delegate.saveItem(`datagrid.sort.column`, {title: column.delegate.title, direction: this._sortDirection});
           this.render();
         };
-        if (typeof d4 !== 'undefined') {
+        if (typeof snail !== 'undefined') {
           headerCell.oncontextmenu = event => {
-            d4.createContextMenu(this._columns.map(column => ({
+            snail.createContextMenu(this._columns.map(column => ({
               title: column.delegate.title,
               checked: column.shown,
               callback: column.delegate.alwaysVisible ? undefined : () => {

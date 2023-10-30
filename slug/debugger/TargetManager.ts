@@ -25,7 +25,7 @@ export class TargetManager {
   }
 
   async startup() {
-    const sendMessage = await d4.attachToCDP({
+    const sendMessage = await snail.attachToCDP({
       onDebuggeesChanged: debuggees => {
         const newTargets = new Map<string|undefined, Target>();
         const framesForBrowserView = new Map<string|undefined, Set<string|undefined>>();

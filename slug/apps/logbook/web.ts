@@ -1,7 +1,7 @@
 /// <reference path="../../iframe/types.d.ts" />
 import { RPC } from '../../sdk/rpc-js';
 import { LogBookView } from './LogBookView';
-d4.setIsFullscreen(true);
+snail.setIsFullscreen(true);
 document.addEventListener('keydown', event => {
   if ((event.code === 'KeyX' || event.code === 'KeyC') && event.ctrlKey) {
     event.preventDefault();
@@ -11,7 +11,7 @@ document.addEventListener('keydown', event => {
 });
 const transport: Parameters<typeof RPC>[0] = {
   send(message) {
-    d4.sendInput(JSON.stringify(message) + '\n');
+    snail.sendInput(JSON.stringify(message) + '\n');
   },
 };
 const rpc = RPC(transport, {
@@ -21,7 +21,7 @@ document.body.append(view.element);
 view.focus();
 try {
 while (true) {
-  const message = await d4.waitForMessage<any>();
+  const message = await snail.waitForMessage<any>();
   transport.onmessage!(message);
 }
 } catch (e) {

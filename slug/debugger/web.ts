@@ -5,7 +5,7 @@ import { Elements } from './elements/Elements';
 import { Tabs } from './ui/Tabs';
 import { Sources } from './Sources';
 const targetManager = new TargetManager();
-let foundFirstTarget = d4.startAsyncWork('first target');
+let foundFirstTarget = snail.startAsyncWork('first target');
 targetManager.addListener({
   targetAdded(target) {
     console.log('targetAdded', target);
@@ -30,10 +30,10 @@ targetManager.addListener({
 
 const tabs = new Tabs({
   load() {
-    return d4.loadItem('debugger.tab-strip');
+    return snail.loadItem('debugger.tab-strip');
   },
   save(value) {
-    d4.saveItem('debugger.tab-strip', value);
+    snail.saveItem('debugger.tab-strip', value);
   }
 });
 const elementsPanel = new Elements(targetManager);
@@ -72,8 +72,8 @@ tabs.appendTab({
 }, 'Sources');
 document.body.appendChild(tabs.element);
 
-d4.setIsFullscreen(true);
-d4.expectingUserInput('debug');
-d4.setToJSON(() => {
+snail.setIsFullscreen(true);
+snail.expectingUserInput('debug');
+snail.setToJSON(() => {
   return [sourcesPanel, consolePanel, elementsPanel].find(panel => panel.element.isConnected).toJSON();
 });

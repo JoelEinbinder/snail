@@ -11,7 +11,7 @@ process.on('exit', () => {
     // The worker might not be able to clean up the metadata path
     const path = require('path');
     const pathService = require('../path_service/');
-    const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
+    const socketDir = path.join(pathService.tmpdir(), 'snail-sockets');
     const metadataPath = path.join(socketDir, `${process.pid}.json`);
     const fs = require('fs');
     fs.unlinkSync(metadataPath);
@@ -244,7 +244,7 @@ async function getServerUrl() {
 
 async function launchServer() {
   const path = require('path');
-  const socketDir = path.join(require('../path_service/').tmpdir(), '1d4-shell-sockets');
+  const socketDir = path.join(require('../path_service/').tmpdir(), 'snail-shell-sockets');
   const socketPath = path.join(socketDir, `${process.pid}-shell.sock`);
   const fs = require('fs');
   fs.mkdirSync(socketDir, {recursive: true, mode: 0o700});

@@ -22,9 +22,9 @@ function makeHostAPI(): IHostAPI {
     });
     return host;
   }
-  if (window.d4) {
-    window.d4.setIsFullscreen(true);
-    const {host, callback} = hostApiHelper('d4', message => {
+  if (window.snail) {
+    window.snail.setIsFullscreen(true);
+    const {host, callback} = hostApiHelper('snail', message => {
       if (message.method === 'contextMenu') {
         // async contextMenu({ menuItems }, client, sender) {
         //   let resolve;
@@ -66,14 +66,14 @@ function makeHostAPI(): IHostAPI {
             return unserialized;
           });
         }
-        d4.createContextMenu(unserializeMenuItems(message.params.menuItems));
+        snail.createContextMenu(unserializeMenuItems(message.params.menuItems));
         return;
       }
-      window.d4.sendInput(JSON.stringify(message) + '\n');
+      window.snail.sendInput(JSON.stringify(message) + '\n');
     });
     (async function() {
       while(true) {
-        const message = await window.d4.waitForMessage();
+        const message = await window.snail.waitForMessage();
         callback(message);
       }
     })();

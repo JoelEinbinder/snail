@@ -109,9 +109,9 @@ class Header {
     this._titleElement.textContent = this.title + (this.modified ? '*' : '');
   }
 }
-d4.setIsFullscreen(true);
-d4.expectingUserInput('edit');
-d4.setToJSON(() => {
+snail.setIsFullscreen(true);
+snail.expectingUserInput('edit');
+snail.setToJSON(() => {
   if (!editor)
     return 'Loading...';
   return {
@@ -120,7 +120,7 @@ d4.setToJSON(() => {
   }
 });
 
-d4.setActions(() => {
+snail.setActions(() => {
   if (!editor)
     return [];
   function monacoShortcutToSnailShortcut(parts) {
@@ -150,7 +150,7 @@ d4.setActions(() => {
   return editor.getActions().map(action => monacoActionToSnailAction(action));
 });
 
-let initialDocumentLoad: (() => void) | null = d4.startAsyncWork('initial document load');
+let initialDocumentLoad: (() => void) | null = snail.startAsyncWork('initial document load');
 document.title = 'foo';
 const header = new Header();
 document.body.append(header.element);
@@ -171,7 +171,7 @@ function doClose() {
       return;
   }
   // this will be handled by the iframe destruction
-  d4.startAsyncWork('closing editor');
+  snail.startAsyncWork('closing editor');
   rpc.notify('close', {});
 }
 let lastSavedVersion;
@@ -179,7 +179,7 @@ let editor: monaco.editor.IStandaloneCodeEditor;
 let relativePath: string;
 const transport: Parameters<typeof RPC>[0] = {
   send(message) {
-    d4.sendInput(JSON.stringify(message) + '\n');
+    snail.sendInput(JSON.stringify(message) + '\n');
   },
 };
 const rpc = RPC(transport, {
@@ -211,7 +211,7 @@ const rpc = RPC(transport, {
       label: 'Save',
       async run() {
         lastSavedVersion = editor.getModel()!.getAlternativeVersionId();
-        const done = d4.startAsyncWork('save');
+        const done = snail.startAsyncWork('save');
         await rpc.send('save', {content: editor.getValue(), file: params.absolutePath });
         header.setModified(lastSavedVersion !== editor.getModel()!.getAlternativeVersionId());
         done();
@@ -237,7 +237,7 @@ window.addEventListener('focus', () => {
   editor?.focus();
 });
 while (true)
-  transport.onmessage!(await d4.waitForMessage<any>());
+  transport.onmessage!(await snail.waitForMessage<any>());
 } catch (e) {
   console.error(e);
 }

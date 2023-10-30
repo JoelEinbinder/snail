@@ -2,7 +2,7 @@
 import type { Metadata } from '../../shell/metadata';
 import './reconnect.css';
 
-const metadatas = await d4.waitForMessage<Metadata[]>();
+const metadatas = await snail.waitForMessage<Metadata[]>();
 const now = new Date(Date.now());
 
 const seenMetadatas: Metadata[] = [];
@@ -25,7 +25,7 @@ for (const metadata of metadatas) {
   const button = document.createElement('button');
   button.textContent = 'Reconnect';
   button.onclick = () => {
-    d4.tryToRunCommand(`reconnect ${metadata.socketPath}`);
+    snail.tryToRunCommand(`reconnect ${metadata.socketPath}`);
   };
   div.append(button);
   document.body.append(div);
@@ -33,15 +33,15 @@ for (const metadata of metadatas) {
 
 window.onresize = updateSize;
 function updateSize() {
-  d4.setHeight(document.body.getBoundingClientRect().height);
+  snail.setHeight(document.body.getBoundingClientRect().height);
 }
-d4.setToJSON(() => {
+snail.setToJSON(() => {
   return seenMetadatas;
 });
 updateSize();
 
 if (!seenMetadatas.length)
-  d4.close();
+  snail.close();
 
 function renderTime(timestamp: number) {
   const span = document.createElement('span');

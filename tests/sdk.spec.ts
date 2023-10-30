@@ -8,8 +8,8 @@ test('use the sdk to display some web content', async ({ shell, populateFilesyst
       sdk.display(${JSON.stringify(path.join(workingDir, 'web.ts'))});
     `,
     'web.ts': `
-      d4.setToJSON({ hello: 'world' });
-      d4.setHeight(100);
+      snail.setToJSON({ hello: 'world' });
+      snail.setHeight(100);
     `,
   });
   await shell.runCommand('node backend.js');
@@ -31,8 +31,8 @@ test('have a nice error message on build failure', async ({ shell, populateFiles
     'web.ts': `
       import { foo } from './not-a-real-file';
       foo();
-      d4.setToJSON({ hello: 'world' });
-      d4.setHeight(100);
+      snail.setToJSON({ hello: 'world' });
+      snail.setHeight(100);
     `,
   });
   await shell.runCommand('node backend.js');

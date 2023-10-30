@@ -1,5 +1,5 @@
 /// <reference path="./types.d.ts" />
 const error = atob(window.snail_error);
 document.body.textContent = error;
-d4.setToJSON({ error });
-d4.setHeight(document.body.offsetHeight);
+snail.setToJSON({ error });
+snail.setHeight(document.body.offsetHeight);

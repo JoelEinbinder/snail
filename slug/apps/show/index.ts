@@ -1,18 +1,15 @@
+///<reference path="../../iframe/types.d.ts" />
 import { JoelEvent } from '../../cdp-ui/JoelEvent';
 import { renderExcalidraw } from './excalidraw';
 import './index.css';
-declare var d4: {
-  waitForMessage<T>(): Promise<T>;
-  setHeight(height: number): void;
-};
 window.onresize = updateSize;
 function updateSize() {
-  d4.setHeight(document.body.offsetHeight);
+  snail.setHeight(document.body.offsetHeight);
 }
 
 let antiCache = 0;
 while (true) {
-  const message = await d4.waitForMessage<{filePath: string, mimeType: string}>();
+  const message = await snail.waitForMessage<{filePath: string, mimeType: string}>();
   document.body.textContent = '';
   const {filePath, mimeType} = message;
   if (filePath.endsWith('.excalidraw')) {

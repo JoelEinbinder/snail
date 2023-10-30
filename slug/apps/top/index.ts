@@ -3,8 +3,8 @@ import './index.css';
 
 window.onresize = updateSize;
 function updateSize() {
-  d4.setHeight(document.body.offsetHeight);
+  snail.setHeight(document.body.offsetHeight);
 }
 
-d4.setIsFullscreen(true);
+snail.setIsFullscreen(true);
 document.body.append('yo yo yo');

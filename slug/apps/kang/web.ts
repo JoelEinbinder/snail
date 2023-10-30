@@ -48,9 +48,9 @@ class Header {
     this.element.classList.toggle('loading', loading);
   }
 }
-d4.setIsFullscreen(true);
-d4.expectingUserInput('edit');
-d4.setToJSON(() => {
+snail.setIsFullscreen(true);
+snail.expectingUserInput('edit');
+snail.setToJSON(() => {
   if (!editor)
     return 'Loading...';
   return {
@@ -58,7 +58,7 @@ d4.setToJSON(() => {
     content: editor.value,
   }
 });
-let initialDocumentLoad: (() => void) | null = d4.startAsyncWork('initial document load');
+let initialDocumentLoad: (() => void) | null = snail.startAsyncWork('initial document load');
 document.title = 'foo';
 const header = new Header();
 document.body.append(header.element);
@@ -99,7 +99,7 @@ function doClose() {
       return;
   }
   // this will be handled by the iframe destruction
-  d4.startAsyncWork('closing editor');
+  snail.startAsyncWork('closing editor');
   rpc.notify('close', {});
 }
 let lastSavedVersion;
@@ -107,7 +107,7 @@ let editor: Editor;
 let relativePath: string;
 const transport: Parameters<typeof RPC>[0] = {
   send(message) {
-    d4.sendInput(JSON.stringify(message) + '\n');
+    snail.sendInput(JSON.stringify(message) + '\n');
   },
 };
 const rpc = RPC(transport, {
@@ -142,7 +142,7 @@ const rpc = RPC(transport, {
         event.preventDefault();
         event.stopPropagation();
         lastSavedVersion = editor.value;
-        const done = d4.startAsyncWork('save');
+        const done = snail.startAsyncWork('save');
         await rpc.send('save', {content: editor.value, file: params.absolutePath });
         header.setModified(lastSavedVersion !== editor.value);
         done();
@@ -205,5 +205,5 @@ async function requestHighlight() {
   updateEditorMode(inLanguageMode);
 }
 while (true)
-  transport.onmessage!(await d4.waitForMessage<any>());
+  transport.onmessage!(await snail.waitForMessage<any>());
 

@@ -1,13 +1,10 @@
+///<reference path="../../iframe/types.d.ts" />
 import './index.css';
-declare var d4: {
-  waitForMessage<T>(): Promise<T>;
-  setHeight(height: number): void;
-};
 window.onresize = updateSize;
 function updateSize() {
-  d4.setHeight(document.body.offsetHeight);
+  snail.setHeight(document.body.offsetHeight);
 }
-const message = await d4.waitForMessage<string>();
+const message = await snail.waitForMessage<string>();
 const parser = new DOMParser()
 const parsed = parser.parseFromString(message, 'application/xml');
 

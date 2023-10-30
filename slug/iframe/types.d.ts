@@ -1,4 +1,4 @@
-declare var d4: {
+declare var snail: {
   waitForMessage<T>(): Promise<T>;
   setHeight(height: number): void;
   setIsFullscreen(isFullscreen: boolean): void;

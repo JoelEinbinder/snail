@@ -312,8 +312,8 @@ body.web-host {
   background-color: black;
 }
 
-/* d4 might be chromium, we don't know */
-body.d4-host {
+/* snail might be chromium, we don't know */
+body.snail-host {
   background: #000030;
 }
 

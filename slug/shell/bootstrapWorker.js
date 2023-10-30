@@ -6,7 +6,7 @@ const pathService = require('../path_service/');
 const path = require('path');
 const worker_threads = require('node:worker_threads');
 const { ShellState } = require('./ShellState');
-const socketDir = path.join(pathService.tmpdir(), '1d4-sockets');
+const socketDir = path.join(pathService.tmpdir(), 'snail-sockets');
 const socketPath = path.join(socketDir, `${process.pid}.socket`);
 const metadataPath = path.join(socketDir, `${process.pid}.json`);
 /** @type {import('./metadata').Metadata} */

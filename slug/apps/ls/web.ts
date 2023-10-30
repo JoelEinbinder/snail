@@ -27,14 +27,14 @@ type Entry = {
   fullPath: string,
   children?: Entry[],
 };
-const {dirs, cwd, showHidden, platform, args} = await d4.waitForMessage<{
+const {dirs, cwd, showHidden, platform, args} = await snail.waitForMessage<{
   dirs: Entry[];
   cwd: string;
   showHidden: boolean;
   platform: string;
   args: string[];
 }>();
-const initialDpr = await d4.getDevicePixelRatio();
+const initialDpr = await snail.getDevicePixelRatio();
 const useTable = args.some(a => a.startsWith('-') && a.includes('l'));
 const now = new Date(Date.now());
 
@@ -265,17 +265,17 @@ async function renderTable() {
     alwaysVisible: true,
   }], {
     async loadItem(item) {
-      return d4.loadItem(`ls.${item}`);
+      return snail.loadItem(`ls.${item}`);
     },
     async saveItem(item, value) {
-      return d4.saveItem(`ls.${item}`, value);
+      return snail.saveItem(`ls.${item}`, value);
     }
   });
   await dataGrid.loadAllData();
   const dirsToShow = (dirs.length === 1 && dirs[0].children) ? dirs[0].children : dirs;
   dataGrid.setItems(dirsToShow.filter(x => showHidden || !x.dir.startsWith('.')));
   document.body.append(dataGrid.element);
-  d4.setHeight(document.body.getBoundingClientRect().height);
+  snail.setHeight(document.body.getBoundingClientRect().height);
 }
 if (useTable)
   renderTable();
@@ -316,7 +316,7 @@ function inlineMode() {
     if (info.mode & 0o111 && !info.isDirectory)
       div.classList.add('executable');
     div.addEventListener('contextmenu', event => {
-      d4.createContextMenu([{
+      snail.createContextMenu([{
         title: 'Copy absolute path',
         callback: () => {
           navigator.clipboard.writeText(fullPath);
@@ -360,16 +360,16 @@ function inlineMode() {
       container.element.style.setProperty('--rows', String(rows));
       container.element.style.setProperty('--cols', String(cols));
     }
-    d4.setHeight(document.body.getBoundingClientRect().height);
+    snail.setHeight(document.body.getBoundingClientRect().height);
   }
-  d4.setToJSON(() => {
+  snail.setToJSON(() => {
     return gridContainers.map(x => {
       return x.element.textContent;
     });
   });
 }
 let undoFind: (() => void) | null = null;
-d4.setFindHandler(params => {
+snail.setFindHandler(params => {
   undoFind?.();
   if (!params)
     return;

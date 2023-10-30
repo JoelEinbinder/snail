@@ -206,7 +206,7 @@ class ChromiumRemoteNode implements RemoteNode {
   async requestChildNodes() {
     if (this._children)
       return;
-    const done = d4.startAsyncWork('requestChildNodes');
+    const done = snail.startAsyncWork('requestChildNodes');
     this._session.send('DOM.requestChildNodes', {
       nodeId: this.data.nodeId,
     }).finally(done);
