@@ -56,6 +56,7 @@ interface Pokemon {
   id: number;
   name: string;
   hp: number;
+  base_hp: number;
   attack: number;
   defense: number;
   spAttack: number;

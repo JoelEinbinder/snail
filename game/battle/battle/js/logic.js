@@ -33,6 +33,7 @@ export function createPokemon(base, level=5) {
       freeze: 0,
       paralyze: 0,
       max: base.hp,
+      base_hp: base.hp,
       nextExp: 0,
       moves: [],
       gender,
@@ -58,6 +59,7 @@ export function forceLevelUp(pokemon, autolearn) {
   pokemon.exp = 0;
   pokemon.nextExp = nextExpForPokemon(pokemon.level, pokemon.levelType);
   recalcHP(pokemon);
+
   if (!autolearn)
       return;
   var slot = 0;
@@ -112,6 +114,8 @@ function recalcHP(pokemon) {
  * @param {string} stat
  */
  export function baseStat(pkm, stat) {
+  if (stat === 'hp')
+    return pkm['base_hp'];
   return pkm[stat];
 }
 
