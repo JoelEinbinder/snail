@@ -3,6 +3,9 @@
 
 Snail is a very fancy terminal
 
+## Demo
+Try out the live [halloween demo](https://joel.tools/halloween/)!
+
 ## Disclaimer
 I've been using snail as my only terminal for over a year, but I would not recommend other people use it as part of their critical infrastructure yet. The apis might change before the 1.0 release and I can't garuantee it won't eat your data. That being said, I welcome feedback from the brave!
 
