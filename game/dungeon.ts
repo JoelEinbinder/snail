@@ -8,7 +8,6 @@ const neighbors_house: DungeonDescriptor = {
       type: 'file',
       content: 'Open to trick or treat',
       open: async (stdout, stderr) => {
-        // stdout.write('You open the chest and find a POTION!\r\n');
         stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'trick-or-treat'})}\x00`);
         dungeon.dispatch({ method: 'Game.playSound', params: { sound: 'doorbell', loop: false }})
         await new Promise(x => setTimeout(x, 2500));
@@ -72,7 +71,7 @@ function createMonster(params: { name: string, element: (typeof types)[number], 
 
 function createPlayer(params: { name: string, level: number }): Pokemon {
   const elements = ['Fire', 'Water', 'Fight'] as const;
-  const element = elements[Math.floor(Math.random() * elements.length)];
+  const element = resets === 0 ? 'Fight' : elements[Math.floor(Math.random() * elements.length)];
 
   const bst = 500;
   const stats = [];
@@ -156,9 +155,10 @@ const monster_room: () => DungeonDescriptor = () => { return {
         }
       },
       children: {
-        'hint.txt': {
+        'credits.txt': {
           type: 'file',
-          content: 'Sorry, hints are not implemented yet.'
+          content: 'Art by Katie Olsen\r\n' +
+          'Find Snail terminal at https://github.com/JoelEinbinder/snail/\r\n',
         },
         boss_room: {
           type: 'directory',
@@ -182,7 +182,7 @@ const monster_room: () => DungeonDescriptor = () => { return {
 const blessing_room: DungeonDescriptor = {
   type: 'directory',
   children: {
-    blessing: {
+    'healing.blessing': {
       type: 'file',
       content: 'Open to heal completely.',
       open: (stdout, stderr) => {
@@ -374,29 +374,30 @@ class Dungeon {
       'Beware of monsters.\r\n' +
       'Find the key to escape.\r\n', stdout, stdin);
     stdout.write('\u001b[0m');
-    if (resets === 0) {
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
-        stdout.write('\u001b[31mWARNING: this game is not designed for mobile devices. It will almost certainly not work properly.\u001b[0m\r\n')
-      stdout.write('type help to view available commands\r\n');
-    }
-    resets++;
     this.player = {
       stats: createPlayer({ level: 5, name: 'adventurer' }),
       bytes: this.player.bytes,
       items: new Map(),
       abilities: new Set(),
     };
+    stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'monster'})}\x00`);
+    send({
+      'Fight': 'werewolf',
+      'Fire': 'dragon',
+      'Water': 'fish',
+    }[this.player.stats.type[0]])
+    await new Promise(x => setTimeout(x, 200));
+    if (resets === 0) {
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+        stdout.write('\u001b[31mWARNING: this game is not designed for mobile devices. It will almost certainly not work properly.\u001b[0m\r\n')
+      stdout.write('type help to view available commands\r\n');
+    }
+    resets++;
     this.root = new LiveDungeon(this._descriptor);
     this.cwd.dispatch('/home/adventurer');
     if (this.player.bytes) {
       stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'reset'})}\x00`);
       send({ bytes: this.player.bytes });
-      function send(data) {
-        const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
-            return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
-        });
-        stdout.write(`\x1b\x1aM${str}\x00`);
-      }
       const data = await stdin.once();
       try {
         const parsed = JSON.parse(data);
@@ -413,6 +414,12 @@ class Dungeon {
       }
     }
     return 0;
+    function send(data) {
+      const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
+          return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
+      });
+      stdout.write(`\x1b\x1aM${str}\x00`);
+    }
   }
 
   giveItem(item: string) {
