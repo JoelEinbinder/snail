@@ -1,6 +1,6 @@
 ///<reference path="../slug/iframe/types.d.ts"/>
 export {};
-d4.setIsFullscreen(true);
+snail.setIsFullscreen(true);
 const keys = {};
 document.addEventListener('keydown', event => {
   keys[event.code] = true;
@@ -99,8 +99,8 @@ function step() {
  
 
 function close(message: 'cancel'|'succeed'|'die') {
-  d4.sendInput(JSON.stringify(message) + '\n');
-  d4.setIsFullscreen(false);
+  snail.sendInput(JSON.stringify(message) + '\n');
+  snail.setIsFullscreen(false);
   clearInterval(interval);
 }
 

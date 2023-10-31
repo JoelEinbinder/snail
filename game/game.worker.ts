@@ -8,6 +8,7 @@ import { JoelEvent } from '../slug/cdp-ui/JoelEvent';
 function dispatch(message) {
   self.postMessage(message);
 }
+dungeon.dispatch = dispatch;
 
 // hookConsole(dispatch);
 
@@ -204,5 +205,6 @@ self['__getResult__'] = async function (command) {
 function notify(method: string, params: any) {
   dispatch({ method: 'Shell.notify', params: { payload: {method, params} }});
 }
+//@ts-ignore
 self.global = self;
 export {}

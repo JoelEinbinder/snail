@@ -1,6 +1,6 @@
 /// <reference path="../slug/iframe/types.d.ts" />
 import './reset-iframe.css';
-const {bytes} = await d4.waitForMessage<{bytes: number}>();
+const {bytes} = await snail.waitForMessage<{bytes: number}>();
 document.body.append('You have ' + bytes + ' bytes.');
 const abilities = [
   { name: 'heal_after_battle', cost: 10, description: 'Heal a small amount after each battle' },
@@ -43,14 +43,14 @@ const doneButton = document.createElement('button');
 doneButton.textContent = 'Done';
 document.body.append(doneButton);
 const done = () => {
-  d4.sendInput(JSON.stringify([...enabled]));
+  snail.sendInput(JSON.stringify([...enabled]));
 };
 doneButton.addEventListener('click', done);
 document.addEventListener('keydown', event => {
   if (event.key === 'Enter')
     done();
   else if (event.key === 'Escape')
-    d4.sendInput('[]');
+    snail.sendInput('[]');
   else if (event.key === 'ArrowUp')
     inputs[inputs.indexOf(document.activeElement) - 1]?.focus();
   else if (event.key === 'ArrowDown')
@@ -61,4 +61,4 @@ document.addEventListener('keydown', event => {
   event.stopPropagation();
 });
 inputs[0].focus();
-d4.setHeight(document.body.offsetHeight);
+snail.setHeight(document.body.offsetHeight);

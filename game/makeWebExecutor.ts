@@ -1,9 +1,10 @@
 import { makeExecute } from '../slug/shjs/execute';
 import { pathResolve, pathJoin, pathBasename, pathRelative } from './path';
 import { dungeon } from './dungeon';
+declare var process;
 export function makeWebExecutor() {
     type Writable = {
-    write: (chunk: any, encoding?: BufferEncoding, callback?: (error?: Error) => void) => void;
+    write: (chunk: any, encoding?: any, callback?: (error?: Error) => void) => void;
     end: () => void;
   }
   const aliases = {};
@@ -219,7 +220,7 @@ export function makeWebExecutor() {
     },
     open: async (args, stdout, stderr, stdin, env) => {
       for (const arg of args) {
-        const ret = dungeon.open(pathResolve(dungeon.cwd.current, arg), stdout, stderr);
+        const ret = await dungeon.open(pathResolve(dungeon.cwd.current, arg), stdout, stderr);
         if (ret !== 0)
           return ret;
       }

@@ -12,7 +12,7 @@ function draw() {
 initGameScreen();
 gamescreen.classList.add("loaded");
 redraw();
-const { player, enemy, items: playerItems } = await d4.waitForMessage<{player: Pokemon, enemy: Pokemon, items: { [key: string] : number }}>();
+const { player, enemy, items: playerItems } = await snail.waitForMessage<{player: Pokemon, enemy: Pokemon, items: { [key: string] : number }}>();
 console.log(player, enemy);
 battleState.self.party.push(player);
 const opponent = {
@@ -25,11 +25,11 @@ for (const [key, value] of Object.entries(playerItems)) {
 }
 setBattleMode(true);
 battleState.enemy = opponent;
-d4.setIsFullscreen(true);
+snail.setIsFullscreen(true);
 const result = await startBattle();
 const afterItems: {[key: string]: number} = {};
 for (const [key, value] of battleState.self.items)
     afterItems[key.name] = value;
 
-d4.sendInput(JSON.stringify({ result, player: battleState.self.party[0], enemy: battleState.enemy.party[0], items: afterItems }) + '\n');
-d4.setIsFullscreen(false);
+snail.sendInput(JSON.stringify({ result, player: battleState.self.party[0], enemy: battleState.enemy.party[0], items: afterItems }) + '\n');
+snail.setIsFullscreen(false);

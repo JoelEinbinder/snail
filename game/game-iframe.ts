@@ -13,7 +13,9 @@ if (iframeType === 'ls') {
   await import('./pathway-iframe');
 } else if (iframeType === 'battle') {
   await import('./battle/battle-iframe');
+} else if (iframeType === 'trick-or-treat') {
+  await import('./trick-or-treat/trick-or-treat-iframe');
 } else {
   document.body.textContent = 'iframe not found: ' + iframeType;
-  d4.setHeight(document.body.offsetHeight);
+  snail.setHeight(document.body.offsetHeight);
 }

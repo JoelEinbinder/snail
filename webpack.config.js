@@ -112,6 +112,13 @@ module.exports = {
         },
       },
       {
+        test: /\.ogg$/,
+        exclude: /node_modules/,
+        use: {
+          loader: require.resolve('file-loader'),
+        },
+      },
+      {
         test: /\.m?js$/,
         include: /node_modules/,
         use: {

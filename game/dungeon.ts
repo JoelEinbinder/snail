@@ -1,14 +1,23 @@
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import { createPokemon, forceLevelUp } from "./battle/battle/js/logic";
 import { moves } from './battle/battle/js/moves';
-const storage_room: DungeonDescriptor = {
+const neighbors_house: DungeonDescriptor = {
   type: 'directory',
   children: {
-    'treasure.chest': {
+    'trick.treat': {
       type: 'file',
-      content: 'A treasure chest.',
-      open: (stdout, stderr) => {
-        stdout.write('You open the chest and find a POTION!\r\n');
+      content: 'Open to trick or treat',
+      open: async (stdout, stderr) => {
+        // stdout.write('You open the chest and find a POTION!\r\n');
+        stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'trick-or-treat'})}\x00`);
+        dungeon.dispatch({ method: 'Game.playSound', params: { sound: 'doorbell', loop: false }})
+        await new Promise(x => setTimeout(x, 2500));
+        stdout.write('\u001b[35m');
+        await writeTextSlowly(
+          'Oh what wonderful costumes!\r\n'
+          , stdout);
+        stdout.write('\u001b[0m');
+        stdout.write('You received a POTION!\r\n');
         dungeon.giveItem('POTION');
         return 0;
       }
@@ -188,13 +197,13 @@ const adventurer: DungeonDescriptor = {
   type: 'directory',
   children: () => {
     const playerElement = dungeon.player.stats.type[0];
-    const monsterElement = {
+    const monsterElement = ({
       Water: ['Fire', 'Fire Ghost'],
       Fire: ['Ice', 'Frost Ghost'],
       Fight: ['Normal', 'Ordinary Ghost'],
-    }[playerElement];
+    } as const)[playerElement];
     return {
-      storage_room,
+      neighbors_house,
       'help.txt': {
         type: 'file',
         content: 'You are in a dungeon.',
@@ -239,7 +248,7 @@ type DungeonDescriptor = Room | Item;
 type Item = {
   type: 'file';
   content: string;
-  open?: (stdout, stderr) => number;
+  open?: (stdout, stderr) => number|Promise<number>;
 }
 
 type Children = { [key: string]: DungeonDescriptor | (() => DungeonDescriptor) };
@@ -287,7 +296,7 @@ class LiveDungeon {
       return '<not a file>';
     return this._descriptor.content;
   }
-  open(stderr, stdout) {
+  async open(stderr, stdout) {
     if (this._descriptor.type !== 'file')
       return 1;
     if (!this._descriptor.open)
@@ -296,7 +305,7 @@ class LiveDungeon {
       stderr.write('It is empty.\r\n');
       return 1;
     }
-    const retVal = this._descriptor.open(stderr, stdout);
+    const retVal = await this._descriptor.open(stderr, stdout);
     if (retVal === 0)
       this.opened = true;
     return retVal;
@@ -325,6 +334,7 @@ class Dungeon {
   cwd = new JoelEvent('/');
   bytesEvent = new JoelEvent<void>(undefined);
   private root: LiveDungeon;
+  dispatch?: (params: any) => void; 
   constructor(private _descriptor: DungeonDescriptor) {
   }
   private _pathToDescriptor(path: string) {

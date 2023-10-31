@@ -4,8 +4,10 @@ import { ClientMethods } from '../src/JSConnection';
 import { RPC, type Transport } from '../slug/protocol/RPC-ts';
 import makeWorker from 'worker-loader!./game.worker';
 import { preprocessTopLevelAwaitExpressions } from './top-level-await';
-import { } from '../slug/shjs/execute';
-
+import doorbell from './trick-or-treat/Sound_Effect_-_Door_Bell.ogg'
+const sounds = {
+  doorbell: new Audio(doorbell),
+};
 export class GameHost implements IHostAPI {
   private _game: Game = new Game((eventName, events) => {
     this._listeners.get(eventName)?.forEach(listener => listener(events));
@@ -104,6 +106,11 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
   workerRPC.on('Game.setBytes' as never, data => {
     bytes = data as number;
     localStorage.setItem('snail_game_bytes', String(bytes));
+  });
+  workerRPC.on('Game.playSound' as never, data => {
+    const sound = sounds[data['sound']];
+    sound.loop = data['loop'];
+    sound?.play();
   });
   return {
     'Shell.enable': async params => {
