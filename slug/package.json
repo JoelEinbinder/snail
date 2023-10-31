@@ -1,6 +1,6 @@
 {
   "name": "slug",
-  "version": "0.8.0",
+  "version": "0.8.0-post",
   "workspaces": [
     "thumbnail_generator",
     "sdk"
