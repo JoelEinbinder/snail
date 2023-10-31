@@ -164,13 +164,22 @@ const monster_room: () => DungeonDescriptor = () => { return {
           type: 'directory',
           monster: createMonster({
             name: 'Great Pumpkin',
-            level: 12,
+            level: 13,
             element: 'Fire',
           }),
           children: {
-            'end.txt': {
+            'treasure.chest': {
               type: 'file',
-              content: 'End of demo for now. I will try to add more later today (10/31/2023).',
+              content: 'This chest can be opened with `open treasure.chest`',
+              open: async (stdout, stderr, stdin) => {
+                dungeon.giveItem('ALEX_KEY');
+                stdout.write('You obtained the ALEX_KEY!\r\n');
+                return 0;
+              },
+            },
+            'hint.txt': {
+              type: 'file',
+              content: 'You can type `..` or `cd ..` or to go up a directory.\r\n',
             }
           }
         }
@@ -239,9 +248,63 @@ function oneOf<T>(...items: T[]) {
   return () => items[Math.floor(Math.random() * items.length)];
 }
 
+const alex: DungeonDescriptor = {
+  type: 'directory',
+  challenge: async (stdout, stderr, stdin) => {
+    if (!dungeon.player.items.has('ALEX_KEY')) {
+      stderr.write('You need the a key to open this door.\r\n');
+      return 'cancel';
+    }
+    stdout.write('The ALEX_KEY perfectly fits the lock.\r\n');
+    return 'succeed';
+  },
+  children: () => {
+    const passcode = Math.floor(Math.random() * 9 ** 4).toString(9).padStart(4, '0');
+    const directories = createDirectories(4);
+    function createDirectories(depth: number, path = ''): DungeonDescriptor {
+      if (path === passcode)
+        return { type: 'directory', children: { 'passcode.txt': { type: 'file', content: 'You already know the passcode' } }};
+      if (depth <= 0)
+        return { type: 'directory', children: {}};
+      const children = {};
+      for (let i = 0; i < 9; i++)
+        children[String(i)] = createDirectories(depth - 1, path + String(i));
+      return {
+        type: 'directory',
+        children,
+      }
+    }
+    return {
+      numbers: directories,
+      locked_box: {
+        type: 'file',
+        content: 'You can use `open` to try to open this, but it needs a passcode.',
+        open: async (stdout, stderr, stdin) => {
+          stdout.write('Enter the passcode: ');
+          let buffer = '';
+          while(true) {
+            const data = await stdin.once();;
+            buffer += data;
+            if (data.includes('\r'))
+              break;
+            stdout.write('*');
+          }
+          stdout.write('\r\n');
+          if (buffer.trim() !== passcode) {
+            stderr.write('Incorrect passcode.\r\n');
+            return 1;
+          }
+          stdout.write('You win! That\'s the end of the game so far but I\'ll probably add more later.\r\n');
+          return 0;
+        },
+      }
+    }
+  },
+};
+
 const home: DungeonDescriptor = {
   type: 'directory',
-  children: { adventurer },
+  children: { adventurer, alex },
 };
 
 const root: DungeonDescriptor = {
@@ -256,7 +319,7 @@ type DungeonDescriptor = Room | Item;
 type Item = {
   type: 'file';
   content: string;
-  open?: (stdout, stderr) => number|Promise<number>;
+  open?: (stdout, stderr, stdin) => number|Promise<number>;
 }
 
 type Children = { [key: string]: DungeonDescriptor | (() => DungeonDescriptor) };
@@ -304,7 +367,7 @@ class LiveDungeon {
       return '<not a file>';
     return this._descriptor.content;
   }
-  async open(stderr, stdout) {
+  async open(stderr, stdout, stdin) {
     if (this._descriptor.type !== 'file')
       return 1;
     if (!this._descriptor.open)
@@ -313,7 +376,7 @@ class LiveDungeon {
       stderr.write('It is empty.\r\n');
       return 1;
     }
-    const retVal = await this._descriptor.open(stderr, stdout);
+    const retVal = await this._descriptor.open(stderr, stdout, stdin);
     if (retVal === 0)
       this.opened = true;
     return retVal;
@@ -448,7 +511,7 @@ class Dungeon {
     return 0;
   }
 
-  open(path: string, stdout, stderr) {
+  open(path: string, stdout, stderr, stdin) {
     const descriptor = this._pathToDescriptor(path);
     if (!descriptor) {
       stderr.write(`no such file or directory: ${path}\r\n`);
@@ -458,7 +521,7 @@ class Dungeon {
       stderr.write(`cannot open ${path}\r\n`);
       return 1;
     }
-    return descriptor.open(stdout, stderr);
+    return descriptor.open(stdout, stderr, stdin);
   }
 
   _isPathObstructed(from: string, to: string) {

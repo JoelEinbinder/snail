@@ -220,7 +220,7 @@ export function makeWebExecutor() {
     },
     open: async (args, stdout, stderr, stdin, env) => {
       for (const arg of args) {
-        const ret = await dungeon.open(pathResolve(dungeon.cwd.current, arg), stdout, stderr);
+        const ret = await dungeon.open(pathResolve(dungeon.cwd.current, arg), stdout, stderr, stdin);
         if (ret !== 0)
           return ret;
       }

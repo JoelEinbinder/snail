@@ -584,4 +584,8 @@ export const items =[
     // {
     //     "name": "TM55"
     // }
+    {
+        "name": "ALEX_KEY",
+        "pocket": "key"
+    },
 ]
