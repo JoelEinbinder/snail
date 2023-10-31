@@ -1,26 +1,13 @@
 node_modules
 .DS_Store
-.history
-history.sqlite3
 /TODO
-/a.js
 dist
 /esout
 /slug-out
 
-joel-terminal-*.vsix
-
-xcuserdata/
-/CoreBundle/
-__pycache__
-/build/
-
 /test-results/
 /playwright-report/
 /playwright/.cache/
-
-/Snail-*-*/
-
 /utils/built-slugs/
 /utils/electron-out/
 /node_18.14.0
