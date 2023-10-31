@@ -170,7 +170,7 @@ const monster_room: () => DungeonDescriptor = () => { return {
           children: {
             'end.txt': {
               type: 'file',
-              content: 'End of demo!',
+              content: 'End of demo for now. I will try to add more later today (10/31/2023).',
             }
           }
         }
@@ -184,9 +184,17 @@ const blessing_room: DungeonDescriptor = {
   children: {
     blessing: {
       type: 'file',
-      content: 'Open to pick a blessing.',
+      content: 'Open to heal completely.',
       open: (stdout, stderr) => {
-        stderr.write('not implemented yet\n');
+        dungeon.player.stats.hp = dungeon.player.stats.max;
+        dungeon.player.stats.volatile = {};
+        dungeon.player.stats.burn = 0;
+        dungeon.player.stats.freeze = 0;
+        dungeon.player.stats.paralyze = 0;
+        dungeon.player.stats.poison = 0;
+        dungeon.player.stats.sleep = 0;
+        dungeon.player.stats.PP = {};
+        stderr.write('You are fully restored\n');
         return 1;
       },
     }
@@ -364,7 +372,7 @@ class Dungeon {
     await writeTextSlowly(
       'Beware of traps.\r\n' +
       'Beware of monsters.\r\n' +
-      'Find the key.\r\n', stdout, stdin);
+      'Find the key to escape.\r\n', stdout, stdin);
     stdout.write('\u001b[0m');
     if (resets === 0) {
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
@@ -606,28 +614,6 @@ class Dungeon {
 }
 
 const types = ["Normal", "Fire", "Water", "Grass", "Electr", "Ice", "Fight", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel"] as const;
-function pokemonTypeEffect(moveType: (typeof types)[number], victType: (typeof types)[number]) {
-  var typeEffect = [
-  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.5],
-  [1.0, 0.5, 0.5, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.5, 1.0, 0.5, 1.0, 2.0],
-  [1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5, 1.0, 1.0],
-  [1.0, 0.5, 2.0, 0.5, 1.0, 1.0, 1.0, 0.5, 2.0, 0.5, 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 0.5],
-  [1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0],
-  [1.0, 0.5, 0.5, 2.0, 1.0, 0.5, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5],
-  [2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5, 2.0, 0.0, 2.0, 2.0],
-  [1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 1.0, 0.0],
-  [1.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 2.0, 1.0, 0.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 2.0],
-  [1.0, 1.0, 1.0, 2.0, 0.5, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0, 1.0, 0.5],
-  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.0, 0.5],
-  [1.0, 0.5, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.5, 2.0, 1.0, 1.0, 0.5, 1.0, 2.0, 0.5],
-  [1.0, 2.0, 1.0, 1.0, 1.0, 2.0, 0.5, 1.0, 0.5, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5],
-  [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 0.5, 0.5],
-  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.5],
-  [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 0.5, 0.5],
-  [1.0, 0.5, 0.5, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 0.5]];
-
-  return typeEffect[types.indexOf(moveType)][types.indexOf(victType)];
-}
 
 
 export const dungeon: Dungeon = new Dungeon(root);
