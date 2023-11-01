@@ -27,7 +27,6 @@
     "css-loader": "^6.2.0",
     "electron": "^22.0.3",
     "electron-packager": "^17.1.1",
-    "electron-rebuild": "^3.2.7",
     "esbuild": "^0.15.12",
     "expect": "^27.4.6",
     "get-port": "^5.1.1",
