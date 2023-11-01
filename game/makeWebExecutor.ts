@@ -144,8 +144,7 @@ export function makeWebExecutor() {
       stdout.write('\x1b[H\x1b[2J');
       return 0;
     },
-    ls: async (args, stdout, stderr, stdin, env) => {
-      stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'ls'})}\x00`);
+    ls: async (args: string[], stdout, stderr, stdin, env) => {
       function send(data) {
         const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
             return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
@@ -158,12 +157,17 @@ export function makeWebExecutor() {
       const cwd = directoryArgs.length === 1 ? pathResolve(process.cwd(), directoryArgs[0]) : process.cwd();
       if (directoryArgs.length === 1)
         directoryArgs = ['.']
+
       try {
+        const dirs = await Promise.all(directoryArgs.map(dir => {
+          return buildItemInfo(cwd, pathResolve(cwd, dir), 1);
+        }));
+        if (dirs.length === 1 && dirs[0]?.children?.length === 0)
+          return 0;
+        stdout.write(`\x1b\x1aL${JSON.stringify({ entry: 'ls'})}\x00`);
         send({
             args,
-            dirs: await Promise.all(directoryArgs.map(dir => {
-              return buildItemInfo(cwd, pathResolve(cwd, dir), 1);
-            })),
+            dirs,
             cwd,
             showHidden: args.some(a => a.startsWith('-') && a.includes('a')),
             platform: 'game',

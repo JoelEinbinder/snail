@@ -204,7 +204,7 @@ const blessing_room: DungeonDescriptor = {
         dungeon.player.stats.sleep = 0;
         dungeon.player.stats.PP = {};
         stderr.write('You are fully restored\n');
-        return 1;
+        return 0;
       },
     }
   },
