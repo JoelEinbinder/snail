@@ -85,12 +85,12 @@ async function buildSlugInDocker(platform, arch, outputFilePath) {
 async function buildSlugLocally(outputFilePath) {
   if (os.platform() != 'darwin' || os.arch() != 'arm64')
     throw new Error('expected to run this on apple silicon');
-  if (!fs.existsSync(path.join(__dirname, '..', 'node_18.14.0'))) {
-    execSync('curl --no-progress-meter -o node.tar.gz https://nodejs.org/dist/v18.14.0/node-v18.14.0-darwin-arm64.tar.gz', { cwd: path.join(__dirname, '..')});
-    execSync('mkdir node_18.14.0 && tar xf node.tar.gz -C node_18.14.0 --strip-components 1', { cwd: path.join(__dirname, '..')});
+  if (!fs.existsSync(path.join(__dirname, '..', 'node_20.10.0'))) {
+    execSync('curl --no-progress-meter -o node.tar.gz https://nodejs.org/dist/v20.10.0/node-v20.10.0-darwin-arm64.tar.gz', { cwd: path.join(__dirname, '..')});
+    execSync('mkdir node_20.10.0 && tar xf node.tar.gz -C node_20.10.0 --strip-components 1', { cwd: path.join(__dirname, '..')});
     execSync('rm node.tar.gz', { cwd: path.join(__dirname, '..')});
   }
-  execSync(`PATH=${path.join(__dirname, '..', 'node_18.14.0', 'bin')}:$PATH npm i --no-package-lock --omit=dev`, {stdio: 'inherit', cwd: path.join(__dirname, '..', 'slug-out')});
+  execSync(`PATH=${path.join(__dirname, '..', 'node_20.10.0', 'bin')}:$PATH npm i --no-package-lock --omit=dev`, {stdio: 'inherit', cwd: path.join(__dirname, '..', 'slug-out')});
   execSync(`tar czf ${outputFilePath} -C ./slug-out .`, { cwd: path.join(__dirname, '..')});
 }
 module.exports = { buildSlugIfNeeded }

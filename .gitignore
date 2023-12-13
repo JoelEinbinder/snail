@@ -10,7 +10,7 @@ dist
 /playwright/.cache/
 /utils/built-slugs/
 /utils/electron-out/
-/node_18.14.0
+/node_20.10.0
 /tests/cached-nodes/
 
 tsconfig.tsbuildinfo

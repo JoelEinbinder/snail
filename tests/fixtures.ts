@@ -92,7 +92,7 @@ export const test = _test.extend<{
   },
   nodeURL: [async ({}, use) => {
     const nodesDir = path.join(__dirname, 'cached-nodes');
-    const supportedNodes = ['v18.14.0/node-v18.14.0-linux-arm64.tar.gz'];
+    const supportedNodes = ['v20.10.0/node-v20.10.0-linux-arm64.tar.gz'];
     for (const node of supportedNodes) {
       const nodePath = path.join(nodesDir, node);
       if (fs.existsSync(path.join(nodesDir, node)))

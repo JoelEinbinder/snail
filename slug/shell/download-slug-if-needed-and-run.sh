@@ -8,7 +8,7 @@ get_node_url_for_platform() {
   then
     if [ $ARCH = arm64 ]
     then
-      echo "$SNAIL_NODE_URL/v18.14.0/node-v18.14.0-darwin-arm64.tar.gz"
+      echo "$SNAIL_NODE_URL/v20.10.0/node-v20.10.0-darwin-arm64.tar.gz"
     else
       echoerr Unknown arch: $ARCH
       exit 1
@@ -17,10 +17,10 @@ get_node_url_for_platform() {
   then
     if [ $ARCH = aarch64 ]
     then
-      echo "$SNAIL_NODE_URL/v18.14.0/node-v18.14.0-linux-arm64.tar.gz"
+      echo "$SNAIL_NODE_URL/v20.10.0/node-v20.10.0-linux-arm64.tar.gz"
     elif [ $ARCH = x86_64 ]
     then
-      echo "$SNAIL_NODE_URL/v18.14.0/node-v18.14.0-linux-x64.tar.gz"
+      echo "$SNAIL_NODE_URL/v20.10.0/node-v20.10.0-linux-x64.tar.gz"
     else
       echoerr Unknown arch: $ARCH
       exit 1
