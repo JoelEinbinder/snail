@@ -196,13 +196,21 @@ async function requestHighlight() {
   if (content === lastHighlight)
     return;
   header.setIsLoading(true);
-  const highlightedTokens = await rpc.send('highlight', {content: editor.value});
-  if (content !== editor.value)
-    return;
-  header.setIsLoading(false);
-  lastHighlight = content;
-  tokens = highlightedTokens;
-  updateEditorMode(inLanguageMode);
+  try {
+    const highlightedTokens = await rpc.send('highlight', {content: editor.value});
+    if (content !== editor.value)
+      return;
+    header.setIsLoading(false);
+    lastHighlight = content;
+    tokens = highlightedTokens;
+    updateEditorMode(inLanguageMode);
+  } catch (error) {
+    console.error(error);
+    header.setIsLoading(false);
+    lastHighlight = '';
+    tokens = [];
+    updateEditorMode(inLanguageMode);
+  }
 }
 while (true)
   transport.onmessage!(await snail.waitForMessage<any>());
