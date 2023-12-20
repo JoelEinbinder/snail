@@ -369,7 +369,8 @@ export class Shell {
           terminalBlock.fullscreenEvent.on(onFullScreen);
           terminalBlock.clearEvent.on(onClear);
           this.addItem(terminalBlock);
-          this._activeItem.dispatch(terminalBlock);
+          if (!activeIframeBlock)
+            this._activeItem.dispatch(terminalBlock);
         };
         terminalTaskQueue.queue(() => addTerminalBlock());
       },
