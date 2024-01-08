@@ -44,8 +44,14 @@ class Transport {
         this._sawSecret = true;
       }
       setImmediate(() => {
-        if (this.onmessage)
-          this.onmessage.call(null, JSON.parse(message));
+        let parsed;
+        try {
+          parsed = JSON.parse(message);
+        } catch {
+          console.error(JSON.stringify(message));
+          throw new Error('failed to parse json');
+        }
+        this.onmessage.call(null, parsed);
       });
     };
     sendMessage(this._pendingMessage + buffer.toString(undefined, 0, end));

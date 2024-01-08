@@ -95,6 +95,7 @@ if (parsedArgs.values['test-highlight']) {
     absolutePath,
     relativePath,
     newFile, 
+    hasLanguageModel: !!doHighlight,
   });
   // TODO thread stdin in case it had some data in it before we went to web mode
   // send a secret message and wait for it to come back.
@@ -116,16 +117,16 @@ function setupHighlight() {
     terminal: false,
   });
   rl.on('line', line => {
-    const {id, tokens, error} = JSON.parse(line);
+    const {id, result, error} = JSON.parse(line);
     if (error)
       higlightCallbacks.get(id).reject(new Error(error));
     else
-      higlightCallbacks.get(id).resolve(tokens);
+      higlightCallbacks.get(id).resolve(result);
   });
   process.on('beforeExit', () => {
     commandChild.kill();
   });
   return (content, id) => {
-    commandChild.stdin.write(JSON.stringify({content, id}) + '\n');
+    commandChild.stdin.write(JSON.stringify({method: 'highlight', params: {content}, id}) + '\n');
   };
 }

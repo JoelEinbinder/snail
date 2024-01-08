@@ -21,7 +21,7 @@ export class Highlighter extends Emitter<{
   'highlight': {from: number, to: number};
 }> {
   private _selectionColors: {color?: string, background?: string};
-  private _mode: Mode<any>;
+  private _mode: Mode<any> | null;
   private _lineInfo = new WeakMap<import('./model').Line, {state: any, tokens: Array<Token>}>();
   private _currentLineNumber = 0;
   private _requestLineNumber = 0;
@@ -176,6 +176,8 @@ export class Highlighter extends Emitter<{
   }
 
   indentation(lineNumber: number): number {
+    if (!this._mode)
+      return 0;
     const line = this._model.line(lineNumber);
     if (!this._lineInfo.has(line))
       return 0;
@@ -265,7 +267,7 @@ export class Highlighter extends Emitter<{
   }
 
   hoverForLocation(loc: Loc): { content: string | Node, reposition: Loc } | null {
-    if (!this._mode.hover)
+    if (!this._mode?.hover)
       return null;
     const line = this._model.line(loc.line);
     if (!line)

@@ -133,7 +133,7 @@ const rpc = RPC(transport, {
       }  
     });
     window['editorForTest'] = editor;
-    updateEditorMode(true);
+    updateEditorMode(!params.hasLanguageModel);
     editorContainer.append(editor.element);
     editor.layout();
     lastSavedVersion = editor.value;
