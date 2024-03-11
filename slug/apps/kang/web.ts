@@ -1,4 +1,4 @@
-/// <reference path="../../iframe/types.d.ts" />
+import * as snail from '../../sdk/web';
 import './web.css';
 import { RPC } from '../../sdk/rpc-js';
 import { Editor } from '../../editor/js/editor';

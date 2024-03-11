@@ -1,4 +1,4 @@
-/// <reference path="../iframe/types.d.ts" />
+import * as snail from '../sdk/web';
 import { RPC, type Transport} from '../protocol/RPC-ts';
 import type { Protocol } from '../../src/protocol';
 

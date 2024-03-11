@@ -1,4 +1,4 @@
-/// <reference path="../../iframe/types.d.ts" />
+import * as snail from '../../sdk/web';
 import './web.css';
 import {iconPathForPath, looksLikeImageOrVideo} from '../../icon_service/iconService';
 import {DataGrid} from '../../datagrid/datagrid';

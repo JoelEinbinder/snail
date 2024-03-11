@@ -1,10 +1,4 @@
-export type MenuItem = {
-  title?: string;
-  enabled?: boolean;
-  checked?: boolean;
-  callback?: () => void;
-  submenu?: MenuItem[];
-};
+import type { MenuItem } from '../slug/sdk/web';
 
 export interface ShellHost {
   obtainWebSocketId(): number;

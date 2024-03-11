@@ -1,4 +1,4 @@
-/// <reference path="../../iframe/types.d.ts" />
+import * as snail from '../../sdk/web';
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import './index.css';
 import { RPC } from '../../sdk/rpc-js';

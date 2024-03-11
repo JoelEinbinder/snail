@@ -1,4 +1,4 @@
-/// <reference path="./types.d.ts" />
+//@ts-check
 const messages = [];
 const callbacks = [];
 /** @type {import('../../src/shortcutParser').ParsedShortcut[]} */
@@ -14,8 +14,8 @@ async function waitForMessage() {
 function sendMessageToParent(message) {
   if (window.parent && window.parent !== window)
     window.parent.postMessage(message, '*');
-  else if (window.electronAPI)
-    window.electronAPI.notify(message);
+  else if (window['electronAPI'])
+    window['electronAPI'].notify(message);
   else if (window['webkit'])
     window['webkit'].messageHandlers.wkMessage.postMessage(message);
   else
@@ -36,8 +36,8 @@ if (window.parent && window.parent !== window) {
       return;
     onMessage(event.data);
   });
-} else if (window.electronAPI) {
-  window.electronAPI.onEvent('postMessage', onMessage);
+} else if (window['electronAPI']) {
+  window['electronAPI'].onEvent('postMessage', onMessage);
 } else if (window['webkit']) {
   window['webkit_callback'] = onMessage;
 } else {
@@ -120,7 +120,7 @@ window.addEventListener('keydown', event => {
       event.stopImmediatePropagation();
     }
   } else {
-    if (event.key === 'Shift' || event.key === 'Control' && event.key === 'Alt' || event.key === 'Meta')
+    if (event.key === 'Shift' || event.key === 'Control' || event.key === 'Alt' || event.key === 'Meta')
       return;
     chording = false;
     sendMessageToParent({method: 'chordPressed', params: {
@@ -181,10 +181,10 @@ window.addEventListener('keydown', event => {
 });
 
 /**
- * @param {HTMLElement} target
+ * @param {EventTarget|null} target
  */
 function isEditing(target) {
-  if (!target)
+  if (!target || !(target instanceof HTMLElement))
     return false;
   if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
     return true;
@@ -196,10 +196,11 @@ function isEditing(target) {
 const contextMenuCallbacks = new Map();
 let lastCallback = 0;
 /**
- * @param {MenuItem[]} menuItems
+ * @param {import('../sdk/web').MenuItem[]} menuItems
  */
 function serializeMenuItems(menuItems) {
   return menuItems.map(item => {
+    /** @type {any} */
     const serialized = {
       ...item,
     };
@@ -214,7 +215,7 @@ function serializeMenuItems(menuItems) {
   });
 }
 /**
- * @param {MenuItem[]} menuItems
+ * @param {import('../sdk/web').MenuItem[]} descriptor
  * @param {boolean=} noDefaultItems
  */
 function createContextMenu(descriptor, noDefaultItems) {
@@ -255,7 +256,7 @@ async function getDevicePixelRatio() {
   return dprPromise;
 }
 
-/** @type {{onMessage: (message: any, browserViewUUID?: string) => void, onDebuggeesChanged: (debuggees: {[key: string]: import('../src/CDPManager').DebuggingInfo}) => void}} */
+/** @type {{onMessage: (message: any, browserViewUUID?: string) => void, onDebuggeesChanged: (debuggees: {[key: string]: import('../sdk/web').DebuggingInfo}) => void}} */
 let cdpListener;
 
 function openDevTools() {
@@ -263,7 +264,7 @@ function openDevTools() {
 }
 
 const ua = navigator.userActivation;
-function tryToRunCommand(command) {
+async function tryToRunCommand(command) {
   if (!ua.isActive)
     return;
   sendMessageToParent({method: 'tryToRunCommand', params: {command}});
@@ -320,12 +321,12 @@ function expectingUserInput(name = 'Anonymous Work Context') {
   return () => sendMessageToParent({method: 'resolveUserInput', params: {id}});
 }
 
-/** @type {(params: import('../../src/Find').FindParams) => void} */
+/** @type {(params: import('../sdk/web').FindParams|null) => void} */
 let findHandler;
-/** @type {import('../../src/Find').FindParams|null} */
+/** @type {import('../sdk/web').FindParams|null} */
 let findParams = null;
 /**
- * @param {string} message
+ * @param {(params: import('../sdk/web').FindParams|null) => void} _findHandler
  */
 function setFindHandler(_findHandler) {
   findHandler = _findHandler;

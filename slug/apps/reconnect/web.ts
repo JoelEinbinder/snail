@@ -1,4 +1,4 @@
-/// <reference path="../../iframe/types.d.ts" />
+import * as snail from '../../sdk/web';
 import type { Metadata } from '../../shell/metadata';
 import './reconnect.css';
 

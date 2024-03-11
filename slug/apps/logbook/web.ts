@@ -1,4 +1,4 @@
-/// <reference path="../../iframe/types.d.ts" />
+import * as snail from '../../sdk/web';
 import { RPC } from '../../sdk/rpc-js';
 import { LogBookView } from './LogBookView';
 snail.setIsFullscreen(true);

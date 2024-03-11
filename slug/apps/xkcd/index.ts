@@ -1,4 +1,4 @@
-///<reference path="../../iframe/types.d.ts" />
+import * as snail from '../../sdk/web';
 import './index.css';
 window.onresize = updateSize;
 function updateSize() {

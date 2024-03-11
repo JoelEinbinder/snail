@@ -1,4 +1,3 @@
-/// <reference path="../slug/iframe/types.d.ts" />
 import type { ShellHost } from '../host/ShellHost';
 export interface IHostAPI {
   sendMessage<Key extends keyof ShellHost>(message: {method: Key, params?: Parameters<ShellHost[Key]>[0]}): Promise<ReturnType<ShellHost[Key]>>;
@@ -22,8 +21,9 @@ function makeHostAPI(): IHostAPI {
     });
     return host;
   }
-  if (window.snail) {
-    window.snail.setIsFullscreen(true);
+  if (window['snail']) {
+    const snail: typeof import('../slug/sdk/web') = window['snail'];
+    snail.setIsFullscreen(true);
     const {host, callback} = hostApiHelper('snail', message => {
       if (message.method === 'contextMenu') {
         // async contextMenu({ menuItems }, client, sender) {
@@ -69,11 +69,11 @@ function makeHostAPI(): IHostAPI {
         snail.createContextMenu(unserializeMenuItems(message.params.menuItems));
         return;
       }
-      window.snail.sendInput(JSON.stringify(message) + '\n');
+      snail.sendInput(JSON.stringify(message) + '\n');
     });
     (async function() {
       while(true) {
-        const message = await window.snail.waitForMessage();
+        const message = await snail.waitForMessage();
         callback(message);
       }
     })();

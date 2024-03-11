@@ -1,4 +1,4 @@
-/// <reference path="../iframe/types.d.ts" />
+import * as snail from '../sdk/web';
 import './datagrid.css';
 
 export interface ColumnDelegate<T extends object> {

@@ -1,10 +1,7 @@
 import { host } from "./host";
 
-export type DebuggingInfo = {
-  browserViewUUID?: string;
-  frameUUID?: string;
-  type: 'webkit'|'chromium'|'node';
-};
+import type { DebuggingInfo } from '../slug/sdk/web';
+export type { DebuggingInfo } from '../slug/sdk/web';
 
 interface CDPListener {
   onMessage(message: any, browserViewUUID?: string): void;

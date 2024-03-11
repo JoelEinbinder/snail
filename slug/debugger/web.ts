@@ -1,4 +1,4 @@
-/// <reference path="../iframe/types.d.ts" />
+import * as snail from '../sdk/web';
 import {TargetManager} from './TargetManager';
 import { Console } from './Console';
 import { Elements } from './elements/Elements';

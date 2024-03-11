@@ -1,6 +1,9 @@
 import { rootBlock } from "./GridPane";
 import { shortcutParser, type ParsedShortcut } from './shortcutParser';
 
+import type { Action } from '../slug/sdk/web';
+export type { Action } from '../slug/sdk/web';
+
 const globalActions: Action[] = [];
 export function registerGlobalAction(action: Action): void {
   const existing = globalActions.findIndex(a => a.id === action.id);
@@ -17,12 +20,6 @@ export function availableActions(): Action[] {
     seenIds.add(action.id);
     return true;
   });
-}
-export type Action = {
-  id: string;
-  title: string;
-  shortcut?: string;
-  callback: () => void;
 }
 
 let continuationActions: {shortcut: ParsedShortcut, action: Action}[] = null;

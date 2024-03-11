@@ -2,6 +2,7 @@ import type { ChromiumSession } from '../TargetManager';
 import type { Protocol } from '../../../src/protocol';
 import { JoelEvent } from '../../cdp-ui/JoelEvent';
 import { RPC, type Transport} from '../../protocol/RPC-ts';
+import * as snail from '../../sdk/web';
 
 export interface DOM {
   documentNodeForFrame(frameUUID: string|undefined, listener: {

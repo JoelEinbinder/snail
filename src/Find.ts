@@ -1,6 +1,9 @@
 import { AntiFlicker } from './AntiFlicker';
 import './find.css';
 
+import type { FindParams } from '../slug/sdk/web';
+export type { FindParams } from '../slug/sdk/web';
+
 export class Find {
   private _element = document.createElement('div');
   private _input = document.createElement('input');
@@ -98,7 +101,6 @@ export class Find {
     this._input.select();
   }
 }
-export type FindParams = { regex: RegExp, report: (matches: number) => void };
 export interface Findable {
   setFind(params: FindParams|null): void;
 }

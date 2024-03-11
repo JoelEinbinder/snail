@@ -56,3 +56,23 @@ Use `⇧⌘P` to open the command menu. Terminal apps can also add their own act
 Don't know how to quit vim? With `edit`, you get the full monaco text editor right in your terminal. And you can just click the x to close.
 
 <img src="screenshots/edit.png" width="487">
+
+## Creating Rich Apps
+
+```js
+// backend.js
+const { display } = require('snail-sdk');
+display(require.resolve('./web.ts'));
+```
+
+```ts
+// web.ts
+import { setHeight } from 'snail-sdk/web';
+document.body.append('Hello World!');
+setHeight(document.body.offsetHeight);
+```
+
+```
+> node backend.js
+Hello World!
+```

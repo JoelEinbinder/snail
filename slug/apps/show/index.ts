@@ -1,4 +1,4 @@
-///<reference path="../../iframe/types.d.ts" />
+import * as snail from '../../sdk/web';
 import { JoelEvent } from '../../cdp-ui/JoelEvent';
 import { renderExcalidraw } from './excalidraw';
 import './index.css';
