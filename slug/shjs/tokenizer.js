@@ -1,6 +1,6 @@
 /**
  * @typedef Token
- * @property {"word"|"operator"|"replacement"|"template"|"space"|"glob"} type
+ * @property {"word"|"operator"|"replacement"|"template"|"space"|"glob"|"comment"} type
  * @property {boolean=} isQuoted
  * @property {string} value
  * @property {string} raw
@@ -22,6 +22,7 @@ function tokenize(code, processTemplateParameter = null) {
     let tokenStart = 0;
     let couldBeOperator = true;
     let inTemplateParameter = false;
+    let inComment = false;
     let i = 0;
     const metaChars = new Set('&|()<>*');
     const operators = new Set([
@@ -37,6 +38,15 @@ function tokenize(code, processTemplateParameter = null) {
     for (; i < code.length; i++) {
         const char = code[i];
         const isSpace = ' \t'.includes(char);
+        if (inComment) {
+            if (char === '\n') {
+                inComment = false;
+                pushToken(true);
+            } else {
+                value += char;
+            }
+            continue;
+        }
         if (inOperator) {
             inOperator = false;
             if (operators.has(value + char)) {
@@ -89,6 +99,10 @@ function tokenize(code, processTemplateParameter = null) {
             } else {
                 value += char;
             }
+        } else if (char == '#') {
+            pushToken(false);
+            inComment = true;
+            value = '';
         } else if (char === '\'') {
             pushToken(false);
             inSingleQuotes = true;
@@ -148,6 +162,8 @@ function tokenize(code, processTemplateParameter = null) {
     }
 
     function currentTokenType() {
+        if (inComment)
+            return 'comment';
         if (inSpace)
             return 'space';
         if (inReplacement)

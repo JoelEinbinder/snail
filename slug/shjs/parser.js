@@ -5,6 +5,10 @@ const {tokenize} = require('./tokenizer');
  * @return {import('./ast').Expression}
  */
 function parse(tokens) {
+    for (let i = tokens.length - 1; i >= 0; i--) {
+        if (tokens[i].type === 'comment')
+            tokens.splice(i, 1);
+    }
     if (!eatSpaces(tokens))
         return null;
     if (tokens[0].type === 'operator') {

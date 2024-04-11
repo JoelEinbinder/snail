@@ -42,6 +42,8 @@ const MyParser = Parser.extend(
         }
         if (candidate.startsWith('.'))
           return makeReturnValue();
+        if (candidate.startsWith('#'))
+          return makeReturnValue();
         const firstToken = Parser.tokenizer(candidate, this.options).getToken();
         if (!firstToken.value)
           return null;
@@ -120,7 +122,11 @@ function transformCode(code, fnName = 'sh', globalVars = new Set()) {
   for (const token of tokens.reverse()) {
     if (token.type !== shTokenType)
       continue;
-    newCode = newCode.substring(0, token.start) + `await ${fnName}(${token.value.transformed})` + newCode.substring(token.end);
+    if (token.value.tokens.length === 1 && token.value.tokens[0].type === 'comment') {
+      newCode = newCode.substring(0, token.start) + `//${token.value.tokens[0].value}` + newCode.substring(token.end);
+    } else {
+      newCode = newCode.substring(0, token.start) + `await ${fnName}(${token.value.transformed})` + newCode.substring(token.end);
+    }
   }
   return newCode;
 }

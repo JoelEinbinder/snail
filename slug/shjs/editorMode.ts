@@ -52,6 +52,8 @@ export class ShjsMode implements Mode<State> {
         return 'sh-replacement';
       if (token.type === 'template')
         return 'sh-template';
+      if (token.type === 'comment')
+        return 'sh-comment';
       if (token.isQuoted)
         return 'sh-string';
       return 'sh';

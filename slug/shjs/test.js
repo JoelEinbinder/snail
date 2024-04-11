@@ -231,6 +231,23 @@ describe('tokenizer', () => {
             {type: 'word', value: 'bar', raw: 'bar'},
         ]);
     });
+    it('should handle a full line comment', () => {
+        expect(tokenize('# the comment').tokens).toEqual([
+            {type: 'comment', value: ' the comment', raw: '# the comment'},
+        ]);
+    });
+    it('should handle a partial line comment', () => {
+        expect(tokenize('foo # the comment').tokens).toEqual([
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'comment', value: ' the comment', raw: '# the comment'},
+        ]);
+    });
+    it('should comment out special tokens', () => {
+        expect(tokenize('# test ;\'\"*+-&><|').tokens).toEqual([
+            {type: 'comment', value: ' test ;\'\"*+-&><|', raw: '# test ;\'\"*+-&><|'},
+        ]);
+    });
 });
 
 describe('parser', () => {
@@ -238,6 +255,13 @@ describe('parser', () => {
     const {tokenize} = require('./tokenizer');
     it('should do a simple command', () => {
         const {tokens} = tokenize('foo bar baz');
+        expect(parse(tokens)).toEqual({
+            executable: 'foo',
+            args: ['bar', 'baz']
+        });
+    });
+    it('should ignore comments', () => {
+        const {tokens} = tokenize('foo bar baz # comment');
         expect(parse(tokens)).toEqual({
             executable: 'foo',
             args: ['bar', 'baz']
@@ -407,6 +431,10 @@ await sh("bar foo")`);
     it('should transform template parameters', () => {
         const code = 'echo foo${123}';
         expect(transformCode(code)).toEqual('await sh(`echo foo${123}`)');
+    });
+    it('should transform shell comments', () => {
+        const code = '# foo';
+        expect(transformCode(code)).toEqual('// foo');
     });
     function shouldBeLeftAlone(code) {
         expect(transformCode(code)).toEqual(code);
