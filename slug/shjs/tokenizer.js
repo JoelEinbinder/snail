@@ -40,8 +40,8 @@ function tokenize(code, processTemplateParameter = null) {
         const isSpace = ' \t'.includes(char);
         if (inComment) {
             if (char === '\n') {
+                pushToken(false);
                 inComment = false;
-                pushToken(true);
             } else {
                 value += char;
             }

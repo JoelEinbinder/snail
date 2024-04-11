@@ -248,6 +248,12 @@ describe('tokenizer', () => {
             {type: 'comment', value: ' test ;\'\"*+-&><|', raw: '# test ;\'\"*+-&><|'},
         ]);
     });
+    it('should parse after the comment', () => {
+        expect(tokenize('# comment\npwd').tokens).toEqual([
+            {type: 'comment', value: ' comment', raw: '# comment'},
+            {type: 'word', value: 'pwd', raw: '\npwd'},
+        ]);
+    });
 });
 
 describe('parser', () => {
