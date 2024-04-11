@@ -16,7 +16,7 @@ function sh(strings, ...values) {
  */
 sh.passThrough = function(strings, values) {
   const expression = parseTemplate(strings, values);
-  const {closePromise} = execute(expression, process.stdout, process.stderr, process.stdin);
+  const {closePromise} = execute(expression, false, process.stdout, process.stderr, process.stdin);
   return closePromise;
 }
 
@@ -65,7 +65,7 @@ function executeAndGetLines(expression) {
     if (line)
       lines.push(line);
   }
-  const {closePromise, stdin} = execute(expression, outStream, process.stderr);
+  const {closePromise, stdin} = execute(expression, false, outStream, process.stderr);
   stdin?.end();
   closePromise.then(async () => {
     addLine(currentLine);

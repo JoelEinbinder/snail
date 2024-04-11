@@ -177,4 +177,17 @@ function parseCodeIntoTokens(code, globalVars = new Set()) {
   return tokens;
 }
 
-module.exports = {transformCode, getAutocompletePrefix, parseCodeIntoTokens};
+/**
+ * @param {string} code
+ * @return {boolean}
+ */
+function isShellLike(code, globalVars = new Set()) {
+  const tokens = parseCodeIntoTokens(code, globalVars);
+  const allowedTokenTypes = new Set([
+    shTokenType,
+    tokTypes.eof,
+  ])
+  return !tokens.some(t => !allowedTokenTypes.has(t.type));
+}
+
+module.exports = {transformCode, getAutocompletePrefix, parseCodeIntoTokens, isShellLike};

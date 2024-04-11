@@ -564,21 +564,30 @@ function computeReplacement(replacement) {
     throw new Error(`Unknown replacement: ${replacement}`);
 }
 
+const safeExecutables = new Set(['cat', 'ls', 'pwd', 'echo', 'show', 'xkcd']);
+
 /**
  * @param {import('./ast').Expression} expression
+ * @param {boolean} noSideEffects
  * @param {Writable} stdout
  * @param {Writable} stderr
  * @param {Readable=} stdin
  * @return {{stdin: Writable|null, kill: (signal: number) => boolean, closePromise: Promise<number>}}
  */
-function execute(expression, stdout, stderr, stdin) {
+function execute(expression, noSideEffects, stdout, stderr, stdin) {
     try {
         if ('executable' in expression) {
             const { redirects } = expression;
+            if (noSideEffects && redirects?.length)
+                throw new UserError('side effect');
             const {executable, args} = processAlias(processWord(expression.executable)[0], expression.args.flatMap(processWord));
             const env = {...process.env};
+            if (noSideEffects && expression.assignments?.length)
+                throw new UserError('side effect');
             for (const {name, value} of expression.assignments || [])
                 env[name] = processWord(value)[0];
+            if (noSideEffects && !safeExecutables.has(executable))
+                throw new UserError('side effect');
             if (executable in builtins) {
                 const closePromise = builtins[executable](args, stdout, stderr, stdin, env);
                 if (closePromise !== 'pass') {
@@ -590,7 +599,7 @@ function execute(expression, stdout, stderr, stdin) {
                 }
             } 
             if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
-                return execute({executable: 'cd', args: [executable], redirects}, stdout, stderr, stdin);
+                return execute({executable: 'cd', args: [executable], redirects}, noSideEffects, stdout, stderr, stdin);
             } else {
                 /** @type {(Readable|Writable|number|undefined)[]} */
                 const stdio = [stdin, stdout, stderr];
@@ -645,24 +654,28 @@ function execute(expression, stdout, stderr, stdin) {
             return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
             }
         } else if ('pipe' in expression) {
-            const pipe = execute(expression.pipe, stdout, stderr);
-            const main = execute(expression.main, pipe.stdin, stderr, stdin);
+            if (noSideEffects)
+                throw new UserError('side effect');
+            const pipe = execute(expression.pipe, noSideEffects, stdout, stderr);
+            const main = execute(expression.main, noSideEffects, pipe.stdin, stderr, stdin);
             const closePromise = main.closePromise.then(() => {
                 pipe.stdin.end();
                 return pipe.closePromise;
             });
             return {stdin: main.stdin, kill: main.kill, closePromise};
         } else if ('left' in expression) {
+            if (noSideEffects)
+                throw new UserError('side effect');
             const writableStdin = new Writable({
                 write(chunk, encoding, callback) {
                     active.stdin.write(chunk, encoding, callback);
                 }
             });
-            const left = execute(expression.left, stdout, stderr, stdin);
+            const left = execute(expression.left, noSideEffects, stdout, stderr, stdin);
             let active = left;
             const closePromise = left.closePromise.then(async code => {
                 if (!!code === (expression.type === 'or')) {
-                    const right = execute(expression.right, stdout, stderr, stdin);
+                    const right = execute(expression.right, noSideEffects, stdout, stderr, stdin);
                     active = right;
                     return right.closePromise;
                 }
@@ -699,7 +712,7 @@ async function getResult(expression) {
     const errStream = arrayWriter(errs);
     const datas = [];
     const outStream = arrayWriter(datas);
-    const {closePromise, stdin} = execute(expression, outStream, errStream);
+    const {closePromise, stdin} = execute(expression, false, outStream, errStream);
     stdin.end();
     const code = await closePromise;
     const output = Buffer.concat(datas).toString();

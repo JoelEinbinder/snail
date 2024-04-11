@@ -8,6 +8,11 @@
   overflow: hidden auto;
   padding: 4px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.log-item-wrapper {
+  flex: 0;
 }
 
 /* scrollbars under the iframe can mess with things. turn it off if we have one */

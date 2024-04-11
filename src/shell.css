@@ -67,8 +67,14 @@
   letter-spacing: 0;
   cursor: text;
 }
+.prompt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 .below-prompt {
-  height: 1.4em;
+  flex-basis: 1.4em;
+  flex-grow: 1;
   line-height: 1.4em;
   overflow: hidden;
   text-overflow: ellipsis;

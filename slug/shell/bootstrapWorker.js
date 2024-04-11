@@ -36,6 +36,9 @@ let lastCommandPromise;
 let lastSubshellId = 0;
 let lastAskPassId = 0;
 let lastStreamId = 0;
+let lastPreviewToken = 0;
+/** @type {Map<number, any[]>} */
+const previewResults = new Map();
 /** @type {Map<number, (password: string) => void>} */
 const passwordCallbacks = new Map();
 /** @type {Map<number, import('../protocol/ProtocolProxy').ProtocolProxy>} */
@@ -145,6 +148,21 @@ const handler = {
     retainers.delete('runCommand');
     maybeExit(); // can never actually exit here because the connection is still open or we haven't been witnessed
     return result;
+  },
+  'Shell.previewCommand': async ({command}) => {
+    const previewToken = ++lastPreviewToken;
+    const notifications = [];
+    previewResults.set(previewToken, notifications);
+    const result = await send('Runtime.evaluate', {
+      expression: `await global.pty(${JSON.stringify(command)}, ${JSON.stringify(previewToken)})`,
+      returnByValue: false,
+      generatePreview: true,
+      userGesture: true,
+      replMode: true,
+      allowUnsafeEvalBlockedByCSP: true,
+    });
+    previewResults.delete(previewToken);
+    return {result, notifications};
   },
   'Shell.resolveFileForIframe': async (params) => {
     if (params.shellIds.length) {
@@ -316,14 +334,20 @@ session.on('inspectorNotification', (/** @type {{method: string, params: any}} *
     if (method === 'cwd') {
       shellState.setCwd(params, message => transport?.send(message));
     } else {
-      const message = {
-        method: 'Shell.notify',
-        params: {
-          payload: {method, params}
-        }
-      };
-      transport?.send(message);
-      shellState.addMessage(message);
+      if (params.previewToken) {
+        const notifications = previewResults.get(params.previewToken);
+        if (notifications)
+          notifications.push({method, params});
+      } else {
+        const message = {
+          method: 'Shell.notify',
+          params: {
+            payload: {method, params}
+          }
+        };
+        transport?.send(message);
+        shellState.addMessage(message);
+      }
     }
     return;
   }

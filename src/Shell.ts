@@ -61,6 +61,7 @@ export class Shell {
   private _activeItem = new JoelEvent<LogItem>(null);
   private _cachedEvaluationResult = new Map<string, Promise<string>>();
   private _connections: JSConnection[] = [];
+  private _urlForIframeForConncetion = new WeakMap<JSConnection, (filePath: string) => Promise<string>>();
   private _size = new JoelEvent({cols: 80, rows: 24});
   private _cachedGlobalObjectId: string;
   private _cachedGlobalVars: Set<string>|undefined;
@@ -141,45 +142,16 @@ export class Shell {
     socketListeners.set(socketId, message => core.onmessage?.(message));
     return this._setupConnectionInner(core, args);
   }
-  async _setupConnectionInner(core: ConnectionCore, args: string[], sshAddress = null) {
-    this._clearCache();
-    const connection = new JSConnection(core);
-    core.onclose = () => connection.didClose();
-    this._connectionIsDaemon.set(connection, false);
-    connection.on('Shell.daemonStatus', ({isDaemon}) => {
-      this._connectionIsDaemon.set(connection, isDaemon);
-      this._updateSuffix();
-    });
-    this._connectionToSSHAddress.set(connection, sshAddress);
-    const filePath = args[0];
-    this._connectionToName.set(connection, filePath || sshAddress);
-    const notify = async function(method: string, params: any) {
-      await connection.send('Runtime.callFunctionOn', {
-        objectId: notifyObjectId,
-        functionDeclaration: `function(data) { return this(data); }`,
-        arguments: [{
-          value: {method, params}
-        }]
-      });
-    }
-    connection.on('Runtime.consoleAPICalled', message => {
-      // console.timeEnd messages are sent twice
-      if (message.stackTrace?.callFrames[0]?.functionName === 'timeLogImpl')
-        return;
-      this.addItem(new JSLogBlock(message, connection, this._size));
-    });
-    connection.on('Shell.askPassword', ({ id, message}) => {
-      const item = new AskPasswordBlock(message, password => {
-        connection.send('Shell.providePassword', { id, password });
-      });
-      this.addItem(item);
-      this._activeItem.dispatch(item);
-    });
-    connection.on('Runtime.executionContextDestroyed', message => {
-        if (message.executionContextId === 1)
-          destroy();
-    });
+  _createTerminalHandler({connection, notify, urlForIframe, addItem, antiFlicker, shouldLockPrompt}: {
+    connection: JSConnection,
+    notify: (method: string, params: any) => Promise<void>,
+    urlForIframe: (filePath: string) => Promise<string>,
+    addItem: (item: LogItem, focus: boolean) => void;
+    shouldLockPrompt: boolean,
+    antiFlicker: AntiFlicker,
+  }) {
     const terminals = new Map<number, {processor: TerminalDataProcessor, cleanup: () => Promise<void>}>();
+    let myActiveItem: LogItem = null;
     const handler = {
       data: ({data, id}: {data: string, id: number}) => {
         // we might have lost the terminal creation due to data smooshing
@@ -192,17 +164,16 @@ export class Shell {
       endTerminal:async ({id}: {id: number}) => {
         const {cleanup} = terminals.get(id);
         terminals.delete(id);
-        this._activeItem.dispatch(null);
+        if (myActiveItem === this._activeItem.current)
+          this._activeItem.dispatch(null);
         await cleanup();
         this._delegate.setTitle('');
-      },
-      leftoverStdin: ({id,data}) => {
-        this._leftoverStdin += data;
       },
       startTerminal:({id}: {id: number}) => {
         if (terminals.has(id))
           console.error('terminal already exists', id);
-        const unlockPrompt = this._lockPrompt('startTerminal ' + id);
+
+        const unlockPrompt = shouldLockPrompt ? this._lockPrompt('startTerminal ' + id) : () => void 0;
         let activeTerminalBlock: TerminalBlock = null;
         let activeIframeBlock: IFrameBlock = null;
         let activeProgressBlock: ProgressBlock = null;
@@ -220,7 +191,7 @@ export class Shell {
                   activeChartBlock = new ChartBlock();
                   terminalTaskQueue.queue(async () => {
                     await closeActiveTerminalBlock();
-                    this.addItem(activeChartBlock);
+                    addItem(activeChartBlock, /* focus */ false);
                     await addTerminalBlock();
                   });
                 }
@@ -256,8 +227,8 @@ export class Shell {
                         await notify('input', { data, id});
                     },
                     connection,
-                    urlForIframe: filePath => core.urlForIframe(filePath, []),
-                    antiFlicker: this._antiFlicker,
+                    urlForIframe,
+                    antiFlicker,
                     browserView: !!(dataObj.browserView),
                     tryToRunCommand: (command: string) => {
                       const commandLooksSafe = /^reconnect [\/\w\-\.]*$/.test(command);
@@ -267,8 +238,7 @@ export class Shell {
                     },
                   });
                   activeIframeBlock = iframeBlock;
-                  this.addItem(iframeBlock);
-                  this._activeItem.dispatch(iframeBlock);
+                  addItem(iframeBlock, /* focus */ true);
                   cdpManager.setDebuggingInfoForTarget(this._uuid, iframeBlock.debugginInfo());
                 });
                 break;
@@ -291,7 +261,7 @@ export class Shell {
                   activeProgressBlock = new ProgressBlock();
                   terminalTaskQueue.queue(async () => {
                     await closeActiveTerminalBlock();
-                    this.addItem(activeProgressBlock);
+                    addItem(activeProgressBlock, /* focus */ false);
                     await addTerminalBlock();
                   });
                 }
@@ -353,7 +323,7 @@ export class Shell {
                 await notify('input', { data, id});
             },
             size: this._size,
-            antiFlicker: this._antiFlicker,
+            antiFlicker,
             setTitle: title => this._delegate.setTitle(title),
           });
           activeTerminalBlock = terminalBlock;
@@ -368,11 +338,73 @@ export class Shell {
           };    
           terminalBlock.fullscreenEvent.on(onFullScreen);
           terminalBlock.clearEvent.on(onClear);
-          this.addItem(terminalBlock);
-          if (!activeIframeBlock)
-            this._activeItem.dispatch(terminalBlock);
+          addItem(terminalBlock, /* focus */ !activeIframeBlock);
         };
         terminalTaskQueue.queue(() => addTerminalBlock());
+      },
+      endAllTerminals: () => {
+        for (const id of terminals.keys())
+          handler.endTerminal({id});
+      }
+    };
+    return handler;
+  }
+  async _setupConnectionInner(core: ConnectionCore, args: string[], sshAddress = null) {
+    this._clearCache();
+    const connection = new JSConnection(core);
+    core.onclose = () => connection.didClose();
+    this._connectionIsDaemon.set(connection, false);
+    const urlForIframe = (filePath: string) => core.urlForIframe(filePath, []);
+    this._urlForIframeForConncetion.set(connection, urlForIframe);
+    connection.on('Shell.daemonStatus', ({isDaemon}) => {
+      this._connectionIsDaemon.set(connection, isDaemon);
+      this._updateSuffix();
+    });
+    this._connectionToSSHAddress.set(connection, sshAddress);
+    const filePath = args[0];
+    this._connectionToName.set(connection, filePath || sshAddress);
+    const notify = async function(method: string, params: any) {
+      await connection.send('Runtime.callFunctionOn', {
+        objectId: notifyObjectId,
+        functionDeclaration: `function(data) { return this(data); }`,
+        arguments: [{
+          value: {method, params}
+        }]
+      });
+    }
+    connection.on('Runtime.consoleAPICalled', message => {
+      // console.timeEnd messages are sent twice
+      if (message.stackTrace?.callFrames[0]?.functionName === 'timeLogImpl')
+        return;
+      this.addItem(new JSLogBlock(message, connection, this._size));
+    });
+    connection.on('Shell.askPassword', ({ id, message}) => {
+      const item = new AskPasswordBlock(message, password => {
+        connection.send('Shell.providePassword', { id, password });
+      });
+      this.addItem(item);
+      this._activeItem.dispatch(item);
+    });
+    connection.on('Runtime.executionContextDestroyed', message => {
+        if (message.executionContextId === 1)
+          destroy();
+    });
+    const terminalHandler = this._createTerminalHandler({
+      connection,
+      notify,
+      urlForIframe,
+      shouldLockPrompt: false,
+      antiFlicker: this._antiFlicker,
+      addItem: (item, focus) => {
+        this.addItem(item);
+        if (focus)
+          this._activeItem.dispatch(item);
+      }
+    });
+    const handler = {
+      ...terminalHandler,
+      leftoverStdin: ({id,data}) => {
+        this._leftoverStdin += data;
       },
       aliases: (aliases) => {
       },
@@ -436,8 +468,7 @@ export class Shell {
         return;
       destroyed = true;
       core.destroy();
-      for (const id of terminals.keys())
-        handler.endTerminal({id});
+      terminalHandler.endAllTerminals(),
       this._size.off(resize);
       if (this._connections[this._connections.length - 1] === connection) {
         this._clearCache();
@@ -575,6 +606,10 @@ export class Shell {
     const { transformCode } = await import('../slug/shjs/transform');
     const jsCode = transformCode(code, 'global.pty', await this.globalVars());
     return jsCode;
+  }
+  async _isShellLikeCode(code: string) {
+    const { isShellLike } = await import('../slug/shjs/transform');
+    return isShellLike(code, await this.globalVars());
   }
 
   _clearCache() {
@@ -904,18 +939,83 @@ export class Shell {
     belowPrompt.classList.add('below-prompt');
     element.appendChild(belowPrompt);
     let lock = {};
+    let belowPromptItems = [];
+    function clearBelowPrompt() {
+      willResizeEvent.dispatch();
+      belowPrompt.textContent = '';
+      for (const item of belowPromptItems)
+        item.dispose();
+      belowPromptItems = [];
+    }
     const onChange = async () => {
       const mylock = {};
       lock = mylock;
       const value = autocomplete.valueWithSuggestion();
+      const isShellLike = await this._isShellLikeCode(value);
+      if (isShellLike) {
+        const {result, notifications} = await this.connection.send('Shell.previewCommand', {
+          command: value,
+        });
+        await new Promise(requestAnimationFrame);
+        if (lock !== mylock)
+          return;
+        if (result.result?.type !== 'string' || result.result.value !== 'this is the secret secret string:0') {
+          clearBelowPrompt();
+          return;
+        }
+        const items: LogItem[] = [];
+        let resolveFlickerPromise: () => void;
+        const flickerPromise = new Promise<void>(x => resolveFlickerPromise = x);
+        const antiFlicker = new AntiFlicker(() => void 0, resolveFlickerPromise);
+        const terminalHandler = this._createTerminalHandler({
+          connection: this.connection,
+          antiFlicker,
+          shouldLockPrompt: false,
+          notify: async (method, params) => {
+            // await this.connection.send('Shell.sendMessageToSubshell', {
+            //   id: result.id,
+            //   message: { method, params }
+            // });
+          },
+          urlForIframe: this._urlForIframeForConncetion.get(this.connection)!,
+          addItem: (item, focus) => {
+            items.push(item);
+          }
+        });
+        const promises: Promise<any>[] = [];
+        for (const {method, params} of notifications)
+          promises.push(terminalHandler[method](params));
+        const didDraw = antiFlicker.expectToDraw(250)
+        await Promise.all(promises);
+        const newDiv = document.createElement('div');
+        newDiv.style.visibility = 'hidden';
+        belowPrompt.appendChild(newDiv);
+        const oldItems = belowPromptItems;
+        belowPromptItems = [];
+        for (const item of items) {
+          belowPromptItems.push(item);
+          const element = item.render();
+          if (element)
+            newDiv.appendChild(element);
+        }
+        didDraw();
+        await flickerPromise;
+        newDiv.style.removeProperty('visibility');
+        for (const child of belowPrompt.childNodes) {
+          if (child !== newDiv)
+            child.remove();
+        }
+        for (const item of oldItems)
+          item.dispose();
+        return;
+      }
       const code = preprocessForJS(await this._transformCode(value));
       // throttle a bit
       await new Promise(requestAnimationFrame);
       if (lock !== mylock)
         return;
       if (!code.trim()) {
-        willResizeEvent.dispatch();
-        belowPrompt.textContent = '';
+        clearBelowPrompt();
         return;
       }
       const result = await this.connection.send('Runtime.evaluate', {
@@ -931,8 +1031,7 @@ export class Shell {
       });
       if (lock !== mylock)
         return;
-      willResizeEvent.dispatch();
-      belowPrompt.textContent = '';
+      clearBelowPrompt();
       void this.connection.send('Runtime.releaseObjectGroup', {
         objectGroup: 'eager-eval',
       });

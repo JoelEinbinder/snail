@@ -26,7 +26,7 @@ async function listenToWebSocket() {
       });
       transport.sendString(JSON.stringify(leftoverData));
     } else if (method === 'command') {
-      const { command, env, dir, magicToken, aliases } = params;
+      const { command, env, dir, magicToken, aliases, noSideEffects} = params;
       process.env = env;
       try {
         process.chdir(dir);
@@ -34,14 +34,14 @@ async function listenToWebSocket() {
       }
       setAllAliases(aliases)
       getAndResetChanges();
-      const result = await runCommand(command.toString(), magicToken);
+      const result = await runCommand(command.toString(), magicToken, noSideEffects);
       transport.sendString(JSON.stringify(result));
     }
   }
 }
-async function runCommand(command, magicToken) {
+async function runCommand(command, magicToken, noSideEffects) {
   process.stdin.setRawMode(false);
-  const {stdin, closePromise, kill} = execute(command);
+  const {stdin, closePromise, kill} = execute(command, process.stdout, process.stderr, process.stdin, noSideEffects);
   const c = await closePromise;
   process.stdin.setRawMode(true);
   process.exitCode = c;

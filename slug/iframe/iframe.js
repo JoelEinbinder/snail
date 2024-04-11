@@ -333,11 +333,6 @@ function setFindHandler(_findHandler) {
   findHandler?.(findParams);
 }
 
-// Hack to put focus somewhere. Otherwise electron loses keyboard events?!
-document.body.tabIndex = -1;
-document.body.focus();
-document.body.removeAttribute('tabIndex');
-
 window.snail = {
   waitForMessage,
   setHeight,

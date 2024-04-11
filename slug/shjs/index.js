@@ -9,10 +9,10 @@ module.exports = {
    * @param {import('stream').Writable} stderr
    * @param {import('stream').Readable=} stdin
    */
-  execute(command, stdout = process.stdout, stderr = process.stderr, stdin = process.stdin) {
+  execute(command, stdout = process.stdout, stderr = process.stderr, stdin = process.stdin, noSideEffects = false) {
     const {tokens} = tokenize(command);
     const ast = parse(tokens);
-    return execute(ast, stdout, stderr, stdin);
+    return execute(ast, noSideEffects, stdout, stderr, stdin);
   },
   getResult(command) {
     const {tokens} = tokenize(command);

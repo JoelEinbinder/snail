@@ -101,7 +101,7 @@ global.bootstrap = (args) => {
     return myshell;
   }
 
-  global.pty = async function(command) {
+  global.pty = async function(command, previewToken) {
     const magicToken = String(Math.random());
     const magicString = `\x1B[JOELMAGIC${magicToken}]\r\n`;
     const {shell, connection} = await claimFreeShell();
@@ -117,13 +117,14 @@ global.bootstrap = (args) => {
       params: {
         command,
         magicToken,
+        noSideEffects: !!previewToken,
         env: process.env,
         dir: process.cwd(),
         aliases: getAliases(),
       }
     }));
     const id = ++shellId;
-    notify('startTerminal', {id});
+    notify('startTerminal', {id, previewToken});
     shells.set(id, shell);
     let waitForDoneCallback;
     const waitForDonePromise = new Promise(x => waitForDoneCallback = x);
@@ -133,7 +134,7 @@ global.bootstrap = (args) => {
       if (data.slice(data.length - magicString.length).toString() === magicString) {
         data = data.slice(0, -magicString.length);
         if (data) {
-          notify('data', {id, data});
+          notify('data', {id, data, previewToken});
           last = '';
         }
         waitForDoneCallback();
@@ -147,7 +148,7 @@ global.bootstrap = (args) => {
         last = '';
       }
       if (data)
-        notify('data', {id, data});
+        notify('data', {id, data, previewToken});
     });
     /** @type {{exitCode: number, died?: boolean, signal?: number, changes?: Changes}} */
     const returnValue = await Promise.race([
@@ -168,7 +169,7 @@ global.bootstrap = (args) => {
         connection.sendString(JSON.stringify({method: 'fush-stdin', params: {stdinEndToken}}));
         shell.write(stdinEndToken);
         const data = await new Promise(x => connection.onmessage = x);
-        notify('leftoverStdin', {id, data})
+        notify('leftoverStdin', {id, data, previewToken})
         shell.kill();
       } else {
         // This is where we reuse shells.
@@ -176,7 +177,7 @@ global.bootstrap = (args) => {
         freeShell = Promise.resolve({connection, shell});
       }
     }
-    if (returnValue.changes) {
+    if (returnValue.changes && !previewToken) {
       const changes = returnValue.changes;
       if (changes.cwd) {
         origChangeDir(changes.cwd);
@@ -207,7 +208,7 @@ global.bootstrap = (args) => {
       }
       worker.postMessage(changes);
     }
-    notify('endTerminal', {id, returnValue});
+    notify('endTerminal', {id, returnValue, previewToken});
     return 'this is the secret secret string:' + returnValue.exitCode;
   }
   const handler = {

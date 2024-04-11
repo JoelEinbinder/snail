@@ -101,10 +101,12 @@ export class TerminalBlock implements LogItem {
     
     font.on(this._fontChanged);
     let firstRender = true;
+    const didFirstRender = delegate.antiFlicker?.expectToDraw(50);
     this._terminal.onRender(() => {
       if (firstRender) {
         firstRender = false;
         windowResize(delegate.size.current);
+        didFirstRender();
       }
       this._willResize();
     });

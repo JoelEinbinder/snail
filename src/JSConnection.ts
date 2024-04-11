@@ -23,6 +23,7 @@ export type ExtraClientMethods = {
   'Shell.evaluate': (params: {code: string}) => {result: string, exitCode: number};
   'Shell.evaluateStreaming': (params: {code: string}) => {streamId: number};
   'Shell.runCommand': (params: {command: string, expression: string}) => Protocol.CommandReturnValues['Runtime.evaluate'];
+  'Shell.previewCommand': (params: {command: string}) => { result: Protocol.CommandReturnValues['Runtime.evaluate'], notifications: any[]};
   'Shell.restore': () => Protocol.CommandReturnValues['Runtime.evaluate']|null;
 
   'Shell.resolveFileForIframe': (params: {shellIds: number[], filePath: string, search: string, headers: Record<string, string>}) => void;
