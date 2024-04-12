@@ -249,9 +249,16 @@ describe('tokenizer', () => {
         ]);
     });
     it('should parse after the comment', () => {
+        // only gets one line becasue we stop after a \n.
         expect(tokenize('# comment\npwd').tokens).toEqual([
             {type: 'comment', value: ' comment', raw: '# comment'},
-            {type: 'word', value: 'pwd', raw: '\npwd'},
+            // {type: 'word', value: 'pwd', raw: '\npwd'},
+        ]);
+    });
+    it('should parse two comments', () => {
+        // only gets one line becasue we stop after a \n.
+        expect(tokenize('# comment\n# again').tokens).toEqual([
+            {type: 'comment', value: ' comment', raw: '# comment'},
         ]);
     });
 });

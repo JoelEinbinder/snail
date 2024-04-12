@@ -44,8 +44,8 @@ function tokenize(code, processTemplateParameter = null) {
                 inComment = false;
             } else {
                 value += char;
+                continue;
             }
-            continue;
         }
         if (inOperator) {
             inOperator = false;
