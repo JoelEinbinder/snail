@@ -106,7 +106,7 @@ export class TerminalBlock implements LogItem {
       if (firstRender) {
         firstRender = false;
         windowResize(delegate.size.current);
-        didFirstRender();
+        requestAnimationFrame(didFirstRender);
       }
       this._willResize();
     });

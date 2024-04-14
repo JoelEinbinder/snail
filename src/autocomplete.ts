@@ -10,6 +10,7 @@ export class Autocomplete {
     private _anchor = 0;
     private _refreshingSuggestions = false;
     private _activationCode = null;
+    private _activeCompletionsPromise: Promise<any>|null = null;
     public suggestionChanged = new JoelEvent<void>(undefined);
     constructor(private _editor: Editor, private _defaultCompleter: Completer, private _activationChars: string, private _specialCompleters: { [key: string]: Completer }) {
         this._editor.on('selection-changed', event => {
@@ -142,7 +143,11 @@ export class Autocomplete {
         this._refreshingSuggestions = true;
         const completer = this._activationCode ? this._specialCompleters[this._activationCode] : this._defaultCompleter;
         const finishWork = startAyncWork('completions');
-        const completions = await completer(textBeforeCursor, abortController.signal);
+        const completionsPromise = completer(textBeforeCursor, abortController.signal);;
+        this._activeCompletionsPromise = completionsPromise;
+        const completions = await completionsPromise;
+        if (this._activeCompletionsPromise === completionsPromise)
+            this._activeCompletionsPromise = null;
         finishWork();
         this._refreshingSuggestions = false;
         if (abortController.signal.aborted)
@@ -188,6 +193,11 @@ export class Autocomplete {
 
     async serializeForTest() {
         return this._suggestBox?.showing ? this._suggestBox.serializeForTest() : undefined;
+    }
+
+    async waitForQuiet() {
+        while (this._activeCompletionsPromise)
+            await this._activeCompletionsPromise;
     }
 }
 

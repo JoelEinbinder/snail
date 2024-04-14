@@ -939,6 +939,7 @@ export class Shell {
     belowPrompt.classList.add('below-prompt');
     element.appendChild(belowPrompt);
     let lock = {};
+    let lastPreviewValue = '';
     let belowPromptItems = [];
     function clearBelowPrompt() {
       willResizeEvent.dispatch();
@@ -948,11 +949,21 @@ export class Shell {
       belowPromptItems = [];
     }
     const onChange = async () => {
+      const value = autocomplete.valueWithSuggestion();
+      await autocomplete.waitForQuiet();
+      if (value !== autocomplete.valueWithSuggestion())
+        return;
+      if (value === lastPreviewValue)
+        return;
       const mylock = {};
       lock = mylock;
-      const value = autocomplete.valueWithSuggestion();
+      if (lock !== mylock)
+        return;
+      lastPreviewValue = value;
       const isShellLike = await this._isShellLikeCode(value);
       if (isShellLike) {
+        if (lock !== mylock)
+          return;
         const {result, notifications} = await this.connection.send('Shell.previewCommand', {
           command: value,
         });

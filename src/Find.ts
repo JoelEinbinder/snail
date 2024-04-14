@@ -56,7 +56,6 @@ export class Find {
   }
 
   _render() {
-    console.trace('render', this._index, this._count);
     if (!this._count) {
       this._countElement.textContent = 'No results';
       return;

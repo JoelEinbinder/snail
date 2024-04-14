@@ -564,7 +564,25 @@ function computeReplacement(replacement) {
     throw new Error(`Unknown replacement: ${replacement}`);
 }
 
-const safeExecutables = new Set(['cat', 'ls', 'pwd', 'echo', 'show', 'xkcd']);
+const safeExecutables = new Set([
+    // side effect free unix stuff
+    'cat',
+    'ls',
+    'pwd',
+    'echo',
+    'diff',
+    'head',
+    'tail',
+    'ps',
+    'who',
+    'whoami',
+    'id',
+    'date',
+
+    // snail apps
+    'show',
+    'xkcd',
+]);
 
 /**
  * @param {import('./ast').Expression} expression
