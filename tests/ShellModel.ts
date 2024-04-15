@@ -32,6 +32,10 @@ class Split {
     await this.waitForAsyncWorkToFinish();
   }
 
+  async openQuickOpen() {
+    await this.page.keyboard.press('Meta+KeyP');
+    await this.waitForAsyncWorkToFinish();
+  }
   async openQuickPick() {
     await this.page.keyboard.press('Shift+Meta+KeyP');
     await this.waitForAsyncWorkToFinish();

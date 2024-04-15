@@ -22,3 +22,18 @@ test('can open quick pick when focus is on an iframe', async ({ shell }) => {
     value: '>',
   });
 });
+
+test('can find a file with quick pick', async ({ shell }) => {
+  await shell.runCommand('mkdir dir && touch dir/fileToFind.txt');
+
+  await shell.runCommand('clear');
+  await shell.page.keyboard.type('cat ');
+  await shell.openQuickOpen();
+  await shell.page.keyboard.type('ToFind');
+  await shell.page.keyboard.press('Enter');
+  await shell.waitForAsyncWorkToFinish();
+  expect(await shell.serialize()).toEqual({
+    log: [],
+    prompt: { value: 'cat dir/fileToFind.txt' },
+  });
+});

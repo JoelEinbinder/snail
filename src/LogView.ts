@@ -259,6 +259,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     this._lockScroll();
     this._prompt = this._shell.addPrompt(this._scroller);
     this._prompt.willResizeEvent.on(() => this._lockScroll());
+    this.setActiveItem(this._prompt);
   }
 
   async serializeForTest() {
@@ -396,6 +397,7 @@ export class LogView implements Block, ShellDelegate, Findable {
         const reportFile = (file: string) => callback({
           callback: () => {
             const active = this._activeItem || this._prompt;
+            console.log('reportFile', file, active);
             active?.recieveFilePath?.(file);    
           },
           title: file,  
