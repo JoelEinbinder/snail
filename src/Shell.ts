@@ -109,7 +109,7 @@ export class Shell {
       socketListeners.delete(socketId);
       socketCloseListeners.delete(socketId);
     });
-    const cwd = this._connections[0] ? this._connections[0].cwd : localStorage.getItem('cwd') || '';
+    const cwd = this._connections[0] ? this._connections[0].cwd : await host.sendMessage({ method: 'loadItem', params: { key: 'cwd' }}) || '';
     const core: ConnectionCore = {
       send(message) {
         host.notify({method: 'sendMessageToWebSocket', params: {socketId, message}});
@@ -453,7 +453,7 @@ export class Shell {
     connection.on('Shell.cwdChanged', message => {
       connection.cwd = message.cwd;
       if (this._connections[0] === connection)
-        localStorage.setItem('cwd', message.cwd);
+        host.notify({ method: 'saveItem', params: { key: 'cwd', value: message.cwd}});
     });
     connection.on('Shell.notify', message => {
       const {method, params} = message.payload;
