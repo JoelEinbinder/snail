@@ -989,7 +989,10 @@ export class Shell {
           },
           urlForIframe: this._urlForIframeForConncetion.get(this.connection)!,
           addItem: (item, focus) => {
-            items.push(item);
+            if (signal.aborted)
+              item.dispose();
+            else
+              items.push(item);
           }
         });
         const promises: Promise<any>[] = [];
@@ -1059,6 +1062,8 @@ export class Shell {
       render: () => element,
       dispose: () => {
         abortController?.abort();
+        clearBelowPrompt();
+        belowPromptItems = [];
         commandPrefix.dispose();
         element.remove();
       },

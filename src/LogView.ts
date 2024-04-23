@@ -344,6 +344,9 @@ export class LogView implements Block, ShellDelegate, Findable {
       callback: async () => {
         const done = startAyncWork('kill process');
         // TODO do this in the shell and preserve the log
+        for (const item of this._log)
+          item.dispose();
+        this._prompt?.dispose();
         this.blockDelegate.replaceWith(new Placeholder('killed'));
         delete this.blockDelegate;
         await this._shell.kill();

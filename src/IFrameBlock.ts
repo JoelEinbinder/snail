@@ -114,6 +114,7 @@ export class IFrameBlock implements LogItem {
   // When the window blurs, our iframe or browserview might have focus.
   // Update the shortcuts to make sure they come back to us from the web content.
   private _onWindowBlur = () => this._updateShortcuts();
+  private _doneLoading: () => void;
   constructor(
     data: string,
     delegate: IFrameBlockDelegate,
@@ -325,10 +326,12 @@ export class IFrameBlock implements LogItem {
   }
 
   private _resetReadyPromise() {
+    this._doneLoading?.();
     this.readyPromise = new Promise(resolve => {
       this._readyCallback = resolve;
     });
-    this.readyPromise.then(startAyncWork('iframe loading'));
+    this._doneLoading = startAyncWork('iframe loading');
+    this.readyPromise.then(this._doneLoading);
   }
   private setIsFullscreen(isFullscreen: boolean) {
     this._isFullscreen = isFullscreen;
@@ -349,6 +352,7 @@ export class IFrameBlock implements LogItem {
     this._cleanupAsyncWorkIfNeeded();
   }
   _cleanupAsyncWorkIfNeeded() {
+    this._doneLoading?.();
     for (const finish of this._finishWorks.values())
       finish();
     this._finishWorks.clear();
@@ -400,8 +404,8 @@ export class IFrameBlock implements LogItem {
 
   async refresh() {
     const cachedMessages = [...this._cachedMessages];
-    this._resetReadyPromise();
     this._cleanupAsyncWorkIfNeeded();
+    this._resetReadyPromise();
     this._webContentView.refresh();
     await this.readyPromise;
     for (const message of cachedMessages)
