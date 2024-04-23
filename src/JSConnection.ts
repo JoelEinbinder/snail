@@ -1,5 +1,5 @@
 import {Protocol} from './protocol';
-import { RPC } from '../slug/protocol/RPC-ts';
+import { RPC, Transport } from '../slug/protocol/RPC-ts';
 
 type ExtraServerMethods = {
   'Shell.daemonStatus': { isDaemon: boolean };
@@ -33,6 +33,8 @@ export type ExtraClientMethods = {
   'Shell.providePassword': (params: { id: number, password: string }) => void;
 
   'Shell.kill': () => void;
+
+  'Protocol.abort': (params: { id: number }) => void;
 }
 
 type ClientMethods = {
@@ -40,4 +42,7 @@ type ClientMethods = {
 } & ExtraClientMethods;
 
 export class JSConnection extends RPC<ClientMethods, ServerMethods> {
+  constructor(transport: Transport) {
+    super(transport, id => this.send('Protocol.abort', {id}));
+  }
 }

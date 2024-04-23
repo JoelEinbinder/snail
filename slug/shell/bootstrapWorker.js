@@ -44,7 +44,7 @@ const passwordCallbacks = new Map();
 /** @type {Map<number, import('../protocol/ProtocolProxy').ProtocolProxy>} */
 const subshells = new Map();
 /** @typedef {import('../../src/JSConnection').ExtraClientMethods} ShellHandler */
-/** @type {{[key in keyof ShellHandler]: (...args: Parameters<ShellHandler[key]>) => (Promise<ReturnType<ShellHandler[key]>>)}} */
+/** @type {{[key in keyof ShellHandler]: (params: Parameters<ShellHandler[key]>[0], signal: AbortSignal) => (Promise<ReturnType<ShellHandler[key]>>)}} */
 const handler = {
   'Shell.setIsDaemon': async (params) => {
     isDaemon = !!params.isDaemon;
@@ -149,9 +149,15 @@ const handler = {
     maybeExit(); // can never actually exit here because the connection is still open or we haven't been witnessed
     return result;
   },
-  'Shell.previewCommand': async ({command}) => {
+  'Shell.previewCommand': async ({command}, signal) => {
     const previewToken = ++lastPreviewToken;
     const notifications = [];
+    const abort = () => send('Runtime.evaluate', {
+      expression: `global._abortPty(${JSON.stringify(previewToken)})`,
+      returnByValue: true,
+      generatePreview: false,
+    }).catch(e => e);
+    signal.addEventListener('abort', abort);
     previewResults.set(previewToken, notifications);
     const result = await send('Runtime.evaluate', {
       expression: `await global.pty(${JSON.stringify(command)}, ${JSON.stringify(previewToken)})`,
@@ -161,6 +167,7 @@ const handler = {
       replMode: true,
       allowUnsafeEvalBlockedByCSP: true,
     });
+    signal.removeEventListener('abort', abort);
     previewResults.delete(previewToken);
     return {result, notifications};
   },
@@ -255,6 +262,9 @@ const handler = {
   'Shell.kill': async () => {
     process.exit(0);
   },
+  'Protocol.abort': async(params) => {
+    abortControllers.get(transport)?.get(params.id)?.abort();
+  },
   // @ts-ignore
   __proto__: null,
 };
@@ -264,9 +274,18 @@ function clearStoredMessages() {
   shellState.clear();
 }
 
+/** @type {WeakMap<PipeTransport, Map<number, AbortController>>} */
+const abortControllers = new WeakMap();
+
 async function dispatchToHandler(message, replyTransport) {
+  const abort = new AbortController();
+  if (!abortControllers.has(transport))
+    abortControllers.set(transport, new Map());
+  if ('id' in message) {
+    abortControllers.get(transport).set(message.id, abort);
+  }
   try {
-    const result = await handler[message.method](message.params);
+    const result = await handler[message.method](message.params, abort.signal);
     if (replyTransport !== transport)
       return;
     if ('id' in message)
@@ -277,6 +296,8 @@ async function dispatchToHandler(message, replyTransport) {
     if ('id' in message)
       transport.send({id: message.id, error: {message: String(e.stack)}});
   }
+  if ('id' in message)
+    abortControllers.get(transport).delete(message.id);
 }
 /** @type {PipeTransport|null} */
 let transport = null;

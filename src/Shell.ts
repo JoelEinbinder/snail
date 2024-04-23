@@ -938,7 +938,7 @@ export class Shell {
     const belowPrompt = document.createElement('div');
     belowPrompt.classList.add('below-prompt');
     element.appendChild(belowPrompt);
-    let lock = {};
+    let abortController = new AbortController();
     let lastPreviewValue = '';
     let belowPromptItems = [];
     function clearBelowPrompt() {
@@ -955,20 +955,19 @@ export class Shell {
         return;
       if (value === lastPreviewValue)
         return;
-      const mylock = {};
-      lock = mylock;
-      if (lock !== mylock)
-        return;
+      abortController?.abort();
+      abortController = new AbortController();
+      const signal = abortController.signal;
       lastPreviewValue = value;
       const isShellLike = await this._isShellLikeCode(value);
       if (isShellLike) {
-        if (lock !== mylock)
+        if (signal.aborted)
           return;
         const {result, notifications} = await this.connection.send('Shell.previewCommand', {
           command: value,
-        });
+        }, signal);
         await new Promise(requestAnimationFrame);
-        if (lock !== mylock)
+        if (signal.aborted)
           return;
         if (result.result?.type !== 'string' || result.result.value !== 'this is the secret secret string:0') {
           clearBelowPrompt();
@@ -1023,7 +1022,7 @@ export class Shell {
       const code = preprocessForJS(await this._transformCode(value));
       // throttle a bit
       await new Promise(requestAnimationFrame);
-      if (lock !== mylock)
+      if (signal.aborted)
         return;
       if (!code.trim()) {
         clearBelowPrompt();
@@ -1040,7 +1039,7 @@ export class Shell {
         timeout: 1000,
         objectGroup: 'eager-eval',
       });
-      if (lock !== mylock)
+      if (signal.aborted)
         return;
       clearBelowPrompt();
       void this.connection.send('Runtime.releaseObjectGroup', {
@@ -1059,6 +1058,7 @@ export class Shell {
     return {
       render: () => element,
       dispose: () => {
+        abortController?.abort();
         commandPrefix.dispose();
         element.remove();
       },

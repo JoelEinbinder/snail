@@ -101,11 +101,32 @@ global.bootstrap = (args) => {
     return myshell;
   }
 
+  /** @type {Map<number, AbortController>} */
+  const abortControllers = new Map();
+  /**
+   * @param {string} command
+   * @param {number=} previewToken
+   * @return {Promise<string>}
+   */
   global.pty = async function(command, previewToken) {
+    /** @type {AbortSignal|null} */
+    let abortSignal = null;
+    if (previewToken) {
+      const controller = new AbortController();
+      abortSignal = controller.signal;
+      abortControllers.set(previewToken, controller);
+    }
     const magicToken = String(Math.random());
     const magicString = `\x1B[JOELMAGIC${magicToken}]\r\n`;
     const {shell, connection} = await claimFreeShell();
-    
+    if (abortSignal?.aborted) {
+      shell.kill();
+      return 'this is the secret secret string:0';
+    }
+    const abort = () => {
+      shell.kill();
+    }
+    abortSignal?.addEventListener('abort', abort);
     const connectionDonePromise = new Promise(x => {
       connection.onmessage = data => {
         delete connection.onmessage;
@@ -156,6 +177,9 @@ global.bootstrap = (args) => {
       connectionDonePromise,
     ]);
     await waitForDonePromise;
+    abortSignal?.removeEventListener('abort', abort);
+    if (previewToken)
+      abortControllers.delete(previewToken);
     shells.delete(id);
     if (freeShell) {
       if (!returnValue.died)
@@ -211,6 +235,14 @@ global.bootstrap = (args) => {
     notify('endTerminal', {id, returnValue, previewToken});
     return 'this is the secret secret string:' + returnValue.exitCode;
   }
+
+  /**
+   * @param {number} previewToken
+   */
+  global._abortPty = function(previewToken) {
+    abortControllers.get(previewToken)?.abort();
+  };
+
   const handler = {
     input({id, data}) {
       const shell = shells.get(id);

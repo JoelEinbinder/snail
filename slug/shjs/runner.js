@@ -470,6 +470,9 @@ function runBashAndExtractEnvironment(command, arg, stdout, stderr) {
 
 /** @type {Object<string, string[]>} */
 const aliases = {
+    'grep': ['grep', '--color=auto', '--exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'],
+    'egrep': ['egrep', '--color=auto', '--exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'],
+    'fgrep': ['fgrep', '--color=auto', '--exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'],
 }
 
 function setAlias(name, value) {
@@ -564,25 +567,72 @@ function computeReplacement(replacement) {
     throw new Error(`Unknown replacement: ${replacement}`);
 }
 
-const safeExecutables = new Set([
-    // side effect free unix stuff
-    'cat',
-    'ls',
-    'pwd',
-    'echo',
-    'diff',
-    'head',
-    'tail',
-    'ps',
-    'who',
-    'whoami',
-    'id',
-    'date',
+const safeExecutables = buildSafeExecutables([
+    {name: 'cat'},
+    {name: 'ls'},
+    {name: 'pwd'},
+    {name: 'echo'},
+    {name: 'diff'},
+    {name: 'head'},
+    {name: 'tail'},
+    {name: 'ps'},
+    {name: 'who'},
+    {name: 'whoami'},
+    {name: 'id'},
+    {name: 'date'},
+
+    // possibly slow
+    {name: 'grep'},
+    {name: 'du'},
+    {name: 'sleep'},
+    {name: 'find'},
+    {name: 'wc'},
+    {name: 'sort'},
+    {name: 'uniq'},
+    {name: 'cut'},
+    {name: 'tr'},
+    {name: 'sed'},
+    {name: 'awk'},
+
+
+
+    // only some args
+    {name: 'git', arg: 'status'},
+    {name: 'git', arg: '--help'},
+    {name: 'python', arg: '-V'},
+    {name: 'python', arg: '--version'},
+    {name: 'python', arg: '--help'},
+    {name: 'python3', arg: '-V'},
+    {name: 'python3', arg: '--version'},
+    {name: 'python3', arg: '--help'},
+    {name: 'node', arg: '--version'},
+    {name: 'node', arg: '-v'},
+    {name: 'node', arg: '--help'},
+    {name: 'npm', arg: '--version'},
+    {name: 'npm', arg: '-v'},
 
     // snail apps
-    'show',
-    'xkcd',
-]);
+    {name: 'show'},
+    {name: 'xkcd'},
+])
+
+/**
+ * @param {{name: string, arg?: string}[]} descriptor
+ * @return {Map<string, { args: Set<string|undefined>}>}
+ */
+function buildSafeExecutables(descriptor) {
+    const map = new Map();
+    for (const {name, arg} of descriptor) {
+        let entry = map.get(name);
+        if (!entry) {
+            entry = {args: new Set()};
+            map.set(name, entry);
+        }
+        entry.args.add(arg);
+    }
+    return map;
+
+}
 
 /**
  * @param {import('./ast').Expression} expression
@@ -604,8 +654,13 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                 throw new UserError('side effect');
             for (const {name, value} of expression.assignments || [])
                 env[name] = processWord(value)[0];
-            if (noSideEffects && !safeExecutables.has(executable))
-                throw new UserError('side effect');
+            if (noSideEffects) {
+                const entry = safeExecutables.get(executable);
+                if (!entry)
+                    throw new UserError('side effect');
+                if (!entry.args.has(undefined) && !entry.args.has(args[0]))
+                    throw new UserError('side effect');
+            }
             if (executable in builtins) {
                 const closePromise = builtins[executable](args, stdout, stderr, stdin, env);
                 if (closePromise !== 'pass') {
@@ -672,8 +727,6 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
             return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
             }
         } else if ('pipe' in expression) {
-            if (noSideEffects)
-                throw new UserError('side effect');
             const pipe = execute(expression.pipe, noSideEffects, stdout, stderr);
             const main = execute(expression.main, noSideEffects, pipe.stdin, stderr, stdin);
             const closePromise = main.closePromise.then(() => {
@@ -682,8 +735,6 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
             });
             return {stdin: main.stdin, kill: main.kill, closePromise};
         } else if ('left' in expression) {
-            if (noSideEffects)
-                throw new UserError('side effect');
             const writableStdin = new Writable({
                 write(chunk, encoding, callback) {
                     active.stdin.write(chunk, encoding, callback);

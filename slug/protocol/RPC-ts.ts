@@ -5,7 +5,10 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
   private  _cwd: string;
   private _cwdHistory: string[] = [];
   public env: {[key: string]: string} = {};
-  constructor(private _transport: Transport) {
+  constructor(
+    private _transport: Transport,
+    private _abortFn?: (id: number) => void,
+  ) {
     this._transport.onmessage = message => {
       if ('id' in message) {
         const callback = this._callbacks.get(message.id);
@@ -33,12 +36,21 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
     if (listeners)
       listeners.delete(listener);
   }
-  async send<Method extends keyof ClientMethods>(method: Method, params: Parameters<ClientMethods[Method]>[0]): Promise<ReturnType<ClientMethods[Method]>> {
+  async send<Method extends keyof ClientMethods>(
+    method: Method,
+    params: Parameters<ClientMethods[Method]>[0],
+    abortSignal?: AbortSignal,
+  ): Promise<ReturnType<ClientMethods[Method]>> {
+    if (abortSignal?.aborted)
+      return;
+    const abort = () => this._abortFn?.(id);
     const id = ++this._id;
     const message = {id, method, params} as {id: number, method: string, params: any};
     const promise = new Promise<any>(x => this._callbacks.set(id, x));
+    abortSignal?.addEventListener('abort', abort);
     this._transport.send(message);
     const data = await promise;
+    abortSignal?.removeEventListener('abort', abort);
     if (data.error)
       throw new Error(String(method) + ': ' + data.error.message);
     return data.result;
