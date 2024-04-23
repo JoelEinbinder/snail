@@ -146,12 +146,12 @@ export class Input extends Emitter {
   }
 
   _selectionChanged(event: { selections: TextRange[]; previousSelections: TextRange[]; }) {
-    var mainSelection = event.selections[0];
+    const firstSelection = [...event.selections].sort(compareRange)[0];
     this._bufferRange = {
-      start: { line: mainSelection.start.line, column: 0 },
+      start: { line: firstSelection.start.line, column: 0 },
       end: {
-        line: mainSelection.end.line,
-        column: this._model.line(mainSelection.end.line).length
+        line: firstSelection.end.line,
+        column: this._model.line(firstSelection.end.line).length
       }
     };
 
@@ -166,8 +166,8 @@ export class Input extends Emitter {
     }
     this._textarea.value = this._buffer;
     this._textarea.setSelectionRange(
-      mainSelection.start.column - this._bufferRange.start.column,
-      this._buffer.length - this._bufferRange.end.column + mainSelection.end.column
+      firstSelection.start.column - this._bufferRange.start.column,
+      this._buffer.length - this._bufferRange.end.column + firstSelection.end.column
     );
   }
 
@@ -234,7 +234,7 @@ export class Input extends Emitter {
       i = j;
     }
     const text = value.substring(i, j + 1);
-    if (compareRange({ start, end }, this._model.selections[0]) !== 0) {
+    if (this._model.selections.every(selection => compareRange({ start, end }, selection) !== 0)) {
       const loc = this._model.replaceRange(text, { start, end });
       this._model.setSelections([{ start: loc, end: loc }]);
       this._renderer.scrollLocationIntoView(loc);

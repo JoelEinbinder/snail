@@ -1,6 +1,7 @@
 import { Emitter } from "./emitter";
 import {
   compareLocation, compareRange, copyLocation, isSelectionCollapsed,
+  TextRange,
   type Loc, type Model
 } from "./model";
 import type { Renderer } from './renderer';
@@ -187,6 +188,19 @@ export class SelectionManger extends Emitter {
     this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, { extend: false, byWord: true }), 'moveWordRight', 'Ctrl+ArrowRight', 'Alt+ArrowRight');
     this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, -1, { extend: true, byWord: true }), 'extendWordLeft', 'Shift+Ctrl+ArrowLeft', 'Alt+Shift+ArrowLeft');
     this._commandManager.addCommand(this.moveCursorHorizontal.bind(this, 1, { extend: true, byWord: true }), 'extendWordRight', 'Shift+Ctrl+ArrowRight', 'Alt+Shift+ArrowRight');
+    this._commandManager.addCommand(
+      () => {
+        if (this._model.selections.length === 1 && isSelectionCollapsed(this._model.selections[0]))
+          return false;
+        this._model.setSelections([{
+          start: this._model.selections[0].end,
+          end: this._model.selections[0].end,
+        }]);
+        return true;
+      },
+      'collapseSelection',
+      'Escape',
+    );
   }
 
   _contentMouseDown(event: MouseEvent) {
@@ -337,48 +351,50 @@ export class SelectionManger extends Emitter {
   }
 
   moveCursorHorizontal(direction: 1 | -1, {extend, byWord}: {extend: boolean, byWord?: boolean}): boolean {
-    var selection = this._model.selections[0];
-    var modifyStart = this._startIsHead(direction, extend);
-
-    var point = modifyStart ? copyLocation(selection.start) : copyLocation(selection.end);
-    var { text } = this._model.line(point.line);
-    if (isSelectionCollapsed(selection) || extend) {
-      if (byWord) {
-        let seenWordChar = false;
-        point.column += direction;
-        while (point.column >= 0 && point.column < text.length) {
-          const isWordChar = /[A-Za-z0-9_]/.test(text[point.column]);
-          if (!isWordChar) {
-            if (seenWordChar) {
-              if (direction === -1)
-                point.column += 1;
-              break;
+    const modifyStart = this._startIsHead(direction, extend);
+    const points: Loc[] = [];
+    for (const selection of this._model.selections) {
+      var point = modifyStart ? copyLocation(selection.start) : copyLocation(selection.end);
+      var { text } = this._model.line(point.line);
+      if (isSelectionCollapsed(selection) || extend) {
+        if (byWord) {
+          let seenWordChar = false;
+          point.column += direction;
+          while (point.column >= 0 && point.column < text.length) {
+            const isWordChar = /[A-Za-z0-9_]/.test(text[point.column]);
+            if (!isWordChar) {
+              if (seenWordChar) {
+                if (direction === -1)
+                  point.column += 1;
+                break;
+              }
+            } else {
+              seenWordChar = true;
             }
-          } else {
-            seenWordChar = true;
+            point.column += direction;
           }
+        } else {
           point.column += direction;
         }
-      } else {
-        point.column += direction;
       }
-    }
-    if (point.column < 0) {
-      point.line--;
-      if (point.line < 0) {
-        point.line = 0;
-        point.column = 0;
-      } else point.column = this._model.line(point.line).text.length;
-    } else if (point.column > text.length) {
-      point.line++;
-      if (point.line >= this._model.lineCount()) {
-        point.line = this._model.lineCount() - 1;
-        point.column = text.length;
-      } else {
-        point.column = 0;
+      if (point.column < 0) {
+        point.line--;
+        if (point.line < 0) {
+          point.line = 0;
+          point.column = 0;
+        } else point.column = this._model.line(point.line).text.length;
+      } else if (point.column > text.length) {
+        point.line++;
+        if (point.line >= this._model.lineCount()) {
+          point.line = this._model.lineCount() - 1;
+          point.column = text.length;
+        } else {
+          point.column = 0;
+        }
       }
+      points.push(point);
     }
-    return this.moveCursor(point, extend);
+    return this.moveCursors(points, extend);
   }
 
   moveCursorVertical(direction: 1 | -1, extend: boolean): boolean {
@@ -414,6 +430,33 @@ export class SelectionManger extends Emitter {
     this._anchor = anchor;
     this._desiredLocation = point;
     this._renderer.scrollLocationIntoView(point);
+    this._renderer.highlightWordOccurrences();
+    return true;
+  }
+
+  moveCursors(points: Loc[], extend?: boolean): boolean {
+    if (points.length !== this._model.selections.length)
+      throw new Error('points.length !== this._model.selections.length');
+    let moved = false;
+    const newSelections: TextRange[] = [];
+    for (let i = 0; i < points.length; i++) {
+      const point = points[i];
+      const selection = this._model.selections[i];
+      const anchor = extend ? this._anchor || point : point;
+      const newSelection = compareLocation(point, anchor) < 0 ?
+        { start: point, end: anchor } :
+        { start: anchor, end: point };
+      if (compareRange(selection, newSelection) !== 0) moved = true;
+      newSelections.push(newSelection);
+      if (i === 0) {
+        this._anchor = anchor;
+        this._desiredLocation = point;
+      }
+    }
+    if (!moved)
+      return false;
+    this._model.setSelections(newSelections);
+    this._renderer.scrollLocationIntoView(this._desiredLocation!);
     this._renderer.highlightWordOccurrences();
     return true;
   }

@@ -30,8 +30,16 @@ export class Model extends Emitter<{
     return this._lines.length;
   }
 
-  setSelections(selections: TextRange[]) {
+  setSelections(rawSelections: TextRange[]) {
     const previousSelections = this._selections;
+    // normalize selections
+    const seenSelections = new Set<string>();
+    const selections = rawSelections.filter(selection => {
+      const hash = selection.start.line + ':' + selection.start.column + ':' + selection.end.line + ':' + selection.end.column;
+      if (seenSelections.has(hash)) return false;
+      seenSelections.add(hash);
+      return true;
+    });
     this._selections = selections;
     this.emit('selection-changed', {
       selections,

@@ -146,7 +146,7 @@ test('should select by word', async ({ editor }) => {
     'these are my words\n' +
     '^                  ');
 });
-test.fixme('should mutli select and edit and move', async ({ editor }) => {
+test('should mutli select and edit and move', async ({ editor }) => {
   const selectWord = os.platform() === 'darwin' ? 'Meta+D' : 'Control+D';
   editor.setValue('a cat and a cat saw a cat');
   await editor.setSelection({ start: {line: 0, column: 2}, end: {line: 0, column: 2}});
@@ -173,6 +173,71 @@ test.fixme('should mutli select and edit and move', async ({ editor }) => {
   expect(await editor.serialize()).toEqual(
     'a dog and a dog saw a dog\n' +
     '    ^         ^         ^ ');
+});
+
+test('should multi select backwards', async ({ editor }) => {
+  const selectWord = os.platform() === 'darwin' ? 'Meta+D' : 'Control+D';
+  editor.setValue('cat cat');
+  await editor.setSelection({ start: {line: 0, column: 6}, end: {line: 0, column: 6}});
+  expect(await editor.serialize()).toEqual(
+    'cat cat\n' +
+    '      ^ ');
+  await editor.page.keyboard.press(selectWord);
+  expect(await editor.serialize()).toEqual(
+    'cat cat\n' +
+    '    [--]');
+  await editor.page.keyboard.press(selectWord);
+  expect(await editor.serialize()).toEqual(
+    'cat cat\n' +
+    '[--][--]');
+  await editor.page.keyboard.type('dog');
+  expect(await editor.serialize()).toEqual(
+    'dog dog\n' +
+    '   ^   ^');
+});
+
+test('should multi select wrap around', async ({ editor }) => {
+  const selectWord = os.platform() === 'darwin' ? 'Meta+D' : 'Control+D';
+  editor.setValue('cat cat cat');
+  await editor.setSelection({ start: {line: 0, column: 9}, end: {line: 0, column: 9}});
+  await editor.page.keyboard.press(selectWord);
+  await editor.page.keyboard.press(selectWord);
+  expect(await editor.serialize()).toEqual(
+    'cat cat cat\n' +
+    '[--]    [--]');
+  await editor.page.keyboard.press(selectWord);
+  expect(await editor.serialize()).toEqual(
+    'cat cat cat\n' +
+    '[--][--][--]');
+  await editor.page.keyboard.press('Escape');
+  expect(await editor.serialize()).toEqual(
+    'cat cat cat\n' +
+    '           ^');
+});
+
+test('should merge identical selections', async ({ editor }) => {
+  const selectWord = os.platform() === 'darwin' ? 'Meta+D' : 'Control+D';
+  editor.setValue('cat cat');
+  await editor.setSelection({ start: {line: 0, column: 0}, end: {line: 0, column: 0}});
+  await editor.page.keyboard.press(selectWord);
+  await editor.page.keyboard.press(selectWord);
+  await editor.page.keyboard.press(selectWord);
+  expect(await editor.serialize()).toEqual(
+    'cat cat\n' +
+    '[--][--]');
+  await editor.page.keyboard.press('d');
+  expect(await editor.serialize()).toEqual(
+    'd d\n' +
+    ' ^ ^');
+  await editor.page.keyboard.press('Backspace');
+  await editor.page.keyboard.press('Backspace');
+  expect(await editor.serialize()).toEqual(
+    '\n' +
+    '^');
+  await editor.page.keyboard.press('f');
+  expect(await editor.serialize()).toEqual(
+    'f\n' +
+    ' ^');
 });
 test.describe('word wrap', () => {
   test.beforeEach(async ({ editor }) => {
