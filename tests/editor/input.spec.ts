@@ -43,7 +43,7 @@ test('input events come in correctly', async ({ shell }) => {
   });
   await shell.kill();
 });
-test.fixme('should type correctly after a big paste', async ({ shell }) => {
+test('should type correctly after a big paste', async ({ shell }) => {
   await shell.runCommand('kang a.txt');
   expect(await shell.serialize()).toEqual({
     content: '',
@@ -53,7 +53,7 @@ test.fixme('should type correctly after a big paste', async ({ shell }) => {
   await shell.page.keyboard.insertText(longText);
   await shell.page.keyboard.type(`'`);
   expect(await shell.serialize()).toEqual({
-    content: longText,
+    content: longText + `'`,
     title: 'a.txt*',
   });
   await shell.kill();

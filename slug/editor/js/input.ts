@@ -148,10 +148,10 @@ export class Input extends Emitter {
   _selectionChanged(event: { selections: TextRange[]; previousSelections: TextRange[]; }) {
     const firstSelection = [...event.selections].sort(compareRange)[0];
     this._bufferRange = {
-      start: { line: firstSelection.start.line, column: 0 },
+      start: { line: firstSelection.start.line, column: Math.max(0, firstSelection.start.column - 400) },
       end: {
         line: firstSelection.end.line,
-        column: this._model.line(firstSelection.end.line).length
+        column: Math.min(firstSelection.end.column + 400, this._model.line(firstSelection.end.line).length)
       }
     };
 
