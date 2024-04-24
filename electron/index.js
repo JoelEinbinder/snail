@@ -1,8 +1,10 @@
+reportTime('electron top');
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, session } = require('electron');
 const { handler, proxies } = require('../host');
 const path = require('path');
 const os = require('os');
+reportTime('electron requires');
 const headless = process.argv.includes('--test-headless');
 let windowNumber = 0;
 if (headless)
@@ -111,6 +113,7 @@ protocol.registerSchemesAsPrivileged([
   }
 ]);
 app.whenReady().then(() => {
+  reportTime('electon ready');
   protocol.registerBufferProtocol('snail', async (request, callback) => {
     try {
       const {host, search, pathname} = new URL('http://' + request.url.substring('snail:'.length));
@@ -142,6 +145,7 @@ app.whenReady().then(() => {
 /** @type {Set<BrowserWindow>} */
 const popups = new Set();
 function makeWindow() {
+  reportTime('start make window');
   const focusedWindow = [...windows].find(x => {
     try {
       // sometimes the close event is late and this throws
@@ -205,6 +209,7 @@ function makeWindow() {
     win.loadFile(path.join(__dirname, 'index.html'));
   win.on('closed', () => windows.delete(win));
   windows.add(win);
+  reportTime('make window');
   if (!focusedWindow)
     return;
   focusedWindow.addTabbedWindow?.(win);
@@ -431,7 +436,11 @@ ipcMain.handle('message', async (event, ...args) => {
   if (!overrides.hasOwnProperty(method))
     throw new Error('command not found');
   try {
+    if (id)
+      reportTime('start ' + method);
     const result = await overrides[method](params, clientForSender(event.sender), event.sender);
+    if (id)
+      reportTime('end ' + method)
     if (id)
       event.sender.send('message', {result, id});
   } catch (error) {
@@ -483,6 +492,11 @@ app.on('activate', event => {
   makeWindow();
 });
 
+
+function reportTime(name) {
+  if (parseInt(process.env.SNAIL_TIME_STARTUP))
+    console.log(`Time: ${name}`);
+}
 
 // For tests
 global.makeWindow = makeWindow;

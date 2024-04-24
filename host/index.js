@@ -197,7 +197,11 @@ const handler = {
     if (!getResult || !getResult.value)
       return undefined;
     return JSON.parse(getResult.value);
-  }
+  },
+  reportTime({ name }) {
+    if (parseInt(process.env.SNAIL_TIME_STARTUP))
+      console.log(`Time: ${name}`);
+  },
 }
 
 let database;

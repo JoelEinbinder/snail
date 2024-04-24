@@ -83,6 +83,7 @@ export class Shell {
   private _leftoverStdin = '';
   constructor(private _delegate: ShellDelegate) {
     console.time('create shell');
+    host.notify({ method: 'reportTime', params: {name: 'start create shell' } });
     this._setupUnlock = this._lockPrompt('setupInitialConnection');
     this._connectionNameElement.classList.add('connection-name');
     this._connectionNameEvent.on(name => {
@@ -567,6 +568,7 @@ export class Shell {
       await this.runCommand('reconnect --list');
     console.timeEnd('create shell');
     this._setupUnlock(); // prompt starts locked
+    host.notify({ method: 'reportTime', params: {name: 'create shell' } });
   }
 
   private get connection() {
