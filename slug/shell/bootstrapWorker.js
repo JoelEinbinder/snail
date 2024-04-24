@@ -265,6 +265,12 @@ const handler = {
   'Protocol.abort': async(params) => {
     abortControllers.get(transport)?.get(params.id)?.abort();
   },
+  'Shell.setCwd': async({cwd}) => {
+    await send('Runtime.evaluate', {
+      expression: `process.chdir(${JSON.stringify(cwd)})`,
+      returnByValue: true,
+    });
+  },
   // @ts-ignore
   __proto__: null,
 };

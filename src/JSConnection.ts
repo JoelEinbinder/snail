@@ -25,6 +25,7 @@ export type ExtraClientMethods = {
   'Shell.runCommand': (params: {command: string, expression: string}) => Protocol.CommandReturnValues['Runtime.evaluate'];
   'Shell.previewCommand': (params: {command: string}) => { result: Protocol.CommandReturnValues['Runtime.evaluate'], notifications: any[]};
   'Shell.restore': () => Protocol.CommandReturnValues['Runtime.evaluate']|null;
+  'Shell.setCwd': (params: {cwd: string}) => void; // this can be run before Shell.enable
 
   'Shell.resolveFileForIframe': (params: {shellIds: number[], filePath: string, search: string, headers: Record<string, string>}) => void;
   'Shell.createSubshell': (params: { sshAddress: string, sshArgs: string[], env: Record<string, string> } | { socketPath: string }) => ({id: number}|{exitCode: number});

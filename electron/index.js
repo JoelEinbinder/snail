@@ -1,7 +1,7 @@
 reportTime('electron top');
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, session } = require('electron');
-const { handler, proxies } = require('../host');
+const { handler, proxies, preloadJSShell } = require('../host');
 const path = require('path');
 const os = require('os');
 reportTime('electron requires');
@@ -146,6 +146,7 @@ app.whenReady().then(() => {
 const popups = new Set();
 function makeWindow() {
   reportTime('start make window');
+  preloadJSShell();
   const focusedWindow = [...windows].find(x => {
     try {
       // sometimes the close event is late and this throws
