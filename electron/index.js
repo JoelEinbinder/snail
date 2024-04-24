@@ -14,7 +14,7 @@ if (process.env.SNAIL_TEST_USER_DATA_DIR)
 app.setName('snail');
 const isDevMode = process.argv.includes('--dev-mode');
 
-if (isDevMode) {
+if (isDevMode && os.platform() == 'darwin') {
   const nativeImage = require('electron').nativeImage
   const image = nativeImage.createFromPath(path.join(__dirname, '..', 'icon', 'icon.png'))
   app.dock.setIcon(image);
