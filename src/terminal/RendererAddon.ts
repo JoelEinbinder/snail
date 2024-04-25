@@ -212,7 +212,15 @@ class Renderer implements IRenderer {
     if (!this._canvas.height)
       return;
     const lastScrollOffset = this._scrollOffset;
-    this._scrollOffset = Math.max(-this._core.screenElement.getBoundingClientRect().top, 0);
+    const scrollingAncestor = (element: HTMLElement): HTMLElement|null => {
+      if (!element)
+        return element;
+      if (element.classList.contains('log-view'))
+        return element;
+      return scrollingAncestor(element.parentElement);
+    };
+    const scrollerOffset = scrollingAncestor(this._core.screenElement)?.getBoundingClientRect().top || 0;
+    this._scrollOffset = Math.max(-this._core.screenElement.getBoundingClientRect().top + scrollerOffset, 0);
     this._canvas.style.top = `${this._scrollOffset}px`;
     this._textLayer.translate(0, (this._scrollOffset - lastScrollOffset) * getDPR());
     this._textLayer.refresh();
