@@ -63,14 +63,16 @@ global.bootstrap = (args) => {
       const {socketPath, uuid} = await getServerUrl();
       /** @type {Promise<import('../protocol/pipeTransport').PipeTransport>|import('../protocol/pipeTransport').PipeTransport} */
       const connectionPromise = new Promise(x => resolveShellConnection.set(id, x));
+      // node won't read these later from the process.env, so we need to set them now
+      /** @type {{[key: string]: string}} */
+      const env = {};
+      // somehow undefined will get stringified to 'undefined' here
+      for (const key of ['TMP', 'TEMP', 'TMPDIR', 'NODE_PATH']) {
+        if (process.env[key])
+          env[key] = process.env[key];
+      }
       const shell = require('node-pty').spawn(process.execPath, [require('path').join(__dirname, '..', 'shjs', 'wrapper.js'), socketPath, uuid, id], {
-        env: {
-          // node won't read these later from the process.env, so we need to set them now
-          TMP: process.env.TMP,
-          TEMP: process.env.TEMP,
-          TMPDIR: process.env.TMPDIR,
-          NODE_PATH: process.env.NODE_PATH,
-        },
+        env,
         rows,
         cols,
         cwd: process.cwd(),
