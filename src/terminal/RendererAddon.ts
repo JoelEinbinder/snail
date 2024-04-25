@@ -361,7 +361,7 @@ class Layer {
       return;
     if (this._translation.x || this._translation.y) {
       this._ctx.globalCompositeOperation = 'copy';
-      this._ctx.drawImage(this.canvas, -this._translation.x, -this._translation.y);
+      this._ctx.drawImage(this.canvas, -this._translation.x, -Math.round(this._translation.y));
       if (this._translation.x < 0) {
         this.invalidate({
           x: 0,
