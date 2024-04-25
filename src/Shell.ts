@@ -144,13 +144,14 @@ export class Shell {
     socketListeners.set(socketId, message => core.onmessage?.(message));
     return this._setupConnectionInner(core, args);
   }
-  _createTerminalHandler({connection, notify, urlForIframe, addItem, antiFlicker, shouldLockPrompt}: {
+  _createTerminalHandler({connection, notify, urlForIframe, addItem, antiFlicker, shouldLockPrompt, setTitle}: {
     connection: JSConnection,
     notify: (method: string, params: any) => Promise<void>,
     urlForIframe: (filePath: string) => Promise<string>,
     addItem: (item: LogItem, focus: boolean) => void;
     shouldLockPrompt: boolean,
     antiFlicker: AntiFlicker,
+    setTitle: (title: string) => void,
   }) {
     const terminals = new Map<number, {processor: TerminalDataProcessor, cleanup: () => Promise<void>}>();
     let myActiveItem: LogItem = null;
@@ -169,7 +170,7 @@ export class Shell {
         if (myActiveItem === this._activeItem.current)
           this._activeItem.dispatch(null);
         await cleanup();
-        this._delegate.setTitle('');
+        setTitle('');
       },
       startTerminal:({id}: {id: number}) => {
         if (terminals.has(id))
@@ -326,7 +327,7 @@ export class Shell {
             },
             size: this._size,
             antiFlicker,
-            setTitle: title => this._delegate.setTitle(title),
+            setTitle: title => setTitle(title),
           });
           activeTerminalBlock = terminalBlock;
           const onFullScreen = (value: boolean) => {
@@ -401,7 +402,8 @@ export class Shell {
         this.addItem(item);
         if (focus)
           this._activeItem.dispatch(item);
-      }
+      },
+      setTitle: title => this._delegate.setTitle(title),
     });
     const handler = {
       ...terminalHandler,
@@ -999,7 +1001,8 @@ export class Shell {
               item.dispose();
             else
               items.push(item);
-          }
+          },
+          setTitle: title => { },
         });
         const promises: Promise<any>[] = [];
         for (const {method, params} of notifications)
