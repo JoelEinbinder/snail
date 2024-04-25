@@ -73,6 +73,14 @@ if (useTabs) {
         });
     }
 }
+registerGlobalAction({
+    callback: async () => {
+        window.location.reload();
+    },
+    title: 'Reload Window',
+    id: 'window.reload',
+    shortcut: 'F5',
+});
 await connetionPromise;
 done();
 });
