@@ -159,9 +159,9 @@ export class Autocomplete {
             this.suggestionChanged.dispatch();
             return;
         }
-        const {anchor, suggestions, exact, preFiltered, cssTag} = completions;
+        const {anchor, suggestions, exact, preFiltered, cssTag, preSorted} = completions;
         const prefix = textBeforeCursor.slice(anchor);
-        const filtered = preFiltered ? suggestions : filterAndSortSuggestionsSubstringMode(suggestions, prefix);
+        const filtered = preFiltered ? suggestions : filterAndSortSuggestionsSubstringMode(suggestions, prefix, preSorted);
         if (!filtered.length) {
             this._suggestBox?.hide();
             this._suggestBox = null;
@@ -205,6 +205,7 @@ export type CompletionResult = {
     anchor: number,
     suggestions: Suggestion[],
     exact?: boolean,
+    preSorted?: boolean,
     preFiltered?: boolean,
     cssTag?: string,
 };
@@ -228,9 +229,14 @@ function filterAndSortSuggestions(suggestions: Suggestion[], prefix: string) {
     return filtered;
 }
 
-function filterAndSortSuggestionsSubstringMode(suggestions: Suggestion[], prefix: string) {
+function filterAndSortSuggestionsSubstringMode(suggestions: Suggestion[], prefix: string, preSorted?: boolean) {
     const lowerPrefix = prefix.toLowerCase();
     const filtered = suggestions.filter(s => s.text.toLowerCase().includes(lowerPrefix));
+    const indexes = new Map<Suggestion, number>();
+    if (preSorted) {
+        for (let i = 0; i < filtered.length; i++)
+            indexes.set(filtered[i], i);
+    }
     filtered.sort((a, b) => {
         const aStart = a.text.startsWith(prefix);
         const bStart = b.text.startsWith(prefix);
@@ -252,7 +258,9 @@ function filterAndSortSuggestionsSubstringMode(suggestions: Suggestion[], prefix
         const underscoreB = /^_*/.exec(b.text)[0].length;
         if (underscoresA !== underscoreB)
             return underscoresA - underscoreB;
-        return a.text.localeCompare(b.text);        
+        if (preSorted)
+            return indexes.get(a) - indexes.get(b);
+        return a.text.localeCompare(b.text);
     });
     return filtered;
 }

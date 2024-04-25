@@ -1,3 +1,4 @@
+import type { Suggestion } from "../autocomplete";
 import type { Shell } from "../Shell";
 import { registerCompleter } from "../shellCompleter";
 
@@ -8,16 +9,24 @@ registerCompleter('git', async (shell, line, abortSignal) => {
     const command = line.slice(4).split(' ')[0];
     const anchor = line.lastIndexOf(' ') + 1;
     if (command === 'checkout' || command === 'branch' || command === 'rebase' || command === 'merge') {
-      const branches = await branchNames(shell);
       return {
         anchor,
-        suggestions: branches.map(text => ({text})),
+        preSorted: true,
+        suggestions: await refNames(shell),
+      };
+    }
+    if (command === 'reset') {
+      return {
+        anchor,
+        preSorted: true,
+        suggestions: await resetTargets(shell),
       };
     }
     if (command === 'fetch') {
       const origins = await originNames(shell);
       return {
         anchor,
+        preSorted: true,
         suggestions: origins.map(text => ({text})),
       };
     }
@@ -26,6 +35,7 @@ registerCompleter('git', async (shell, line, abortSignal) => {
   
   return {
     anchor,
+    preSorted: true,
     suggestions: Object.entries(commands).map(([text, value]) => ({text: text + ' ', description: async () => value}))
   };
 });
@@ -188,12 +198,39 @@ const commands = {
   'stripspace':'filter out empty lines',
 };
 
-async function branchNames(shell: Shell) {
-  const branches = (await shell.cachedEvaluation(`git branch -a --format='%(refname:short)' | cat`)).split('\n').map(x => x.trim());
-  return branches;
+async function refNames(shell: Shell): Promise<Suggestion[]> {
+  const ref = (await shell.cachedEvaluation(`git for-each-ref --format='%(refname:short) %(contents:subject)' | cat`)).split('\n').map(x => x.trim());
+  const refs = ref.map(str => {
+    const index = str.indexOf(' ');
+    const text = str.slice(0, index);
+    const description = str.slice(index + 1);
+    return {text, description: async () => description };
+  });
+  const indexes = new Map<Suggestion, number>();
+  for (let i = 0; i < refs.length; i++)
+      indexes.set(refs[i], i);
+  return refs.sort((a, b) => {
+    const aIsMain = a.text.endsWith('/master') || a.text.endsWith('/main') || a.text === 'main' || a.text === 'master';
+    const bIsMain = b.text.endsWith('/master') || b.text.endsWith('/main') || b.text === 'main' || b.text === 'master';
+    if (aIsMain != bIsMain)
+      return aIsMain ? -1 : 1;
+    return indexes.get(a) - indexes.get(b);
+  })
 }
 
 async function originNames(shell: Shell) {
-  const branches = (await shell.cachedEvaluation(`git remote | cat`)).split('\n').map(x => x.trim());
-  return branches;
+  return (await shell.cachedEvaluation(`git remote | cat`)).split('\n').map(x => x.trim());
+}
+
+async function resetTargets(shell: Shell) {
+  const log = (await shell.cachedEvaluation('git log -n 10 --format=%s | cat')).split('\n').map(x => x.trim());
+  const heads: Suggestion[] = [];
+  for (let i = 0; i < log.length; i++) {
+    const text = i === 0 ? 'HEAD' : `HEAD~${i}`;
+    heads.push({text, description: async () => log[i]});
+  }
+  return [
+    ...await refNames(shell),
+    ...heads,
+  ];
 }

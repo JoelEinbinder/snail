@@ -57,6 +57,8 @@ export function makeShellCompleter(shell: Shell): Completer {
       anchor: prefix.start + result.anchor,
       suggestions: result.suggestions,
       exact: result.exact,
+      preSorted: result.preSorted,
+      preFiltered: result.preFiltered,
     };
   };
 }
