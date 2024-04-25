@@ -4,6 +4,7 @@ const callbacks = [];
 /** @type {import('../../src/shortcutParser').ParsedShortcut[]} */
 let activeShortcuts = [];
 let lastMessageId = 0;
+let isClosed = false;
 const messasgeCallbacks = new Map();
 async function waitForMessage() {
   if (messages.length)
@@ -98,6 +99,8 @@ function onMessage(data) {
         };
       }
       findHandler?.(findParams);
+    } else if (method === 'didClose') {
+      isClosed = true;
     }
   } else {
     const {id, result} = data;
@@ -161,7 +164,7 @@ window.addEventListener('keydown', event => {
     }});
     return;
   }
-  if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
+  if (!isClosed && event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
     const codeMap = {
       'KeyC': '\x03',
       'KeyD': '\x04',

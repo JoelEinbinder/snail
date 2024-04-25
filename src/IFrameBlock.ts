@@ -396,6 +396,12 @@ export class IFrameBlock implements LogItem {
       if (this._lastHeight === 0)
         this._webContentView.element.remove();
     }
+  
+    const message = {
+      method: 'didClose',
+    };
+    this._cachedMessages.push(message);
+    this.readyPromise.then(() => this._webContentView.postMessage(message));
   }
 
   debugginInfo() {

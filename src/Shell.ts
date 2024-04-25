@@ -23,6 +23,7 @@ import { randomUUID } from './uuid';
 import { startAyncWork } from './async';
 import { AskPasswordBlock } from './AskPasswordBlock';
 import { ChartBlock } from './ChartBlock';
+import { somethingSelected } from './selection';
 
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
 const socketCloseListeners = new Map<number, () => void>();
@@ -912,15 +913,18 @@ export class Shell {
         editor.value = '';
         await this.runCommand(command);
       } else if (event.code === 'KeyC' && event.ctrlKey) {
-        const commandBlock = new CommandBlock(editor.value, this._size, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
-        commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
-        commandBlock.wasCanceled = true;
-        this.addItem(commandBlock);
-        editor.value = '';
-        editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
+        const isMac = navigator['userAgentData']?.platform === 'macOS';
+        if (isMac || !somethingSelected()) {
+          const commandBlock = new CommandBlock(editor.value, this._size, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
+          commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
+          commandBlock.wasCanceled = true;
+          this.addItem(commandBlock);
+          editor.value = '';
+          editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
 
-        event.preventDefault();
-        event.stopImmediatePropagation();
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
       }
       finishWork();
     }, false);

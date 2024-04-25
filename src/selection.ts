@@ -17,3 +17,7 @@ export function setSelection(sel: string | (() => string)) {
   selection = sel;
 }
 
+export function somethingSelected() {
+  const str = typeof selection === 'string' ? selection : selection();
+  return !!str;
+}
