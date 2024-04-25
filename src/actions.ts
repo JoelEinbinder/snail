@@ -22,6 +22,10 @@ export function availableActions(): Action[] {
   });
 }
 
+export function makeChordShortcut(shortcut: string) {
+  return 'Ctrl+B ' + shortcut;
+}
+
 let continuationActions: {shortcut: ParsedShortcut, action: Action}[] = null;
 
 export function getCurrentShortcutActions() {

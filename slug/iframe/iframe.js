@@ -114,7 +114,7 @@ window.addEventListener('keydown', event => {
   if (event.defaultPrevented)
     return;
   if (!chording) {
-    if (event.code === 'KeyA' && event.ctrlKey) {
+    if (event.code === 'KeyB' && event.ctrlKey) {
       chording = true;
       event.preventDefault();
       event.stopImmediatePropagation();

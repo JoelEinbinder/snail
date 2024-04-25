@@ -92,13 +92,13 @@ class Split {
   }
 
   async toggleDemonMode() {    
-    await this.page.keyboard.press('Control+A');
+    await this.page.keyboard.press('Control+B');
     await this.page.keyboard.press('Control+D');
     await this.waitForAsyncWorkToFinish();
   }
 
   async kill() {    
-    await this.page.keyboard.press('Control+A');
+    await this.page.keyboard.press('Control+B');
     await this.page.keyboard.press('KeyK');
     await this.waitForAsyncWorkToFinish();
   }
@@ -121,7 +121,7 @@ export class ShellModel extends Split {
     return shell;
   }
   async splitHorizontally() {
-    await this.page.keyboard.press('Control+A');
+    await this.page.keyboard.press('Control+B');
     await this.page.keyboard.press('Control+"');
     await this.waitForAsyncWorkToFinish();
     return [new Split(this.page, this._block.locator('> div:not(.divider)').nth(0)), new Split(this.page, this._block.locator('> div:not(.divider)').nth(1))];

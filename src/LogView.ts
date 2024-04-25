@@ -5,7 +5,7 @@ import { Block, BlockDelegate } from './GridPane';
 import { startAyncWork } from './async';
 import { makeLazyProxy } from './LazyProxy';
 import { UIThrottle } from './UIThrottle';
-import type { Action } from './actions';
+import { Action, makeChordShortcut } from './actions';
 import type { LogItem } from './LogItem';
 import { Find, Findable, FindableList, type FindParams } from './Find';
 import { attachMenuItemsToContextMenuEvent } from './contextMenu';
@@ -302,17 +302,17 @@ export class LogView implements Block, ShellDelegate, Findable {
   actions(): Action[] {
     const fullscreenActions: Action[] = [{
       title: 'Split vertically',
-      shortcut: 'Ctrl+A %',
+      shortcut: makeChordShortcut('%'),
       id: 'log.split.vertical',
       callback: () => this._doSplit('vertical'),
     }, {
       title: 'Split horizontally',
-      shortcut: 'Ctrl+A "',
+      shortcut: makeChordShortcut('"'),
       id: 'log.split.horizontal',
       callback: () => this._doSplit('horizontal'),
     }, {
       title: 'Toggle daemon mode',
-      shortcut: 'Ctrl+A D',
+      shortcut: makeChordShortcut('D'),
       id: 'log.toggle.daemon',
       callback: () => {
         const done = startAyncWork('demon mode toggle');
@@ -320,7 +320,7 @@ export class LogView implements Block, ShellDelegate, Findable {
       }
     }, {
       title: 'Refresh active iframe',
-      shortcut: 'Ctrl+A R',
+      shortcut: makeChordShortcut('R'),
       id: 'log.refresh.active.iframe',
       callback: () => this._shell.refreshActiveIframe(),
     }, {
@@ -339,7 +339,7 @@ export class LogView implements Block, ShellDelegate, Findable {
       }
     }, {
       title: 'Kill process',
-      shortcut: 'Ctrl+A K',
+      shortcut: makeChordShortcut('K'),
       id: 'log.kill',
       callback: async () => {
         const done = startAyncWork('kill process');
@@ -363,7 +363,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     }, {
       title: 'Fold all',
       id: 'log.fold.all',
-      shortcut: 'CmdOrCtrl+K O',
+      shortcut: makeChordShortcut('O'),
       callback: () => {
         this._lockScroll();
         for (const item of this._log)
@@ -372,7 +372,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     }, {
       title: 'Unfold all',
       id: 'log.unfold.all',
-      shortcut: 'CmdOrCtrl+K J',
+      shortcut: makeChordShortcut('O'),
       callback: () => {
         this._lockScroll();
         for (const item of this._log)

@@ -194,8 +194,8 @@ export class IFrameBlock implements LogItem {
           this._webContentView.element.dispatchEvent(new KeyboardEvent('keydown', {
             bubbles: true,
             cancelable: true,
-            key: 'a',
-            code: 'KeyA',
+            key: 'b',
+            code: 'KeyB',
             ctrlKey: true,
           }));
           this._webContentView.element.dispatchEvent(new KeyboardEvent('keydown', {
