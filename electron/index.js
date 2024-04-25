@@ -158,6 +158,8 @@ function makeWindow() {
   const win = new BrowserWindow({
     width: 490,
     height: 371,
+    minHeight: 130,
+    minWidth: 200,
     title: 'snail',
     tabbingIdentifier: (++windowNumber).toString(),
     webPreferences: {
