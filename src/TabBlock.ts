@@ -1,8 +1,9 @@
-import type { Block, BlockDelegate } from "./GridPane";
 import './tabBlock.css';
 import { showContextMenu } from './contextMenu';
 import type { Action } from "./actions";
 import type { QuickPickProvider } from "./QuickPick";
+import { SplitBlock, type Block, type BlockDelegate } from './GridPane';
+
 export class TabBlock implements Block {
   private _tabs: Block[] = [];
   private _activeTab?: Block;
@@ -148,23 +149,36 @@ export class TabBlock implements Block {
 
   }
   addTab(tab: Block) {
-    tab.blockDelegate = {
+    const delegate: BlockDelegate = {
       close: () => {
         this.closeTab(tab);
       },
       replaceWith: block => {
-        throw new Error('not implemented');
+        const active = this._activeTab === tab;
+        const hadFocus = tab.hasFocus();
+        block.blockDelegate = delegate;
+        this._tabs[this._tabs.indexOf(tab)] = block;
+        this._headerForTab.set(block, this._headerForTab.get(tab));
+        this._headerForTab.delete(tab);
+        tab = block;
+        if (active) {
+          this._activeTab = null;
+          this.switchTab(tab);
+          if (hadFocus)
+            tab.focus();
+        }
       },
-      split(newBlock, direction) {
-        
+      split: (newBlock, direction) => {
+        const splitBlock = new SplitBlock([tab, newBlock], direction, this._parentElement);
+        delegate.replaceWith(splitBlock);
       },
       titleUpdated: () => {
         if (this._activeTab === tab)
           this.blockDelegate?.titleUpdated();
         tabHeader.textContent = tab.title();
       },
-
-    }
+    };
+    tab.blockDelegate = delegate; 
     const tabHeader = document.createElement('div');
     tabHeader.textContent = tab.title();
     tabHeader.classList.add('tab-header');

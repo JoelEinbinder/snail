@@ -106,7 +106,7 @@ class RootBlock {
 
 export const rootBlock = new RootBlock();
 
-class SplitBlock implements Block {
+export class SplitBlock implements Block {
   public blockDelegate?: BlockDelegate;
   private _rect?: Rect;
   private _ratio = 0.5;
