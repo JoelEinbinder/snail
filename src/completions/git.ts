@@ -7,11 +7,18 @@ registerCompleter('git', async (shell, line, abortSignal) => {
   if (prefix.includes(' ')) {
     const command = line.slice(4).split(' ')[0];
     const anchor = line.lastIndexOf(' ') + 1;
-    if (command === 'checkout' || command === 'branch' || command === 'rebase') {
+    if (command === 'checkout' || command === 'branch' || command === 'rebase' || command === 'merge') {
       const branches = await branchNames(shell);
       return {
         anchor,
         suggestions: branches.map(text => ({text})),
+      };
+    }
+    if (command === 'fetch') {
+      const origins = await originNames(shell);
+      return {
+        anchor,
+        suggestions: origins.map(text => ({text})),
       };
     }
     return null;
@@ -19,7 +26,7 @@ registerCompleter('git', async (shell, line, abortSignal) => {
   
   return {
     anchor,
-    suggestions: Object.entries(commands).map(([text, value]) => ({text, description: async () => value}))
+    suggestions: Object.entries(commands).map(([text, value]) => ({text: text + ' ', description: async () => value}))
   };
 });
 
@@ -183,5 +190,10 @@ const commands = {
 
 async function branchNames(shell: Shell) {
   const branches = (await shell.cachedEvaluation(`git branch -a --format='%(refname:short)' | cat`)).split('\n').map(x => x.trim());
+  return branches;
+}
+
+async function originNames(shell: Shell) {
+  const branches = (await shell.cachedEvaluation(`git remote | cat`)).split('\n').map(x => x.trim());
   return branches;
 }
