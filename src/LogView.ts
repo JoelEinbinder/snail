@@ -173,9 +173,11 @@ export class LogView implements Block, ShellDelegate, Findable {
     const parent = this._itemToParent.get(item);
     if (parent) {
       const retainers = this._itemToRetainers.get(parent);
-      retainers.delete(item);
-      if (retainers.size === 0)
-        this.removeItem(parent, true);
+      if (retainers) {
+        retainers.delete(item);
+        if (retainers.size === 0)
+          this.removeItem(parent, true);
+      }
     }
     item.dispose();
     this._lockScroll();

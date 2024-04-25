@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 // for declare global side effect
 import type { } from '../src/TestingHooks';
+import os from 'os';
 
 class Split {
   constructor(public page: Page, protected _block: Locator) {
@@ -33,11 +34,11 @@ class Split {
   }
 
   async openQuickOpen() {
-    await this.page.keyboard.press('Meta+KeyP');
+    await this.page.keyboard.press(os.platform() === 'darwin' ? 'Meta+KeyP' : 'Control+KeyP');
     await this.waitForAsyncWorkToFinish();
   }
   async openQuickPick() {
-    await this.page.keyboard.press('Shift+Meta+KeyP');
+    await this.page.keyboard.press(os.platform() === 'darwin' ? 'Shift+Meta+KeyP' : 'Shift+Control+KeyP');
     await this.waitForAsyncWorkToFinish();
   }
   async closeQuickPick() {

@@ -3,6 +3,7 @@ import { showContextMenu } from './contextMenu';
 import type { Action } from "./actions";
 import type { QuickPickProvider } from "./QuickPick";
 import { SplitBlock, type Block, type BlockDelegate } from './GridPane';
+import type { LogView } from './LogView';
 
 export class TabBlock implements Block {
   private _tabs: Block[] = [];
@@ -264,6 +265,10 @@ export class TabBlock implements Block {
 
   async asyncActions(): Promise<Action[]> {
       return this._activeTab?.asyncActions() || [];
+  }
+
+  waitForLineForTest(regex: RegExp) {
+    return (this._activeTab as LogView)?.waitForLineForTest(regex);
   }
 }
 
