@@ -8,27 +8,45 @@ registerCompleter('git', async (shell, line, abortSignal) => {
   if (prefix.includes(' ')) {
     const command = line.slice(4).split(' ')[0];
     const anchor = line.lastIndexOf(' ') + 1;
-    if (command === 'checkout' || command === 'branch' || command === 'rebase' || command === 'merge') {
-      return {
-        anchor,
-        preSorted: true,
-        suggestions: await refNames(shell),
-      };
-    }
-    if (command === 'reset') {
-      return {
-        anchor,
-        preSorted: true,
-        suggestions: await resetTargets(shell),
-      };
-    }
-    if (command === 'fetch') {
-      const origins = await originNames(shell);
-      return {
-        anchor,
-        preSorted: true,
-        suggestions: origins.map(text => ({text})),
-      };
+    const seenArgs = line.slice(0, anchor).split(' ').filter(x => x && !x.startsWith('-')).length;
+    if (seenArgs === 2) {
+      if (command === 'checkout' || command === 'switch' || command === 'log' || command === 'branch' || command === 'rebase' || command === 'merge') {
+        return {
+          anchor,
+          preSorted: true,
+          suggestions: await refNames(shell),
+        };
+      }
+      if (command === 'reset') {
+        return {
+          anchor,
+          preSorted: true,
+          suggestions: await resetTargets(shell),
+        };
+      }
+      if (command === 'fetch' || command === 'push') {
+        const origins = await originNames(shell);
+        return {
+          anchor,
+          preSorted: true,
+          suggestions: origins.map(text => ({text})),
+        };
+      }
+    } else if (seenArgs === 3) {
+      if (command === 'rebase' || command === 'merge') {
+        return {
+          anchor,
+          preSorted: true,
+          suggestions: await refNames(shell),
+        };
+      }
+      if (command === 'push') {
+        return {
+          anchor,
+          preSorted: true,
+          suggestions: await refNames(shell),
+        };
+      }
     }
     return null;
   }
