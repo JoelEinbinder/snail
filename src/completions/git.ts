@@ -44,7 +44,10 @@ registerCompleter('git', async (shell, line, abortSignal) => {
         return {
           anchor,
           preSorted: true,
-          suggestions: await refNames(shell),
+          suggestions: [
+            { text: 'HEAD' },
+            ...await refNames(shell),
+          ],
         };
       }
     }
