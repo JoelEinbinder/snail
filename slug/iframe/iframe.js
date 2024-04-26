@@ -181,6 +181,15 @@ window.addEventListener('keydown', event => {
       shiftKey: event.shiftKey,
     }});
   }
+  // Synthetic copy
+  if (event.shiftKey && event.code === 'KeyC') {
+    const isMac = navigator['userAgentData']?.platform === 'macOS';
+    if (!isMac) {
+      const text = window.getSelection();
+      if (text)
+        navigator.clipboard.writeText(text.toString());
+    }
+  }
 });
 
 /**
