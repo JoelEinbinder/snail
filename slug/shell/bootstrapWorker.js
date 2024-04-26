@@ -266,6 +266,7 @@ const handler = {
     abortControllers.get(transport)?.get(params.id)?.abort();
   },
   'Shell.setCwd': async({cwd}) => {
+    shellState.setCwd(cwd, message => transport?.send(message));
     await send('Runtime.evaluate', {
       expression: `process.chdir(${JSON.stringify(cwd)})`,
       returnByValue: true,
