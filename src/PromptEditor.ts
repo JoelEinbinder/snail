@@ -12,6 +12,7 @@ import { setSelection } from "./selection";
 import { host } from "./host";
 import { makeHistoryCompleter } from "./historyCompleter";
 import { themeSelectionColor, themeTextColor } from "./theme";
+import { startAyncWork } from "./async";
 
 export function makePromptEditor(shell: Shell) {
   const editor = new Editor('', {
@@ -46,7 +47,7 @@ export function makePromptEditor(shell: Shell) {
     if (event.key === 'ArrowDown' && editor.selections[0].end.line === editor.lastLine) {
       moveHistory(-1);
     } else if (event.key === 'ArrowUp' && editor.selections[0].start.line === 0) {
-      moveHistory(1);      
+      moveHistory(1);
     } else if (event.code === 'KeyN' && event.ctrlKey && !event.shiftKey) {
       moveHistory(-1);
     } else if (event.code === 'KeyP' && event.ctrlKey && !event.shiftKey) {
@@ -62,10 +63,12 @@ export function makePromptEditor(shell: Shell) {
     event.preventDefault();
   }, true);
   async function moveHistory(direction: -1 | 1) {
+    const done = startAyncWork('history');
     if (historyIndex === 0)
       currentValue = editor.value;
     const prefix = editor.text({start: {column: 0, line: 0,}, end: editor.selections[0].start});
     const result = await shell.searchHistory(editor.value, prefix, historyIndex, direction);
+    done();
     if (result === 'current' && editor.value !== currentValue) {
       editor.value = currentValue;
       historyIndex = 0;

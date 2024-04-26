@@ -67,7 +67,9 @@ class Split {
       while (cursor !== hooks.rootBlock.element) {
         if (!cursor.parentElement)
           throw new Error('Block not found in root');
-        path.push([...cursor.parentElement.children].indexOf(cursor));
+        path.push([...cursor.parentElement.children].filter(x => {
+          return !x.classList.contains('tab-bar') && !x.classList.contains('divider'); 
+        }).indexOf(cursor));
         cursor = cursor.parentElement;
       }
       let selected = serialized;
@@ -125,6 +127,6 @@ export class ShellModel extends Split {
     await this.page.keyboard.press('Control+B');
     await this.page.keyboard.press('Control+"');
     await this.waitForAsyncWorkToFinish();
-    return [new Split(this.page, this._block.locator('> div:not(.divider)').nth(0)), new Split(this.page, this._block.locator('> div:not(.divider)').nth(1))];
+    return [new Split(this.page, this._block.locator('> div:not(.divider):not(.tab-bar)').nth(0)), new Split(this.page, this._block.locator('> div:not(.divider):not(.tab-bar)').nth(1))];
   }
 }

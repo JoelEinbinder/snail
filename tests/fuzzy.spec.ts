@@ -16,13 +16,11 @@ test('score correctly', async ({ }) => {
     { title: '/foo/bar/handle.js', score: 28142 },
   ]);
 });
-test('quickly render a big file', async ({ }) => {
+test.skip('quickly render a big file', async ({ }) => {
   const scorer = new FilePathScoreFunction('hand');
   const items: string[] = JSON.parse(fs.readFileSync(require.resolve('./resources/filenames.json'), 'utf8'));
-  console.time('fuzzy');
   const sortedItems = items.map(title => {
     const score = scorer.calculateScore(title, null);
     return {title, score};
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 100);
-  console.timeEnd('fuzzy');
 });

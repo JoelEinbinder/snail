@@ -205,12 +205,14 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
 
   async _doSplit(direction: 'horizontal' | 'vertical') {
+    const finishWork = startAyncWork('split');
     const logViewProxy = makeLazyProxy<ShellDelegate>();
     const shell = new (await import('./Shell')).Shell(logViewProxy.proxy);
     await shell.setupInitialConnection();
     const view = new LogView(shell, this._container);
     this.blockDelegate.split(view, direction);
     logViewProxy.fulfill(view);
+    finishWork();
   }
 
   updatePosition(rect: { x: number; y: number; width: number; height: number; }): void {

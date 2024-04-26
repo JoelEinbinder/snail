@@ -70,7 +70,7 @@ const handler = {
           res(this);
       });
     });
-    return runResult.lastID;;
+    return runResult.lastID;
   },
   async queryDatabase({sql, params}) {
     const database = await getDatabase();
