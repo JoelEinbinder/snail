@@ -9,6 +9,7 @@ export class SuggestBox {
     private _suggestions: Suggestion[] = [];
     private _prefix: string = '';
     private _glassPane: GlassPlane;
+    private _triggerHappy: boolean;
     private _viewport = new Viewport<Suggestion>(font.current.size * 1.4, 9, this._renderItem.bind(this));
     private _description = document.createElement('div');
     constructor(private _onPick: (suggestion: Suggestion) => boolean, private _onSelectionChanged: () => void) {
@@ -29,6 +30,9 @@ export class SuggestBox {
 
     get currentSuggestion() {
         return this._selectedSuggestion ? this._selectedSuggestion : this._suggestions[0];
+    }
+    setTriggerHappy(triggerHappy: boolean) {
+        this._triggerHappy = triggerHappy;
     }
 
     setSuggestions(prefix: string, suggestions: Suggestion[], cssTag?: string) {
@@ -94,8 +98,12 @@ export class SuggestBox {
             case 'ArrowDown':
                 this._moveSelection(1);
                 return true;
-            case 'Enter':
+            case 'ArrowRight':
+            case 'End':
                 return this._onPick(suggestion);
+            case 'Enter':
+                const result = this._onPick(suggestion);
+                return result && !this._triggerHappy;
             case 'Tab':
                 if (suggestion.psuedo)
                     this._onPick(this._suggestions[1]);

@@ -56,6 +56,10 @@ body.light .suggest-popup {
     --suggest-background: rgba(30, 0, 30, 0.7);
     --suggest-selected: hsl(300, 8%, 20%);
 }
+body.light .suggest-popup[data-css-tag="history"] {
+    --suggest-background: hsla(300, 100%, 80%, 0.5);
+    --suggest-selected: hsl(300, 80%, 95%);
+} 
 .description {
     width: 160px;
     flex: 1;

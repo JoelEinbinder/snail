@@ -64,6 +64,7 @@ export function makeHistoryCompleter(shell: Shell): Completer {
       exact: true,
       preFiltered: true,
       cssTag: 'history',
+      triggerHappy: true,
     }
   };
 }

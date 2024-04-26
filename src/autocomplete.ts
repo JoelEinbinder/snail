@@ -159,7 +159,7 @@ export class Autocomplete {
             this.suggestionChanged.dispatch();
             return;
         }
-        const {anchor, suggestions, exact, preFiltered, cssTag, preSorted} = completions;
+        const {anchor, suggestions, triggerHappy, exact, preFiltered, cssTag, preSorted} = completions;
         const prefix = textBeforeCursor.slice(anchor);
         const filtered = preFiltered ? suggestions : filterAndSortSuggestionsSubstringMode(suggestions, prefix, preSorted);
         if (!filtered.length) {
@@ -181,6 +181,7 @@ export class Autocomplete {
                 psuedo: true,
             });
         }
+        this._suggestBox.setTriggerHappy(!!triggerHappy);
         this._suggestBox.setSuggestions(prefix, filtered, cssTag);
         const point = this._editor.pointFromLocation({ line: location.line, column: anchor });
         const rect = this._editor.element.getBoundingClientRect();
@@ -208,6 +209,7 @@ export type CompletionResult = {
     preSorted?: boolean,
     preFiltered?: boolean,
     cssTag?: string,
+    triggerHappy?: boolean,
 };
 export type Completer = (line: string, abortSignal: AbortSignal) => Promise<CompletionResult>;
 export type Suggestion = {
