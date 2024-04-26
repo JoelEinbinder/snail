@@ -146,8 +146,24 @@ export class TerminalBlock implements LogItem {
       this.element.style.removeProperty('height');
       this.element.style.padding = '4px';
     } else {
-      this.element.style.height = this._terminal.element.getBoundingClientRect().height + 'px';
+      const height = this._terminal.element.getBoundingClientRect().height;
+      this.element.style.height = height + 'px';
       this.element.style.removeProperty('padding');
+      if (!this._closed && !this.fullscreenEvent.current) {
+        const scrollingAncestor = (element: HTMLElement): HTMLElement|null => {
+          if (!element)
+            return element;
+          if (element.classList.contains('log-view'))
+            return element;
+          return scrollingAncestor(element.parentElement);
+        };
+        const scrollerHeight = scrollingAncestor(this.element)?.getBoundingClientRect().height;
+        if (height > scrollerHeight) {
+          const rowHeight = this._addon.rowHeight;//height / (this._terminal.rows + 1);
+          const padding = scrollerHeight % rowHeight;
+          this.element.style.padding = `0 0 ${padding ? rowHeight-padding -4 : 0}px 0`;
+        }
+      }
     }
   }
 
@@ -206,6 +222,7 @@ export class TerminalBlock implements LogItem {
     this._closed = true;
     this._terminal.blur();
     this._terminal.disable();
+    this._willResize();
   }
 
   async serializeForTest(): Promise<any> {

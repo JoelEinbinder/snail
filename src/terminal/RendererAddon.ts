@@ -36,6 +36,10 @@ export class RendererAddon implements ITerminalAddon, Findable {
   setFind(params: FindParams): void {
     this._findService.setFind(params);
   }
+
+  get rowHeight() {
+    return this._renderer?.rowHeight;
+  }
 }
 
 class Renderer implements IRenderer {
@@ -95,6 +99,9 @@ class Renderer implements IRenderer {
     }
   };
   dispose(): void {
+  }
+  get rowHeight() {
+    return this.dimensions.actualCellHeight;
   }
   setColors(colors: IColorSet): void {
     // refresh will be called after this
