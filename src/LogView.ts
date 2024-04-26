@@ -475,4 +475,9 @@ export class LogView implements Block, ShellDelegate, Findable {
     this._log.setFind(params);
   }
 
+  async scrollToBottom() {
+    await this._lockScroll();
+    this._scroller.scrollTop = this._scroller.scrollHeight;
+  }
+
 }

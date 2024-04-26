@@ -45,6 +45,7 @@ export interface ShellDelegate {
   setFullscreenItem(item: LogItem|null): void;
   setTitle(title: string): void;
   setSuffix(suffix: string): void;
+  scrollToBottom(): void;
 }
 
 interface ConnectionCore {
@@ -921,8 +922,10 @@ export class Shell {
           commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
           commandBlock.wasCanceled = true;
           this.addItem(commandBlock);
+          
           editor.value = '';
           editor.selections = [{start: {column: 0, line: 0}, end: {column: 0, line: 0}}];
+          this._delegate.scrollToBottom();
 
           event.preventDefault();
           event.stopImmediatePropagation();
