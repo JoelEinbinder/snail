@@ -1,25 +1,4 @@
-body {
-  --black: #3E3E3E;
-  --red: #990000;
-  --green: #00A600;
-  --yellow: #999900;
-  --blue: #0000B2;
-  --magenta: #B200B2;
-  --cyan: #00A6B2;
-  --white: #BFBFBF;
-  --brightBlack: #666666;
-  --brightRed: #E50000;
-  --brightGreen: #00D900;
-  --brightYellow: #E5E500;
-  --brightBlue: #0000FF;
-  --brightMagenta: #E500E5;
-  --brightCyan: #00E5E5;
-  --brightWhite: #E5E5E5;
-  --foreground: #F4F4F4;
-  --background: 'transparent';
-  --selection: #525252;
-  --cursor: #606060;
-
+body { 
   --color-0: #3E3E3E;
   --color-1: #990000;
   --color-2: #00A600;
@@ -298,29 +277,83 @@ body {
   --ansi-253: #dadada;
   --ansi-254: #e4e4e4;
   --ansi-255: #eeeeee;
+
+  --black: #3E3E3E;
+  --red: #990000;
+  --green: #00A600;
+  --yellow: #999900;
+  --blue: #0000B2;
+  --magenta: #B200B2;
+  --cyan: #00A6B2;
+  --white: #BFBFBF;
+  --brightBlack: #666666;
+  --brightRed: #E50000;
+  --brightGreen: #00D900;
+  --brightYellow: #E5E500;
+  --brightBlue: #0000FF;
+  --brightMagenta: #E500E5;
+  --brightCyan: #00E5E5;
+  --brightWhite: #E5E5E5;
+}
+
+body.dark {
+  --foreground: #F4F4F4;
+  --background: #000;
+  --selection: #525252;
+  --cursor: #606060;
+  --foreground-2: #d4d4d4;
+  --backround-2: #111111;
+}
+body.light {
+  --foreground: #222;
+  --background: #FFF;
+  --selection: #b3d7ff;
+  --cursor: #606060;
+
+  --foreground-2: #666;
+  --backround-2: #f4f4f4;
 }
 
 body {
   font: var(--current-font);
   color: var(--foreground);
+  background: var(--background);
   margin: 0;
+}
+
+body.dark {
   color-scheme: dark;
 }
+body.light {
+  color-scheme: light;
+}
 /* chromium oopifs have white backgrounds */
-body.electron-host,
-body.web-host {
+body.light.electron-host,
+body.light.web-host {
   background-color: black;
 }
 
+body.light.electron-host,
+body.light.web-host {
+  background-color: white;
+}
+
+
 /* snail might be chromium, we don't know */
-body.snail-host {
+body.light.snail-host {
   background: #000030;
 }
 
-::selection {
-  background: rgba(82,82,82,0.99);
+body.light.snail-host {
+  background: #f0f0FF;
 }
 
+body.dark::selection {
+  background: rgba(82,82,82,0.99);
+}
+body.light::selection {
+  background: var(--selection);
+}
 .find-match {
   background: rgba(255, 255, 0, 0.3);
 }

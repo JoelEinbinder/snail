@@ -50,7 +50,7 @@
 
 .log-item-wrapper:not(:first-child),
 .prompt:not(:first-child) {
-  border-top: 1px solid var(--ansi-237);
+  border-top: 1px solid var(--border-color);
   margin-top: 4px;
   padding-top: 4px;
 }
@@ -81,7 +81,7 @@
   opacity: 0.6;
 }
 .connection-name {
-  color: var(--ansi-237);
+  color: var(--border-color);
   padding-right: 2px;
 }
 
@@ -134,7 +134,7 @@ iframe.fullscreen {
 body:not(.vscode-dark) iframe.fullscreen {
   -webkit-backdrop-filter: blur(15px);
   backdrop-filter: blur(15px);
-  background-color: rgba(0,0,0,0.6);
+  background-color: var(--blurry-background);
 }
 
 .terminal.xterm .xterm-viewport {

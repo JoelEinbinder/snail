@@ -17,8 +17,8 @@ body {
 .header {
   padding: 2px 2px;
   overflow: hidden;
-  color: #d4d4d4;
-  background: #111111;
+  color: var(--foreground-2);
+  background: var(--backround-2);
   flex: 0 1 auto;
   user-select: none;
   -webkit-user-select: none;

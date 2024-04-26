@@ -8,6 +8,7 @@ import { RendererAddon } from "./terminal/RendererAddon";
 import { startAyncWork } from "./async";
 import type { FindParams } from "./Find";
 import { attachMenuItemsToContextMenuEvent } from "./contextMenu";
+import { themeCursorColor, themeName, themeSelectionColor, themeTextColor } from "./theme";
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
@@ -60,10 +61,10 @@ export class TerminalBlock implements LogItem {
         brightMagenta: '#E500E5',
         brightCyan: '#00E5E5',
         brightWhite: '#E5E5E5',
-        foreground: '#F4F4F4',
-        background: 'transparent',
-        selection: '#525252',
-        cursor: '#606060',
+        foreground: themeTextColor(),
+        background: themeName() === 'dark' ? '#00000000' : '#FFFFFF00',
+        selection: themeSelectionColor(),
+        cursor: themeCursorColor(),
       },
       fontWeightBold: 'normal',
       allowTransparency: true,

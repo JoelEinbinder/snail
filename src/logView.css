@@ -23,7 +23,7 @@
 .fullscreen-element {
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  background: rgb(0,0,0,0.5);
+  background: var(--blurry-background);
   z-index: 2;
   position: absolute;
   inset: 0;

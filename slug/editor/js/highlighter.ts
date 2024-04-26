@@ -31,7 +31,7 @@ export class Highlighter extends Emitter<{
     private _model: import('./model').Model,
     private _language: string = 'js',
     private _underlay?: (arg0: number, arg1: string) => Token[],
-    colors: { selectionBackground?: string; } | undefined = {}) {
+    colors: { selectionBackground?: string; foreground?: string, textColor?: string } | undefined = {}) {
     super();
     this._model.on('selection-changed', ({ selections, previousSelections }) => {
       for (var selection of selections)
@@ -84,7 +84,7 @@ export class Highlighter extends Emitter<{
             ['variable', '#afd7ff'],
             ['property', '#afd7ff'],
             ['def', '#afd7ff'],
-            ['sh', '#f4f4f4'],
+            ['sh', colors.foreground],
             ['sh-replacement', '#E5E500'],
             ['sh-template', '#00A6B2'],
             ['sh-string', '#999900'],

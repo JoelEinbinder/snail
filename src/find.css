@@ -1,12 +1,12 @@
 .find {
   display: block;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--blurry-background);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   position: fixed;
   right: 0;
   top: 0;
-  border: 1px solid var(--ansi-237);
+  border: 1px solid var(--border-color);
   border-radius: 2px;
   padding: 4px;
   border-top: none;

@@ -4,6 +4,7 @@ import { LogItem } from "./LogItem";
 import { setSelection } from "./selection";
 import type { Shell } from './Shell';
 import { FindParams } from "./Find";
+import { themeSelectionColor, themeTextColor } from "./theme";
 
 export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
@@ -28,9 +29,9 @@ export class CommandBlock implements LogItem {
       padding: 0,
       wordWrap: true,
       colors: {
-        cursorColor: '#f4f4f4',
-        foreground: '#f4f4f4',
-        selectionBackground: '#525252',
+        cursorColor: themeTextColor(),
+        foreground: themeTextColor(),
+        selectionBackground: themeSelectionColor(),
       },
       readOnly: true,
     });

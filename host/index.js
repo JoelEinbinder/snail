@@ -140,6 +140,21 @@ const handler = {
   },
 }
 
+async function getTheme() {
+  const database = await getDatabase();
+  const getResult = await new Promise((res, rej) => {
+    database.get(`SELECT value FROM preferences WHERE key = ?`, 'theme', function(err, row) {
+      if (err)
+        rej(err);
+      else
+        res(row);
+    });
+  });
+  if (!getResult || !getResult.value)
+    return 'dark';
+  return JSON.parse(getResult.value);
+}
+
 let database;
 /** @return {Promise<import('sqlite3').Database>} */
 async function getDatabase() {
@@ -171,4 +186,4 @@ async function getDatabase() {
   return database;
 }
 
-module.exports = {handler, proxies, preloadJSShell};
+module.exports = {handler, proxies, preloadJSShell, getTheme};

@@ -11,6 +11,7 @@ import './completions/docker';
 import { setSelection } from "./selection";
 import { host } from "./host";
 import { makeHistoryCompleter } from "./historyCompleter";
+import { themeSelectionColor, themeTextColor } from "./theme";
 
 export function makePromptEditor(shell: Shell) {
   const editor = new Editor('', {
@@ -20,9 +21,9 @@ export function makePromptEditor(shell: Shell) {
     padding: 0,
     wordWrap: true,
     colors: {
-      cursorColor: '#f4f4f4',
-      foreground: '#f4f4f4',
-      selectionBackground: '#525252',
+      cursorColor: themeTextColor(),
+      foreground: themeTextColor(),
+      selectionBackground: themeSelectionColor(),
     }
   });
   shell.globalVars().then(globalVars => {

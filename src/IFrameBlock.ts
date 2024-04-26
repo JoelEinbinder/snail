@@ -11,6 +11,7 @@ import { getCurrentShortcutActions } from "./actions";
 import type { Action } from './actions';
 import { BrowserView } from "./BrowserView";
 import { attachMenuItemsToContextMenuEvent } from "./contextMenu";
+import { themeName } from "./theme";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -307,7 +308,7 @@ export class IFrameBlock implements LogItem {
     this._webContentView = delegate.browserView ? new BrowserView(handler) : new IFrameView(handler);
     delegate.urlForIframe(data).then(urlStr => {
       const url = new URL(urlStr);
-      url.searchParams.set('class', `${host.type()}-host`);
+      url.searchParams.set('class', `${host.type()}-host ${themeName()}`);
       url.searchParams.set('css', `--current-font: ${fontString()}`);
       if (host.type() === 'web')
         url.host = document.location.host;

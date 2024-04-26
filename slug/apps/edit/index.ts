@@ -16,16 +16,17 @@ async function loadScript(path) {
 
 (require as any).config({ paths: { vs: './vs' } });
 await new Promise(x => (require as any)(['vs/editor/editor.main'], x));
-monaco.editor.defineTheme('my-dark', {
-  base: 'vs-dark',
-  inherit: true,
-  rules: [],
-  colors: {
-    'editor.background': '#111111'
-  }
-})
-monaco.editor.setTheme('my-dark');
-
+if (document.body.classList.contains('dark')) {
+  monaco.editor.defineTheme('my-dark', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [],
+    colors: {
+      'editor.background': '#111111'
+    }
+  })
+  monaco.editor.setTheme('my-dark');
+}
 monaco.languages.register({
   id: 'git-commit',
   filenames: ['COMMIT_EDITMSG'],

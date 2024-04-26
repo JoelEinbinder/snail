@@ -1,5 +1,6 @@
 body {
   padding: 10px;
+  overflow: hidden;
 }
 h1 {
   margin: 0;

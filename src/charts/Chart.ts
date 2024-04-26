@@ -1,12 +1,13 @@
+import { themeBackgroundColor, themeTextColor } from "../theme";
 import type { ProcessedData } from "./Dataset";
 import { makeIconCheckbox } from "./IconCheckbox";
 import { showTooltip } from "./Tooltip";
 import './chart.css';
 
-const background = 'black';
+const background = themeBackgroundColor();
 const foreground = '#e8710a';
 const majorAxisColor = '#999';
-const textColor = '#f4f4f4';
+const textColor = themeTextColor();
 const minorAxisColor = '#444';
 const zeroAxisScolor = '#777';
 const selectionInnerColor = 'rgba(128,128,128,0.1)';

@@ -1,4 +1,4 @@
-import './dark.css';
+import './theme';
 import './font';
 import { rootBlock } from './GridPane';
 import './TestingHooks';

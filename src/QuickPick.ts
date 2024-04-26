@@ -45,6 +45,7 @@ class QuickPick {
     setBrowserViewsHidden(true);
 
     this._input.value = initialText;
+    this._input.spellcheck = false;
     this._render();
     this._element.showModal();
     this._element.addEventListener('close', event => {

@@ -1,7 +1,7 @@
 reportTime('electron top');
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, session } = require('electron');
-const { handler, proxies, preloadJSShell } = require('../host');
+const { handler, proxies, preloadJSShell, getTheme } = require('../host');
 const path = require('path');
 const os = require('os');
 reportTime('electron requires');
@@ -144,7 +144,7 @@ app.whenReady().then(() => {
 });
 /** @type {Set<BrowserWindow>} */
 const popups = new Set();
-function makeWindow() {
+async function makeWindow() {
   reportTime('start make window');
   preloadJSShell();
   const focusedWindow = [...windows].find(x => {
@@ -155,6 +155,7 @@ function makeWindow() {
       return false;
     }
   });
+  const theme = await getTheme();
   const win = new BrowserWindow({
     width: 490,
     height: 371,
@@ -165,14 +166,14 @@ function makeWindow() {
     webPreferences: {
       preload: __dirname + '/preload.js',
     },
-    backgroundColor: '#000',
+    backgroundColor: theme === 'dark' ? '#000' : '#FFF',
     show: !headless,
     skipTaskbar: headless,
     icon: os.platform() === 'darwin' ? undefined : path.join(__dirname, '128.png'),
 
     // linux options
     autoHideMenuBar: true,
-    darkTheme: true,
+    darkTheme: theme === 'dark',
     frame: os.platform() === 'darwin',
   });
   win.on('maximize', () => {
@@ -204,12 +205,19 @@ function makeWindow() {
     window.excludedFromShownWindowsMenu = true;
     popups.add(window);
   })
-  if (isDevMode)
-    require('../electron-dev/').createDevServer().then(({url}) => win.loadURL(url))
-  else if (process.env.SNAIL_DEBUG_URL)
-    win.loadURL(process.env.SNAIL_DEBUG_URL);
-  else
-    win.loadFile(path.join(__dirname, 'index.html'));
+  if (isDevMode) {
+    require('../electron-dev/').createDevServer().then(({url}) => {
+      const parsed = new URL(url);
+      parsed.searchParams.set('theme', theme);
+      return win.loadURL(parsed.toString());
+    });
+  } else if (process.env.SNAIL_DEBUG_URL) {
+    const parsed = new URL(process.env.SNAIL_DEBUG_URL);
+    parsed.searchParams.set('theme', theme);
+    win.loadURL(parsed.toString());
+  } else {
+    win.loadFile(path.join(__dirname, 'index.html'), { query: { theme } });
+  }
   win.on('closed', () => windows.delete(win));
   windows.add(win);
   reportTime('make window');

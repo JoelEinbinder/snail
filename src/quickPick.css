@@ -11,9 +11,9 @@
   height: fit-content;
 
   border-radius: 3px;
-  border: 1px solid var(--ansi-237);
+  border: 1px solid var(--border-color);
 
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--blurry-background);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
@@ -48,7 +48,7 @@ body.vscode-dark .quick-pick {
   background-color: var(--ansi-236);
 }
 .quick-pick-option.selected {
-  background-color: var(--ansi-237);
+  background-color: var(--border-color);
 }
 .quick-pick-option > .title > .match {
   font-weight: bold;

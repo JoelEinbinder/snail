@@ -2,7 +2,7 @@ import * as snail from '../../sdk/web';
 import './index.css';
 window.onresize = updateSize;
 function updateSize() {
-  snail.setHeight(document.body.offsetHeight);
+  snail.setHeight(document.documentElement.offsetHeight);
 }
 const message = await snail.waitForMessage<string>();
 const parser = new DOMParser()
@@ -33,7 +33,8 @@ highRes.onload = () => {
   const ctx = canvas.getContext('2d')!;
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.globalCompositeOperation = 'difference'
+  if (document.body.classList.contains('dark'))
+    ctx.globalCompositeOperation = 'difference'
   ctx.drawImage(highRes, 0, 0, highRes.width, highRes.height, 0, 0, canvas.width, canvas.height);
   const altText = document.createElement('div');
   altText.textContent = titleText;

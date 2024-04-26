@@ -1,4 +1,3 @@
-
 body {
   --color-0: #3E3E3E;
   --color-1: #990000;
@@ -16,11 +15,6 @@ body {
   --color-13: #E500E5;
   --color-14: #00E5E5;
   --color-15: #E5E5E5;
-  --color-text: #F4F4F4;
-  --color-bold: #FFFFFF;
-  --color-selection: #525252;
-  --color-background: #000000;
-  --color-cursor: #606060;
 
   --ansi-0: #2e3436;
   --ansi-1: #cc0000;
@@ -279,25 +273,56 @@ body {
   --ansi-254: #e4e4e4;
   --ansi-255: #eeeeee;
 }
-body {
-  background: rgba(0,0,0,0.7);
-  /* background: black; */
-  color: var(--color-text);
-  font: var(--current-font);
-  margin: 0;
+body.dark {
+  --color-text: #F4F4F4;
+  --color-bold: #FFFFFF;
+  --color-selection: #525252;
+  --color-background: #000000;
+  --color-cursor: #606060;
+  
+  --border-color: var(--ansi-237);
+  --blurry-background: rgba(0, 0, 0, 0.7);
+
+  --tab-foreground: #444;
+  --tab-background: #202020;
+  --tab-hover: #3a3a3a;
+  --tab-border: rgba(128,128,128,0.5);
+}
+body.light {
+  --color-text: #222;
+  --color-bold: #000;
+  --color-selection: #b3d7ff;
+  --color-background: #fff;
+  --color-cursor: #606060;
+
+  --border-color: var(--ansi-254);
+  --blurry-background: rgba(255, 255, 255, 0.6);
+
+  --tab-foreground: #e5e5e5;
+  --tab-background: #f4f4f4;
+  --tab-hover: #eee;
+  --tab-border: rgba(200,200,200,0.5);
+}
+body.dark {
+  background: #000;
   color-scheme: dark;
 }
-body.vscode-dark {
+body.light {
+  background: #FFF;
+  color-scheme: light;
+}
+
+body.dark.vscode-dark {
   background: none;
   padding: 0;
   color-scheme: normal;
 }
-body.web-host {
+body.dark.web-host {
   background: black;
   color-scheme: dark;
 
 }
-body.snail-host {
+body.dark.snail-host {
   background: #000030;
   color-scheme: dark;
 }
@@ -309,6 +334,11 @@ body.glass-pane {
 body, html {
   overflow: hidden;
 }
+body {
+  color: var(--color-text);
+  font: var(--current-font);
+  margin: 0;
+}
 
 ::selection {
   background: var(--color-selection);
@@ -317,7 +347,7 @@ body, html {
 input:not([type="range"]):not([type="checkbox"]) {
   border: 1px solid rgb(133, 133, 133);
   padding: 2px;
-  background-color: var(--ansi-237);
+  background-color: var(--border-color);
   border-radius: 2px;
   font-family: var(--current-font);
 }
