@@ -205,6 +205,10 @@ class Renderer implements IRenderer {
       width: this.dimensions.canvasWidth,
       height: (end - start) * this.dimensions.actualCellHeight
     });
+    const bufferService: IBufferService = (this._core as any)._bufferService;
+    const cursorY = bufferService.buffer.ybase + bufferService.buffer.y;
+    if (cursorY >= start && cursorY <= end)
+        this._updateCursor();
     this._doRender();
   }
 
