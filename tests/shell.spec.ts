@@ -1,5 +1,7 @@
 import { test, expect } from './fixtures';
 import os from 'os';
+import fs from 'fs';
+import path from 'path';
 
 test('can run a command', async ({ shell }) => {
   await shell.runCommand('echo hello');
@@ -404,3 +406,70 @@ test('aliases should still work even if shell was killed', async ({ shell }) => 
   });
 });
 
+test('should not flicker with blank lines in terminal blocks', async ({ shell, workingDir }) => {
+  await fs.promises.writeFile(path.join(workingDir, 'flicker.js'), `(async function () {
+      console.log('first line');
+      process.stdin.setRawMode(true);
+      process.stdout.write('second line');
+      await new Promise(x => process.stdin.once('data', x));
+      process.stdout.write('\\r\\x1b[2K\\x1b[1A\\x1b[2Knew line');
+      await new Promise(x => process.stdin.once('data', x));
+      process.exit();
+  })();`);
+  const commandPromise = shell.runCommand('node flicker.js');
+  await shell.waitForLine(/second line/);
+  expect((await shell.serialize()).log[1]).toBe('first line\nsecond line');
+  await shell.page.keyboard.press('Enter');
+  await shell.waitForLine(/new line/);
+  expect((await shell.serialize()).log[1]).toBe('new line\n');
+  await shell.page.keyboard.press('Enter');
+  await commandPromise;
+  expect((await shell.serialize()).log[1]).toBe('new line');
+});
+
+test('should consume blank lines in terminal blocks', async ({ shell, workingDir }) => {
+  await fs.promises.writeFile(path.join(workingDir, 'grow.js'), `(async function () {
+      console.log('first line');
+      process.stdin.setRawMode(true);
+      await new Promise(x => process.stdin.once('data', x));
+      process.exit();
+  })();`);
+  const commandPromise = shell.runCommand('node grow.js');
+  await shell.waitForLine(/first line/);
+  expect((await shell.serialize()).log[1]).toBe('first line\n');
+  const viewport = {
+    width: 490,
+    height: 371,
+  };
+  await shell.page.setViewportSize({width: viewport.width, height: viewport.height + 19 * 3});
+  expect((await shell.serialize()).log[1]).toBe('first line\n');
+  await shell.page.keyboard.press('Enter');
+  await commandPromise;
+  expect((await shell.serialize()).log[1]).toBe('first line');
+});
+
+test('should consume blank lines in terminal blocks after a lot of data', async ({ shell, workingDir }) => {
+  await fs.promises.writeFile(path.join(workingDir, 'grow.js'), `(async function () {
+      for (let i = 0; i < 100; i++)
+          console.log(i);
+      console.log('first line');
+      process.stdin.setRawMode(true);
+      await new Promise(x => process.stdin.once('data', x));
+      process.exit();
+  })();`);
+  let prefix = '';
+  for (let i = 0; i < 100; i++)
+      prefix += String(i) + '\n';
+  const commandPromise = shell.runCommand('node grow.js');
+  await shell.waitForLine(/first line/);
+  expect((await shell.serialize()).log[1]).toBe(prefix + 'first line\n');
+  const viewport = {
+    width: 490,
+    height: 371,
+  };
+  await shell.page.setViewportSize({width: viewport.width, height: viewport.height + 19 * 3});
+  expect((await shell.serialize()).log[1]).toBe(prefix + 'first line\n');
+  await shell.page.keyboard.press('Enter');
+  await commandPromise;
+  expect((await shell.serialize()).log[1]).toBe(prefix + 'first line');
+});

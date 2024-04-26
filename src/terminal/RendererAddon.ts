@@ -64,6 +64,7 @@ class Renderer implements IRenderer {
   private _isAttached = false;
   private _textLayer: Layer;
   private _bottomBlankRows = 0;
+  private _rowsSeenWithContent = 0;
   private _scrollOffset = 0;
   get bottomBlankRows(): number { return this._bottomBlankRows; }
   private _workCell = new CellData();
@@ -332,10 +333,11 @@ class Renderer implements IRenderer {
         break;
       blankRows++;
     }
-    // TODO: Do something here to fix docker flickering
-    // if (this._terminal.enabled)
-    //   blankRows = Math.min(blankRows, this._bottomBlankRows);
-    this._bottomBlankRows = blankRows;
+    this._rowsSeenWithContent = Math.max(this._terminal.rows - blankRows, this._rowsSeenWithContent);
+    if (this._terminal.enabled)
+      this._bottomBlankRows = Math.max(0, this._terminal.rows - this._rowsSeenWithContent);
+    else
+      this._bottomBlankRows = blankRows;
   }
 
   private _getScrollOffset() {

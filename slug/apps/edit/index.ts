@@ -159,12 +159,21 @@ const editorContainer = document.createElement('div');
 editorContainer.classList.add('editor-container');
 document.body.append(editorContainer);
 document.addEventListener('keydown', event => {
-  if ((event.code === 'KeyX' || event.code === 'KeyC') && event.ctrlKey) {
+  const text = editor.getSelections()?.map(s => editor.getModel()?.getValueInRange(s)).join('\n');
+   if (!text && (event.code === 'KeyX' || event.code === 'KeyC') && event.ctrlKey && !event.shiftKey) {
     event.preventDefault();
     event.stopPropagation();
     doClose();
+  } else if (text && event.code === 'KeyC' && event.shiftKey && !event.defaultPrevented) {
+    if (text)
+        navigator.clipboard.writeText(text);
+    event.preventDefault();
+    event.stopImmediatePropagation();
   }
-});
+  if (event.code === 'KeyC' || event.code === 'KeyX') {
+    event.stopImmediatePropagation();
+  }
+}, true);
 
 function doClose() {
   if (editor && header.isModified()) {
