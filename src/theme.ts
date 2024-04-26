@@ -4,7 +4,6 @@ import { registerGlobalAction } from './actions';
 import { host } from './host';
 export function themeName(): 'light'|'dark' {
     const theme =  new URL(window.location.href).searchParams.get('theme');
-    console.log(theme);
     if (theme !== 'dark' && theme !== 'light')
         return 'dark';
     return theme;
@@ -25,7 +24,6 @@ export function themeSelectionColor() {
     return window.getComputedStyle(document.body).getPropertyValue('--color-selection');
 }
 
-// export const theme = new JoelEvent<'light'|'dark'>('light');
 if (themeName() !== 'dark') {
     registerGlobalAction({
         title: 'Switch to dark theme (reload)',

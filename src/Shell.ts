@@ -234,7 +234,7 @@ export class Shell {
                     antiFlicker,
                     browserView: !!(dataObj.browserView),
                     tryToRunCommand: (command: string) => {
-                      const commandLooksSafe = /^reconnect [\/\w\-\.]*$/.test(command);
+                      const commandLooksSafe = checkIfCommandLooksSafe(command);
                       if (!commandLooksSafe && !confirm('Run potentially dangerous command?\n\n' + command))
                         return;
                       this.runCommand(command);
@@ -1195,3 +1195,10 @@ function measureChar() {
   return {width: Math.floor(window.devicePixelRatio * width/10) / window.devicePixelRatio, height: Math.ceil(height)};
 }
 
+function checkIfCommandLooksSafe(command: string) {
+  if (/^reconnect [\/\w\-\.]*$/.test(command))
+    return true;
+  if (/^ls \"[\/\w\-\.]*\"$/.test(command))
+    return true;
+  return false;
+}

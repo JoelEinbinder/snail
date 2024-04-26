@@ -308,6 +308,11 @@ function inlineMode() {
       return;
     const div = document.createElement('div');
     const {element, readyPromise} = makeImageForPath(info.fullPath, info);
+    element.style.cursor = 'pointer';
+    element.onclick = () => {
+      snail.tryToRunCommand(`ls ${JSON.stringify(fullPath)}`);
+    };
+  
     imageLoadPromises.push(readyPromise);
     div.append(element, dir);
     div.title = fullPath;
