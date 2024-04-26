@@ -438,6 +438,7 @@ export class SelectionManger extends Emitter {
     if (points.length !== this._model.selections.length)
       throw new Error('points.length !== this._model.selections.length');
     let moved = false;
+    let desiredLocation: Loc|null = null;
     const newSelections: TextRange[] = [];
     for (let i = 0; i < points.length; i++) {
       const point = points[i];
@@ -450,12 +451,13 @@ export class SelectionManger extends Emitter {
       newSelections.push(newSelection);
       if (i === 0) {
         this._anchor = anchor;
-        this._desiredLocation = point;
+        desiredLocation = point;
       }
     }
     if (!moved)
       return false;
     this._model.setSelections(newSelections);
+    this._desiredLocation = desiredLocation;
     this._renderer.scrollLocationIntoView(this._desiredLocation!);
     this._renderer.highlightWordOccurrences();
     return true;

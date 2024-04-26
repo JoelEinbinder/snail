@@ -58,3 +58,14 @@ test('should type correctly after a big paste', async ({ shell }) => {
   });
   await shell.kill();
 });
+test('should type correctly after ArrowLeft', async ({ shell }) => {
+  await shell.runCommand('kang a.txt');
+  await shell.page.keyboard.type('123');
+  await shell.page.keyboard.press('ArrowLeft');
+  await shell.page.keyboard.type('a');
+  expect(await shell.serialize()).toEqual({
+    content: '12a3',
+    title: 'a.txt*',
+  });
+  await shell.kill();
+});
