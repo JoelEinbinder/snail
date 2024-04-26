@@ -331,7 +331,8 @@ const overrides = {
     browserViews.get(sender)?.get(uuid)?.webContents.focus();
   },
   focusMainContent(_, client, sender) {
-    sender.focus();
+    if (BrowserWindow.fromWebContents(sender).isFocused())
+      sender.focus();
   },
   destroyBrowserView({uuid}, client, sender) {
     const views = browserViews.get(sender);
