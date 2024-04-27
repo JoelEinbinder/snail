@@ -267,6 +267,16 @@ describe('tokenizer', () => {
             {type: 'comment', value: ' comment', raw: '# comment'},
         ]);
     });
+    it('should ignore escaped newlines', () => {
+        expect(tokenize('foo \\\n bar').tokens).toEqual([
+            {type: 'word', value: 'foo', raw: 'foo'},
+            {type: 'space', value: '  ', raw: ' \\\n '},
+            {type: 'word', value: 'bar', raw: 'bar'},
+        ]);
+        expect(tokenize('foo\\\nbar').tokens).toEqual([
+            {type: 'word', value: 'foobar', raw: 'foo\\\nbar'},
+        ]);
+    });
 });
 
 describe('parser', () => {
@@ -450,6 +460,10 @@ await sh("bar foo")`);
     it('should transform shell comments', () => {
         const code = '# foo';
         expect(transformCode(code)).toEqual('// foo');
+    });
+    it('should transform with escaped newlines', () => {
+        const code = 'echo foo \\\n bar';
+        expect(transformCode(code)).toEqual('await sh("echo foo \\\\\\n bar")');
     });
     function shouldBeLeftAlone(code) {
         expect(transformCode(code)).toEqual(code);

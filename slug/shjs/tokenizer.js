@@ -58,7 +58,8 @@ function tokenize(code, processTemplateParameter = null) {
                 // fall through
             }
         }
-        if (inSpace && !isSpace) {
+        const willEscape = char === '\\' && !inSingleQuotes && !escaped;
+        if (inSpace && !isSpace && !willEscape && (!escaped || char !== '\n')) {
             pushToken(false);
             inSpace = false;
         }

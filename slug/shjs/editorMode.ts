@@ -39,7 +39,17 @@ export class ShjsMode implements Mode<State> {
         if (token.type.label === 'sh') {
           state.shTokens = [...token.value.tokens];
         }
-      } else {
+      } else if (token.end > state.textBefore.length && !state.shTokens.length && token.type.label === 'sh') {
+        let tokenCursor = token.start;
+        for (const shToken of token.value.tokens) {
+          if (shToken.raw.length > state.textBefore.length - tokenCursor) {
+            state.shTokens.push({
+              ...shToken,
+              raw: shToken.raw.slice(state.textBefore.length - tokenCursor),
+            });
+          }
+          tokenCursor += shToken.raw.length;
+        }
       }
     }
     if (state.shTokens.length) {
