@@ -131,6 +131,9 @@ function transformCode(code, fnName = 'sh', globalVars = new Set()) {
   return newCode;
 }
 
+/**
+ * @return {{ start: number, end: number, isSh: boolean } | null}
+ */
 function getAutocompletePrefix(code, globalVars = new Set()) {
   const magicString = 'JOEL_AUTOCOMPLETE_MAGIC';
   /** @type {import('acorn').Token[]} */

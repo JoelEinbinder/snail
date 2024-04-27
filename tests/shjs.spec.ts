@@ -1,10 +1,17 @@
-const {it, describe, beforeEach, afterEach} = require('mocha');
-const expect = require('expect');
-const rimraf = require('rimraf');
-const os = require('os');
-
+import { test } from './fixtures';
+import rimraf from 'rimraf';
+import os from 'os';
+import { getResult } from '../slug/shjs/runner';
+import { sh } from '../slug/shjs/jsapi';
+import { tokenize } from '../slug/shjs/tokenizer';
+import { parse } from '../slug/shjs/parser';
+import { transformCode, getAutocompletePrefix } from '../slug/shjs/transform';
+import { getResult as apiGetResult } from '../slug/shjs'
+import fs from 'fs';
+import path from 'path';
+const { describe, expect } = test;
+const it = test;
 describe('runner', () => {
-    const {getResult} = require('./runner');
     it('should pipe', async () => {
         const result = await getResult({
             main: {
@@ -129,7 +136,6 @@ describe('runner', () => {
 });
 
 describe('tokenizer', () => {
-    const {tokenize} = require('./tokenizer');
     it('should split arguments', () => {
         expect(tokenize('foo bar  baz').tokens).toEqual([
             {type: 'word', value: 'foo', raw: 'foo'},
@@ -264,8 +270,6 @@ describe('tokenizer', () => {
 });
 
 describe('parser', () => {
-    const {parse} = require('./parser');
-    const {tokenize} = require('./tokenizer');
     it('should do a simple command', () => {
         const {tokens} = tokenize('foo bar baz');
         expect(parse(tokens)).toEqual({
@@ -355,20 +359,19 @@ describe('parser', () => {
 });
 
 describe('jsapi', () => {
-    const {sh} = require('./jsapi');
     it('should get the text', async () => {
         const output = await sh`echo "foo bar baz"`;
         expect(output).toEqual(['foo bar baz']);
     });
     it('should async iterate the text', async () => {
-        const lines = [];
-        for await (const line of sh`ls test-assets`) {
+        const lines: string[] = [];
+        for await (const line of sh`ls tests/test-assets`) {
             lines.push(line);
         }
         expect(lines).toEqual(['bar.txt', 'baz.txt', 'foo.txt']);
     });
     it('should wait for sleep', async () => {
-        const lines = [];
+        const lines: string[] = [];
         for await (const line of sh`bash -c "echo 1; sleep .02; echo 2"`) {
             lines.push(line);
         }
@@ -377,7 +380,6 @@ describe('jsapi', () => {
 });
 
 describe('transform', () => {
-    const {transformCode, getAutocompletePrefix} = require('./transform');
     it('should be left alone', () => {
         shouldBeLeftAlone(`const foo = 'bar';`);
         shouldBeLeftAlone(`let foo = 'bar';`);
@@ -437,7 +439,7 @@ await sh("bar foo")`);
             if (!result)
                 return result;
             const { start, end, isSh } = result;
-            expect(isSh).toEqual(shouldBeSH)
+            expect(isSh).toEqual(shouldBeSH);
             return code.slice(start, end);
         }
     });
@@ -455,18 +457,16 @@ await sh("bar foo")`);
 });
 
 describe('glob', () => {
-    const {sh} = require('./jsapi');
-    const {getResult} = require('.');
     it('should glob everything in the test-assets folder', async () => {
-        const output = await sh`echo test-assets/*`;
-        expect(output).toEqual(['test-assets/bar.txt test-assets/baz.txt test-assets/foo.txt']);
+        const output = await sh`echo tests/test-assets/*`;
+        expect(output).toEqual(['tests/test-assets/bar.txt tests/test-assets/baz.txt tests/test-assets/foo.txt']);
     });
     it('should not glob when there are quotes', async () => {
         const output = await sh`echo '*'`;
         expect(output).toEqual(['*']);
     });
     it('should fail when no globs are found', async () => {
-        const output = await getResult('echo *iamnotreal*');
+        const output = await apiGetResult('echo *iamnotreal*');
         expect(output).toEqual({
             code: 1,
             output: '',
@@ -476,28 +476,18 @@ describe('glob', () => {
 });
 
 describe('redirect', () => {
-    const {sh} = require('./jsapi');
-    const fs = require('fs');
-    const path = require('path');
-    const tempDir = path.join(__dirname, 'test-temp-dir');
-    beforeEach(async () => {
-        try {
-        rimraf.sync(tempDir);
-        } catch {}
-        await fs.promises.mkdir(tempDir, {recursive: true});
-    });
     it('should do a redirect to /dev/null', async () => {
         const output = await sh`echo hello > /dev/null`;
         expect(output).toEqual([]);
     });
-    it('should do a redirect to a text file', async () => {
-        const helloFile = path.join(tempDir, 'hello.txt');
+    it('should do a redirect to a text file', async ({workingDir}) => {
+        const helloFile = path.join(workingDir, 'hello.txt');
         const output = await sh`echo hello > ${helloFile}`;
         expect(output).toEqual([]);
         expect(await fs.promises.readFile(helloFile, 'utf8')).toEqual('hello\n');
     });
-    it('should do a redirect from a text file', async () => {
-        const helloFile = path.join(tempDir, 'hello.txt');
+    it('should do a redirect from a text file', async ({workingDir}) => {
+        const helloFile = path.join(workingDir, 'hello.txt');
         fs.writeFileSync(helloFile, "hello world\n", "utf8");
         const output = await sh`cat < ${helloFile}`;
         expect(output).toEqual(['hello world']);

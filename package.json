@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "start": "electron . --dev-mode",
-    "test": "cd slug/shjs; mocha",
+    "test": "npm run build && playwright test -gv docker",
     "type": "tsc --build src/tsconfig.json && tsc -p slug/shell/tsconfig.json && tsc -p slug/debugger/tsconfig.json && tsc -p slug/editor/tsconfig.json",
     "build": "node utils/esbuild.js",
     "release": "npm run check && node utils/publish-sdk.js && node utils/bundle-and-upload-slugs.js && node utils/package-and-upload.js",
@@ -26,7 +26,6 @@
     "esbuild": "^0.15.12",
     "expect": "^27.4.6",
     "get-port": "^5.1.1",
-    "mocha": "^9.2.0",
     "read": "^2.1.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.5.5"
