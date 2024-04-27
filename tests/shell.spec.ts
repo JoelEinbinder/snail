@@ -286,6 +286,20 @@ test('can clear and still show rest of terminal output', async ({ shell }) => {
   });
 });
 
+test('can clear and still show rest of terminal output, separate statements', async ({ shell }) => {
+  await shell.runCommand('echo clear this');
+  await shell.runCommand('clear; echo hello');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> clear; echo hello', // the active command block is retained, so this doesn't get cleared
+      'hello',
+    ],
+    prompt: {
+      value: '',
+    },
+  });
+});
+
 test('can clear with keyboard shortcut', async ({ shell }) => {
   await shell.runCommand('echo clear this');
   await shell.page.keyboard.press('Control+KeyL');

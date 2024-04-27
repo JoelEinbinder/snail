@@ -26,7 +26,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _activeItemListeners = new Set<() => void>();
   private _itemToElement = new WeakMap<LogItem, Element>();
   private _itemToParent = new WeakMap<LogItem, LogItem>();
-  private _itemToRetainers = new WeakMap<LogItem, Set<LogItem>>();
+  private _itemToRetainers = new WeakMap<LogItem, Set<LogItem|'forced'>>();
   private _suffixThrottle = new UIThrottle('', () => {
     this.blockDelegate?.titleUpdated();
   });
@@ -115,7 +115,7 @@ export class LogView implements Block, ShellDelegate, Findable {
       const parentWrapper = this._itemToElement.get(parent);
       parentWrapper.appendChild(element);
       this._itemToParent.set(item, parent);
-      this._itemToRetainers.get(parent).add(item);
+      this.addRetainer({item, parent});
     } else {
       if (this._prompt)
         this._scroller.insertBefore(element, this._prompt.render());
@@ -171,20 +171,29 @@ export class LogView implements Block, ShellDelegate, Findable {
       }
     }
     const parent = this._itemToParent.get(item);
-    if (parent) {
-      const retainers = this._itemToRetainers.get(parent);
-      if (retainers) {
-        retainers.delete(item);
-        if (retainers.size === 0)
-          this.removeItem(parent, true);
-      }
-    }
+    if (parent)
+      this.removeRetainer({item, parent});
     item.dispose();
     this._lockScroll();
     this._itemToElement.get(item)?.remove();
     this._itemToElement.delete(item);
     this._itemToParent.delete(item);
     this._itemToRetainers.delete(item);
+  }
+
+  addRetainer({item, parent}: {item: LogItem|'forced', parent: LogItem}) {
+    this._itemToRetainers.get(parent).add(item);
+  }
+
+  removeRetainer({item, parent}: {item: LogItem, parent: LogItem}) {
+    const retainers = this._itemToRetainers.get(parent);
+    if (retainers) {
+      retainers.delete(item);
+      if (retainers.size === 0) {
+        console.log('remove parent');
+        this.removeItem(parent, true);
+      }
+    }
   }
 
   clearAllExcept(savedItem: LogItem): void {

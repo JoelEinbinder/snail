@@ -46,6 +46,8 @@ export interface ShellDelegate {
   setTitle(title: string): void;
   setSuffix(suffix: string): void;
   scrollToBottom(): void;
+  addRetainer(params: {item: LogItem|'forced', parent: LogItem}): void;
+  removeRetainer(params: {item: LogItem|'forced', parent: LogItem}): void;
 }
 
 interface ConnectionCore {
@@ -649,13 +651,25 @@ export class Shell {
       await connection.send('Shell.kill', undefined).catch(e => {});
   }
 
+  _setActiveCommandBlock(commandBlock: CommandBlock|null) {
+    if (this._activeCommandBlock)
+      this._delegate.removeRetainer({item: 'forced', parent: this._activeCommandBlock});
+    if (commandBlock) {
+      // never clear the command block as long as it is active
+      this._delegate.addRetainer({item: 'forced', parent: commandBlock});
+      this._activeCommandBlock = commandBlock;
+    }else {
+      delete this._activeCommandBlock;
+    }
+  }
+
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command, this._size, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)
       return;
-    this._activeCommandBlock = commandBlock;
+    this._setActiveCommandBlock(commandBlock);
     this._delegate.setTitle(command);
     const unlockPrompt = this._lockPrompt('runCommand');
     this._activeItem.dispatch(commandBlock);
@@ -678,7 +692,7 @@ export class Shell {
         cdpManager.removeDebuggingInfoForTarget(this._uuid);
         return;
       }
-      delete this._activeCommandBlock;
+      this._setActiveCommandBlock(null);
       unlockPrompt();
       return;
     }
@@ -720,7 +734,7 @@ export class Shell {
       this._activeItem.dispatch(null);
     unlockPrompt();
     this._addJSBlock(result, connection, commandBlock);
-    delete this._activeCommandBlock;
+    this._setActiveCommandBlock(null);
   }
 
   _addJSBlock(result: Protocol.CommandReturnValues['Runtime.evaluate'], connection: JSConnection, commandBlock?: CommandBlock) {
