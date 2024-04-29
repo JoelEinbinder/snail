@@ -115,7 +115,11 @@ function tokenize(code, processTemplateParameter = null) {
         } else if (char === '~' && value === '' && (!code[i + 1] || '&|;()<> \t\n$/'.includes(code[i + 1]))) {
             value = '~';
             inReplacement = true;
-            pushToken(false);
+            pushToken(true);
+        } else if ('-+'.includes(char) && value === '~' && (!code[i + 1] || '&|;()<> \t\n$/'.includes(code[i + 1]))) {
+            value = '~' + char;
+            inReplacement = true;
+            pushToken(true);
         } else if (isSpace) {
             if (!inSpace)
                 pushToken(false);

@@ -22,15 +22,26 @@ let changes = null;
 const builtins = {
     cd: async (args, stdout, stderr) => {
         try {
-            const [dir = pathService.homedir()] = args;
+            let [dir = pathService.homedir()] = args;
+            if (dir === '-') {
+                if (!process.env.OLDPWD) {
+                    stderr.write('cd: OLDPWD not set\n');
+                    return 1;
+                }
+                dir = process.env.OLDPWD;
+                stdout.write(dir + '\n');
+            }
+            const oldDir = process.cwd();
             process.chdir(dir);
             if (!changes)
                 changes = {};
             changes.cwd = process.cwd();
             process.env.PWD = process.cwd();
+            process.env.OLDPWD = oldDir;
             if (!changes.env)
                 changes.env = {};
             changes.env.PWD = process.cwd();
+            changes.env.OLDPWD = oldDir;
         } catch (e) {
             if (e?.code === 'ENOENT') {
                 stderr.write(`cd: No such file or directory '${e.dest}'\n`);
@@ -560,6 +571,10 @@ function processWord(word) {
 function computeReplacement(replacement) {
     if (replacement === '~')
         return process.env.HOME || pathService.homedir();
+    if (replacement === '~+')
+        return process.cwd();
+    if (replacement === '~-')
+        return process.env.OLDPWD || '~-';
     if (replacement.startsWith('$')) {
         const key = replacement.substring(1);
         return key in process.env ? process.env[key] : '';

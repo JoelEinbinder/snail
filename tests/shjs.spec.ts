@@ -277,6 +277,23 @@ describe('tokenizer', () => {
             {type: 'word', value: 'foobar', raw: 'foo\\\nbar'},
         ]);
     });
+    it('should tokenize ~ replacements', () => {
+        expect(tokenize('echo ~').tokens).toEqual([
+            {type: 'word', value: 'echo', raw: 'echo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'replacement', value: '~', raw: '~'},
+        ]);
+        expect(tokenize('echo ~+').tokens).toEqual([
+            {type: 'word', value: 'echo', raw: 'echo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'replacement', value: '~+', raw: '~+'},
+        ]);
+        expect(tokenize('echo ~-').tokens).toEqual([
+            {type: 'word', value: 'echo', raw: 'echo'},
+            {type: 'space', value: ' ', raw: ' '},
+            {type: 'replacement', value: '~-', raw: '~-'},
+        ]);
+    })
 });
 
 describe('parser', () => {
@@ -506,4 +523,30 @@ describe('redirect', () => {
         const output = await sh`cat < ${helloFile}`;
         expect(output).toEqual(['hello world']);
     });
-})
+});
+
+describe('replacements', () => {
+    it('should replace ~ with the home directory', async () => {
+        const output = await sh`echo ~`;
+        expect(output).toEqual([os.homedir()]);
+    });
+    it('should replace $HOME with the home directory', async () => {
+        const output = await sh`echo $HOME`;
+        expect(output).toEqual([os.homedir()]);
+    });
+    it('should replace ~- with the previous directory', async ({workingDir}) => {
+        await sh`cd ${workingDir} && cd ..`;
+        const output = await sh`echo ~-`;
+        expect(output).toEqual([workingDir]);
+    });
+    it('should replace ~+ with the current directory', async ({workingDir}) => {
+        await sh`cd ${workingDir}`;
+        const output = await sh`echo ~+`;
+        expect(output).toEqual([workingDir]);
+    });
+    it('should cd - to the previous directory', async ({workingDir}) => {
+        await sh`cd ${workingDir} && cd ..`;
+        const output = await sh`cd - && pwd`;
+        expect(output).toEqual([workingDir, workingDir]);
+    });
+});
