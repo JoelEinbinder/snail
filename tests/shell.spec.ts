@@ -73,6 +73,14 @@ test('sees aliases in autocomplete', async ({ shell }) => {
   expect((await shell.serialize()).prompt.autocomplete).toEqual(['my_alias_for_test']);
 });
 
+test('has only directories in cd autocomplete', async ({ shell, workingDir }) => {
+  await shell.runCommand(`cd ${workingDir}; mkdir a b c; touch d e f; mkdir a/sub_a`);
+  await shell.typeInPrompt('cd ');
+  expect((await shell.serialize()).prompt.autocomplete).toEqual(['', 'a', 'b', 'c', '.']);
+  await shell.typeInPrompt('a/');
+  expect((await shell.serialize()).prompt.autocomplete).toEqual(['', 'sub_a']);
+});
+
 test('sees filter autocomplete properly', async ({ shell }) => {
   await shell.runCommand('export FOO_BAR=123; export FOO_BAZ=456; export NOT_THIS=789;');
   await shell.typeInPrompt('echo $FOO_');

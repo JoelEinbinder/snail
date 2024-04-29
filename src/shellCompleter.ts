@@ -19,6 +19,10 @@ registry.set('sudo', async (shell, line, abortSignal) => {
   };
 });
 
+registry.set('cd', async (shell, line, abortSignal) => {
+  return fileCompleter(shell, line, { directoriesOnly: true });
+});
+
 export function makeShellCompleter(shell: Shell): Completer {
   return async (line: string, abortSignal: AbortSignal) => {
     const {getAutocompletePrefix} = await import('../slug/shjs/transform');
@@ -29,7 +33,7 @@ export function makeShellCompleter(shell: Shell): Completer {
     const prefixText = line.slice(prefix.start, prefix.end);
     if (prefixText === '' || (prefix.isSh && !prefixText.includes(' '))) {
       if (line.includes('/'))
-        result = await fileCompleter(shell, line, true);
+        result = await fileCompleter(shell, line, {executablesOnly: true});
       else
         result = await commandCompleter(shell, line);
       return {
@@ -52,7 +56,7 @@ export function makeShellCompleter(shell: Shell): Completer {
     if (!result && registry.has(command))
       result = await registry.get(command)(shell, prefixText, abortSignal);
     if (!result)
-      result = await fileCompleter(shell, prefixText, false);
+      result = await fileCompleter(shell, prefixText);
     return {
       anchor: prefix.start + result.anchor,
       suggestions: result.suggestions,
@@ -122,13 +126,13 @@ async function commandCompleter(shell: Shell, line: string) {
   }
 }
 
-async function fileCompleter(shell: Shell, line: string, executablesOnly: boolean): ReturnType<Completer> {
+async function fileCompleter(shell: Shell, line: string, {executablesOnly, directoriesOnly}: {executablesOnly?: boolean, directoriesOnly?: boolean} = {}): ReturnType<Completer> {
   const pathStart = lastIndexIgnoringEscapes(line, ' ') + 1;
   const path = line.substring(pathStart);
   const anchor = path.lastIndexOf('/') + 1 + pathStart;
   const prefix = path.substring(0, anchor - pathStart);
-  const files = await parseCompletions(!executablesOnly ? `__file_completions all ${prefix}` : `__file_completions executable ${prefix}`);
   const directories = new Set(await parseCompletions(`__file_completions directory ${prefix}`));
+  const files = directoriesOnly ? [...directories] : await parseCompletions(!executablesOnly ? `__file_completions all ${prefix}` : `__file_completions executable ${prefix}`);
   const suggestions: Suggestion[] = [];
   if (!path || path === '.')
     files.push('.');
