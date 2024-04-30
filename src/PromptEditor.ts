@@ -11,7 +11,7 @@ import './completions/docker';
 import { setSelection } from "./selection";
 import { host } from "./host";
 import { makeHistoryCompleter } from "./historyCompleter";
-import { themeSelectionColor, themeTextColor } from "./theme";
+import { themeEditorColors } from "./theme";
 import { startAyncWork } from "./async";
 
 export function makePromptEditor(shell: Shell) {
@@ -21,11 +21,7 @@ export function makePromptEditor(shell: Shell) {
     language: 'shjs',
     padding: 0,
     wordWrap: true,
-    colors: {
-      cursorColor: themeTextColor(),
-      foreground: themeTextColor(),
-      selectionBackground: themeSelectionColor(),
-    }
+    colors: themeEditorColors(),
   });
   shell.globalVars().then(globalVars => {
     editor.setModeOptions({globalVars});

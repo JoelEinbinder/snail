@@ -189,10 +189,8 @@ export class LogView implements Block, ShellDelegate, Findable {
     const retainers = this._itemToRetainers.get(parent);
     if (retainers) {
       retainers.delete(item);
-      if (retainers.size === 0) {
-        console.log('remove parent');
+      if (retainers.size === 0)
         this.removeItem(parent, true);
-      }
     }
   }
 
@@ -413,7 +411,6 @@ export class LogView implements Block, ShellDelegate, Findable {
         const reportFile = (file: string) => callback({
           callback: () => {
             const active = this._activeItem || this._prompt;
-            console.log('reportFile', file, active);
             active?.recieveFilePath?.(file);    
           },
           title: file,  

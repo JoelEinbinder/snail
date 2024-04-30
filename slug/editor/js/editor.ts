@@ -140,6 +140,7 @@ export type EditorOptions = {
     gutterBackground?: string;
     gutterForeground?: string;
     gutterBorder?: string;
+    tokenColors?: [string, string][];
   }
 }
 

@@ -4,7 +4,7 @@ import { LogItem } from "./LogItem";
 import { setSelection } from "./selection";
 import type { Shell } from './Shell';
 import { FindParams } from "./Find";
-import { themeSelectionColor, themeTextColor } from "./theme";
+import { themeName, themeEditorColors } from "./theme";
 
 export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
@@ -28,11 +28,7 @@ export class CommandBlock implements LogItem {
       language: 'shjs',
       padding: 0,
       wordWrap: true,
-      colors: {
-        cursorColor: themeTextColor(),
-        foreground: themeTextColor(),
-        selectionBackground: themeSelectionColor(),
-      },
+      colors: themeEditorColors(),
       readOnly: true,
     });
     if (globalVars)
@@ -151,29 +147,36 @@ export class CommandPrefix {
       this._shellOrCommand.cachedEvaluation('__is_git_dirty'),
     ]);
     const sshAddress = this._shellOrCommand.sshAddress;
-    const colors = {
+    const colors = themeName() === 'dark' ? {
       path: sshAddress? 112 : 32,
       arrow: sshAddress ? 106 : 105,
       paren: sshAddress ? 119 : 75,
       gitName: sshAddress? 119 : 78,
+      gitStatus: 214,
+    } : {
+      path: sshAddress? 112 : 'var(--color-4)',
+      arrow: sshAddress ? 106 : 'var(--color-12)',
+      paren: sshAddress ? 119 : 'var(--color-6)',
+      gitName: sshAddress? 119 : 'var(--color-6)',
+      gitStatus: 'var(--color-3)',
     };
     const prettyDirName = computePrettyDirName(this._shellOrCommand, this._shellOrCommand.cwd);
-    const dir = Ansi(colors.path, prettyDirName);
+    const dir = Color(colors.path, prettyDirName);
     dir.classList.add('dir');
-    const mediumDir = Ansi(colors.path, mediumDirname(prettyDirName));
+    const mediumDir = Color(colors.path, mediumDirname(prettyDirName));
     mediumDir.classList.add('dir');
-    const tinyDir = Ansi(colors.path, tinyDirname(prettyDirName));
+    const tinyDir = Color(colors.path, tinyDirname(prettyDirName));
     tinyDir.classList.add('dir');
     if (this._onClick) {
       this.element.classList.add('clickable-dir-name');
       this.element.addEventListener('mousedown', this._onClick);
       this.element.addEventListener('contextmenu', this._onClick);
     }
-    const GitStatus = revName ? Ansi(colors.paren,"(", Ansi(colors.gitName, revName), Ansi(214, dirtyState ? '*' : ''), ")") : '';
+    const GitStatus = revName ? Color(colors.paren,"(", Color(colors.gitName, revName), Color(colors.gitStatus, dirtyState ? '*' : ''), ")") : '';
     const renderInner = () => {
       this.element.textContent = '';
       const badge = makeVenvBadge(this._shellOrCommand) || ' ';
-      const arrow = Ansi(colors.arrow, '»');
+      const arrow = Color(colors.arrow, '»');
       const layouts: (string | Node)[][] = [
         [dir, GitStatus, badge, arrow],
         [mediumDir, GitStatus, badge, arrow],
@@ -212,12 +215,12 @@ export function computePrettyDirName(shellOrCommand: Shell|CommandBlock, dir: st
 }
 
 /**
- * @param {number} color
+ * @param {number|string} color
  * @param {...Node|string|null} children
  */
-function Ansi(color, ...children) {
+function Color(color, ...children) {
   const span = document.createElement('span');
-  span.style.color = `var(--ansi-${color})`;
+  span.style.color = typeof color === 'number' ? `var(--ansi-${color})` : color;
   span.append(...children.filter(x => x));
   return span;
 }

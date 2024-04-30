@@ -3,25 +3,53 @@ import './actions';
 import { registerGlobalAction } from './actions';
 import { host } from './host';
 export function themeName(): 'light'|'dark' {
-    const theme =  new URL(window.location.href).searchParams.get('theme');
+    const theme = new URL(window.location.href).searchParams.get('theme');
     if (theme !== 'dark' && theme !== 'light')
         return 'dark';
     return theme;
 }
+
+function cssvar(name: string) {
+    return window.getComputedStyle(document.body).getPropertyValue(name);
+}
+
 export function themeCursorColor() {
-    return window.getComputedStyle(document.body).getPropertyValue('--color-cursor');
+    return cssvar('--color-cursor');
 }
 export function themeBackgroundColor() {
-    return window.getComputedStyle(document.body).getPropertyValue('--color-background');
+    return cssvar('--color-background');
 }
 export function themeTextColor() {
-    return window.getComputedStyle(document.body).getPropertyValue('--color-text');
+    return cssvar('--color-text');
 }
 export function themeBoldColor() {
-    return window.getComputedStyle(document.body).getPropertyValue('--color-bold');
+    return cssvar('--color-bold');
 }
 export function themeSelectionColor() {
-    return window.getComputedStyle(document.body).getPropertyValue('--color-selection');
+    return cssvar('--color-selection');
+}
+
+export function themeEditorColors(): import('../slug/editor/').EditorOptions['colors'] {
+    return {
+        cursorColor: themeTextColor(),
+        foreground: themeTextColor(),
+        selectionBackground: themeSelectionColor(),
+        tokenColors: [
+            ['keyword', cssvar('--ansi-135')],
+            ['number', cssvar('--color-3')],
+            ['comment', cssvar('--color-8')],
+            ['string', cssvar('--color-2')],
+            ['string-2', cssvar('--color-2')],
+            ['variable', themeName() === 'dark' ? cssvar('--ansi-153'): cssvar('--color-6')],
+            ['property', themeName() === 'dark' ? cssvar('--ansi-153'): cssvar('--color-6')],
+            ['def', themeName() === 'dark' ? cssvar('--ansi-153'): cssvar('--color-6')],
+            ['sh', themeTextColor()],
+            ['sh-replacement', themeName() === 'dark' ? cssvar('--color-11') : cssvar('--color-2')],
+            ['sh-template', cssvar('--color-6')],
+            ['sh-string', cssvar('--color-3')],
+            ['sh-comment', cssvar('--color-8')],
+          ]
+    };
 }
 
 if (themeName() !== 'dark') {

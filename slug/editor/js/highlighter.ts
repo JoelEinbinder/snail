@@ -31,7 +31,7 @@ export class Highlighter extends Emitter<{
     private _model: import('./model').Model,
     private _language: string = 'js',
     private _underlay?: (arg0: number, arg1: string) => Token[],
-    colors: { selectionBackground?: string; foreground?: string, textColor?: string } | undefined = {}) {
+    colors: { selectionBackground?: string; foreground?: string, textColor?: string, tokenColors?: [string, string][] } | undefined = {}) {
     super();
     this._model.on('selection-changed', ({ selections, previousSelections }) => {
       for (var selection of selections)
@@ -69,7 +69,7 @@ export class Highlighter extends Emitter<{
       
     this._mode = getMode(_language)?.({ indentUnit: 2 }, {});
 
-    this._colors =
+    this._colors = colors.tokenColors || (
       (_language !== 'css')
         ? [
             ['keyword', '#af5fff'],
@@ -77,14 +77,10 @@ export class Highlighter extends Emitter<{
             ['comment', '#666666'],
             ['string', '#00A600'],
             ['string-2', '#00A600'],
-            // ['atom', '#F4F4F4'],
-            // ['def', '#F4F4F4'],
-            // ['operator', '#F4F4F4'],
-            // ['meta', '#F4F4F4'],
             ['variable', '#afd7ff'],
             ['property', '#afd7ff'],
             ['def', '#afd7ff'],
-            ['sh', colors.foreground || '#f4f4f4'],
+            ['sh', colors.foreground || '#222'],
             ['sh-replacement', '#E5E500'],
             ['sh-template', '#00A6B2'],
             ['sh-string', '#999900'],
@@ -103,7 +99,7 @@ export class Highlighter extends Emitter<{
             ['variable', 'rgb(200, 0, 0)'],
             ['variable-2', 'rgb(0, 0, 128)'],
             ['property', 'rgb(200, 0, 0)']
-          ];
+          ]);
   }
 
   _findCurrentLineNumber(from: number) {
