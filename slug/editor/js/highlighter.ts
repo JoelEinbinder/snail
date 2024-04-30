@@ -84,7 +84,7 @@ export class Highlighter extends Emitter<{
             ['variable', '#afd7ff'],
             ['property', '#afd7ff'],
             ['def', '#afd7ff'],
-            ['sh', colors.foreground],
+            ['sh', colors.foreground || '#f4f4f4'],
             ['sh-replacement', '#E5E500'],
             ['sh-template', '#00A6B2'],
             ['sh-string', '#999900'],
