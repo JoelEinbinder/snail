@@ -63,7 +63,12 @@ class PipeTransport {
   sendString(messageStr) {
     if (this._closed)
       throw new Error('Pipe has been closed');
-    this._pipeWrite.write(messageStr);
+    this._pipeWrite.write(messageStr, err => {
+      if (err) {
+        console.error('pipe write error', err);
+        console.error('trying to write', messageStr);
+      }
+    });
     this._pipeWrite.write('\0');
   }
 

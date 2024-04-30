@@ -140,3 +140,7 @@ body:not(.vscode-dark) iframe.fullscreen {
 .terminal.xterm .xterm-viewport {
   overflow: hidden;
 }
+
+.terminal-block:focus {
+  outline: none;
+}

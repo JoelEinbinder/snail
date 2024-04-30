@@ -36,6 +36,7 @@ export class TerminalBlock implements LogItem {
   constructor(delegate: TerminalBlockDelegate) {
 
     this.element = document.createElement('div');
+    this.element.classList.add('terminal-block');
     this.element.style.height = '0px';
     this.element.style.overflow = 'hidden';
     this._terminal = new Terminal({
@@ -75,6 +76,17 @@ export class TerminalBlock implements LogItem {
         title: "Copy selection",
         callback: () => navigator.clipboard.writeText(this._terminal.getSelection()),
       }], event);
+    });
+    this.element.addEventListener('mousedown', event => {
+      // xterm default prevents the mousedown to stop browser selection
+      // But this stops focus from moving to the disabled terminal, which is bad
+      if (!event.defaultPrevented || this._terminal.enabled)
+        return;
+      this.element.setAttribute('tabindex', '-1');
+      this.element.focus();
+    });
+    this.element.addEventListener('focusout', () => {
+      this.element.removeAttribute('tabindex');
     });
     this._terminal.open(this.element);
     this._terminal.loadAddon(this._addon);
