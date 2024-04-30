@@ -55,8 +55,12 @@ const MyParser = Parser.extend(
           // let/await/async are special cause they are not keywords
           if (firstToken.value === 'let' || firstToken.value === 'await' || firstToken.value === 'async')
             return null;
-          if (gv.has(firstToken.value))
-            return null;
+          if (gv.has(firstToken.value)) {
+            // for global vars, prefer executing binaries like `http-server` over subtraction
+            // maybe should do this for local vars as well, but this seems fine for now.
+            if (candidate[firstToken.value.length] !== '-')
+              return null;
+          }
           for (const stack of this.scopeStack) {
             if (stack.var.includes(firstToken.value))
               return null;

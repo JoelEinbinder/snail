@@ -417,8 +417,8 @@ describe('transform', () => {
         shouldBeLeftAlone(`this`);
         shouldBeLeftAlone(`''.split('').toString();`);
         shouldBeLeftAlone(`await new Promise(x => setTimeout(x, 100));`);
-        // shouldBeLeftAlone(`doesNotExist();`);
-        // shouldBeLeftAlone(`doesNotExist = 5`);
+        shouldBeLeftAlone(`doesExist();`, 'sh', new Set(['doesExist']));
+        shouldBeLeftAlone(`doesExist = 5`, 'sh', new Set(['doesExist']));
     });
     it('should transform simple commands', () => {
         const code = `echo 'foo' bar' 'baz'`;
@@ -482,8 +482,18 @@ await sh("bar foo")`);
         const code = 'echo foo \\\n bar';
         expect(transformCode(code)).toEqual('await sh("echo foo \\\\\\n bar")');
     });
-    function shouldBeLeftAlone(code) {
-        expect(transformCode(code)).toEqual(code);
+    it('should transform http-server', () => {
+        const code = `http-server start`;
+        const globalVars = new Set(['http']);
+        expect(transformCode(code, 'sh', globalVars)).toEqual(`await sh("http-server start")`);
+    });
+    it('should leave http - server alone', () => {
+        const code = `http - server start`;
+        const globalVars = new Set(['http']);
+        shouldBeLeftAlone(code, 'sh', globalVars);
+    });
+    function shouldBeLeftAlone(code, ...args) {
+        expect(transformCode(code, ...args)).toEqual(code);
     }
 });
 
