@@ -29,8 +29,9 @@ global.bootstrap = (args) => {
   function notify(method, params) {
     binding(JSON.stringify({method, params}));
   }
-  const {abortPty, respond, setNotify, pty, ensureFreeShell} = require('./runtime');
-  setNotify(notify);
+  const {Runtime} = require('./runtime');
+  const runtime = new Runtime();
+  runtime.setNotify(notify);
 
   const origChangeDir = process.chdir;
 
@@ -45,12 +46,12 @@ global.bootstrap = (args) => {
   }
 
   global.sh = sh;
-  global.pty = pty;
-  global._abortPty = abortPty;
+  global.pty = runtime.pty.bind(runtime);
+  global._abortPty = runtime.abortPty.bind(runtime);
 
   // i have no idea why these needs promise.resolve
-  Promise.resolve().then(() => ensureFreeShell());
-  return respond;
+  Promise.resolve().then(() => runtime.ensureFreeShell());
+  return runtime.respond.bind(runtime);
 };
 
 

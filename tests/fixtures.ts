@@ -23,6 +23,7 @@ export const test = _test.extend<{
   waitForPort: (port: number) => Promise<void>;
   shellInDocker: ShellModel;
   populateFilesystem: (files: { [filePath: string]: string }) => Promise<void>;
+  runtime: import('../slug/shell/runtime.js').Runtime;
 }, {
   imageId: string|null;
   slugURL: string;
@@ -36,11 +37,15 @@ export const test = _test.extend<{
   tmpDirForTest: async ({ workingDir }, use) => {
     const tmpDir = await fs.promises.mkdtemp(path.join(require('os').tmpdir(), 'snail-temp-'));
     await use(tmpDir);
-    const entries = await fs.promises.readdir(path.join(tmpDir, 'snail-sockets'));
-    if (entries.length)
-      console.warn('some sockets still open', entries);
-    for (const entry of entries.filter(x => x.endsWith('.json')))
-      console.log(await fs.readFileSync(path.join(tmpDir, 'snail-sockets', entry), 'utf8'));
+    try {
+      const entries = await fs.promises.readdir(path.join(tmpDir, 'snail-sockets'));
+      if (entries.length)
+        console.warn('some sockets still open', entries);
+      for (const entry of entries.filter(x => x.endsWith('.json')))
+        console.log(await fs.readFileSync(path.join(tmpDir, 'snail-sockets', entry), 'utf8'));
+    } catch {
+      // for unit tests snail-sockets might not be created
+    }
     await fs.promises.rm(tmpDir, { recursive: true, force: true });
   },
   imageId: [async ({ }, use) => {
@@ -274,6 +279,12 @@ export const test = _test.extend<{
         await fs.promises.writeFile(filePath, content, 'utf8');
       }));
     });
+  },
+  runtime: async ({ tmpDirForTest }, use) => {
+    const { Runtime } = await import('../slug/shell/runtime.js');
+    const runtime = new Runtime(path.join(tmpDirForTest, 'snail-shell-sockets'));
+    runtime.setNotify(() => {});
+    await use(runtime);
   },
 });
 export default test;
