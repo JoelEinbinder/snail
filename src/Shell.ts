@@ -24,6 +24,7 @@ import { startAyncWork } from './async';
 import { AskPasswordBlock } from './AskPasswordBlock';
 import { ChartBlock } from './ChartBlock';
 import { somethingSelected } from './selection';
+import type { Runtime } from '../slug/shell/runtime-types';
 
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
 const socketCloseListeners = new Map<number, () => void>();
@@ -408,8 +409,13 @@ export class Shell {
       },
       setTitle: title => this._delegate.setTitle(title),
     });
-    const handler = {
+    const handler: {[key in keyof Runtime]: (params: Runtime[key]) => void} = {
       ...terminalHandler,
+      cwd: cwd => {
+        connection.cwd = cwd;
+        if (this._connections[0] === connection)
+          host.notify({ method: 'saveItem', params: { key: 'cwd', value: cwd}});  
+      },
       leftoverStdin: ({id,data}) => {
         this._leftoverStdin += data;
       },
@@ -457,11 +463,6 @@ export class Shell {
         });
       },
     }
-    connection.on('Shell.cwdChanged', message => {
-      connection.cwd = message.cwd;
-      if (this._connections[0] === connection)
-        host.notify({ method: 'saveItem', params: { key: 'cwd', value: message.cwd}});
-    });
     connection.on('Shell.notify', message => {
       const {method, params} = message.payload;
       handler[method](params);

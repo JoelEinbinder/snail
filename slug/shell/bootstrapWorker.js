@@ -14,18 +14,6 @@ const metadata = {
   connected: false,
   socketPath,
 };
-worker_threads.parentPort.on('message', changes => {
-  if (changes.env) {
-    for (const key in changes.env)
-      process.env[key] = changes.env[key];
-  }
-  if (changes.aliases) {
-    const {setAlias} = require('../shjs/index');
-    for (const key of Object.keys(changes.aliases)) {
-      setAlias(key, changes.aliases[key]);
-    }
-  }
-});
 const shellState = new ShellState();
 let isDaemon = false;
 const enabledTransports = new Set();
@@ -359,6 +347,17 @@ session.connectToMainThread();
 session.on('inspectorNotification', (/** @type {{method: string, params: any}} */ notification) => {
   if (notification.method === 'Runtime.bindingCalled' && notification.params.name === 'magic_binding') {
     const {method, params} = JSON.parse(notification.params.payload);
+    if (method === 'env') {
+      for (const key in params)
+        process.env[key] = params[key];
+    }
+    if (method === 'aliases') {
+      const {setAlias} = require('../shjs/index');
+      for (const key of Object.keys(params)) {
+        setAlias(key, params[key]);
+      }
+    }
+
     if (method === 'cwd') {
       shellState.setCwd(params, message => transport?.send(message));
     } else {

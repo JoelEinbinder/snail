@@ -29,7 +29,7 @@ class ShellState {
   }
 
   _notifyCwdChanged(send) {
-    send({method: 'Shell.cwdChanged', params: {cwd: this.cwd}});
+    send({method: 'Shell.notify', params: { payload: {method: 'cwd', params: this.cwd }}});
   }
 }
 

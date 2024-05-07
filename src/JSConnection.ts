@@ -1,11 +1,10 @@
 import {Protocol} from './protocol';
 import { RPC, Transport } from '../slug/protocol/RPC-ts';
+import type { Runtime } from '../slug/shell/runtime-types';
 
 type ExtraServerMethods = {
   'Shell.daemonStatus': { isDaemon: boolean };
-  // TODO start typing these methods
-  'Shell.notify': { payload: any; };
-  'Shell.cwdChanged': { cwd: string; };
+  'Shell.notify': { payload: { method: keyof Runtime , params: any }};
   
   'Shell.subshellDestroyed': { id: number };
   'Shell.messageFromSubshell': { id: number, message: any };
