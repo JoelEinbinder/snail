@@ -748,7 +748,11 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                 pipe.stdin.end();
                 return pipe.closePromise;
             });
-            return {stdin: main.stdin, kill: main.kill, closePromise};
+            return {stdin: main.stdin, kill: (...args) => {
+                const result1 = main.kill(...args);
+                const result2 = pipe.kill(...args);
+                return result1 && result2;
+            }, closePromise};
         } else if ('left' in expression) {
             const writableStdin = new Writable({
                 write(chunk, encoding, callback) {
@@ -757,7 +761,10 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
             });
             const left = execute(expression.left, noSideEffects, stdout, stderr, stdin);
             let active = left;
+            let killed = false;
             const closePromise = left.closePromise.then(async code => {
+                if (killed)
+                    return code;
                 if (!!code === (expression.type === 'or')) {
                     const right = execute(expression.right, noSideEffects, stdout, stderr, stdin);
                     active = right;
@@ -765,7 +772,14 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                 }
                 return code;   
             });
-            return {stdin: writableStdin, kill: (...args) => active.kill(...args), closePromise};
+            return {
+                stdin: writableStdin,
+                kill: (...args) => {
+                    killed = true;
+                    return active.kill(...args);
+                },
+                closePromise,
+            };
         }
     } catch(error) {
         if (!(error instanceof UserError))

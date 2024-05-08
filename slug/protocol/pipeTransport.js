@@ -43,7 +43,9 @@ class PipeTransport {
         this.onclose.call(null);
     });
     pipeRead.on('error', e => console.error('error', e));
-    pipeWrite.on('error', e => console.error('error', e));
+    // @ts-ignore
+    if (pipeRead !== pipeWrite)
+      pipeWrite.on('error', e => console.error('error', e));
     /** @type {(message: ProtocolResponse|ProtocolRequest) => void=} */
     this.onmessage = undefined;
     /** @type {() => void} */
@@ -63,13 +65,12 @@ class PipeTransport {
   sendString(messageStr) {
     if (this._closed)
       throw new Error('Pipe has been closed');
-    this._pipeWrite.write(messageStr, err => {
+    this._pipeWrite.write(messageStr + '\0', err => {
       if (err) {
         console.error('pipe write error', err);
         console.error('trying to write', messageStr);
       }
     });
-    this._pipeWrite.write('\0');
   }
 
   /**

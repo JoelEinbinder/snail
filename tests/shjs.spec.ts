@@ -6,7 +6,7 @@ import { sh } from '../slug/shjs/jsapi';
 import { tokenize } from '../slug/shjs/tokenizer';
 import { parse } from '../slug/shjs/parser';
 import { transformCode, getAutocompletePrefix } from '../slug/shjs/transform';
-import { getResult as apiGetResult } from '../slug/shjs'
+import { execute, getResult as apiGetResult } from '../slug/shjs'
 import fs from 'fs';
 import path from 'path';
 const { describe, expect } = test;
@@ -558,5 +558,28 @@ describe('replacements', () => {
         await sh`cd ${workingDir} && cd ..`;
         const output = await sh`cd - && pwd`;
         expect(output).toEqual([workingDir, workingDir]);
+    });
+});
+
+describe('kill', () => {
+    it('should kill a process', async () => {
+        const { closePromise, kill } = execute('sleep 100');
+        expect(kill(9)).toBe(true);
+        await closePromise;
+    });
+    it('should kill a process anded with another process', async () => {
+        const { closePromise, kill } = execute('sleep 100 && sleep 100');
+        expect(kill(9)).toBe(true);
+        await closePromise;
+    });
+    it('should kill a process orred with another process', async () => {
+        const { closePromise, kill } = execute('sleep 100 && sleep 100');
+        expect(kill(9)).toBe(true);
+        await closePromise;
+    });
+    it('should kill a process piped with another process', async () => {
+        const { closePromise, kill } = execute('sleep 100 | sleep 100');
+        expect(kill(9)).toBe(true);
+        await closePromise;
     });
 });
