@@ -3,7 +3,8 @@
   "version": "0.10.0-post",
   "workspaces": [
     "thumbnail_generator",
-    "sdk"
+    "sdk",
+    "node-pty"
   ],
   "private": true,
   "dependencies": {
@@ -13,7 +14,6 @@
     "fast-glob": "^3.3.0",
     "ignore": "^5.2.4",
     "mime-types": "^2.1.35",
-    "node-pty": "^0.10.1",
     "sqlite3": "^5.1.7",
     "userid": "^1.2.5"
   }

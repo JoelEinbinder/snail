@@ -1,4 +1,4 @@
-const {spawn, spawnSync} = require('child_process');
+const {spawn, spawnSync, exec} = require('child_process');
 const {Writable, Readable} = require('stream');
 const fs = require('fs');
 const path = require('path');
@@ -706,7 +706,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                 const defaultStdio = [process.stdin, process.stdout, process.stderr];
                 const child = spawn(executable, args, {
                     stdio: stdio.map((stream, index) => {
-                        if (typeof stream === 'number')
+                        if (typeof stream === 'number' || stream?.['fd'])
                             return stream;
                         if (!stream)
                             return 'pipe';
@@ -732,7 +732,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                 });
                 for (let i = 0; i < stdio.length; i++) {
                     const stream = stdio[i];
-                    if (stream === defaultStdio[i] || typeof stream === 'number' || !stream)
+                    if (stream === defaultStdio[i] || typeof stream === 'number' || !stream || stream['fd'])
                         continue;
                     if ('write' in stream)
                         child.stdio[i].pipe(stream, { end: false });

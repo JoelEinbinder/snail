@@ -280,11 +280,12 @@ export const test = _test.extend<{
       }));
     });
   },
-  runtime: async ({ tmpDirForTest }, use) => {
+  runtime: async ({ }, use) => {
     const { Runtime } = await import('../slug/shell/runtime.js');
-    const runtime = new Runtime(path.join(tmpDirForTest, 'snail-shell-sockets'));
+    const runtime = new Runtime();
     runtime.setNotify(() => {});
     await use(runtime);
+    runtime.dispose();
   },
 });
 export default test;

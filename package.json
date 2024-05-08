@@ -12,6 +12,9 @@
   "version": "0.10.0-post",
   "workspaces": [
     "slug",
+    "slug/thumbnail_generator",
+    "slug/sdk",
+    "slug/node-pty",
     "xterm.js"
   ],
   "main": "./electron/index.js",

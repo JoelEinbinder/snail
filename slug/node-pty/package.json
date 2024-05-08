@@ -1,0 +1,13 @@
+{
+  "name": "node-pty",
+  "description": "Fork pseudoterminals in Node.JS",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "install": "node-gyp rebuild"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.1.0",
+    "node-gyp": "^10.0.1"
+  }
+}
