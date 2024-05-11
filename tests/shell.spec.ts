@@ -261,8 +261,8 @@ test('stdin doesnt leak to the next command', async ({ shell }) => {
   await shell.waitForLine(/I am listening!/);
   await shell.page.keyboard.type('z');
   await secondCommandPromise;
-  const serailized = await shell.serialize();
-  expect(serailized.log[3]).toEqual(
+  const serialized = await shell.serialize();
+  expect(serialized.log[3]).toEqual(
     'I am listening!\n' +
     'recieved z'
   );

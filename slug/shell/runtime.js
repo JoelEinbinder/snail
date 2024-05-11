@@ -18,26 +18,17 @@ const child_process = require('child_process');
  */
 
 class Shell extends EventEmitter {
-  /**
-   * @param {number} rows
-   * @param {number} cols
-   */
-  constructor(cols, rows) {
+  _lock = Promise.resolve();
+  constructor() {
       super();
       //@ts-ignore
-      const {open, resize} = require('../node-pty/build/Release/pty.node');
+      const {open} = require('../node-pty/build/Release/pty.node');
       /** @type {{slave: number, master: number, pty: string }} */
-      const {slave, master, pty} = open(cols, rows);
-      this._process = child_process.fork(require.resolve('../shjs/wrapper.js'), [], {
-        stdio: [slave, slave, slave, 'ipc'],
-        detached: true,
+      const {slave, master, pty} = open(80, 24);
+      this.claim().then(release => {
+        this._setupProcess().then(release);
       });
       
-      this.closePromise = new Promise(x => this._process.once('exit', () => x({exitCode: -1, died: true})));
-      this.startupPromise = Promise.race([
-        new Promise(x => this._process.once('message', x)),
-        this.closePromise,
-      ]);
       const tty = require('tty');
       this._stream = new tty.ReadStream(master);
       this._stream.setEncoding('utf8');
@@ -56,10 +47,42 @@ class Shell extends EventEmitter {
     const {resize} = require('../node-pty/build/Release/pty.node');
     resize(this.master, cols, rows);
   }
+
+  async _setupProcess() {
+    this._process = child_process.fork(require.resolve('../shjs/wrapper.js'), [], {
+      stdio: [this.slave, this.slave, this.slave, 'ipc'],
+      detached: true,
+    });
+    
+    this.closePromise = new Promise(x => this._process.once('exit', () => x({exitCode: -1, died: true})));
+    await Promise.race([
+      new Promise(x => this._process.once('message', x)),
+      this.closePromise,
+    ]);
+  }
+
+  async claim() {
+    /** @type {() => void} */
+    let releaseShell;
+    /** @type {Promise<void>} */
+    const promise = new Promise(x => releaseShell = x);
+    const wait = this._lock;
+    this._lock = promise;
+    await wait;
+    return releaseShell;
+  }
   
-  destroy() {
+  softKill() {
+    this._process.send({
+      method: 'kill',
+    });
+  }
+
+  async destroy() {
+    const release = await this.claim();
     this._process.kill();
     this._stream.destroy();
+    release();
   }
 
   write(data) {
@@ -114,16 +137,10 @@ class Runtime {
   _resolveShellConnection = new Map();
   /** @type {import('./runtime-types').NotifyFunction} */
   _notify;
-  /** @type {Map<number, Shell>} */
-  _shells = new Map();
 
-  /** @type {WeakSet<Shell>} */
-  _wroteToStdin = new WeakSet();
+  _wroteToStdin = false;
   _shellId = 0;
-  _rows = 24;
-  _cols = 80;
-  /** @type {Shell|null} */
-  _freeShell = null;
+  _shell = new Shell();
   /** @type {Map<number, AbortController>} */
   _abortControllers = new Map();
   /** @type {Promise<{socketPath: string, uuid: string}>|null} */
@@ -132,20 +149,11 @@ class Runtime {
   constructor() {
     this.handler = {
       input: ({id, data}) => {
-        const shell = this._shells.get(id);
-        if (!shell) {
-          console.error('writing to nonexistant shell', {data});
-          return;
-        }
-        this._wroteToStdin.add(shell);
-        shell.write(data);
+        this._wroteToStdin = true;
+        this._shell.write(data);
       },
       resize: (size) => {
-        this._rows = size.rows;
-        this._cols = size.cols;
-        for (const shell of this._shells.values())
-          shell.resize(size.cols, size.rows);
-        this._freeShell?.resize(size.cols, size.rows);
+        this._shell.resize(size.cols, size.rows);
       }
     }
   }
@@ -155,18 +163,6 @@ class Runtime {
    */
   setNotify(_notify) {
     this._notify = _notify;
-  }
-
-  ensureFreeShell() {
-    if (this._freeShell)
-      return this._freeShell;
-    return this._freeShell = new Shell(this._cols, this._rows);
-  }
-
-  _claimFreeShell() {
-    const myshell = this.ensureFreeShell();
-    this._freeShell = null;
-    return myshell;
   }
 
   /**
@@ -184,41 +180,37 @@ class Runtime {
       abortSignal = controller.signal;
       this._abortControllers.set(previewToken, controller);
     }
-    const shell = this._claimFreeShell();
-    await shell.startupPromise;
+    const releaseShell = await this._shell.claim();
     if (abortSignal?.aborted) {
-      shell.destroy();
+      releaseShell();
       return 'this is the secret secret string:0';
     }
     const abort = () => {
       // silence all errors after we are done
       readStream.on('error', e => {});
       writeStream.on('error', e => {});
-      shell.destroy();
+      this._shell.softKill();
     };
     const fs = require('fs');
-    const net = require('net');
     const writeStream = fs.createWriteStream('', {
-      fd: shell.slave,
+      fd: this._shell.slave,
       autoClose: false,
     });
     const readStream = fs.createReadStream('', {
-      fd: shell.slave,
+      fd: this._shell.slave,
       autoClose: false,
     });
     abortSignal?.addEventListener('abort', abort);
-    shell.pause();
+    this._shell.pause();
     const magicToken = String(Math.random());
     const magicString = `\x1B[JOELMAGIC${magicToken}]\r\n`;
-    const closePromise = shell.runCommand(command, magicToken, !!previewToken);
-
+    const closePromise = this._shell.runCommand(command, magicToken, !!previewToken);
     const id = ++this._shellId;
-    this._shells.set(id, shell);
     this._notify('startTerminal', {id, previewToken});
     let waitForDoneCallback;
     const waitForDonePromise = Promise.race([
       new Promise(x => waitForDoneCallback = x),
-      shell.closePromise,
+      this._shell.closePromise,
     ]);
     let last = '';
     /** @type {(data: Buffer|string) => void} */
@@ -243,33 +235,27 @@ class Runtime {
       if (data)
         this._notify('data', {id, data, previewToken});
     };
-    shell.on('data', onData);
-    shell.resume();
+    this._shell.on('data', onData);
+    this._shell.resume();
     /** @type {{changes?: Changes, exitCode: number, died?: boolean}} */
     const returnValue = await closePromise;
     await waitForDonePromise;
     abortSignal?.removeEventListener('abort', abort);
     if (previewToken)
       this._abortControllers.delete(previewToken);
-    this._shells.delete(id);
     // silence all errors after we are done
     readStream.on('error', e => {});
     writeStream.on('error', e => {});
-    shell.off('data', onData);
-    if (this._freeShell || returnValue.died) {
-      shell.destroy();
-    } else {
-      if (this._wroteToStdin.has(shell)) {
-        // Don't reuse a shell if it had stdin written to it, because it might leak into the next command.
-        // We do something fancy to flush it out.
-        const data = await shell.flushStdin();
-        this._notify('leftoverStdin', {id, data, previewToken})
-        shell.destroy();
-      } else {
-        // This is where we reuse shells.
-        this._freeShell = shell;
-      }
+    this._shell.off('data', onData);
+    this._shell.pause();
+    if (this._wroteToStdin) {
+      // If it had stdin written to it, it might leak into the next command.
+      // We do something fancy to flush it out.
+      this._wroteToStdin = false;
+      const data = await this._shell.flushStdin();
+      this._notify('leftoverStdin', {id, data, previewToken})
     }
+    releaseShell();
     const {changes} = returnValue;
     if (changes && !previewToken) {
       if (changes.cwd) {
@@ -317,7 +303,7 @@ class Runtime {
   }
 
   dispose() {
-    this._freeShell?.destroy();
+    this._shell.destroy();
   }
 }
 

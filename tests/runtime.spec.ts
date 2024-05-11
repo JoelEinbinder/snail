@@ -27,9 +27,9 @@ test('pty should keep wokring after an abort', async ({runtime}) => {
 });
 
 test('pty should do stdin', async ({runtime}) => {
-    runtime.setNotify((method, params) => {
+    runtime.setNotify(method => {
         if (method === 'startTerminal')
-            runtime.respond({method: 'input', params: { id: params.id, data: 'foo\n'}});
+            runtime.respond({method: 'input', params: { data: 'foo\n'}});
     })
     await runtime.pty('read');
 });
@@ -37,24 +37,24 @@ test('pty should do stdin', async ({runtime}) => {
 test('pty should close on ctrl+c', async ({runtime}) => {
     test.setTimeout(5000);
     const ptyPromise = runtime.pty('sleep 1000');
-    runtime.setNotify((method, params) => {
+    runtime.setNotify(method => {
         if (method === 'startTerminal')
-            runtime.respond({method: 'input', params: { id: (params as Runtime['startTerminal']).id, data: '\u0003'}});
+            runtime.respond({method: 'input', params: { data: '\u0003'}});
     });
     await ptyPromise;
 });
 
 test('pty should ctrl+c after nano', async ({runtime}) => {
     test.setTimeout(5000);
-    runtime.setNotify((method, params) => {
+    runtime.setNotify(method => {
         if (method === 'startTerminal')
-            runtime.respond({method: 'input', params: { id: (params as Runtime['startTerminal']).id, data: '\u0018'}});
+            runtime.respond({method: 'input', params: { data: '\u0018'}});
     });
     const nanoPromise = runtime.pty('nano');
     await nanoPromise;
-    runtime.setNotify((method, params) => {
+    runtime.setNotify(method => {
         if (method === 'startTerminal')
-            runtime.respond({method: 'input', params: { id: (params as Runtime['startTerminal']).id, data: '\u0003'}});
+            runtime.respond({method: 'input', params: { data: '\u0003'}});
     });
     const sleepPromise = runtime.pty('sleep 1000');
     await sleepPromise;

@@ -231,7 +231,7 @@ export class Shell {
                     dataObj = { entry: 'uh-oh-invalid-parse-entry???!!!' };
                   const iframeBlock = new IFrameBlock(String(dataObj.entry), {
                     async sendInput(data) {
-                        await notify('input', { data, id});
+                        await notify('input', { data });
                     },
                     connection,
                     urlForIframe,
@@ -292,7 +292,7 @@ export class Shell {
                 // this should only be a uuid. dont notify otherwise in case its some kind of strange injection attempt
                 if (!/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/.test(dataStr))
                   break;
-                notify('input', { data: dataStr, id});
+                notify('input', { data: dataStr });
                 break;
               }
             }
@@ -327,7 +327,7 @@ export class Shell {
           await closeActiveTerminalBlock();
           const terminalBlock = new TerminalBlock({
             async sendInput(data) {
-                await notify('input', { data, id});
+                await notify('input', { data });
             },
             size: this._size,
             antiFlicker,

@@ -49,8 +49,6 @@ global.bootstrap = (args) => {
   global.pty = runtime.pty.bind(runtime);
   global._abortPty = runtime.abortPty.bind(runtime);
 
-  // i have no idea why these needs promise.resolve
-  Promise.resolve().then(() => runtime.ensureFreeShell());
   return runtime.respond.bind(runtime);
 };
 
