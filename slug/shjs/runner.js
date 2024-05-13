@@ -650,7 +650,7 @@ function buildSafeExecutables(descriptor) {
 }
 
 /**
- * @param {import('./ast').Expression} expression
+ * @param {import('./ast').Expression|null} expression
  * @param {boolean} noSideEffects
  * @param {Writable} stdout
  * @param {Writable} stderr
@@ -658,6 +658,13 @@ function buildSafeExecutables(descriptor) {
  * @return {{stdin: Writable|null, kill: (signal: number) => boolean, closePromise: Promise<number>}}
  */
 function execute(expression, noSideEffects, stdout, stderr, stdin) {
+    if (!expression) {
+        return {
+            closePromise: Promise.resolve(0),
+            stdin: new Writable({write(){}}),
+            kill: () => false,        
+        }
+    }
     try {
         if ('executable' in expression) {
             const { redirects } = expression;

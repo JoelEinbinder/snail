@@ -495,3 +495,13 @@ test('should consume blank lines in terminal blocks after a lot of data', async 
   await commandPromise;
   expect((await shell.serialize()).log[1]).toBe(prefix + 'first line');
 });
+
+test('can start typing a comment', async ({ shell }) => {
+  await shell.typeInPrompt('# ');
+  expect(await shell.serialize()).toEqual({
+    log: [],
+    prompt: {
+      value: '# ',
+    },
+  });
+});

@@ -20,7 +20,7 @@ import { fontString } from './font';
 import { Protocol } from './protocol';
 import { cdpManager } from './CDPManager';
 import { randomUUID } from './uuid';
-import { startAyncWork } from './async';
+import { startAyncWork, wrapAsyncFunction } from './async';
 import { AskPasswordBlock } from './AskPasswordBlock';
 import { ChartBlock } from './ChartBlock';
 import { somethingSelected } from './selection';
@@ -974,7 +974,7 @@ export class Shell {
         item.dispose();
       belowPromptItems = [];
     }
-    const onChange = async () => {
+    const onChange = wrapAsyncFunction('shell preview', async () => {
       const value = autocomplete.valueWithSuggestion();
       await autocomplete.waitForQuiet();
       if (value !== autocomplete.valueWithSuggestion())
@@ -1078,7 +1078,8 @@ export class Shell {
       if (result.exceptionDetails)
         return;
       belowPrompt.append(renderRemoteObjectOneLine(result.result, this._size.current.cols));
-    }
+    });
+
     const willResizeEvent = new JoelEvent<void>(undefined);
     editor.on('change', onChange);
     editor.on('might-resize', () => {

@@ -136,7 +136,7 @@ function transformCode(code, fnName = 'sh', globalVars = new Set()) {
 }
 
 /**
- * @return {{ start: number, end: number, isSh: boolean } | null}
+ * @return {{ start: number, end: number, isSh: boolean, isComment?: boolean } | null}
  */
 function getAutocompletePrefix(code, globalVars = new Set()) {
   const magicString = 'JOEL_AUTOCOMPLETE_MAGIC';
@@ -144,7 +144,7 @@ function getAutocompletePrefix(code, globalVars = new Set()) {
   const tokens = [];
   let before = gv;
   gv = globalVars;
-  /** @type {null|{start: number, end: number, isSh: boolean}} */
+  /** @type {null|{start: number, end: number, isSh: boolean, isComment?: boolean}} */
   let found = null;
   try {
     const fullCode = code + magicString;
@@ -153,6 +153,17 @@ function getAutocompletePrefix(code, globalVars = new Set()) {
         found = {start: node.object.start, end: node.object.end, isSh: false};
       } else if (node.type === 'ShStatement') {
         const shText = fullCode.slice(node.start, node.end);
+        const shTokens = tokenize(shText, code => '');
+        // check if magicString is in a comment
+        for (const token of shTokens.tokens) {
+          if (token.raw.includes(magicString)) {
+            if (token.type === 'comment') {
+              found = {start: node.start, end: node.end, isSh: true, isComment: true};
+              return;
+            }
+            break;
+          }
+        }
         if (shText.trim() === magicString)
           found = {start: code.length, end: code.length, isSh: false};
         else if (shText.includes(magicString)) {

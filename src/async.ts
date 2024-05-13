@@ -20,6 +20,20 @@ export function startAyncWork(name = 'Anonymous Work') {
     workEvent.dispatch();
   }
 }
+
+export function wrapAsyncFunction<Args extends any[], ReturnVal>(name: string, fn: (...args: Args) => Promise<ReturnVal>) {
+  return async function (...args: Args) {
+    const done = startAyncWork(name);
+    try {
+      const retVal = await fn.call(this, ...args);
+      done();
+      return retVal;
+    } catch (e) {
+      done();
+      throw e;
+    }
+  }
+}
 export async function waitForAnyWorkToFinish() {
   while(workContexts[workContexts.length - 1].works.size)
     await workEvent.once();

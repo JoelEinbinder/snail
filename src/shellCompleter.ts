@@ -28,7 +28,7 @@ export function makeShellCompleter(shell: Shell): Completer {
     const {getAutocompletePrefix} = await import('../slug/shjs/transform');
     const prefix = getAutocompletePrefix(line, await shell.globalVars());
     let result: CompletionResult;
-    if (prefix === null)
+    if (prefix === null || (prefix.isSh && prefix.isComment))
       return null;
     const prefixText = line.slice(prefix.start, prefix.end);
     if (prefixText === '' || (prefix.isSh && !prefixText.includes(' '))) {
