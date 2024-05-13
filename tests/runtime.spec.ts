@@ -34,14 +34,14 @@ test('pty should do stdin', async ({runtime}) => {
     await runtime.pty('read');
 });
 
-test('pty should close on ctrl+c', async ({runtime}) => {
+test('pty should close on SIGINT ctrl+c', async ({runtime}) => {
     test.setTimeout(5000);
     const ptyPromise = runtime.pty('sleep 1000');
     runtime.setNotify(method => {
         if (method === 'startTerminal')
             runtime.respond({method: 'input', params: { data: '\u0003'}});
     });
-    await ptyPromise;
+    expect(await ptyPromise).toBe('this is the secret secret string:130');
 });
 
 test('pty should ctrl+c after nano', async ({runtime}) => {
@@ -60,3 +60,12 @@ test('pty should ctrl+c after nano', async ({runtime}) => {
     await sleepPromise;
 });
 
+test('pty should close on SIGQUIT ctrl+/', async ({runtime}) => {
+    test.setTimeout(5000);
+    const ptyPromise = runtime.pty('sleep 1000');
+    runtime.setNotify(method => {
+        if (method === 'startTerminal')
+            runtime.respond({method: 'input', params: { data: '\u001c'}});
+    });
+    expect(await ptyPromise).toBe('this is the secret secret string:131');
+});

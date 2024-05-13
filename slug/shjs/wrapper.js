@@ -56,3 +56,8 @@ process.on('SIGINT', () => {
   // catch sigint, but still kill the inner process
   killLastCommand(2);
 });
+
+process.on('SIGQUIT', () => {
+  // catch sigquit, but still kill the inner process
+  killLastCommand(3);
+});
