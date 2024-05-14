@@ -41,7 +41,8 @@ process.send('intialized');
 
 let killLastCommand = (signal) => void 0;
 async function runCommand(command, magicToken, noSideEffects) {
-  const {stdin, closePromise, kill} = execute(command, process.stdout, process.stderr, process.stdin, noSideEffects);
+  const stdin = noSideEffects ? null : process.stdin;
+  const { closePromise, kill} = execute(command, process.stdout, process.stderr, stdin, noSideEffects);
   killLastCommand = kill;
   const c = await closePromise;
   process.exitCode = c;

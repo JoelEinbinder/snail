@@ -7,7 +7,7 @@ module.exports = {
    * @param {string} command
    * @param {import('stream').Writable} stdout
    * @param {import('stream').Writable} stderr
-   * @param {import('stream').Readable=} stdin
+   * @param {import('stream').Readable|null=} stdin
    */
   execute(command, stdout = process.stdout, stderr = process.stderr, stdin = process.stdin, noSideEffects = false) {
     const {tokens} = tokenize(command);

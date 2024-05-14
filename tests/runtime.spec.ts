@@ -69,3 +69,7 @@ test('pty should close on SIGQUIT ctrl+/', async ({runtime}) => {
     });
     expect(await ptyPromise).toBe('this is the secret secret string:131');
 });
+
+test('pty should not wait for input in preview', async ({ runtime }) => {
+    expect(await runtime.pty('cat', 1), 'this is the secret secret string:0');
+});

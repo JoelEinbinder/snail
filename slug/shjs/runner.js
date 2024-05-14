@@ -706,7 +706,7 @@ function signalToCode(signal) {
  * @param {boolean} noSideEffects
  * @param {Writable} stdout
  * @param {Writable} stderr
- * @param {Readable=} stdin
+ * @param {Readable|null=} stdin
  * @return {{stdin: Writable|null, kill: (signal: number) => boolean, closePromise: Promise<number>}}
  */
 function execute(expression, noSideEffects, stdout, stderr, stdin) {
@@ -748,7 +748,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
             if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
                 return execute({executable: 'cd', args: [executable], redirects}, noSideEffects, stdout, stderr, stdin);
             } else {
-                /** @type {(Readable|Writable|number|undefined)[]} */
+                /** @type {(Readable|Writable|number|undefined|null)[]} */
                 const stdio = [stdin, stdout, stderr];
                 const openFds = [];
                 for (const redirect of redirects || []) {
@@ -767,6 +767,8 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                     stdio: stdio.map((stream, index) => {
                         if (typeof stream === 'number' || stream?.['fd'])
                             return stream;
+                        if (stream === null)
+                            return 'ignore';
                         if (!stream)
                             return 'pipe';
                         if (stream === defaultStdio[index])
@@ -801,7 +803,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                     if ('write' in stream)
                         child.stdio[i].pipe(stream, { end: false });
                     else
-                        stream.pipe(/** @type {Writable} */(child.stdio[i]), { end: false });
+                        stream.pipe(/** @type {Writable} */(child.stdio[i]), { end: true });
                 }
             return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
             }
