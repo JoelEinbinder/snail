@@ -204,8 +204,18 @@ function isShellLike(code, globalVars = new Set()) {
   const allowedTokenTypes = new Set([
     shTokenType,
     tokTypes.eof,
-  ])
-  return !tokens.some(t => !allowedTokenTypes.has(t.type));
+  ]);
+  return tokens.every(t => {
+    if (!allowedTokenTypes.has(t.type))
+      return false;
+    if (t.type == shTokenType) {
+      /** @type {import('./tokenizer').Token[]} */
+      const tokens = t.value.tokens;
+      if (tokens.some(t => t.type === 'template'))
+        return false;
+    }
+    return true;
+  });
 }
 
 module.exports = {transformCode, getAutocompletePrefix, parseCodeIntoTokens, isShellLike};
