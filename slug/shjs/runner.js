@@ -713,7 +713,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
     if (!expression) {
         return {
             closePromise: Promise.resolve(0),
-            stdin: new Writable({write(){}}),
+            stdin: createNullWriter(),
             kill: () => false,        
         }
     }
@@ -740,7 +740,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                 if (closePromise !== 'pass') {
                     return {
                         closePromise,
-                        stdin: new Writable({write(){}}),
+                        stdin: createNullWriter(),
                         kill: () => void 0,
                     }
                 }
@@ -853,10 +853,18 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
         stderr.write(`shjs: ${error.message}\n`);
         return {
             closePromise: Promise.resolve(1),
-            stdin: new Writable({write(){}}),
+            stdin: createNullWriter(),
             kill: () => void 0,
         }
     }
+}
+
+function createNullWriter() {
+    return new Writable({
+        write(chunk, encoding, callback) {
+            callback();
+        }
+    });
 }
 
 function arrayWriter(datas) {

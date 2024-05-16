@@ -14,16 +14,6 @@ function sh(strings, ...values) {
  * @param {TemplateStringsArray} strings
  * @param {...any} values
  */
-sh.passThrough = function(strings, values) {
-  const expression = parseTemplate(strings, values);
-  const {closePromise} = execute(expression, false, process.stdout, process.stderr, process.stdin);
-  return closePromise;
-}
-
-/**
- * @param {TemplateStringsArray} strings
- * @param {...any} values
- */
 function parseTemplate(strings, ...values) {
   let built = '';
   for (let i = 0; i < strings.length; i++) {

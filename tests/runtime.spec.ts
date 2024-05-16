@@ -73,3 +73,15 @@ test('pty should close on SIGQUIT ctrl+/', async ({runtime}) => {
 test('pty should not wait for input in preview', async ({ runtime }) => {
     expect(await runtime.pty('cat', 1), 'this is the secret secret string:0');
 });
+
+test('pty should fail unfinished command', async ({ runtime }) => {
+    expect(await runtime.pty('echo foo |', 1), 'this is the secret secret string:0');
+});
+
+test('pty should finish grepping nothing', async ({ runtime }) => {
+    expect(await runtime.pty('echo foo | grep', 1), 'this is the secret secret string:0');
+});
+
+test('pty can preview ps aux piped nowhere', async ({ runtime }) => {
+    expect(await runtime.pty('ps aux |', 1), 'this is the secret secret string:0');
+});
