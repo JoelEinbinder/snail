@@ -322,6 +322,8 @@ test('can clear with keyboard shortcut', async ({ shell }) => {
 
 test('should report uncaught node errors', async ({ shell }) => {
   await shell.runCommand(`const socket = net.connect({ path: './not-a-real-path.txt' });`);
+  // wait for the error to propagate all the way.
+  await new Promise(x => setTimeout(x, 500));
   await shell.runCommand('echo still alive');
   const serialized = await shell.serialize();
   serialized.log = serialized.log.map(x => x.replace(/^\s*at .*$/gm, '<readacted>'))
