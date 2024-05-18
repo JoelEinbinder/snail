@@ -207,7 +207,7 @@ const handler = {
       });
     } else {
       const { connectToSocket } = require('./spawnJSProcess');
-      const socket = connectToSocket(params.socketPath);
+      const socket = await connectToSocket(params.socketPath);
       output = {
         socket,
         closePromise: new Promise(x => socket.onclose = x),
@@ -223,7 +223,7 @@ const handler = {
     });
     subshells.set(id, proxy);
     await Promise.race([
-      /** @type {Promise<void>} */ (new Promise(x => socket.onopen = x)),
+      socket.readyPromise,
       closePromise,
     ]);
     if (startedTerminal)
@@ -453,10 +453,18 @@ async function globalObjectId() {
   return objectId;
 }
 
+let metadataLock = null;
 async function writeMetadata() {
-  await fs.promises.writeFile(metadataPath, JSON.stringify(metadata, null, 2), {
+  while (metadataLock) {
+    await metadataLock;
+  }
+  const lock = fs.promises.writeFile(metadataPath, JSON.stringify(metadata, null, 2), {
     mode: 0o600,
   });
+  metadataLock = lock;
+  await metadataLock;
+  if (metadataLock === lock)
+    metadataLock = null;
 }
 
 function maybeExit() {

@@ -112,8 +112,7 @@ function createJSShell() {
       didClose = true;
       onclose();
     }
-    //@ts-ignore
-    await new Promise(x => socket.onopen = x);
+    await socket.readyPromise;
   };
   const startupPromise = init();
   return {

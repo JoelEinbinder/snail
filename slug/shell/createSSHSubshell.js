@@ -19,6 +19,9 @@ let askpassUniqueId = 0;
  */
 async function createSSHSubshell(delegate) {
   const {spawn} = require('child_process');
+  let readyCallback;
+  /** @type {Promise<void>} */
+  const readyPromise = new Promise(x => readyCallback = x);
   /** @type {import('../protocol/ProtocolProxy').ProtocolSocket} */
   const socket = {
     send(message) {
@@ -27,6 +30,7 @@ async function createSSHSubshell(delegate) {
     close() {
       child.kill();
     },
+    readyPromise,
   };
   const {SSHPassUtility} = require('./sshPassUtility');
   const sshDir = path.join(pathService.tmpdir(), 'snail-ssh-askpass');
@@ -71,7 +75,7 @@ async function createSSHSubshell(delegate) {
       socket.onmessage?.({data});
     },
     ready: () => {
-      socket.onopen?.();
+      readyCallback();
     }
   });
   pipeTransport.onclose = () => {

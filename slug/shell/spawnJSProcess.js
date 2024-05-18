@@ -7,7 +7,7 @@ const fs = require('fs');
  * send: (message:string) => void,
  * close: () => void,
  * onmessage?: (event: {data: string}) => void,
- * onopen?: () => void,
+ * readyPromise: Promise<void>,
  * onclose?: () => void,
  * }} JSSocket
  */
@@ -53,36 +53,46 @@ function spawnJSProcess({cwd, nodePath, bootstrapPath}) {
   }
 }
 
-function connectToSocket(socketPath) {
+async function connectToSocket(socketPath) {
   const net = require('net');
 
   /** @type {net.Socket} */
-  const unixSocket = net.connect({
-    path: socketPath,
-  });
-  
-  unixSocket.once('ready', () => {
-    socket.onopen?.();
-  });
-
-  const {PipeTransport} = require('../protocol/pipeTransport');
-  const transport = new PipeTransport(unixSocket, unixSocket);
-  transport.onmessage = message => {
-    socket?.onmessage?.({data: JSON.stringify(message)});
-  }
-  transport.onclose = () => socket.onclose?.();
-  
-  /** @type {JSSocket} */ 
-  const socket = {
-    close() {
-      unixSocket.end();
-    },
-    send(message) {
-      transport.sendString(message);
+  let unixSocket;
+  for (let i = 0; i < 10; i++) {
+    try {
+      unixSocket = net.connect({
+        path: socketPath,
+      });    
+      const readyPromise = new Promise(resolve => unixSocket.once('ready', resolve));
+      const {PipeTransport} = require('../protocol/pipeTransport');
+      const transport = new PipeTransport(unixSocket, unixSocket);
+      transport.onmessage = message => {
+        socket?.onmessage?.({data: JSON.stringify(message)});
+      }
+      transport.onclose = () => socket.onclose?.();
+      
+      /** @type {JSSocket} */ 
+      const socket = {
+        close() {
+          unixSocket.end();
+        },
+        send(message) {
+          transport.sendString(message);
+        },
+        readyPromise,
+      }
+      
+      await new Promise((resolve, reject) => {
+        unixSocket.once('connect', resolve);
+        unixSocket.once('error', reject);
+      });
+      return socket;
+    } catch (e) {
+      console.error('error connecting to socket', e);
+      await new Promise(x => setTimeout(x, 100));
     }
   }
-  
-  return socket;
+  throw new Error('Failed to connect to socket after 10 attempts');
 }
 
 module.exports = {spawnJSProcess, connectToSocket};

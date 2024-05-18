@@ -3,7 +3,7 @@
  *  send: (message:string) => void,
  *  close: () => void,
  *  onmessage?: (event: {data: string}) => void,
- *  onopen?: () => void,
+ *  readyPromise: Promise<void>,
  * }} ProtocolSocket
  */
 class ProtocolProxy {

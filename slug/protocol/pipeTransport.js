@@ -42,10 +42,10 @@ class PipeTransport {
       if (this.onclose)
         this.onclose.call(null);
     });
-    pipeRead.on('error', e => console.error('error', e));
+    pipeRead.on('error', e => console.error('pipeRead error', e));
     // @ts-ignore
     if (pipeRead !== pipeWrite)
-      pipeWrite.on('error', e => console.error('error', e));
+      pipeWrite.on('error', e => console.error('pipeWrite error', e));
     /** @type {(message: ProtocolResponse|ProtocolRequest) => void=} */
     this.onmessage = undefined;
     /** @type {() => void} */

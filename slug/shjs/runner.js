@@ -165,13 +165,19 @@ const builtins = {
             /** @type {import('../shell/metadata').Metadata[]} */
             const metadatas = [];
             for (const metadataString of metadataStrings) {
-                /** @type {import('../shell/metadata').Metadata} */
-                const metadata = JSON.parse(await fs.promises.readFile(path.join(socketDir, metadataString), 'utf8'));
-                if (quiet) {
-                    if (!metadata.connected)
-                        return 0;
-                } else {
-                    metadatas.push(metadata);
+                const jsonString = await fs.promises.readFile(path.join(socketDir, metadataString), 'utf8');
+                try {
+                    /** @type {import('../shell/metadata').Metadata} */
+                    const metadata = JSON.parse(jsonString);
+                    if (quiet) {
+                        if (!metadata.connected)
+                            return 0;
+                    } else {
+                        metadatas.push(metadata);
+                    }
+                } catch (e) {
+                    console.error('failed to parse', {jsonString});
+                    throw e;
                 }
             }
             if (quiet)
