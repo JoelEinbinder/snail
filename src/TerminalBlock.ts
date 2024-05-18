@@ -93,6 +93,7 @@ export class TerminalBlock implements LogItem {
     
     this._listeners.push(this._terminal.onData(data => {
       delegate.sendInput(data);
+      this._addon.scrollIntoViewIfNeeded();
     }));
     this._listeners.push(this._terminal.buffer.onBufferChange(() => {
       this._willResize();

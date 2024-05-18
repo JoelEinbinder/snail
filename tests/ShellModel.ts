@@ -113,6 +113,14 @@ class Split {
   activeFrame() {
     return this.page.frames()[this.page.frames().length - 1];
   }
+
+  scrollTop() {
+    return this._block.locator('.log-view-scroller').evaluate(node => node.scrollTop);
+  }
+
+  setScrollTop(scrollTop: number) {
+    return this._block.locator('.log-view-scroller').evaluate((node, scrollTop) => node.scrollTop = scrollTop, scrollTop);
+  }
 }
 export class ShellModel extends Split {
   private constructor(public page: Page) {

@@ -40,6 +40,10 @@ export class RendererAddon implements ITerminalAddon, Findable {
   get rowHeight() {
     return this._renderer?.rowHeight;
   }
+
+  scrollIntoViewIfNeeded() {
+    this._renderer?.scrollIntoViewIfNeeded();
+  }
 }
 
 class Renderer implements IRenderer {
@@ -151,12 +155,16 @@ class Renderer implements IRenderer {
   }
   onCursorMove(): void {
     this._updateCursor();
+  }
+
+  scrollIntoViewIfNeeded() {
     if (isAncesetorOf(this._terminal.element, this._terminal.element.ownerDocument.activeElement)) {
       // TODO make this work for firefox?
       // @ts-ignore
       this._cursor.scrollIntoViewIfNeeded?.();
     }
   }
+
   private _updateCursor() {
     const cursorPosition = this._cursorPosition();
     if (cursorPosition) {

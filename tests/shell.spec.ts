@@ -519,3 +519,16 @@ test('can start a template', async ({ shell }) => {
     },
   });
 });
+
+test('does not scroll down when lots of messages come in', async ({ shell }) => {
+  await shell.runCommand(`for (let i = 0; i < 300; i++) console.log(i);`);
+  await shell.setScrollTop(0);
+  expect(await shell.scrollTop()).toBe(0);
+  const commandPromise = shell.runCommand(`node -e 'setInterval(() => console.log("hi"), 10)'`);
+  await shell.waitForLine(/hi/);
+  await shell.setScrollTop(0);
+  await new Promise(x => setTimeout(x, 500));
+  expect(await shell.scrollTop()).toBe(0);
+  await shell.page.keyboard.press('Control+C');
+  await commandPromise;
+});

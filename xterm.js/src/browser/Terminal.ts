@@ -468,13 +468,14 @@ export class Terminal extends CoreTerminal implements ITerminal {
     // Performance: Use a document fragment to build the terminal
     // viewport and helper elements detached from the DOM
     const fragment = document.createDocumentFragment();
-    this._viewportElement = document.createElement('div');
-    this._viewportElement.classList.add('xterm-viewport');
-    fragment.appendChild(this._viewportElement);
-    this._viewportScrollArea = document.createElement('div');
-    this._viewportScrollArea.classList.add('xterm-scroll-area');
-    this._viewportElement.appendChild(this._viewportScrollArea);
-
+    if (!this.options.delegatesScrolling) {
+      this._viewportElement = document.createElement('div');
+      this._viewportElement.classList.add('xterm-viewport');
+      fragment.appendChild(this._viewportElement);
+      this._viewportScrollArea = document.createElement('div');
+      this._viewportScrollArea.classList.add('xterm-scroll-area');
+      this._viewportElement.appendChild(this._viewportScrollArea);
+    }
     this.screenElement = document.createElement('div');
     this.screenElement.classList.add('xterm-screen');
     // Create the container that will hold helpers like the textarea for
@@ -531,15 +532,17 @@ export class Terminal extends CoreTerminal implements ITerminal {
     this._mouseService = this._instantiationService.createInstance(MouseService);
     this._instantiationService.setService(IMouseService, this._mouseService);
 
-    this.viewport = this._instantiationService.createInstance(Viewport,
-      (amount: number) => this.scrollLines(amount, true, ScrollSource.VIEWPORT),
-      this._viewportElement,
-      this._viewportScrollArea,
-      this.element
-    );
-    this.viewport.onThemeChange(this._colorManager.colors);
-    this.register(this._inputHandler.onRequestSyncScrollBar(() => this.viewport!.syncScrollArea()));
-    this.register(this.viewport);
+    if (!this.options.delegatesScrolling) {
+      this.viewport = this._instantiationService.createInstance(Viewport,
+        (amount: number) => this.scrollLines(amount, true, ScrollSource.VIEWPORT),
+        this._viewportElement!,
+        this._viewportScrollArea!,
+        this.element
+      );
+      this.viewport.onThemeChange(this._colorManager.colors);
+      this.register(this._inputHandler.onRequestSyncScrollBar(() => this.viewport!.syncScrollArea()));
+      this.register(this.viewport);
+    }
 
     this.register(this.onCursorMove(() => {
       this._renderService!.onCursorMove();
@@ -548,7 +551,7 @@ export class Terminal extends CoreTerminal implements ITerminal {
     this.register(this.onResize(() => this._renderService!.onResize(this.cols, this._bufferService.rows)));
     this.register(this.onBlur(() => this._renderService!.onBlur()));
     this.register(this.onFocus(() => this._renderService!.onFocus()));
-    this.register(this._renderService.onDimensionsChange(() => this.viewport!.syncScrollArea()));
+    this.register(this._renderService.onDimensionsChange(() => this.viewport?.syncScrollArea()));
 
     this._selectionService = this.register(this._instantiationService.createInstance(SelectionService,
       this.element,
@@ -568,11 +571,12 @@ export class Terminal extends CoreTerminal implements ITerminal {
       this.textarea!.select();
     }));
     this.register(this._onScroll.event(ev => {
-      this.viewport!.syncScrollArea();
+      this.viewport?.syncScrollArea();
       this._selectionService!.refresh();
     }));
-    this.register(addDisposableDomListener(this._viewportElement, 'scroll', () => this._selectionService!.refresh()));
-
+    if (!this.options.delegatesScrolling) {
+      this.register(addDisposableDomListener(this._viewportElement!, 'scroll', () => this._selectionService!.refresh()));
+    }
     this._mouseZoneManager = this._instantiationService.createInstance(MouseZoneManager, this.element, this.screenElement);
     this.register(this._mouseZoneManager);
     this.register(this.onScroll(() => this._mouseZoneManager!.clearAll()));
@@ -874,13 +878,13 @@ export class Terminal extends CoreTerminal implements ITerminal {
 
     this.register(addDisposableDomListener(el, 'touchstart', (ev: TouchEvent) => {
       if (this.coreMouseService.areMouseEventsActive) return;
-      this.viewport!.onTouchStart(ev);
+      this.viewport?.onTouchStart(ev);
       return this.cancel(ev);
     }, { passive: true }));
 
     this.register(addDisposableDomListener(el, 'touchmove', (ev: TouchEvent) => {
       if (this.coreMouseService.areMouseEventsActive) return;
-      if (!this.viewport!.onTouchMove(ev)) {
+      if (!this.viewport?.onTouchMove(ev)) {
         return this.cancel(ev);
       }
     }, { passive: false }));

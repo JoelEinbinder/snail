@@ -13,6 +13,7 @@ import { QuickPickProvider, showQuickPick } from './QuickPick';
 import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_match_patch';
 import { iconPathForPath } from '../slug/icon_service/iconService';
 import { Placeholder } from './Placeholder';
+import { font } from './font';
 
 export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
@@ -108,7 +109,10 @@ export class LogView implements Block, ShellDelegate, Findable {
       return;
     this._itemToElement.set(item, element);
     item.willResizeEvent.on(async () => {
-      this._lockScroll();
+      const rect = this._itemToElement.get(item).getBoundingClientRect();
+      const scrollBottom = this._scroller.scrollHeight - this._scroller.scrollTop - this._scroller.offsetHeight;
+      if (rect.bottom < this._scroller.getBoundingClientRect().top || scrollBottom < font.current.size)
+        this._lockScroll();
     });
     this._lockScroll();
     if (parent) {
