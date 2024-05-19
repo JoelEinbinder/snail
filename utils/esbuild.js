@@ -21,6 +21,7 @@ try {
     treeShaking: true,
   });
   console.timeEnd('build');
-} catch {
+} catch(e) {
+  console.error(e);
   process.exit(1);
 }
