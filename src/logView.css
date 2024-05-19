@@ -20,6 +20,10 @@
   display: none;
 }
 
+.linux-platform .log-view-scroller::-webkit-scrollbar {
+  display: none;
+}
+
 .fullscreen-element {
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);

@@ -14,6 +14,7 @@ import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_m
 import { iconPathForPath } from '../slug/icon_service/iconService';
 import { Placeholder } from './Placeholder';
 import { font } from './font';
+import { FakeScrollBar } from './FakeScrollBar';
 
 export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
@@ -58,6 +59,10 @@ export class LogView implements Block, ShellDelegate, Findable {
       for (const item of this._log)
         item.onScroll?.();
     }, { passive: true });
+    if (navigator['userAgentData']?.platform === 'Linux') {
+      const fakeScrollBar = new FakeScrollBar(this._scroller);
+      this._element.append(fakeScrollBar.element);
+    }
     this.hide();
   }
   hide(): void {

@@ -1,0 +1,29 @@
+.fake-scroll-bar {
+    position: fixed;
+    top: 2px;
+    right: 0;
+    bottom: 2px;
+    width: 12px;
+}
+
+.fake-scroll-bar > .track {
+    background: var(--color-bold);
+    opacity: 0;
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    border-radius: 4px;
+    cursor: default;
+    transition: opacity 0.5s 1s;
+}
+
+.fake-scroll-bar.scrolled-now > .track,
+.active-scroll .fake-scroll-bar > .track,
+.fake-scroll-bar:hover > .track {
+    opacity: 0.5;
+    transition: none;
+}
+
+.active-scroll * {
+    cursor: default !important;
+}

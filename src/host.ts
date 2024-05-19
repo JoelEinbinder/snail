@@ -141,4 +141,5 @@ function hostApiHelper(type: string, postMessage: (message: any) => void) {
 
 export const host = makeHostAPI();
 document.body.classList.toggle(`${host.type()}-host`, true);
+document.body.classList.toggle(`${String(navigator['userAgentData']?.platform).toLocaleLowerCase()}-platform`, true);
 host.onEvent('log', args => console.log(...args));
