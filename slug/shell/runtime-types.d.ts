@@ -8,7 +8,7 @@ export interface Runtime {
     env: { [key: string]: string };
     aliases: { [key: string]: string[] };
     nod: string[];
-    ssh: { sshAddress: string, sshArgs: string[], env: NodeJS.ProcessEnv };
+    ssh: { sshAddress: string, sshArgs: string[], env: {[key: string]: string} };
     reconnect: string;
     code: string;
 }
