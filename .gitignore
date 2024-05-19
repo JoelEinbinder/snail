@@ -14,3 +14,4 @@ dist
 /tests/cached-nodes/
 
 tsconfig.tsbuildinfo
+.vscode

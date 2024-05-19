@@ -123,13 +123,15 @@ export class Autocomplete {
     }
 
     hideSuggestBox() {
+        const textBefore = this.valueWithSuggestion();
         this._wantsSuggestBoxShown = false;
         this._suggestBox?.hide();
         this._suggestBox = null;
         this._activationCode = null;
         this._abortController?.abort();
         delete this._abortController;
-        this.suggestionChanged.dispatch();
+        if (this.valueWithSuggestion() !== textBefore)
+            this.suggestionChanged.dispatch();
     }
 
     async showSuggestBox(autoaccept = false) {

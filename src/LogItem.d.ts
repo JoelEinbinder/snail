@@ -10,6 +10,9 @@ export interface LogItem extends Findable {
   focus(): void;
   dispose(): void;
   serializeForTest(): Promise<any>;
+  recieveLLMAction?(iterator: AsyncIterable<import('openai').OpenAI.Chat.ChatCompletionChunk>, signal?: AbortSignal): Promise<void>;
+  serializeForLLM?(): Promise<import('openai').OpenAI.Chat.ChatCompletionMessageParam|null>;
+  flushForLLM?(): Promise<void>;
   waitForLineForTest?(regex: RegExp, signal?: AbortSignal): Promise<void>;
   isFullscreen?(): boolean;
   onScroll?(): void;

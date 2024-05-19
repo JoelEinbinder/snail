@@ -276,6 +276,9 @@ async function renderTable() {
   dataGrid.setItems(dirsToShow.filter(x => showHidden || !x.dir.startsWith('.')));
   document.body.append(dataGrid.element);
   snail.setHeight(document.body.getBoundingClientRect().height);
+  snail.setToJSON(() => {
+    return dataGrid.element.innerText;
+  });
 }
 if (useTable)
   renderTable();
@@ -353,7 +356,7 @@ function inlineMode() {
   Promise.race([
     new Promise(x => setTimeout(x, 250)),
     Promise.all(imageLoadPromises),
-  ]).then(() => {
+  ]).finally(() => {
     document.body.style.visibility = 'visible';
     updateSize();
   })

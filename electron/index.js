@@ -453,8 +453,16 @@ ipcMain.handle('message', async (event, ...args) => {
     const result = await overrides[method](params, clientForSender(event.sender), event.sender);
     if (id)
       reportTime('end ' + method)
-    if (id)
-      event.sender.send('message', {result, id});
+    if (result && result[Symbol.asyncIterator]) {
+      for await (const streamingResult of result) {
+        if (id)
+          event.sender.send('message', {streamingResult, id});
+      }
+      event.sender.send('message', { id, streamingDone: true });
+    } else {
+      if (id)
+        event.sender.send('message', {result, id});
+    }
   } catch (error) {
     if (id)
       event.sender.send('message', {error: error.stack, id});

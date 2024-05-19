@@ -8,6 +8,7 @@ import './completions/npx';
 import './completions/npm';
 import './completions/apt';
 import './completions/docker';
+import './completions/ai_model';
 import { setSelection } from "./selection";
 import { host } from "./host";
 import { makeHistoryCompleter } from "./historyCompleter";

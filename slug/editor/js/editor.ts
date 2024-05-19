@@ -113,6 +113,10 @@ export class Editor extends Emitter<EditorEvents> {
   setHighlightRanges(highlightRanges: HighlightRanges) {
     this._renderer.setHighlightRanges(highlightRanges);
   }
+
+  selectAll() {
+    this._selectionManager.selectAll();
+  }
 }
 
 type EditorEvents = {

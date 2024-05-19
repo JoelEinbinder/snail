@@ -49,6 +49,7 @@ export interface ShellDelegate {
   scrollToBottom(): void;
   addRetainer(params: {item: LogItem|'forced', parent: LogItem}): void;
   removeRetainer(params: {item: LogItem|'forced', parent: LogItem}): void;
+  cancelLLMRequest(): void;
 }
 
 interface ConnectionCore {
@@ -86,6 +87,7 @@ export class Shell {
   private _activeCommandBlock?: CommandBlock;
   private _setupUnlock: () => void;
   private _leftoverStdin = '';
+  private _lastCommandWasError = false;
   constructor(private _delegate: ShellDelegate) {
     console.time('create shell');
     host.notify({ method: 'reportTime', params: {name: 'start create shell' } });
@@ -666,6 +668,7 @@ export class Shell {
 
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command, this._size, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
+    this._lastCommandWasError = false;
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)
@@ -733,14 +736,17 @@ export class Shell {
     }
     if (this._activeItem.current === commandBlock)
       this._activeItem.dispatch(null);
-    unlockPrompt();
     this._addJSBlock(result, connection, commandBlock);
     this._setActiveCommandBlock(null);
+    delete this._activeCommandBlock;
+    unlockPrompt();
   }
 
   _addJSBlock(result: Protocol.CommandReturnValues['Runtime.evaluate'], connection: JSConnection, commandBlock?: CommandBlock) {
     if (result.result?.type === 'string' && result.result.value.startsWith('this is the secret secret string:')) {
-      commandBlock?.setExitCode(parseInt(result.result.value.substring('this is the secret secret string:'.length)));
+      const exitCode = parseInt(result.result.value.substring('this is the secret secret string:'.length));
+      commandBlock?.setExitCode(exitCode);
+      this._lastCommandWasError = (exitCode !== 0) && (exitCode !== 130);
       return;
     }
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, connection, this._size);
@@ -974,7 +980,10 @@ export class Shell {
         item.dispose();
       belowPromptItems = [];
     }
+    let dontCancelLLM = false;
     const onChange = wrapAsyncFunction('shell preview', async () => {
+      if (!dontCancelLLM)
+        this._delegate.cancelLLMRequest();
       const value = autocomplete.valueWithSuggestion();
       await autocomplete.waitForQuiet();
       if (value !== autocomplete.valueWithSuggestion())
@@ -985,6 +994,10 @@ export class Shell {
       abortController = new AbortController();
       const signal = abortController.signal;
       lastPreviewValue = value;
+      if (!value.trim()) {
+        clearBelowPrompt();
+        return;
+      }
       const isShellLike = await this._isShellLikeCode(value);
       if (isShellLike) {
         if (signal.aborted)
@@ -1107,6 +1120,31 @@ export class Shell {
       setFind() {
         // TODO prompt find
       },
+      flushForLLM: async () => {
+        if (!editor.value)
+          return;
+        const old = editor.value;
+        dontCancelLLM = true;
+        editor.value = '';
+        dontCancelLLM = false;
+        await this.runCommand(old);
+      },
+      recieveLLMAction: async (iterator, signal) => {
+        let value = '';
+        for await (const chunk of iterator) {
+          if (signal.aborted)
+            break;
+          if (!chunk.choices[0].delta.content)
+            continue;
+          value += chunk.choices[0].delta.content;
+          // a user typing in the prompt will cancel an llm action
+          // set this flag so it doesnt.
+          dontCancelLLM = true;
+          editor.value = value;
+          editor.selectAll();
+          dontCancelLLM = false;
+        }
+      },
       recieveFilePath: filePath => {
         const beforeRange = editor.selections[0] || {
           start: { column: 0, line: 0},
@@ -1196,6 +1234,10 @@ export class Shell {
       for (const line of lines)
         callback(line);
     });
+  }
+
+  lastCommandWasError(): boolean {
+    return this._lastCommandWasError;
   }
 }
 

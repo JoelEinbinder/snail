@@ -52,6 +52,12 @@ const builtins = {
         }
         return 0;
     },
+    ai_model: (args, stdout, stderr, stdin, env) => {
+        if (args[0])
+            return builtins.export(['SNAIL_LLM_MODEL=' + args[0]], stdout, stderr, stdin, env);
+        stdout.write(env.SNAIL_LLM_MODEL || 'gpt-4o');
+        return Promise.resolve(0);
+    },
     ls: (args, stdout, stderr) => {
         if (stdout !== process.stdout || args.some(x => x.startsWith('-') && /[^\-la]/.test(x)))
             return 'pass';

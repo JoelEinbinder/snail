@@ -15,6 +15,26 @@
   cursor: pointer;
   user-select: none;
 }
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.ai-loading .editor-line {
+  --border-width: 1px;
+  border:var(--border-width) solid transparent;
+  margin: calc( -1 * var(--border-width));
+  --angle: 0deg;
+  border-image: linear-gradient(var(--angle), blue, red) 1;
+  animation: 2s rotate linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    --angle: 360deg;
+  }
+}
 
 .log-item-wrapper:not(:has(.fullscreen)) {
   position: relative;

@@ -22,17 +22,28 @@ const electronAPI = {
   },
   type() { return "electron"; }
 };
+function sendEvent(method, params) {
+  for (const listener of listeners.get(method) || [])
+    listener(params);
+}
 ipcRenderer.on('message', (sender, event) => {
   if ('id' in event) {
     if (event.error) {
       callbacks.get(event.id).reject(event.error);
     } else {
-     callbacks.get(event.id).resolve(event.result);
+      if (event.streamingResult) {
+        callbacks.get(event.id)?.resolve({ streamingId: event.id });
+        callbacks.delete(event.id);
+        sendEvent('streaming', { done: false, id: event.id, value: event.streamingResult });
+      } else if (event.streamingDone) {
+        sendEvent('streaming', { done: true, id: event.id });
+      } else {
+        callbacks.get(event.id).resolve(event.result);
+      }
     }
     callbacks.delete(event.id);
   } else {
-    for (const listener of listeners.get(event.method) || [])
-      listener(event.params);
+    sendEvent(event.method, event.params)
   }
 })
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

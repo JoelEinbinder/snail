@@ -12,6 +12,7 @@ import type { Action } from './actions';
 import { BrowserView } from "./BrowserView";
 import { attachMenuItemsToContextMenuEvent } from "./contextMenu";
 import { themeName } from "./theme";
+import type { ChatCompletionMessageParam } from "openai/resources";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -456,6 +457,16 @@ export class IFrameBlock implements LogItem {
       };
     }
     return actions;
+  }
+
+  async serializeForLLM(): Promise<ChatCompletionMessageParam> {
+    const content = await this.serializeForTest();
+    if (!content)
+      return null;
+    return {
+      content: typeof content === 'string' ? content : JSON.stringify(content),
+      role: 'user',
+    }
   }
 }
 

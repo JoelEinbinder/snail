@@ -77,10 +77,10 @@ class Row {
 export class LogBookView {
   element = document.createElement('div');
   private _filter: LogFilter;
-  constructor(private _query: (sql: string, params?: any) => Promise<any[]>) {
+  constructor(query: (sql: string, params?: any) => Promise<any[]>) {
     this.element.classList.add('logbook');
     this._filter = new LogFilter(filter => grid.setFilter(`%${filter}%`));
-    const grid = new LogGrid(_query);
+    const grid = new LogGrid(query);
     this.element.append(this._filter.element, grid.element);
   }
 

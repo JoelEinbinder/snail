@@ -45,4 +45,6 @@ export interface ShellHost {
   captureImage(params: { rect: {x: number, y: number, width: number, height: number} }): { data: string };
 
   reportTime(params: {name: string}): void;
+
+  openai(params: import('openai').OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming & {apiKey: string}): AsyncIterable<import('openai').OpenAI.Chat.Completions.ChatCompletionChunk>;
 }

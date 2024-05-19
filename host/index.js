@@ -18,6 +18,8 @@ let lastWebsocketId = 0;
 /** @type {Map<number, ProtocolProxy>} */
 const proxies = new Map();
 const webServers = new WebServers(false);
+/** @type {import('openai').OpenAI} */
+let openai;
 /** @typedef {import('./ShellHost').ShellHost} ShellHost */
 /** @type {{[key in keyof ShellHost]: (params: Parameters<ShellHost[key]>[0], sender: Client) => Promise<ReturnType<ShellHost[key]>>}} */
 const handler = {
@@ -137,6 +139,18 @@ const handler = {
   reportTime({ name }) {
     if (parseInt(process.env.SNAIL_TIME_STARTUP))
       console.log(`Time: ${name}`);
+  },
+  openai(request){
+    if (!openai || openai.apiKey !== request.apiKey) {
+      const { OpenAI } = require('openai');
+      openai = new OpenAI({
+        apiKey: request.apiKey,
+      });
+    }
+    return openai.chat.completions.create({
+      ...request,
+      apiKey: undefined,
+    });
   },
 }
 

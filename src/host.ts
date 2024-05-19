@@ -143,3 +143,58 @@ export const host = makeHostAPI();
 document.body.classList.toggle(`${host.type()}-host`, true);
 document.body.classList.toggle(`${String(navigator['userAgentData']?.platform).toLocaleLowerCase()}-platform`, true);
 host.onEvent('log', args => console.log(...args));
+
+/** @type {Map<number, CustomAsyncIterator>} */
+const iterators = new Map();
+host.onEvent('streaming', ({id, value, done}) => {
+  const iterator = ensureIterator(id);
+  if (done) {
+    iterator.markDone();
+  } else {
+    iterator.provideValue(value);
+  }
+});
+class CustomAsyncIterator<T> {
+  done = false;
+  buffer: T[] = [];
+  _tick = () => void 0;
+  tickPromise: Promise<void>;
+  constructor() {
+    this.tick();
+  }
+  tick() {
+    this._tick();
+    /** @type {Promise<void>} */
+    this.tickPromise = new Promise(resolve => this._tick = resolve);
+  }
+  provideValue(value: T) {
+    this.buffer.push(value);
+    this.tick();
+  }
+  markDone() {
+    this.done = true;
+    this.tick();
+  }
+  async next() {
+    if (this.buffer.length)
+      return { value: this.buffer.shift(), done: false };
+    if (this.done)
+      return { value: undefined, done: true };
+    await this.tickPromise;
+    return {
+      value: this.buffer.shift(),
+      done: this.done
+    }
+  }
+}
+function ensureIterator(id: number) {
+  if (!iterators.has(id))
+    iterators.set(id, new CustomAsyncIterator());
+  return iterators.get(id);
+}
+export async function sendStreamingCommandToHost<Key extends keyof ShellHost>(method: Key, params: Parameters<ShellHost[Key]>[0]): Promise<ReturnType<ShellHost[Key]>> {
+  const { streamingId } = await host.sendMessage({method, params});
+  return {
+    [Symbol.asyncIterator]: () => ensureIterator(streamingId),
+  } as any;
+}

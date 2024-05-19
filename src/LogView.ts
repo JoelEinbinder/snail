@@ -15,6 +15,7 @@ import { iconPathForPath } from '../slug/icon_service/iconService';
 import { Placeholder } from './Placeholder';
 import { font } from './font';
 import { FakeScrollBar } from './FakeScrollBar';
+import { host, sendStreamingCommandToHost } from './host';
 
 export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
@@ -35,9 +36,13 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _titleThrottle = new UIThrottle('Loading...', () => {
     this.blockDelegate?.titleUpdated();
   });
+  private _promptChangePromise: Promise<void>;
+  private _promptChangeResolve: () => void;
   private _find = new Find(this, () => this.focus());
+  private _llmAbortController: AbortController|null = null;
   blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
+    this._updatePromptChangePromise();
     this._fullscreenElement.classList.add('fullscreen-element');
     this._element.addEventListener('keydown', (event: KeyboardEvent) => {
       if (!this._prompt)
@@ -64,6 +69,15 @@ export class LogView implements Block, ShellDelegate, Findable {
       this._element.append(fakeScrollBar.element);
     }
     this.hide();
+  }
+
+  cancelLLMRequest(): void {
+    this._element.classList.toggle('ai-loading', false);
+    this._llmAbortController?.abort();
+  }
+
+  _updatePromptChangePromise() {
+    this._promptChangePromise = new Promise(resolve => this._promptChangeResolve = resolve);
   }
   hide(): void {
     this._element.style.display = 'none';
@@ -92,6 +106,8 @@ export class LogView implements Block, ShellDelegate, Findable {
       this._prompt?.dispose();
       delete this._prompt;
     }
+    this._promptChangeResolve();
+    this._updatePromptChangePromise();
   }
 
   focus(): void {
@@ -102,6 +118,83 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
   hasFocus(): boolean {
     return this._element.contains(document.activeElement);
+  }
+
+  async _triggerLLM(): Promise<void> {
+    if (!this._prompt)
+      return;
+    const apiKey = await this._shell.cachedEvaluation('echo $SNAIL_OPENAI_KEY');
+    if (!apiKey)
+      return;
+    this._llmAbortController?.abort();
+    const controller = new AbortController();
+    this._llmAbortController = controller;
+    this._element.classList.toggle('ai-loading', true);
+    await this._prompt.flushForLLM();
+    while (!this._prompt)
+      await this._promptChangePromise;
+    const tearDown = () => {
+      if (this._llmAbortController === controller) {
+        this._element.classList.toggle('ai-loading', false);
+        this._llmAbortController = null;
+      }  
+    };
+    if (controller.signal.aborted) {
+      tearDown()
+      return;
+    }
+    const model = await this._shell.cachedEvaluation('ai_model');
+    if (controller.signal.aborted) {
+      tearDown()
+      return;
+    }
+    const messages: import('openai').OpenAI.Chat.ChatCompletionMessageParam[] = [];
+    let total = 0;
+    for (const item of [...this._log].reverse()) {
+      const message = await item.serializeForLLM?.();
+      if (controller.signal.aborted) {
+        tearDown()
+        return;
+      }
+      if (message) {
+        if (message.content.length > 1000)
+          message.content = message.content.slice(0, 500) + '<content truncated>' + message.content.slice(-500);
+        total += message.content.length;
+        messages.push(message);
+      }
+      if (total >= 10_000)
+        break;
+    }
+    messages.push({
+      role: 'system',
+      content: `Your messages are being typed directly into a terminal shell.
+The user will respond with the result from your command.
+Always respond in the form of a bash command.
+Respond directly with the command to run instead of asking the user to run a given command.
+Try to gather information and explore the environment before giving up.
+Make sure any comments in your response are prefixed with a '#'.
+Keep comments to a minimum.
+Refrain from explaining simple commands.
+For example, if you don't know what to do, respond with ls.
+Use uname -a to check whether the system is MacOS or Linux.`
+    });
+    messages.reverse();
+
+
+    const iterator = await sendStreamingCommandToHost('openai', {
+      stream: true,
+      messages,
+      model,
+      apiKey,
+    });
+
+    if (controller.signal.aborted) {
+      tearDown()
+      return;
+    }
+    await this._prompt.recieveLLMAction(iterator, controller.signal);
+    
+    tearDown()
   }
 
   addItem(item: LogItem, parent?: LogItem) {
@@ -283,6 +376,11 @@ export class LogView implements Block, ShellDelegate, Findable {
     this._prompt = this._shell.addPrompt(this._scroller);
     this._prompt.willResizeEvent.on(() => this._lockScroll());
     this.setActiveItem(this._prompt);
+    
+    // automaticaly trigger the llm if there was an error
+    // it probably will help fix a typo or something
+    if (this._shell.lastCommandWasError())
+      this._triggerLLM();
   }
 
   async serializeForTest() {
@@ -378,7 +476,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     }]
     if (this._isFullscreen)
       return fullscreenActions;
-    return [...fullscreenActions, {
+    const actions = [...fullscreenActions, {
       title: 'Clear log',
       shortcut: 'Ctrl+L',
       id: 'log.clear',
@@ -402,6 +500,15 @@ export class LogView implements Block, ShellDelegate, Findable {
           item?.toggleFold?.dispatch(false);
       }
     }];
+    if (this._prompt) {
+      actions.push({
+        title: 'Invoke AI Assistant',
+        id: 'log.ai',
+        shortcut: 'Meta+L',
+        callback: () => this._triggerLLM(),
+      });
+    }
+    return actions;
   }
 
   async quickPicks(): Promise<QuickPickProvider[]> {

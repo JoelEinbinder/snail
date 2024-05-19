@@ -9,6 +9,7 @@ import { startAyncWork } from "./async";
 import type { FindParams } from "./Find";
 import { attachMenuItemsToContextMenuEvent } from "./contextMenu";
 import { themeCursorColor, themeName, themeSelectionColor, themeTextColor } from "./theme";
+import type { ChatCompletionMessageParam } from "openai/resources";
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
@@ -247,6 +248,16 @@ export class TerminalBlock implements LogItem {
     for (let i = 0; i < bufferSize; i++)
       lines.push(buffer.getLine(i).translateToString(true));
     return lines.join('\n');
+  }
+
+  async serializeForLLM(): Promise<ChatCompletionMessageParam> {
+    const content = await this.serializeForTest();
+    if (!content)
+      return null;
+    return {
+      content,
+      role: 'user',
+    }
   }
 
   isFullscreen(): boolean {

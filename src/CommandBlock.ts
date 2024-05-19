@@ -5,6 +5,7 @@ import { setSelection } from "./selection";
 import type { Shell } from './Shell';
 import { FindParams } from "./Find";
 import { themeName, themeEditorColors } from "./theme";
+import type { ChatCompletionMessageParam } from "openai/resources";
 
 export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
@@ -131,6 +132,13 @@ export class CommandBlock implements LogItem {
 
   async serializeForTest(): Promise<any> {
     return '> ' + this.command;
+  }
+
+  async serializeForLLM(): Promise<ChatCompletionMessageParam> {
+    return {
+      content: this.command,
+      role: 'assistant',
+    }
   }
 }
 
