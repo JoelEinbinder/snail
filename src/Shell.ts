@@ -40,7 +40,7 @@ export interface ShellDelegate {
   shellClosed(): void;
   addItem(item: LogItem, parent?: LogItem): void;
   removeItem(item: LogItem): void;
-  clearAllExcept(item: LogItem): void;
+  clearAllAbove(item: LogItem): void;
   togglePrompt(showPrompt: boolean): void;
   setActiveItem(item: LogItem|null): void;
   setFullscreenItem(item: LogItem|null): void;
@@ -341,7 +341,7 @@ export class Shell {
               this._fullscreenItem.dispatch(null);
           };
           const onClear = () => {
-            this._delegate.clearAllExcept(terminalBlock);
+            this._delegate.clearAllAbove(terminalBlock);
           };    
           terminalBlock.fullscreenEvent.on(onFullScreen);
           terminalBlock.clearEvent.on(onClear);

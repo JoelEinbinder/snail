@@ -109,6 +109,8 @@ export class LogView implements Block, ShellDelegate, Findable {
       return;
     this._itemToElement.set(item, element);
     item.willResizeEvent.on(async () => {
+      if (!this._itemToElement.has(item))
+          return;
       const rect = this._itemToElement.get(item).getBoundingClientRect();
       const scrollBottom = this._scroller.scrollHeight - this._scroller.scrollTop - this._scroller.offsetHeight;
       if (rect.bottom < this._scroller.getBoundingClientRect().top || scrollBottom < font.current.size)
@@ -198,10 +200,11 @@ export class LogView implements Block, ShellDelegate, Findable {
     }
   }
 
-  clearAllExcept(savedItem: LogItem): void {
+  clearAllAbove(savedItem: LogItem): void {
     for (const item of [...this._log]) {
-      if (item !== savedItem)
-        this.removeItem(item, false);
+      if (item === savedItem)
+          return;
+      this.removeItem(item, false);
     }
   }
 
