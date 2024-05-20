@@ -59,6 +59,14 @@ async function buildItemInfo(parentDir, filePath, depth) {
       }
     }
     const isDirectory = stat.isDirectory();
+    let username = `unknown: ${stat.uid}`;
+    let groupname = `unknown: ${stat.gid}`;
+    try {
+      username = userid.username(stat.uid);
+    } catch { }
+    try {
+      groupname = userid.groupname(stat.gid);
+    } catch { }
     return {
       dir: resolved === parentDir ? path.basename(resolved) : path.relative(parentDir, resolved),
       fullPath: resolved,
@@ -66,8 +74,8 @@ async function buildItemInfo(parentDir, filePath, depth) {
       nlink: stat.nlink,
       uid: stat.uid,
       gid: stat.gid,
-      username: userid.username(stat.uid),
-      groupname: userid.groupname(stat.gid),
+      username,
+      groupname,
       mtime: stat.mtime.toJSON(),
       atime: stat.atime.toJSON(),
       birthtime: stat.birthtime.toJSON(),
