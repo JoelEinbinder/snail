@@ -42,15 +42,22 @@ process.send('intialized');
 let killLastCommand = (signal) => void 0;
 async function runCommand(command, magicToken, noSideEffects) {
   const stdin = noSideEffects ? null : process.stdin;
-  const { closePromise, kill} = execute(command, process.stdout, process.stderr, stdin, noSideEffects);
-  killLastCommand = kill;
-  const c = await closePromise;
-  process.exitCode = c;
+  let exitCode;
+  try {
+    const { closePromise, kill} = execute(command, process.stdout, process.stderr, stdin, noSideEffects);
+    killLastCommand = kill;
+    exitCode = await closePromise;
+  } catch (e) {
+    exitCode = 1;
+    process.stderr.write(`Error running command: ${JSON.stringify(command)}\n`);
+    process.stderr.write((e?.stack || String(e)) + '\n');
+  }
+  process.exitCode = exitCode;
   if (magicToken) {
     const magicString = `\x1B[JOELMAGIC${magicToken}]\n`;
     process.stdout.write(magicString);
   }
-  return {exitCode: c, changes: getAndResetChanges()};
+  return {exitCode, changes: getAndResetChanges()};
 }
 
 process.on('SIGINT', () => {
