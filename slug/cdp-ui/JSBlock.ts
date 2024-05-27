@@ -216,10 +216,20 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBu
     charBudget -= summary.textContent!.length;
     let first = true;
     let overflow = object.preview.overflow
+    let lastNumber = -1;
     for (const property of object.preview.properties) {
       const fragment = document.createDocumentFragment();
       if (!first) fragment.append(', ');
-      if (object.preview.subtype !== 'array' || String(parseInt(property.name)) !== property.name) {
+      if (object.preview.subtype === 'array' && String(Math.abs(parseInt(property.name))) === property.name) {
+        const currentNumber = parseInt(property.name);
+        const empties = currentNumber - lastNumber - 1;
+        if (empties > 0) {
+          fragment.append(empties === 1 ? '<empty item>' : `<${empties} empty items>`);
+          fragment.append(', ');
+        }
+        lastNumber = currentNumber;
+      }
+      if (object.preview.subtype !== 'array' || String(Math.abs(parseInt(property.name))) !== property.name) {
         fragment.append(property.name);
         fragment.append(': ');
       }
