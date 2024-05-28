@@ -1,6 +1,6 @@
 {
   "name": "snail-slug",
-  "version": "0.11.0-post",
+  "version": "0.11.1",
   "workspaces": [
     "thumbnail_generator",
     "sdk",
