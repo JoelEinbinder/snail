@@ -2,8 +2,9 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
   private _id = 0;
   private _callbacks = new Map();
   private _listeners = new Map<keyof ServerMethods, Set<Function>>();
-  private  _cwd: string;
+  private _cwd: string;
   private _cwdHistory: string[] = [];
+  private _closed = false;
   public env: {[key: string]: string} = {};
   constructor(
     private _transport: Transport,
@@ -43,6 +44,8 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
   ): Promise<ReturnType<ClientMethods[Method]>> {
     if (abortSignal?.aborted)
       return;
+    if (this._closed)
+      throw new Error(String(method) + ': ' + 'Connection closed');
     const abort = () => this._abortFn?.(id);
     const id = ++this._id;
     const message = {id, method, params} as {id: number, method: string, params: any};
@@ -80,6 +83,9 @@ export class RPC<ClientMethods extends {[key: string]: (arg0: any) => any}, Serv
   }
 
   didClose() {
+    if (this._closed)
+      return;
+    this._closed = true;
     for (const [id, callback] of this._callbacks)
       callback({error: {message: 'Connection closed'}});
     this._callbacks.clear();
