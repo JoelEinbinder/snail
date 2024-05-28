@@ -221,7 +221,8 @@ Use uname -a to check whether the system is MacOS or Linux.`
       this._itemToParent.set(item, parent);
       this.addRetainer({item, parent});
     } else {
-      if (this._prompt)
+      const promptElement = this._prompt?.render();
+      if (promptElement && promptElement.parentElement === this._scroller)
         this._scroller.insertBefore(element, this._prompt.render());
       else
         this._scroller.appendChild(element);

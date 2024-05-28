@@ -358,10 +358,28 @@ export class Shell {
     };
     return handler;
   }
+
+  _logMessageToUser(message: string) {
+    this.addItem(new JSLogBlock({
+      type: 'log',
+      args: [{
+        type: 'string',
+        value: message,
+      }],
+      executionContextId: -1,
+      timestamp: 0,
+    }, this.connection, this._size));
+  }
+
   async _setupConnectionInner(core: ConnectionCore, args: string[], sshAddress = null) {
     this._clearCache();
     const connection = new JSConnection(core);
-    core.onclose = () => connection.didClose();
+    core.onclose = () => {
+      if (!destroyed)
+        this._logMessageToUser('Connection closed.');
+      destroy();
+      connection.didClose();
+    }
     this._connectionIsDaemon.set(connection, false);
     const urlForIframe = (filePath: string) => core.urlForIframe(filePath, []);
     this._urlForIframeForConncetion.set(connection, urlForIframe);
