@@ -21,7 +21,10 @@ export class ChartBlock implements LogItem {
   dispose(): void {
   }
   async serializeForTest(): Promise<any> {
-    return '<chart>';
+    const serialized = {};
+    for (const [name, chart] of this._charts)
+      serialized[name] = chart.serializeForTest();
+    return serialized;
   }
   isFullscreen(): boolean {
     return false;

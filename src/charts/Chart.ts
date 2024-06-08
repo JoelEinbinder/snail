@@ -58,7 +58,7 @@ export type LineOptions = {
 export class Line {
   private _color: string;
   private _name: string;
-  private _listeners = new Set<() => void>();
+  private _listeners = new Set<(item: ProcessedData[0]) => void>();
   data: ProcessedData = [];
   constructor(options: LineOptions = {}) {
     const {color = '#e8710a', name = ''} = options;
@@ -66,31 +66,42 @@ export class Line {
     this._name = name;
   }
 
-  setData(data: ProcessedData) {
-    this.data = [...data].sort((a, b) => {
-      return a.step - b.step;
-    });
-    this.didUpdate();
-  }
-
   appendData(data: ProcessedData) {
-    this.setData(this.data.concat(data));
+    if (data.length > 1) {
+      for (const item of data)
+        this.appendData([item]);
+      return;
+    }
+    if (data.length === 0)
+      return;
+    const item = data[0];
+    // fast case is adding to the end
+    for (let i = this.data.length - 1; i >= 0; i--) {
+      if (this.data[i].step <= item.step) {
+        this.data.splice(i + 1, 0, item);
+        this.didUpdate(item);
+        return;
+      }
+    }
+    // item goes at the start
+    this.data.unshift(item);
+    this.didUpdate(item);
   }
 
   get color() {
     return this._color;
   }
 
-  private didUpdate() {
+  private didUpdate(item: ProcessedData[0]) {
     for (const listener of this._listeners)
-      listener();
+      listener(item);
   }
 
-  addListener(listener: () => void) {
+  addListener(listener: (item: ProcessedData[0]) => void) {
     this._listeners.add(listener);
   }
 
-  removeListener(listener: () => void) {
+  removeListener(listener: (item: ProcessedData[0]) => void) {
     this._listeners.delete(listener);
   }
 
@@ -435,25 +446,22 @@ export class Chart {
       }
     });
   }
-  private updateBounds() {
-    for (const line of this.lines) {
-      for (const item of line.data) {
-        this.autoBounds.x[0] = Math.min(this.autoBounds.x[0], item.step);
-        this.autoBounds.x[1] = Math.max(this.autoBounds.x[1], item.step);
-  
-        this.autoBounds.y[0] = Math.min(this.autoBounds.y[0], item.value);
-        this.autoBounds.y[1] = Math.max(this.autoBounds.y[1], item.value);
-      }
-    }
-    this.dataOrBoundsChanged();
+
+  serializeForTest() {
+    return this.autoBounds;
   }
 
   addLine(line: Line) {
     this.lines.add(line);
-    line.addListener(() => {
-      this.updateBounds();
+    line.addListener(item => {
+      this.autoBounds.x[0] = Math.min(this.autoBounds.x[0], item.step);
+      this.autoBounds.x[1] = Math.max(this.autoBounds.x[1], item.step);
+
+      this.autoBounds.y[0] = Math.min(this.autoBounds.y[0], item.value);
+      this.autoBounds.y[1] = Math.max(this.autoBounds.y[1], item.value);
+      this.dataOrBoundsChanged();
     });
-    this.updateBounds();
+    this.dataOrBoundsChanged();
   }
 
   private dataOrBoundsChanged() {
