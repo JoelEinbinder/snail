@@ -382,10 +382,10 @@ export class Chart {
         ctx.beginPath();
         ctx.strokeStyle = line.color;
         ctx.lineWidth = 1;
-        efficientlyDrawPoints(line.data.map(item => ({
+        efficientlyDrawPoints(line, item => ({
           x: this.getXPoint(item.step),
           y: this.getYPoint(item.value),
-        })));
+        }));
         ctx.stroke();
         ctx.globalAlpha = 1;
         if (this.smooth > 0) {
@@ -393,7 +393,7 @@ export class Chart {
           let value = 0;
           let count = 0;
           const smooth = 1 - ((1 - this.smooth) ** 4);
-          efficientlyDrawPoints(line.data.map(item => {
+          efficientlyDrawPoints(line, item => {
             if (count < 1 / (1 - smooth))
               value = value * count / (count + 1) + item.value / (count + 1);
             value = smooth * value + (1 - smooth) * item.value;
@@ -403,19 +403,20 @@ export class Chart {
               x: this.getXPoint(item.step),
               y: this.getYPoint(value),
             }
-          }));
+          });
 
           ctx.stroke();
         }
       }
       ctx.restore();
-      function efficientlyDrawPoints(inputPoints: {x: number, y: number}[]) {
+      function efficientlyDrawPoints(line: Line, transform: (item: ProcessedData[0]) => {x: number, y: number}) {
         let lastX = -Infinity;
         const points = [];
         const threshold = 0.5 / window.devicePixelRatio;
         let highestPoint = { x: -Infinity, y: -Infinity };
         let lowestPoint = { x: Infinity, y: Infinity };
-        for (const point of inputPoints) {
+        for (const item of line.data) {
+          const point = transform(item);
           if (point.x - lastX > threshold) {
             flush();
             lastX = point.x;

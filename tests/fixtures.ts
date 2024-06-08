@@ -8,6 +8,8 @@ import getPort from 'get-port';
 import net from 'net';
 import http from 'http';
 import { buildSlugIfNeeded } from '../utils/build-slug-if-needed.js';
+import { createDevServer } from '../electron-dev/'
+import { ChartModel } from './ChartModel';
 type SshAddress = {
   address: string,
   port: number,
@@ -24,10 +26,12 @@ export const test = _test.extend<{
   shellInDocker: ShellModel;
   populateFilesystem: (files: { [filePath: string]: string }) => Promise<void>;
   runtime: import('../slug/shell/runtime.js').Runtime;
+  chart: ChartModel;
 }, {
   imageId: string|null;
   slugURL: string;
   nodeURL: string;
+  chartURL: string;
 }>({
   workingDir: async ({ }, use) => {
     const workingDir = test.info().outputPath('working-dir');
@@ -287,5 +291,15 @@ export const test = _test.extend<{
     await use(runtime);
     runtime.dispose();
   },
+
+  chart: async ({ page, chartURL }, use) => {
+    await page.goto(chartURL);
+    await use(await ChartModel.create(page));
+  },
+  chartURL: [async ({}, use) => {
+    const {url, close} = await createDevServer(path.join(__dirname, './chartEntry.ts'));
+    await use(url);
+    close();
+  }, { scope: 'worker' }],
 });
 export default test;
