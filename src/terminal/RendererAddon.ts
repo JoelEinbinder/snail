@@ -44,6 +44,10 @@ export class RendererAddon implements ITerminalAddon, Findable {
   scrollIntoViewIfNeeded() {
     this._renderer?.scrollIntoViewIfNeeded();
   }
+
+  hackToEnsureBlackRowsAreUpToDate() {
+    this._renderer?.hackToEnsureBlackRowsAreUpToDate();
+  }
 }
 
 class Renderer implements IRenderer {
@@ -346,6 +350,7 @@ class Renderer implements IRenderer {
       this._bottomBlankRows = Math.max(0, this._terminal.rows - this._rowsSeenWithContent);
     else
       this._bottomBlankRows = blankRows;
+    console.log('update bottom blank rows', this._bottomBlankRows);
   }
 
   private _getScrollOffset() {
@@ -355,6 +360,10 @@ class Renderer implements IRenderer {
   setFindState(findState: FindState): void {
     this._findState = findState;
     this._requestRedraw();
+  }
+
+  hackToEnsureBlackRowsAreUpToDate() {
+    this._updateBottomBlankRows();
   }
 }
 const isWebKit = /WebKit/.test(navigator.userAgent);

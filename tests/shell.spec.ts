@@ -531,3 +531,16 @@ test('does not scroll down when lots of messages come in', async ({ shell }) => 
   await shell.page.keyboard.press('Control+C');
   await commandPromise;
 });
+
+test('should be able to cat a file with a blank line at the top', async ({ shell, workingDir }) => {
+  const content = `\nfoo`;
+  await fs.promises.writeFile(workingDir + '/file.txt', content);
+  await shell.runCommand('cat file.txt');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> cat file.txt',
+      content,
+    ],
+    prompt: { value: '' },
+  });
+})

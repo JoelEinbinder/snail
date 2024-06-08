@@ -217,6 +217,9 @@ export class TerminalBlock implements LogItem {
   async close() {
     await this._lastWritePromise;
 
+    // for some reason there is still a refresh in progress or something?
+    // TODO debug this properly
+    this._addon.hackToEnsureBlackRowsAreUpToDate();
     for (const listeners of this._listeners)
       listeners.dispose();
     font.off(this._fontChanged);
