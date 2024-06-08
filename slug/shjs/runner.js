@@ -618,7 +618,6 @@ const safeExecutables = buildSafeExecutables([
     {name: 'uniq'},
     {name: 'cut'},
     {name: 'tr'},
-    {name: 'sed'},
     {name: 'awk'},
 
 
