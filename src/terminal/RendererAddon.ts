@@ -350,7 +350,6 @@ class Renderer implements IRenderer {
       this._bottomBlankRows = Math.max(0, this._terminal.rows - this._rowsSeenWithContent);
     else
       this._bottomBlankRows = blankRows;
-    console.log('update bottom blank rows', this._bottomBlankRows);
   }
 
   private _getScrollOffset() {
