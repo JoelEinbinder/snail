@@ -3,6 +3,7 @@ import type { ProcessedData } from "./Dataset";
 import { makeIconCheckbox } from "./IconCheckbox";
 import { showTooltip } from "./Tooltip";
 import './chart.css';
+import { showContextMenu } from "../contextMenu";
 
 const background = themeBackgroundColor();
 const foreground = '#e8710a';
@@ -233,6 +234,21 @@ export class Chart {
       };
       this.scheduleDraw();
     });
+    this.canvas.addEventListener('contextmenu', event => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      showContextMenu([{
+        title: 'Copy',
+        callback: () => {
+          clearFocusedPoint();
+          this.draw(true);
+          this.canvas.toBlob(blob => {
+            this.draw(false);
+            navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
+          })
+        }
+      }])
+    })
     this.canvas.addEventListener('pointerup', event => {
       if (!this.selectionRect)
         return;
@@ -497,12 +513,14 @@ export class Chart {
     });
   }
 
-  draw() {
+  draw(drawBackground = false) {
 
     this.ctx.save();
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    // this.ctx.fillStyle = background;
-    // this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    if (drawBackground) {
+      this.ctx.fillStyle = background;
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
     this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     
     this.ctx.font = '10px monaco';
