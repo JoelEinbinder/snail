@@ -12,7 +12,7 @@ import type { Suggestion } from './autocomplete';
 import { host } from './host';
 import { AntiFlicker } from './AntiFlicker';
 import { ProgressBlock } from './ProgressBlock';
-import { TerminalDataProcessor } from './TerminalDataProcessor';
+import { TerminalDataProcessor } from '../slug/shell/TerminalDataProcessor';
 import { TaskQueue } from './TaskQueue';
 import { IFrameBlock } from './IFrameBlock';
 import { MenuItem, showContextMenu } from './contextMenu';
@@ -205,7 +205,11 @@ export class Shell {
                   });
                 }
                 const dataStr = new TextDecoder().decode(data.slice(1));
-                activeChartBlock.appendUserData(JSON.parse(dataStr));
+                const chartData = JSON.parse(dataStr);
+                if (Array.isArray(chartData))
+                  chartData.forEach(chartData => activeChartBlock.appendUserData(chartData));
+                else
+                  activeChartBlock.appendUserData(chartData);
                 break;
               }
               case 75:

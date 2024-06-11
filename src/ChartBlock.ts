@@ -71,7 +71,7 @@ function normalizeData(data: any): { data: {[key: string]: number}, step?: numbe
     const { step, wallTime } = data;
     data = {...data};
     delete data.step;
-    delete data.step;
+    delete data.wallTime;
     for (const key in data) {
       if (typeof data[key] !== 'number') {
         console.error('Unexpected chart data', data);

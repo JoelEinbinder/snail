@@ -17,7 +17,7 @@ test('chart should work', async ({ shell, workingDir }) => {
   })
 });
 
-test.skip('chart should reconnect with data intact', async ({ shellFactory, workingDir }) => {
+test('chart should reconnect with data intact', async ({ shellFactory, workingDir }) => {
   const count = 1_500_000;
   const script = `
   const { chart } = require(${JSON.stringify(require.resolve('../slug/sdk/'))});
@@ -45,12 +45,19 @@ test.skip('chart should reconnect with data intact', async ({ shellFactory, work
   await shell2.waitForLine(/i am done/);
   
   const { log: [,,,chart2]} = await shell2.serialize();
-  expect(chart2).toEqual({
-    foo: {
-      x: [0, count - 1],
-      y: [0, count - 1],
-    }
-  });
+
+  // we will be missing some points because of sampling
+  // so check that we are within at least 200
+  const buffer = 200;
+  expect(chart2.foo.x[0]).toBeGreaterThanOrEqual(0);
+  expect(chart2.foo.x[0]).toBeLessThanOrEqual(buffer);
+  expect(chart2.foo.y[0]).toBeGreaterThanOrEqual(0);
+  expect(chart2.foo.y[0]).toBeLessThanOrEqual(buffer);
+
+  expect(chart2.foo.x[1]).toBeGreaterThanOrEqual(count - 1 - buffer);
+  expect(chart2.foo.x[1]).toBeLessThanOrEqual(count - 1);
+  expect(chart2.foo.y[1]).toBeGreaterThanOrEqual(count - 1 - buffer);
+  expect(chart2.foo.y[1]).toBeLessThanOrEqual(count - 1);
   await shell2.page.keyboard.press('Control+C');
   await commandPromise;
 });

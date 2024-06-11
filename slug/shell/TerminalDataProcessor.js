@@ -1,33 +1,50 @@
-const enum ParserState {
-  GROUND = 0,
-  ESCAPE = 1,
-  ESCAPE_INTERMEDIATE = 2,
-  CSI_ENTRY = 3,
-  CSI_PARAM = 4,
-  CSI_INTERMEDIATE = 5,
-  CSI_IGNORE = 6,
-  SOS_PM_APC_STRING = 7,
-  OSC_STRING = 8,
-  DCS_ENTRY = 9,
-  DCS_PARAM = 10,
-  DCS_IGNORE = 11,
-  DCS_INTERMEDIATE = 12,
-  DCS_PASSTHROUGH = 13,
-  HTML_BLOCK = 14,
-}
-export interface TerminalDataProcessorDelegate {
-  htmlTerminalMessage(data: Uint8Array): void;
-  plainTerminalData(data: Uint8Array): void;
+const ParserState = {
+  GROUND: 0,
+  ESCAPE: 1,
+  ESCAPE_INTERMEDIATE: 2,
+  CSI_ENTRY: 3,
+  CSI_PARAM: 4,
+  CSI_INTERMEDIATE: 5,
+  CSI_IGNORE: 6,
+  SOS_PM_APC_STRING: 7,
+  OSC_STRING: 8,
+  DCS_ENTRY: 9,
+  DCS_PARAM: 10,
+  DCS_IGNORE: 11,
+  DCS_INTERMEDIATE: 12,
+  DCS_PASSTHROUGH: 13,
+  HTML_BLOCK: 14,
 };
-export class TerminalDataProcessor {
-  private state = ParserState.GROUND;
-  private html: number[] = [];
-  constructor(private delegate: TerminalDataProcessorDelegate) {}
-  processRawData(data: string|Uint8Array) {
+/**
+ * @typedef {Object} TerminalDataProcessorDelegate
+ * @property {function(Uint8Array):void} htmlTerminalMessage
+ * @property {function(Uint8Array):void} plainTerminalData 
+ */
+
+class TerminalDataProcessor {
+  /** @private */
+  state = ParserState.GROUND;
+  /**
+   * @private
+   * @type {number[]}
+   */
+  html = [];
+  /**
+   * @param {TerminalDataProcessorDelegate} delegate
+   */
+  constructor(delegate) {
+    /** @private */
+    this.delegate = delegate;
+  }
+  /**
+   * @param {string|Uint8Array} data
+   */
+  processRawData(data) {
     const bufferData = data instanceof Uint8Array ? data : new TextEncoder().encode(data);
     let start = 0;
     let end = 0;
-    const queuedChunks: Uint8Array[] = [];
+    /** @type {Uint8Array[]} */
+    const queuedChunks = [];
     for (let i = 0; i < bufferData.length; i++) {
       const char = bufferData[i];
       if (this.state === ParserState.GROUND) {
@@ -74,3 +91,5 @@ export class TerminalDataProcessor {
       this.delegate.plainTerminalData(chunk);
   }
 }
+
+module.exports = { TerminalDataProcessor };
