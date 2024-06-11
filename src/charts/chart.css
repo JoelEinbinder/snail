@@ -30,7 +30,7 @@ input[type="range"]:not(.active)::-webkit-slider-thumb {
 
 .chart {
   text-align: center;
-  color: #f4f4f4;
+  color: var(--color-text);
   font: 10px monaco;
   overflow: hidden;
   display: flex;
