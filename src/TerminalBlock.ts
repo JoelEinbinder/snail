@@ -154,6 +154,13 @@ export class TerminalBlock implements LogItem {
     this._terminal.options.fontSize = font.current.size;
   }
 
+  wasShown(): void {
+    // the terminal size is delayed for the resize event to work
+    // but if its shown when the tab is not visible, it will get a height
+    // of 0px. So to fix that whenever the tab is shown we re-run willResize.
+    this._willResize();
+  }
+
   _willResize() {
     this.willResizeEvent.dispatch();
     if (this._terminal.buffer.active === this._terminal.buffer.alternate) {

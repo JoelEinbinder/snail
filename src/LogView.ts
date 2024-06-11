@@ -80,10 +80,14 @@ export class LogView implements Block, ShellDelegate, Findable {
     this._promptChangePromise = new Promise(resolve => this._promptChangeResolve = resolve);
   }
   hide(): void {
+    for (const item of this._log)
+      item.willHide?.();
     this._element.style.display = 'none';
   }
   show(): void {
     this._element.style.removeProperty('display');
+    for (const item of this._log)
+      item.wasShown?.();
   }
   title(): string {
     return this._titleThrottle.value + this._suffixThrottle.value;

@@ -16,6 +16,8 @@ export interface LogItem extends Findable {
   waitForLineForTest?(regex: RegExp, signal?: AbortSignal): Promise<void>;
   isFullscreen?(): boolean;
   onScroll?(): void;
+  wasShown?(): void;
+  willHide?(): void;
   aysncActions?(): Promise<Action[]>;
   recieveFilePath?(filePath: string): void;
   readonly acceptsChildren?: boolean;
