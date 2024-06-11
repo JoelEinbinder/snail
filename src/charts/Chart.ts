@@ -139,7 +139,7 @@ export class Chart {
   private dataRect: {top: number, left: number, width: number, height: number};
   private smoothForItem = new WeakMap<ProcessedData[0], number>();
   private dataLayer: Layer;
-  private hoverItems: (ProcessedData[0] & {line: Line})[] | undefined;
+  private hoverItems: {data: ProcessedData[0], line: Line}[] | undefined;
   private selectionRect: {x: number, y: number, x2: number, y2: number} | undefined;
   private eventually = new RunOnceEventaully();
   private lines = new Set<Line>();
@@ -263,24 +263,24 @@ export class Chart {
         this.hoverItems = [];
         const step = this.xToValue(event.offsetX);
         for (const line of this.lines) {
-          let hoverItem;
+          let data: ProcessedData[0];
           for (let item of line.data) {
-            hoverItem = item;
+            data = item;
             if (item.step >= step)
               break;
           }
-          this.hoverItems.push({...hoverItem, line});
+          this.hoverItems.push({data, line});
         }
         const table = document.createElement('table');
         const rect = this.canvas.getBoundingClientRect();
         const heading = document.createElement('tr');
         table.append(heading);
         const data: {[key: string]: number[]} = {
-          Step: this.hoverItems.map(h => h.step),
-          Value: this.hoverItems.map(h => h.value),
+          Step: this.hoverItems.map(h => h.data.step),
+          Value: this.hoverItems.map(h => h.data.value),
         };
         if (this.smooth > 0) {
-          data.Smoothed = this.hoverItems.map(h => this.smoothForItem.get(h));
+          data.Smoothed = this.hoverItems.map(h => this.smoothForItem.get(h.data));
         }
         for (const key of Object.keys(data)) {
           const th = document.createElement('th');
@@ -578,8 +578,8 @@ export class Chart {
     for (const item of this.hoverItems || []) {
       this.ctx.beginPath();
       this.ctx.arc(
-        this.getXPoint(item.step),
-        this.getYPoint(this.smooth ? this.smoothForItem.get(item) : item.value),
+        this.getXPoint(item.data.step),
+        this.getYPoint(this.smooth ? this.smoothForItem.get(item.data) : item.data.value),
         5,
         0,
         2 * Math.PI);
