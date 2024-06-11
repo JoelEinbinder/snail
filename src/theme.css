@@ -298,9 +298,9 @@ body.light {
   --border-color: var(--ansi-254);
   --blurry-background: rgba(255, 255, 255, 0.6);
 
-  --tab-foreground: #e5e5e5;
-  --tab-background: #f4f4f4;
-  --tab-hover: #eee;
+  --tab-foreground: #f4f4f4;
+  --tab-background: #e5e5e5;
+  --tab-hover: #ddd;
   --tab-border: rgba(200,200,200,0.5);
 }
 body.dark {

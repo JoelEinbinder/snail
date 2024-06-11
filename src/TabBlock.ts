@@ -184,7 +184,9 @@ export class TabBlock implements Block {
     tabHeader.textContent = tab.title();
     tabHeader.classList.add('tab-header');
     this._headerForTab.set(tab, tabHeader);
-    tabHeader.onclick = () => {
+    tabHeader.onmousedown = event => {
+      if (event.button !== 0)
+        return;
       this.switchTab(tab);
       tab.focus();
     };
