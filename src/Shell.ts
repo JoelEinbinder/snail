@@ -206,10 +206,14 @@ export class Shell {
                 }
                 const dataStr = new TextDecoder().decode(data.slice(1));
                 const chartData = JSON.parse(dataStr);
-                if (Array.isArray(chartData))
+                if (Array.isArray(chartData)) {
+                  // if we have steps, sorting will make appending much faster
+                  if (chartData.every(x => 'step' in x))
+                    chartData.sort((a, b) => a.step - b.step);
                   chartData.forEach(chartData => activeChartBlock.appendUserData(chartData));
-                else
+                } else {
                   activeChartBlock.appendUserData(chartData);
+                }
                 break;
               }
               case 75:
