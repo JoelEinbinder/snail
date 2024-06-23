@@ -1114,9 +1114,13 @@ export class Shell {
       void this.connection.send('Runtime.releaseObjectGroup', {
         objectGroup: 'eager-eval',
       });
-      if (result.exceptionDetails)
-        return;
-      belowPrompt.append(renderRemoteObjectOneLine(result.result, this._size.current.cols));
+      if (result.exceptionDetails) {
+        if (result.exceptionDetails?.exception?.className === 'SyntaxError')
+          return;
+        if (result.exceptionDetails?.exception?.className === 'EvalError')
+          return;
+      }
+      belowPrompt.append(renderRemoteObjectOneLine(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._size.current.cols));
     });
 
     const willResizeEvent = new JoelEvent<void>(undefined);
