@@ -86,6 +86,10 @@ test('pty can preview ps aux piped nowhere', async ({ runtime }) => {
     expect(await runtime.pty('ps aux |', 1), 'this is the secret secret string:0');
 });
 
+test('pty can preview ps aux piped to head', async ({ runtime }) => {
+    expect(await runtime.pty('ps aux | head', 1), 'this is the secret secret string:0');
+});
+
 test('should still work after a syntax error', async ({ runtime }) => {
     expect(await runtime.pty('&', 1), 'this is the secret secret string:1');
     expect(await runtime.pty('echo foo'), 'this is the secret secret string:0');

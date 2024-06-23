@@ -816,14 +816,43 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                     else
                         stream.pipe(/** @type {Writable} */(child.stdio[i]), { end: true });
                 }
-            return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
+                return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
             }
         } else if ('pipe' in expression) {
+            const callbacks = new Set();
+            let pipeClosed = false;
+            const interruptableStdin = new Writable({
+                write(chunk, encoding, callback) {
+                    if (pipeClosed || pipe.stdin.destroyed) {
+                        callback();
+                        return;
+                    }
+                    callbacks.add(callback);
+                    pipe.stdin.write(chunk, encoding, err => {
+                        // EPIPE is fine, it just means the pipe process was closed
+                        if (err?.code === 'EPIPE')
+                            err = null;
+                        callbacks.delete(callback);
+                        callback(err);
+                    });
+                }
+            });
             const pipe = execute(expression.pipe, noSideEffects, stdout, stderr);
-            const main = execute(expression.main, noSideEffects, pipe.stdin, stderr, stdin);
+            pipe.stdin.on('error', err => {
+                if (err.code === 'EPIPE')
+                    return;
+                throw err;
+            });
+            const main = execute(expression.main, noSideEffects, interruptableStdin, stderr, stdin);
             const closePromise = main.closePromise.then(() => {
                 pipe.stdin.end();
                 return pipe.closePromise;
+            });
+            pipe.closePromise.then(() => {
+                pipeClosed = true;
+                for (const callback of callbacks)
+                    callback();
+                callbacks.clear();
             });
             return {stdin: main.stdin, kill: (...args) => {
                 const result1 = main.kill(...args);
