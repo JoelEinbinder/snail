@@ -121,6 +121,35 @@
   background-color: var(--ansi-0);
 }
 
+[data-language="py"] > .arrow::before,
+[data-language="js"] > .arrow::before,
+[data-language="sh"] > .arrow::before {
+  vertical-align: bottom;
+  margin-left: -.5em;
+  margin-right: 2px;
+  -webkit-mask: var(--mask-image);
+  mask: var(--mask-image);
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  content: '';
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  background-color: var(--ansi-8);
+}
+
+[data-language="py"] > .arrow::before {
+  --mask-image: url('./icons/language-python.svg');
+}
+
+[data-language="js"] > .arrow::before {
+  --mask-image: url('./icons/nodejs.svg');
+}
+
+[data-language="sh"] > .arrow::before {
+  --mask-image: url('./icons/bash.svg');
+}
+
 .exit-code:empty {
   display: none;
 }

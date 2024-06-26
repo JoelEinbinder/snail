@@ -110,6 +110,10 @@ export class Editor extends Emitter<EditorEvents> {
     this._highlighter.setModeOptions(options);
   }
 
+  setMode(language: string) {
+    this._highlighter.setMode(language);
+  }
+
   setHighlightRanges(highlightRanges: HighlightRanges) {
     this._renderer.setHighlightRanges(highlightRanges);
   }

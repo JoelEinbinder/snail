@@ -2,6 +2,9 @@ import { Editor } from "../slug/editor/js/editor";
 import { Autocomplete } from "./autocomplete";
 import type { Shell } from "./Shell";
 import '../slug/shjs/editorMode';
+import '../slug/editor/modes/python';
+import '../slug/editor/modes/shell';
+import '../slug/editor/modes/javascript';
 import { makeShellCompleter } from "./shellCompleter";
 import './completions/git';
 import './completions/npx';
@@ -15,11 +18,11 @@ import { makeHistoryCompleter } from "./historyCompleter";
 import { themeEditorColors } from "./theme";
 import { startAyncWork } from "./async";
 
-export function makePromptEditor(shell: Shell) {
+export function makePromptEditor(shell: Shell, language: string) {
   const editor = new Editor('', {
     inline: true,
     lineNumbers: false,
-    language: 'shjs',
+    language,
     padding: 0,
     wordWrap: true,
     colors: themeEditorColors(),

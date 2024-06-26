@@ -481,7 +481,7 @@ Use uname -a to check whether the system is MacOS or Linux.`
     }]
     if (this._isFullscreen)
       return fullscreenActions;
-    const actions = [...fullscreenActions, {
+    const actions = [...fullscreenActions, ...this._shell.actions(), {
       title: 'Clear log',
       shortcut: 'Ctrl+L',
       id: 'log.clear',

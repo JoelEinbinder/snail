@@ -21,12 +21,13 @@ export class CommandBlock implements LogItem {
     private _connectionName: string,
     public env: {[key: string]: string},
     public cwd: string,
+    private _language: string,
     globalVars?: Set<string>,
     private _sshAddress?: string) {
     this._editor = new Editor('', {
       inline: true,
       lineNumbers: false,
-      language: 'shjs',
+      language: _language,
       padding: 0,
       wordWrap: true,
       colors: themeEditorColors(),
@@ -84,6 +85,7 @@ export class CommandBlock implements LogItem {
     command.classList.add('command');
     command.classList.toggle('canceled', this.wasCanceled);
     this._commandPrefix = new CommandPrefix(this, this._size);
+    this._commandPrefix.element.setAttribute('data-language', this._language);
     this._commandPrefix.element.addEventListener('click', event => {
       this.toggleFold.dispatch(!this.toggleFold.current);
       event.preventDefault();
@@ -185,6 +187,7 @@ export class CommandPrefix {
       this.element.textContent = '';
       const badge = makeVenvBadge(this._shellOrCommand) || ' ';
       const arrow = Color(colors.arrow, '»');
+      arrow.classList.add('arrow');
       const layouts: (string | Node)[][] = [
         [dir, GitStatus, badge, arrow],
         [mediumDir, GitStatus, badge, arrow],

@@ -27,6 +27,7 @@ export class Highlighter extends Emitter<{
   private _requestLineNumber = 0;
   private _tokenizeTimeout = 0;
   private _colors: [string, string][];
+  private _modeOptions: any;
   constructor(
     private _model: import('./model').Model,
     private _language: string = 'js',
@@ -187,7 +188,17 @@ export class Highlighter extends Emitter<{
   }
 
   setModeOptions(options: any) {
-    this._mode = getMode(this._language)?.({ indentUnit: 2, ...options }, {});
+    this._modeOptions = options;
+    this._refreshMode();
+  }
+
+  setMode(language: string) {
+    this._language = language;
+    this._refreshMode();
+  }
+
+  _refreshMode() {
+    this._mode = getMode(this._language)?.({ indentUnit: 2, ...this._modeOptions }, {});
     this._currentLineNumber = 0;
     this.emit('highlight', {
       from: 0,
