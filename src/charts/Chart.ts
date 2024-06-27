@@ -130,7 +130,7 @@ export class Chart {
   private smooth = 0;
   private margin = 50;
   private autoBounds = {
-    x: [0, 0],
+    x: [Infinity, -Infinity],
     y: [Infinity, -Infinity]
   }
   private xLog = false;
