@@ -87,16 +87,29 @@ const handler = {
     }
     return result;
   },
-  'Shell.runCommand': async ({expression, command}) => {
+  'Shell.runCommand': async ({expression, command, language}) => {
     retainers.add('runCommand');
-    lastCommandPromise = send('Runtime.evaluate', {
-      expression,
-      returnByValue: false,
-      generatePreview: true,
-      userGesture: true,
-      replMode: true,
-      allowUnsafeEvalBlockedByCSP: true,
-    });
+    if (language === 'javascript' || language === 'shjs') {
+      lastCommandPromise = send('Runtime.evaluate', {
+        expression,
+        returnByValue: false,
+        generatePreview: true,
+        userGesture: true,
+        replMode: true,
+        allowUnsafeEvalBlockedByCSP: true,
+      });
+    } else if (language === 'python') {
+      lastCommandPromise = getOrCreatePythonController().send('Runtime.evaluate', {
+        expression,
+        returnByValue: false,
+        generatePreview: true,
+        userGesture: true,
+        replMode: true,
+        allowUnsafeEvalBlockedByCSP: true,
+      });
+    } else {
+      throw new Error('Unsupported language: ' + language);
+    }
     /** @type {import('./metadata').Task} */
     const task = {
       command,
@@ -260,6 +273,10 @@ const handler = {
       returnByValue: true,
     });
   },
+  'Python.reset': async() => {
+    closePythonContrller();
+    getOrCreatePythonController();
+  },
   // @ts-ignore
   __proto__: null,
 };
@@ -312,6 +329,16 @@ function waitForConnection() {
     transport.onmessage = (/** @type {import('../protocol/pipeTransport').ProtocolRequest} */ message) => {
       if (message.method in handler) {
         dispatchToHandler(message, transport);
+        return;
+      }
+      if (message.method?.startsWith('Python.') || message.params?.objectId?.startsWith('py-')) {
+        getOrCreatePythonController().send(message.method, message.params).then(result => {
+          if ('id' in message)
+            transport?.send({id: message.id, result});
+        }).catch(error => {
+          if ('id' in message)
+            transport?.send({id: message.id, error: {message: String(error.stack)}});
+        });
         return;
       }
       let callback = 'id' in message ? (error, result) => {
@@ -474,3 +501,16 @@ function maybeExit() {
 }
 writeMetadata();
 waitForConnection();
+
+/** @type {import('./python/controller').PythonController|null} */
+let _pythonController = null;
+function getOrCreatePythonController() {
+  if (!_pythonController)
+    _pythonController = new (require('./python/controller').PythonController)();
+  return _pythonController;
+}
+function closePythonContrller() {
+  if (_pythonController)
+    _pythonController.close();
+  _pythonController = null;
+}

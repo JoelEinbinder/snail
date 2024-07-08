@@ -197,6 +197,10 @@ export class Highlighter extends Emitter<{
     this._refreshMode();
   }
 
+  language() {
+    return this._language;
+  }
+
   _refreshMode() {
     this._mode = getMode(this._language)?.({ indentUnit: 2, ...this._modeOptions }, {});
     this._currentLineNumber = 0;

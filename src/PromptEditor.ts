@@ -1,11 +1,11 @@
 import { Editor } from "../slug/editor/js/editor";
-import { Autocomplete } from "./autocomplete";
+import { Autocomplete, Completer } from "./autocomplete";
 import type { Shell } from "./Shell";
 import '../slug/shjs/editorMode';
 import '../slug/editor/modes/python';
 import '../slug/editor/modes/shell';
 import '../slug/editor/modes/javascript';
-import { makeShellCompleter } from "./shellCompleter";
+import { makeJSCompleter, makeShellCompleter } from "./shellCompleter";
 import './completions/git';
 import './completions/npx';
 import './completions/npm';
@@ -17,6 +17,17 @@ import { host } from "./host";
 import { makeHistoryCompleter } from "./historyCompleter";
 import { themeEditorColors } from "./theme";
 import { startAyncWork } from "./async";
+import { makePythonCompleter } from "./pythonCompleter";
+
+export function makePromptAutocomplete(editor: Editor, shell: Shell) {
+  return new Autocomplete(editor, {
+    shjs: makeShellCompleter(shell),
+    py: makePythonCompleter(shell),
+    js: makeJSCompleter(shell),
+  }, ' /.', {
+    'KeyR': makeHistoryCompleter(shell),
+  });
+}
 
 export function makePromptEditor(shell: Shell, language: string) {
   const editor = new Editor('', {
@@ -30,9 +41,7 @@ export function makePromptEditor(shell: Shell, language: string) {
   shell.globalVars().then(globalVars => {
     editor.setModeOptions({globalVars});
   })
-  const autocomplete = new Autocomplete(editor, makeShellCompleter(shell), ' /.', {
-    'KeyR': makeHistoryCompleter(shell),
-  });
+
   let historyIndex = 0;
   let currentValue = '';
   editor.on('selection-changed', () => {
@@ -85,7 +94,7 @@ export function makePromptEditor(shell: Shell, language: string) {
     editor.layout();
   });
   observer.observe(editor.element);
-  return {editor, autocomplete};
+  return editor;
 }
 
 function beep() {

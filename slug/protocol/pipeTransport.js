@@ -31,7 +31,8 @@ class PipeTransport {
    * @param {import('stream').Writable} pipeWrite
    * @param {import('stream').Readable} pipeRead
    */
-  constructor(pipeWrite, pipeRead) {
+  constructor(pipeWrite, pipeRead, eol = '\0') {
+    this._eol = eol;
     this._pipeWrite = pipeWrite;
     this._pendingMessage = '';
     this._waitForNextTask = setImmediate;
@@ -65,7 +66,7 @@ class PipeTransport {
   sendString(messageStr) {
     if (this._closed)
       throw new Error('Pipe has been closed');
-    this._pipeWrite.write(messageStr + '\0', err => {
+    this._pipeWrite.write(messageStr + this._eol, err => {
       if (err) {
         console.error('pipe write error', err);
         console.error('trying to write', messageStr);
@@ -77,7 +78,7 @@ class PipeTransport {
    * @param {Buffer} buffer
    */
   _dispatch(buffer) {
-    let end = buffer.indexOf('\0');
+    let end = buffer.indexOf(this._eol);
     if (end === -1) {
       this._pendingMessage += buffer.toString();
       return;
@@ -93,7 +94,7 @@ class PipeTransport {
     });
 
     let start = end + 1;
-    end = buffer.indexOf('\0', start);
+    end = buffer.indexOf(this._eol, start);
     while (end !== -1) {
       const message = buffer.toString(undefined, start, end);
       this._waitForNextTask(() => {
@@ -101,7 +102,7 @@ class PipeTransport {
           this.onmessage.call(null, JSON.parse(message));
       });
       start = end + 1;
-      end = buffer.indexOf('\0', start);
+      end = buffer.indexOf(this._eol, start);
     }
     this._pendingMessage = buffer.toString(undefined, start);
   }

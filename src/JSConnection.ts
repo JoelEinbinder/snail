@@ -21,7 +21,7 @@ export type ExtraClientMethods = {
   'Shell.setIsDaemon': (params: {isDaemon: boolean}) => void;
   'Shell.evaluate': (params: {code: string}) => {result: string, exitCode: number};
   'Shell.evaluateStreaming': (params: {code: string}) => {streamId: number};
-  'Shell.runCommand': (params: {command: string, expression: string}) => Protocol.CommandReturnValues['Runtime.evaluate'];
+  'Shell.runCommand': (params: {command: string, expression: string, language: 'shjs'|'javascript'|'python'|'bash'}) => Protocol.CommandReturnValues['Runtime.evaluate'];
   'Shell.previewCommand': (params: {command: string}) => { result: Protocol.CommandReturnValues['Runtime.evaluate'], notifications: any[]};
   'Shell.restore': () => Protocol.CommandReturnValues['Runtime.evaluate']|null;
   'Shell.setCwd': (params: {cwd: string}) => void; // this can be run before Shell.enable
@@ -33,6 +33,12 @@ export type ExtraClientMethods = {
   'Shell.providePassword': (params: { id: number, password: string }) => void;
 
   'Shell.kill': () => void;
+
+  'Python.autocomplete': (params: {line: string}) => {
+    anchor: number,
+    suggestions: string[]
+  };
+  'Python.reset': () => void;
 
   'Protocol.abort': (params: { id: number }) => void;
 }

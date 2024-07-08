@@ -1,6 +1,6 @@
 import 'xterm/css/xterm.css';
 import { History } from './history';
-import { makePromptEditor } from './PromptEditor';
+import { makePromptAutocomplete, makePromptEditor } from './PromptEditor';
 import { JoelEvent } from '../slug/cdp-ui/JoelEvent';
 import type { LogItem } from './LogItem';
 import { CommandBlock, CommandPrefix, computePrettyDirName } from './CommandBlock';
@@ -619,6 +619,7 @@ export class Shell {
     if (exitCode === 0)
       await this.runCommand('reconnect --list', 'shjs');
     console.timeEnd('create shell');
+    this._language.dispatch(await host.sendMessage({ method: 'loadItem', params: { key: 'language' }}) || 'shjs');
     this._setupUnlock(); // prompt starts locked
     host.notify({ method: 'reportTime', params: {name: 'create shell' } });
   }
@@ -657,18 +658,14 @@ export class Shell {
   }
 
   async _transformCode(code: string, language: Language) {
-    if (language === 'javascript')
-      return code;
-    if (language === 'python')
-      throw new Error('python not implemented');
-    if (language === 'bash')
-      throw new Error('bash not implemented');
     if (language === 'shjs') {
       const { transformCode } = await import('../slug/shjs/transform');
       const jsCode = transformCode(code, 'global.pty', await this.globalVars());
-      return jsCode;
+      return preprocessForJS(jsCode);
     }
-    throw new Error('unknown language:' + language);
+    if (language === 'javascript')
+      return preprocessForJS(code);
+    return code;
   }
   async _isShellLikeCode(code: string, language: Language) {
     if (language !== 'shjs' && language !== 'bash')
@@ -739,12 +736,12 @@ export class Shell {
     const unlockPrompt = this._lockPrompt('runCommand');
     this._activeItem.dispatch(commandBlock);
     const updateHistory = await this._addToHistory(command);
-    const jsCode = await this._transformCode(command, language);
     let error;
     const connection = this.connection;
     const result = await connection.send('Shell.runCommand', {
-      expression: preprocessForJS(jsCode),
+      expression: await this._transformCode(command, language),
       command,
+      language,
     }).catch(e => {
       error = e;
       return null;
@@ -966,6 +963,7 @@ export class Shell {
             callback: async () => {
               if (language === this._language.current)
                 return;
+              host.notify({ method: 'saveItem', params: { key: 'language', value: language}});  
               this._language.dispatch(language);
             }
           };
@@ -1053,7 +1051,8 @@ export class Shell {
       finishWork();
     }, false);
     editorLine.appendChild(editorWrapper);
-    const {editor, autocomplete} = makePromptEditor(this, languageToMode[this._language.current]);
+    const editor = makePromptEditor(this, languageToMode[this._language.current]);
+    const autocomplete = makePromptAutocomplete(editor, this);
     this._prompt = editor;
     const loc = editor.replaceRange(this._leftoverStdin, { start: { line: 0, column: 0 }, end: { line: 0, column: 0 } });
     editor.selections = [{ start: loc, end: loc }];
@@ -1081,6 +1080,8 @@ export class Shell {
     }
     let dontCancelLLM = false;
     const onChange = wrapAsyncFunction('shell preview', async () => {
+      if (this._language.current !== 'shjs' && this._language.current !== 'javascript')
+        return;
       if (!dontCancelLLM)
         this._delegate.cancelLLMRequest();
       const value = autocomplete.valueWithSuggestion();
@@ -1226,7 +1227,7 @@ export class Shell {
         dontCancelLLM = true;
         editor.value = '';
         dontCancelLLM = false;
-        await this.runCommand(old);
+        await this.runCommand(old, this._language.current);
       },
       recieveLLMAction: async (iterator, signal) => {
         let value = '';
@@ -1291,8 +1292,9 @@ export class Shell {
     this._delegate.addItem(item, this._activeCommandBlock);
   }
 
-  async jsCompletions(prefix: string): Promise<Suggestion[]> {
-    if (!this._cachedSuggestions.has(prefix)) {
+  async jsCompletions(prefix: string) {
+    const key = 'js:' + prefix;
+    if (!this._cachedSuggestions.has(key)) {
       const inner = async () => {
         const {exceptionDetails, result} = await this.connection.send('Runtime.evaluate', {
           throwOnSideEffect: true,
@@ -1322,7 +1324,11 @@ export class Shell {
       }
       this._cachedSuggestions.set(prefix, inner());
     }
-    return this._cachedSuggestions.get(prefix);
+    return this._cachedSuggestions.get(key);
+  }
+
+  pythonCompletions(line: string) {
+    return this.connection.send('Python.autocomplete', { line });
   }
 
   async findAllFiles(maxFiles: number, callback: (path: string) => void) {
@@ -1346,7 +1352,7 @@ export class Shell {
       'python': 'Meta+K P',
       'javascript': 'Meta+K J',
     };
-    return shellLanguages.map(language => {
+    return [...shellLanguages.map(language => {
       return {
         id: `shell-language-${language}`,
         title: `Switch shell to ${language}`,
@@ -1355,7 +1361,13 @@ export class Shell {
         },
         shortcut: shortcuts[language],
       }
-    })
+    }), {
+      id: 'python.reset',
+      title: 'Reset Python',
+      callback: async () => {
+        await this.connection.send('Python.reset', {});
+      },
+    }]
   }
 }
 

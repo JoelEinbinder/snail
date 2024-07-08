@@ -48,6 +48,9 @@ global.bootstrap = (args) => {
   global.sh = sh;
   global.pty = runtime.pty.bind(runtime);
   global._abortPty = runtime.abortPty.bind(runtime);
+  global._python = code => {
+    console.log('code', code);
+  }
 
   return runtime.respond.bind(runtime);
 };

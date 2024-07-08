@@ -114,6 +114,10 @@ export class Editor extends Emitter<EditorEvents> {
     this._highlighter.setMode(language);
   }
 
+  language() {
+    return this._highlighter.language();
+  }
+
   setHighlightRanges(highlightRanges: HighlightRanges) {
     this._renderer.setHighlightRanges(highlightRanges);
   }

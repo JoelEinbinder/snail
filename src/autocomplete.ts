@@ -12,7 +12,7 @@ export class Autocomplete {
     private _activationCode = null;
     private _activeCompletionsPromise: Promise<any>|null = null;
     public suggestionChanged = new JoelEvent<void>(undefined);
-    constructor(private _editor: Editor, private _defaultCompleter: Completer, private _activationChars: string, private _specialCompleters: { [key: string]: Completer }) {
+    constructor(private _editor: Editor, private _languageCompleters: {[key: string]: Completer}, private _activationChars: string, private _specialCompleters: { [key: string]: Completer }) {
         this._editor.on('selection-changed', event => {
             this._abortController?.abort();
             delete this._abortController;
@@ -134,6 +134,13 @@ export class Autocomplete {
             this.suggestionChanged.dispatch();
     }
 
+    _completer() {
+        if (this._activationCode)
+            return this._specialCompleters[this._activationCode];
+        const language = this._editor.language();
+        return this._languageCompleters[language] || (() => null);
+    }
+
     async showSuggestBox(autoaccept = false) {
         this._wantsSuggestBoxShown = true;
         const location = this._editor.selections[0].start;
@@ -143,7 +150,7 @@ export class Autocomplete {
         this._abortController = abortController;
         const textBeforeCursor = this._editor.text({ start: { line: location.line, column: 0 }, end: location });
         this._refreshingSuggestions = true;
-        const completer = this._activationCode ? this._specialCompleters[this._activationCode] : this._defaultCompleter;
+        const completer = this._completer();
         const finishWork = startAyncWork('completions');
         const completionsPromise = completer(textBeforeCursor, abortController.signal);;
         this._activeCompletionsPromise = completionsPromise;

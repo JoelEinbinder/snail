@@ -67,6 +67,23 @@ export function makeShellCompleter(shell: Shell): Completer {
   };
 }
 
+export function makeJSCompleter(shell: Shell): Completer {
+  return async (line: string, abortSignal: AbortSignal) => {
+    const {getAutocompletePrefix} = await import('../slug/shjs/transform');
+    const prefix = getAutocompletePrefix(line, await shell.globalVars(), false);
+    console.log('prefix', prefix)
+    if (prefix === null)
+      return null;
+    const prefixText = line.slice(prefix.start, prefix.end);
+    const suggestions = await shell.jsCompletions(prefixText);
+    const anchor = prefix.end + 1;
+    return {
+      anchor,
+      suggestions: suggestions,
+      exact: true,
+    }
+  }
+}
 async function envCompleter(shell: Shell, line: string): Promise<CompletionResult> {
   const anchor = line.lastIndexOf('$');
   if (anchor === -1)
