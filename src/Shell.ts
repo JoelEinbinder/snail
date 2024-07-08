@@ -424,6 +424,21 @@ export class Shell {
         if (message.executionContextId === 1)
           destroy();
     });
+    const evaluationsToPush = new Map<number, (result: string) => void>();
+    // To avoid round trip latency, the backend will push evaluation results it thinks we need
+    connection.on('Shell.willPushEvaluation', ({id, code}) => {
+      this._cachedEvaluationResult.set(code, new Promise(resolve => {
+        evaluationsToPush.set(id, resolve);
+      }));
+    });
+    connection.on('Shell.pushEvaluation', ({id, result, exitCode}) => {
+      if (!evaluationsToPush.has(id)) {
+        console.error('evaluation not found', {id, result, exitCode});
+        return;      
+      }
+      evaluationsToPush.get(id)?.(result.trim());
+      evaluationsToPush.delete(id);
+    });
     const terminalHandler = this._createTerminalHandler({
       connection,
       notify,
@@ -707,6 +722,7 @@ export class Shell {
     const jsCode = await this._transformCode(command);
     let error;
     const connection = this.connection;
+    this._clearCache();
     const result = await connection.send('Shell.runCommand', {
       expression: preprocessForJS(jsCode),
       command,
@@ -726,7 +742,6 @@ export class Shell {
       unlockPrompt();
       return;
     }
-    this._clearCache();
     // TODO update the prompt line here?
     if (updateHistory) {
       await updateHistory('end', Date.now());
@@ -835,7 +850,7 @@ export class Shell {
 
   async cachedEvaluation(code: string): Promise<string> {
     if (!this._cachedEvaluationResult.has(code))
-      this._cachedEvaluationResult.set(code, this.evaluate(code));;
+      this._cachedEvaluationResult.set(code, this.evaluate(code));
     return this._cachedEvaluationResult.get(code);
   }
 

@@ -12,6 +12,9 @@ type ExtraServerMethods = {
 
   'Shell.evaluateStreamingData': { streamId: number, data: string };
   'Shell.evaluateStreamingEnd': { streamId: number };
+
+  'Shell.willPushEvaluation': { id: number, code: string };
+  'Shell.pushEvaluation': { id: number, result: string, exitCode: number };
 }
 type ServerMethods = Protocol.Events & ExtraServerMethods;
 

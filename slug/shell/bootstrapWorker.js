@@ -25,6 +25,7 @@ let lastSubshellId = 0;
 let lastAskPassId = 0;
 let lastStreamId = 0;
 let lastPreviewToken = 0;
+let lastPushedEvaluationId = 0;
 /** @type {Map<number, any[]>} */
 const previewResults = new Map();
 /** @type {Map<number, (password: string) => void>} */
@@ -87,7 +88,7 @@ const handler = {
     }
     return result;
   },
-  'Shell.runCommand': async ({expression, command}) => {
+  'Shell.runCommand': async ({expression, command}, signal) => {
     retainers.add('runCommand');
     lastCommandPromise = send('Runtime.evaluate', {
       expression,
@@ -135,6 +136,21 @@ const handler = {
     }
     retainers.delete('runCommand');
     maybeExit(); // can never actually exit here because the connection is still open or we haven't been witnessed
+    for (const code of [
+      '__git_ref_name',
+      '__is_git_dirty',
+      'pwd',
+      'echo $HOME',
+      'GIT_OPTIONAL_LOCKS=0 git rev-parse HEAD',
+    ]) {
+      const id = ++lastPushedEvaluationId;
+      transport?.send({ method: 'Shell.willPushEvaluation', params: { code, id }});
+      handler['Shell.evaluate']({ code }, signal).then(({exitCode, result }) => {
+        transport?.send({ method: 'Shell.pushEvaluation', params: { id, result, exitCode }});
+      }).catch(() => {
+        transport?.send({ method: 'Shell.pushEvaluation', params: { id, result: '<evaluation failed>', exitCode: 1 }});
+      });
+    }
     return result;
   },
   'Shell.previewCommand': async ({command}, signal) => {
