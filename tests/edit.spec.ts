@@ -93,3 +93,21 @@ test('can edit inside docker', async ({ shellInDocker }) => {
     content: '',
   });
 });
+
+test('can reconnect to edit', async ({ shellFactory }) => {
+  const shell1 = await shellFactory();
+  await shell1.runCommand('edit foo.txt');
+  expect(await shell1.serialize()).toEqual({
+    title: 'foo.txt',
+    content: '',
+  });
+  await shell1.close();
+
+  const shell2 = await shellFactory();
+  await shell2.runCommand('reconnect');
+  expect(await shell2.serialize()).toEqual({
+    title: 'foo.txt',
+    content: '',
+  });
+  await shell2.kill();
+});

@@ -97,7 +97,7 @@ class ShellState {
               break;
             }
           }
-          addData(new Uint8Array([0x1b, 0xa]));
+          addData(new Uint8Array([0x1b, 0x1a]));
           addData(data);
           addData(new Uint8Array([0x0]));
         },
