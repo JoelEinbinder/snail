@@ -12,6 +12,7 @@ type State = {
 };
 export class ShjsMode implements Mode<State> {
   innerMode: Mode<any>;
+  lineComment = '//';
   constructor(public options: {indentUnit: number, globalVars?: Set<string>}) {
     this.innerMode = getMode('js')({indentUnit: options.indentUnit}, {});
   }

@@ -15,6 +15,7 @@ export interface Mode<State> {
   token(stream: StringStream, state: State): string|null;
   indent?(state: State, textAfter: string): number|undefined;
   hover?(state: State): Node|string|null;
+  lineComment?: string;
 };
 const MAX_TOKENS = 1000;
 export class Highlighter extends Emitter<{
@@ -29,9 +30,10 @@ export class Highlighter extends Emitter<{
   private _colors: [string, string][];
   constructor(
     private _model: import('./model').Model,
+    private _commandManager: import('./commands').CommandManager,
     private _language: string = 'js',
     private _underlay?: (arg0: number, arg1: string) => Token[],
-    colors: { selectionBackground?: string; foreground?: string, textColor?: string, tokenColors?: [string, string][] } | undefined = {}) {
+    colors: { selectionBackground?: string; foreground?: string, textColor?: string, tokenColors?: [string, string][] } | undefined = {},) {
     super();
     this._model.on('selection-changed', ({ selections, previousSelections }) => {
       for (var selection of selections)
@@ -100,6 +102,51 @@ export class Highlighter extends Emitter<{
             ['variable-2', 'rgb(0, 0, 128)'],
             ['property', 'rgb(200, 0, 0)']
           ]);
+
+    this._commandManager.addCommand(() => {
+      if (!this._mode?.lineComment)
+        return false;
+      const selections = [...this._model.selections].map(s => ({start: {...s.start}, end: {...s.end}}));
+      if (!selections.length)
+        return false;
+      const lineComment = this._mode.lineComment;
+      const lines = new Set<number>();
+      for (const selection of selections) {
+        for (let i = selection.start.line; i <= selection.end.line; i++)
+          lines.add(i);
+      }
+      let isCommented = true;
+      for (const line of lines) {
+        const text = this._model.line(line).text;
+        if (!text.trimStart().startsWith(lineComment)) {
+          isCommented = false;
+          break;
+        }
+      }
+      for (const line of lines) {
+        const text = this._model.line(line).text;
+        if (isCommented) {
+          const { index, 0: match } = /\/\/ ?/.exec(text)!;          
+          this._model.replaceRange('', { start: {line, column: index}, end: {line, column: index + match.length} });
+          for (const selection of selections) {
+            if (selection.start.line === line && selection.start.column > index)
+              selection.start.column -= match.length;
+            if (selection.end.line === line && selection.end.column > index)
+              selection.end.column -= match.length;
+          }
+        } else {
+          this._model.replaceRange('// ', { start: {line, column: 0}, end: {line, column: 0} });
+          for (const selection of selections) {
+            if (selection.start.line === line)
+              selection.start.column += '// '.length;
+            if (selection.end.line === line)
+              selection.end.column += '// '.length;
+          }
+        }
+      }
+      this._model.setSelections(selections);
+      return true;
+    }, 'toggleLineComment', 'Ctrl+/', 'Meta+/');
   }
 
   _findCurrentLineNumber(from: number) {

@@ -69,3 +69,15 @@ test('should type correctly after ArrowLeft', async ({ shell }) => {
   });
   await shell.kill();
 });
+
+test('should do a line comment', async ({ shell }) => {
+  await shell.runCommand('kang a.js');
+  await shell.page.keyboard.type('123\n456');
+  await shell.page.keyboard.press('ControlOrMeta+KeyA');
+  await shell.page.keyboard.press('ControlOrMeta+Slash');
+  expect(await shell.serialize()).toEqual({
+    content: '// 123\n// 456',
+    title: 'a.js*',
+  });
+  await shell.kill();
+});

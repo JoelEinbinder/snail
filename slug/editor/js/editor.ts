@@ -20,9 +20,9 @@ export class Editor extends Emitter<EditorEvents> {
     this.element.className = 'editor';
     this.element.tabIndex = -1;
 
-    this._highlighter = new Highlighter(this._model, options.language, options.underlay, options.colors);
-    this._renderer = new Renderer(this._model, this.element, this._highlighter, options);
     this._commandManager = new CommandManager(this.element);
+    this._highlighter = new Highlighter(this._model, this._commandManager, options.language, options.underlay, options.colors);
+    this._renderer = new Renderer(this._model, this.element, this._highlighter, options);
     this._input = new Input(this.element, this._model, this._commandManager, this._renderer, options.readOnly);
     this._selectionManager = new SelectionManger(this._renderer, this._model, this._commandManager);
     this._model.on('change', change => this.emit('change', change));
