@@ -13,7 +13,7 @@ export class Editor extends Emitter<EditorEvents> {
   private _commandManager: CommandManager;
   private _input: Input;
   private _selectionManager: SelectionManger;
-  constructor(data: string, options: EditorOptions | undefined = {}) {
+  constructor(data: string, private _options: EditorOptions | undefined = {}) {
     super();
     this._model = new Model(data);
     this.element = document.createElement('div');
@@ -21,13 +21,21 @@ export class Editor extends Emitter<EditorEvents> {
     this.element.tabIndex = -1;
 
     this._commandManager = new CommandManager(this.element);
-    this._highlighter = new Highlighter(this._model, this._commandManager, options.language, options.underlay, options.colors);
-    this._renderer = new Renderer(this._model, this.element, this._highlighter, options);
-    this._input = new Input(this.element, this._model, this._commandManager, this._renderer, options.readOnly);
+    this._highlighter = new Highlighter(this._model, this._commandManager, _options.language, _options.underlay, _options.colors);
+    this._renderer = new Renderer(this._model, this.element, this._highlighter, _options);
+    this._input = new Input(this.element, this._model, this._commandManager, this._renderer, _options.readOnly);
     this._selectionManager = new SelectionManger(this._renderer, this._model, this._commandManager);
     this._model.on('change', change => this.emit('change', change));
     this._renderer.on('might-resize', () => this.emit('might-resize', undefined));
     this._model.on('selection-changed', event => this.emit('selection-changed', event));
+
+    this.element.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        this.smartEnter();
+      }
+    })
   }
 
   layout() {
@@ -64,7 +72,8 @@ export class Editor extends Emitter<EditorEvents> {
 
   smartEnter() {
     const indentation = this._highlighter.indentation(this._model.selections[0].start.line);
-    this._input.insertText('\n' + '\t'.repeat(indentation / this._renderer.TAB.length));
+    const text = '\n' + (this._options?.useTabs ?  '\t'.repeat(indentation / this._renderer.TAB.length) : ' '.repeat(indentation));
+    this._input.insertText(text);
   }
 
   pointFromLocation(location: Loc) {
@@ -136,6 +145,7 @@ export type EditorOptions = {
   backgroundColor?: string;
   padding?: number;
   wordWrap?: boolean;
+  useTabs?: boolean;
   underlay?: (lineNumber: number, text: string) => Array<import('./highlighter').Token>;
   colors?: {
     foreground: string;

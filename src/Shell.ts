@@ -994,7 +994,7 @@ export class Shell {
         }
       }
       finishWork();
-    }, false);
+    }, true);
     editorLine.appendChild(editorWrapper);
     const {editor, autocomplete} = makePromptEditor(this);
     const loc = editor.replaceRange(this._leftoverStdin, { start: { line: 0, column: 0 }, end: { line: 0, column: 0 } });

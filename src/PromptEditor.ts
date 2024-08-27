@@ -23,6 +23,7 @@ export function makePromptEditor(shell: Shell) {
     padding: 0,
     wordWrap: true,
     colors: themeEditorColors(),
+    useTabs: true,
   });
   shell.globalVars().then(globalVars => {
     editor.setModeOptions({globalVars});
