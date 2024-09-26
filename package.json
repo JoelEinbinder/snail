@@ -20,7 +20,7 @@
   "main": "./electron/index.js",
   "author": "Joel Einbinder",
   "devDependencies": {
-    "@playwright/test": "^1.46.1",
+    "@playwright/test": "^1.47.2",
     "@types/node": "^17.0.45",
     "@types/rimraf": "^3.0.2",
     "@types/sqlite3": "^3.1.8",
