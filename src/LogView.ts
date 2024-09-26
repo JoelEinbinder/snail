@@ -40,6 +40,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _promptChangeResolve: () => void;
   private _find = new Find(this, () => this.focus());
   private _llmAbortController: AbortController|null = null;
+  private _isMockAI = false;
   blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._updatePromptChangePromise();
@@ -127,9 +128,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   async _triggerLLM(): Promise<void> {
     if (!this._prompt)
       return;
-    const apiKey = await this._shell.cachedEvaluation('echo $SNAIL_OPENAI_KEY');
-    if (!apiKey)
-      return;
+    const done = startAyncWork('ai');
     this._llmAbortController?.abort();
     const controller = new AbortController();
     this._llmAbortController = controller;
@@ -137,68 +136,14 @@ export class LogView implements Block, ShellDelegate, Findable {
     await this._prompt.flushForLLM();
     while (!this._prompt)
       await this._promptChangePromise;
-    const tearDown = () => {
-      if (this._llmAbortController === controller) {
-        this._element.classList.toggle('ai-loading', false);
-        this._llmAbortController = null;
-      }  
-    };
-    if (controller.signal.aborted) {
-      tearDown()
-      return;
+    const iterator = this._isMockAI ? mockCompletions() : await openAICompletions(this._shell, this._log, controller.signal); 
+    if (iterator)
+      await this._prompt.recieveLLMAction(iterator, controller.signal);  
+    if (this._llmAbortController === controller) {
+      this._element.classList.toggle('ai-loading', false);
+      this._llmAbortController = null;
     }
-    const model = await this._shell.cachedEvaluation('ai_model');
-    if (controller.signal.aborted) {
-      tearDown()
-      return;
-    }
-    const messages: import('openai').OpenAI.Chat.ChatCompletionMessageParam[] = [];
-    let total = 0;
-    for (const item of [...this._log].reverse()) {
-      const message = await item.serializeForLLM?.();
-      if (controller.signal.aborted) {
-        tearDown()
-        return;
-      }
-      if (message) {
-        if (message.content.length > 1000)
-          message.content = message.content.slice(0, 500) + '<content truncated>' + message.content.slice(-500);
-        total += message.content.length;
-        messages.push(message);
-      }
-      if (total >= 10_000)
-        break;
-    }
-    messages.push({
-      role: 'system',
-      content: `Your messages are being typed directly into a terminal shell.
-The user will respond with the result from your command.
-Always respond in the form of a bash command.
-Respond directly with the command to run instead of asking the user to run a given command.
-Try to gather information and explore the environment before giving up.
-Make sure any comments in your response are prefixed with a '#'.
-Keep comments to a minimum.
-Refrain from explaining simple commands.
-For example, if you don't know what to do, respond with ls.
-Use uname -a to check whether the system is MacOS or Linux.`
-    });
-    messages.reverse();
-
-
-    const iterator = await sendStreamingCommandToHost('openai', {
-      stream: true,
-      messages,
-      model,
-      apiKey,
-    });
-
-    if (controller.signal.aborted) {
-      tearDown()
-      return;
-    }
-    await this._prompt.recieveLLMAction(iterator, controller.signal);
-    
-    tearDown()
+    done();
   }
 
   addItem(item: LogItem, parent?: LogItem) {
@@ -397,6 +342,10 @@ Use uname -a to check whether the system is MacOS or Linux.`
       }))).filter(x => x),
       prompt: await this._prompt?.serializeForTest(),
     };
+  }
+
+  enableMockAI() {
+    this._isMockAI = true;
   }
 
   async waitForLineForTest(regex: RegExp) {
@@ -610,4 +559,65 @@ Use uname -a to check whether the system is MacOS or Linux.`
     this._scroller.scrollTop = this._scroller.scrollHeight;
   }
 
+}
+
+
+async function openAICompletions(shell: Shell, log: Iterable<LogItem>, signal: AbortSignal) {
+  const apiKey = await shell.cachedEvaluation('echo $SNAIL_OPENAI_KEY');
+  if (!apiKey)
+    return null;
+  if (signal.aborted)
+    return null;
+  const model = await shell.cachedEvaluation('ai_model');
+  if (signal.aborted)
+    return null;
+  const messages: import('openai').OpenAI.Chat.ChatCompletionMessageParam[] = [];
+  let total = 0;
+  for (const item of [...log].reverse()) {
+    const message = await item.serializeForLLM?.();
+    if (signal.aborted)
+      return null;
+    if (message) {
+      if (message.content.length > 1000)
+        message.content = message.content.slice(0, 500) + '<content truncated>' + message.content.slice(-500);
+      total += message.content.length;
+      messages.push(message);
+    }
+    if (total >= 10_000)
+      break;
+  }
+  messages.push({
+    role: 'system',
+    content: `Your messages are being typed directly into a terminal shell.
+The user will respond with the result from your command.
+Always respond in the form of a bash command.
+Respond directly with the command to run instead of asking the user to run a given command.
+Try to gather information and explore the environment before giving up.
+Make sure any comments in your response are prefixed with a '#'.
+Keep comments to a minimum.
+Refrain from explaining simple commands.
+For example, if you don't know what to do, respond with ls.
+Use uname -a to check whether the system is MacOS or Linux.`
+  });
+  messages.reverse();
+
+
+  return sendStreamingCommandToHost('openai', {
+    stream: true,
+    messages,
+    model,
+    apiKey,
+  });
+};
+
+async function * mockCompletions(): AsyncIterable<import('openai').OpenAI.Chat.ChatCompletionChunk> {
+  // chunk.choices[0].delta.content
+  yield {
+    choices: [{ delta: { content: '# fake ai suggestion' },
+      finish_reason: 'stop', index: 0}],
+      created: Date.now(),
+      id: '-1',
+      model: 'mock',
+      object: 'chat.completion.chunk'
+    };
 }

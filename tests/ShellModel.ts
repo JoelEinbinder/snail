@@ -121,6 +121,17 @@ class Split {
   setScrollTop(scrollTop: number) {
     return this._block.locator('.log-view-scroller').evaluate((node, scrollTop) => node.scrollTop = scrollTop, scrollTop);
   }
+
+  async enableMockAI() {
+    await this.page.evaluate(() => {
+      const hooks = window.testingHooks;
+      hooks.enableMockAI();
+    });
+  }
+
+  async triggerLLM() {
+    await this.page.keyboard.press('ControlOrMeta+L');
+  }
 }
 export class ShellModel extends Split {
   private constructor(public page: Page) {

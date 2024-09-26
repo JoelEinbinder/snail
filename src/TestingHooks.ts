@@ -20,6 +20,9 @@ class TestingHooks {
     // TODO do something when there is a split?
     return (rootBlock.block as LogView).waitForLineForTest(regex);
   }
+  enableMockAI() {
+    return (rootBlock.block as LogView).enableMockAI();
+  }
 }
 declare global {
   interface Window { testingHooks: TestingHooks; }
