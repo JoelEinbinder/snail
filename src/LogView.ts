@@ -329,7 +329,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     
     // automaticaly trigger the llm if there was an error
     // it probably will help fix a typo or something
-    if (this._shell.lastCommandWasError())
+    if (this._shell.lastCommandWasError() && this._shell.lastCommandWasNew())
       this._triggerLLM();
   }
 

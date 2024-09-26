@@ -88,6 +88,7 @@ export class Shell {
   private _setupUnlock: () => void;
   private _leftoverStdin = '';
   private _lastCommandWasError = false;
+  private _lastCommandWasNew = false;
   constructor(private _delegate: ShellDelegate) {
     console.time('create shell');
     host.notify({ method: 'reportTime', params: {name: 'start create shell' } });
@@ -710,6 +711,7 @@ export class Shell {
   async runCommand(command: string) {
     const commandBlock = new CommandBlock(command, this._size, this._connectionNameEvent.current, {...this.env}, this.cwd, this._cachedGlobalVars, this.sshAddress);
     this._lastCommandWasError = false;
+    this._lastCommandWasNew = false;
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
     if (!command)
@@ -719,6 +721,7 @@ export class Shell {
     const unlockPrompt = this._lockPrompt('runCommand');
     this._activeItem.dispatch(commandBlock);
     const updateHistory = await this._addToHistory(command);
+    const isNewCommand = await this._isNewCommand(command);
     const jsCode = await this._transformCode(command);
     let error;
     const connection = this.connection;
@@ -778,6 +781,7 @@ export class Shell {
     if (this._activeItem.current === commandBlock)
       this._activeItem.dispatch(null);
     this._addJSBlock(result, connection, commandBlock);
+    this._lastCommandWasNew = isNewCommand;
     this._setActiveCommandBlock(null);
     delete this._activeCommandBlock;
     unlockPrompt();
@@ -793,6 +797,11 @@ export class Shell {
     const jsBlock = new JSBlock(result.exceptionDetails ? result.exceptionDetails.exception : result.result, connection, this._size);
 
     this.addItem(jsBlock);
+  }
+
+  async _isNewCommand(command: string) {
+    const pwd = await this.cachedEvaluation('pwd');
+    return this._history.isNewCommand({ command, pwd, sshAddress: this.sshAddress });
   }
 
   async evaluate(code: string): Promise<string> {
@@ -1283,6 +1292,10 @@ export class Shell {
 
   lastCommandWasError(): boolean {
     return this._lastCommandWasError;
+  }
+
+  lastCommandWasNew(): boolean {
+    return this._lastCommandWasNew;
   }
 }
 

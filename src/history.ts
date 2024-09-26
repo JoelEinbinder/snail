@@ -140,4 +140,15 @@ export class History {
       return searchLocalHistory();
     }
   }
+
+  async isNewCommand({ command, pwd, sshAddress }: { command: string, pwd: string, sshAddress: string|null }) {
+    const result = await host.sendMessage({
+      method: 'queryDatabase',
+      params: {
+        sql: `SELECT hostname FROM history WHERE end IS NOT NULL AND command = ? AND pwd = ? AND hostname ${sshAddress ? '= ?' : 'IS NULL'} LIMIT 1`,
+        params: sshAddress ? [command, pwd, sshAddress] : [command, pwd],
+      }
+    });
+    return result.length === 0;
+  }
 }
