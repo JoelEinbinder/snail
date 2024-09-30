@@ -37,3 +37,14 @@ test('can find a file with quick pick', async ({ shell }) => {
     prompt: { value: 'cat dir/fileToFind.txt' },
   });
 });
+
+test('can type in the prompt after closing quick pick', async ({ shell }) => {
+  await shell.openQuickOpen();
+  await shell.page.keyboard.press('Escape');
+  await shell.page.keyboard.type('you_should_see_me')
+  await shell.waitForAsyncWorkToFinish();
+  expect(await shell.serialize()).toEqual({
+    log: [],
+    prompt: { value: 'you_should_see_me' },
+  });
+});

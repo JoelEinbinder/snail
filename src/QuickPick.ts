@@ -93,14 +93,22 @@ class QuickPick {
   dispose() {
     if (!this._element.isConnected)
       return;
+    window.removeEventListener('focus', this._doFocus);
     if (this._element.open)
       this._element.close();
     this._element.remove();
     activePick = undefined;
-    window.removeEventListener('focus', this._doFocus);
     setBrowserViewsHidden(false);
-    if (document.activeElement === document.body)
+    if (document.activeElement === document.body) {
       rootBlock.block?.focus();
+    } else {
+      // dialog does some crazy async stuff if we don't refocus
+      const before = document.activeElement;
+      if (before instanceof HTMLElement || before instanceof SVGElement) {
+        before.blur();
+        before.focus();
+      }
+    }
   }
 
   async _render() {
