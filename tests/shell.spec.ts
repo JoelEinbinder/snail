@@ -544,3 +544,13 @@ test('should be able to cat a file with a blank line at the top', async ({ shell
     prompt: { value: '' },
   });
 })
+
+test('should scroll to bottom on Enter', async ({ shell }) => {
+  await shell.runCommand(`for (let i = 0; i < 300; i++) console.log(i);`);
+  const topAtBottom = await shell.scrollTop();
+  await shell.setScrollTop(0);
+  expect(await shell.scrollTop()).toBe(0);
+  await shell.page.keyboard.press('Enter');
+  await shell.waitForAsyncWorkToFinish();
+  expect(await shell.scrollTop()).toBeGreaterThanOrEqual(topAtBottom);
+});

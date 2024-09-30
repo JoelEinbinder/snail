@@ -714,6 +714,7 @@ export class Shell {
     this._lastCommandWasNew = false;
     commandBlock.cachedEvaluationResult = this._cachedEvaluationResult;
     this.addItem(commandBlock);
+    this._delegate.scrollToBottom();
     if (!command)
       return;
     this._setActiveCommandBlock(commandBlock);
