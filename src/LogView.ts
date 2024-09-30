@@ -48,13 +48,18 @@ export class LogView implements Block, ShellDelegate, Findable {
     this._element.addEventListener('keydown', (event: KeyboardEvent) => {
       if (!this._prompt)
         return;
-      if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey)
+      if (event.ctrlKey || event.altKey || event.metaKey)
         return;
       const element = document.activeElement as HTMLElement;
       if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT' || element.isContentEditable)
         return;
       if (event.defaultPrevented)
         return;
+      if (event.key.length !== 1) {
+        if (event.key !== 'Enter')
+          return;
+        event.preventDefault();
+      }
       this._prompt.focus();
     }, false);
     this._container.appendChild(this._element);

@@ -554,3 +554,11 @@ test('should scroll to bottom on Enter', async ({ shell }) => {
   await shell.waitForAsyncWorkToFinish();
   expect(await shell.scrollTop()).toBeGreaterThanOrEqual(topAtBottom);
 });
+
+test('refocus the prompt on enter', async ({ shell }) => {
+  await shell.runCommand(`("hello " + "world")`);
+  await shell.page.getByText(`'hello world'`).click();
+  expect(await shell.activeFrame().evaluate(() => document.activeElement?.tagName)).toBe('BODY');
+  await shell.page.keyboard.press('Enter'); 
+  expect(await shell.activeFrame().evaluate(() => document.activeElement?.tagName)).toBe('TEXTAREA');
+});

@@ -173,7 +173,7 @@ window.addEventListener('keydown', event => {
       event.preventDefault();
       sendInput(codeMap[event.code]);
     }
-  } else if (!event.ctrlKey && !event.altKey && !event.metaKey && event.key.length === 1 && !isEditing(event.target)) {
+  } else if (!event.ctrlKey && !event.altKey && !event.metaKey && (event.key.length === 1 || event.key === 'Enter') && !isEditing(event.target)) {
     event.preventDefault();
     sendMessageToParent({method: 'keyPressed', params: {
       key: event.key,
