@@ -2,6 +2,7 @@ import { test, expect } from '../fixtures';
 import type { Editor, TextRange } from '../../slug/editor/js/editor';
 test('input events come in correctly', async ({ shell }) => {
   await shell.runCommand('kang a.txt');
+  await shell.hackToEnsureKeyboardFocusIsOnFrame();
   expect(await shell.serialize()).toEqual({
     content: '',
     title: 'a.txt',
@@ -45,6 +46,7 @@ test('input events come in correctly', async ({ shell }) => {
 });
 test('should type correctly after a big paste', async ({ shell }) => {
   await shell.runCommand('kang a.txt');
+  await shell.hackToEnsureKeyboardFocusIsOnFrame();
   expect(await shell.serialize()).toEqual({
     content: '',
     title: 'a.txt',
@@ -60,6 +62,7 @@ test('should type correctly after a big paste', async ({ shell }) => {
 });
 test('should type correctly after ArrowLeft', async ({ shell }) => {
   await shell.runCommand('kang a.txt');
+  await shell.hackToEnsureKeyboardFocusIsOnFrame();
   await shell.page.keyboard.type('123');
   await shell.page.keyboard.press('ArrowLeft');
   await shell.page.keyboard.type('a');
@@ -72,6 +75,7 @@ test('should type correctly after ArrowLeft', async ({ shell }) => {
 
 test('should do a line comment', async ({ shell }) => {
   await shell.runCommand('kang a.js');
+  await shell.hackToEnsureKeyboardFocusIsOnFrame();
   await shell.page.keyboard.type('123\n456');
   await shell.page.keyboard.press('ControlOrMeta+KeyA');
   await shell.page.keyboard.press('ControlOrMeta+Slash');

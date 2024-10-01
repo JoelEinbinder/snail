@@ -21,6 +21,37 @@ class Split {
     await this.waitForAsyncWorkToFinish();
   }
 
+  async hackToEnsureKeyboardFocusIsOnFrame() {
+    // Playwright doesn't wait for focus to hit the browser before sending keys
+    // This means that right after a frame has been created, but before it's focus
+    // has been reported, the keys will be sent to the page and not the iframe.
+    // Poll for the focus to be on the iframe
+    const gotKeyboardFocus = this.activeFrame().evaluate(() => new Promise<void>(resolve => {
+      const eventListener = (event: KeyboardEvent) => {
+        if (event.key !== 'F12')
+          return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.removeEventListener('keydown', eventListener, true);
+        resolve();
+      };
+      window.addEventListener('keydown', eventListener, true);
+    }))
+    // thread the renderer to ensure the listener is active
+    await this.activeFrame().evaluate(() => 1);
+    (async () => {
+      let foundKey = false;
+      gotKeyboardFocus.then(() => foundKey = true);
+      let count = 0;
+      while (!foundKey && count < 10) {
+        count++;
+        await this.page.keyboard.press('F12');
+        await new Promise(x => setTimeout(x, 50));
+      }
+    })();
+    return gotKeyboardFocus;
+  }
+
   async historyUp() {
     const textarea = this._block.locator('textarea:enabled');
     await textarea.press('ArrowUp');
