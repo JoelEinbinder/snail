@@ -13,7 +13,7 @@ import { setSelection } from "./selection";
 import { host } from "./host";
 import { makeHistoryCompleter } from "./historyCompleter";
 import { themeEditorColors } from "./theme";
-import { startAyncWork } from "./async";
+import { startAsyncWork } from "./async";
 
 export function makePromptEditor(shell: Shell) {
   const editor = new Editor('', {
@@ -61,7 +61,7 @@ export function makePromptEditor(shell: Shell) {
     event.preventDefault();
   }, true);
   async function moveHistory(direction: -1 | 1) {
-    const done = startAyncWork('history');
+    const done = startAsyncWork('history');
     if (historyIndex === 0)
       currentValue = editor.value;
     const prefix = editor.text({start: {column: 0, line: 0,}, end: editor.selections[0].start});

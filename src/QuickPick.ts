@@ -3,7 +3,7 @@ import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_m
 import { availableActions, registerGlobalAction, Action } from './actions';
 import { type ParsedShortcut, shortcutParser } from './shortcutParser';
 import { rootBlock } from './GridPane';
-import { startAyncWork } from './async';
+import { startAsyncWork } from './async';
 import { setBrowserViewsHidden } from './BrowserView';
 import { FilePathScoreFunction } from './FilePathScoreFunction';
 import { setSelection } from './selection';
@@ -221,7 +221,7 @@ class QuickPick {
 
 let lastQuickPick: QuickPick | undefined;
 export async function showQuickPick(prefix: string) {
-  const done = startAyncWork('loading quickpick');
+  const done = startAsyncWork('loading quickpick');
   const actions = [...availableActions(), ...await rootBlock.asyncActions()];
   const providers: QuickPickProvider[] = [
     ...await rootBlock.quickPicks(), {

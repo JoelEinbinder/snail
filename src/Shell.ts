@@ -20,7 +20,7 @@ import { fontString } from './font';
 import { Protocol } from './protocol';
 import { cdpManager } from './CDPManager';
 import { randomUUID } from './uuid';
-import { startAyncWork, wrapAsyncFunction } from './async';
+import { startAsyncWork, wrapAsyncFunction } from './async';
 import { AskPasswordBlock } from './AskPasswordBlock';
 import { ChartBlock } from './ChartBlock';
 import { somethingSelected } from './selection';
@@ -465,7 +465,7 @@ export class Shell {
           connection.env[key] = value;
       },
       nod: async (args: string[]) => {
-        const done = startAyncWork('nod');
+        const done = startAsyncWork('nod');
         const unlockPrompt = this._lockPrompt('nod');
         // TODO switch to Shell.createNodSubshell
         await this._setupConnection(args);
@@ -473,7 +473,7 @@ export class Shell {
         done();
       },
       ssh: async ({sshAddress, sshArgs, env}: {sshAddress: string, sshArgs: string[], env: Record<string, string>}) => {
-        const done = startAyncWork('ssh');
+        const done = startAsyncWork('ssh');
         const unlockPrompt = this._lockPrompt('ssh');
         const sshCore = await this._createSubshell(connection, core, { sshAddress, sshArgs, env })
         // Setting up ssh may have failed or been canceled
@@ -483,7 +483,7 @@ export class Shell {
         done();
       },
       reconnect: async (socketPath: string) => {
-        const done = startAyncWork('reconnect');
+        const done = startAsyncWork('reconnect');
         const unlockPrompt = this._lockPrompt('reconnect');
         const reconnectCore = await this._createSubshell(connection, core, { socketPath });
         await this._setupConnectionInner(reconnectCore, [], this._connectionToSSHAddress.get(connection));
@@ -956,7 +956,7 @@ export class Shell {
     editorWrapper.style.flex = '1';
     editorWrapper.style.minHeight = '1.4em';
     editorWrapper.addEventListener('keydown', async event => {
-      const finishWork = startAyncWork('User Evaluation');
+      const finishWork = startAsyncWork('User Evaluation');
       if ((event.key === 'Enter' && !event.shiftKey) || (event.code === 'KeyM' && event.ctrlKey)) {
         event.preventDefault();
         event.stopImmediatePropagation();

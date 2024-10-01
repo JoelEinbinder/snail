@@ -10,7 +10,7 @@ class WorkContext {
 const workContexts: WorkContext[] = [];
 workContexts.push(new WorkContext('root'));
 
-export function startAyncWork(name = 'Anonymous Work') {
+export function startAsyncWork(name = 'Anonymous Work') {
   const work = { name };
   const { works } = workContexts[workContexts.length - 1];
   works.add(work);
@@ -23,7 +23,7 @@ export function startAyncWork(name = 'Anonymous Work') {
 
 export function wrapAsyncFunction<Args extends any[], ReturnVal>(name: string, fn: (...args: Args) => Promise<ReturnVal>) {
   return async function (...args: Args) {
-    const done = startAyncWork(name);
+    const done = startAsyncWork(name);
     try {
       const retVal = await fn.call(this, ...args);
       done();

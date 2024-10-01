@@ -1,4 +1,4 @@
-import { startAyncWork } from "./async";
+import { startAsyncWork } from "./async";
 
 export class UIThrottle<T> {
   private _timeout: number;
@@ -15,7 +15,7 @@ export class UIThrottle<T> {
 
   update(value: T|Promise<T>) {
     if (!this._asyncWorkDone)
-      this._asyncWorkDone = startAyncWork('UIThrottle');
+      this._asyncWorkDone = startAsyncWork('UIThrottle');
     this._clear();
     this._pendingValue = value;
     this._timeout = setTimeout(() => {
@@ -27,7 +27,7 @@ export class UIThrottle<T> {
     const flushNumber = ++this._flushNumber;
     this._clear();
     if (!this._asyncWorkDone)
-      this._asyncWorkDone = startAyncWork('UIThrottle');
+      this._asyncWorkDone = startAsyncWork('UIThrottle');
     const value = await this._pendingValue;
     if (flushNumber !== this._flushNumber)
       return;

@@ -5,7 +5,7 @@ import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { LogItem } from "./LogItem";
 import { setSelection } from './selection';
 import { RendererAddon } from "./terminal/RendererAddon";
-import { startAyncWork } from "./async";
+import { startAsyncWork } from "./async";
 import type { FindParams } from "./Find";
 import { attachMenuItemsToContextMenuEvent } from "./contextMenu";
 import { themeCursorColor, themeName, themeSelectionColor, themeTextColor } from "./theme";
@@ -192,7 +192,7 @@ export class TerminalBlock implements LogItem {
     this.empty = false;
     if (data.length !== 0)
       this._trailingNewline = typeof data === 'string' ? data.endsWith('\n') : data[data.length - 1] === '\n'.charCodeAt(0);
-    const wroteData = startAyncWork('write terminal data');
+    const wroteData = startAsyncWork('write terminal data');
     this._lastWritePromise = new Promise(x => {
       this._terminal.write(data, () => {
         wroteData();

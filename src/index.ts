@@ -2,7 +2,7 @@ import './theme';
 import './font';
 import { rootBlock } from './GridPane';
 import './TestingHooks';
-import { startAyncWork } from './async'
+import { startAsyncWork } from './async'
 import { makeLazyProxy } from './LazyProxy';
 import type { ShellDelegate } from './Shell';
 import { TabBlock } from './TabBlock';
@@ -12,7 +12,7 @@ import { registerGlobalAction } from './actions';
 document.title = 'Loading...';
 const useTabs = navigator['userAgentData']?.platform !== 'macOS';
 console.time('load shell module');
-const done = startAyncWork('load shell module');
+const done = startAsyncWork('load shell module');
 const lazyLogView = makeLazyProxy<ShellDelegate>();
 const shellPromise = import('./Shell').then(({ Shell }) => new Shell(lazyLogView.proxy));
 const connetionPromise = shellPromise.then(shell => shell.setupInitialConnection());

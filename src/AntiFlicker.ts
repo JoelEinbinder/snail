@@ -1,4 +1,4 @@
-import { startAyncWork } from "./async";
+import { startAsyncWork } from "./async";
 
 export class AntiFlicker<T = unknown> {
   private count = 0;
@@ -11,7 +11,7 @@ export class AntiFlicker<T = unknown> {
   expectToDraw(maxDelay: number) {
     this.count++;
     if (this.count === 1) {
-      this._finishedWork = startAyncWork('anti flicker');
+      this._finishedWork = startAsyncWork('anti flicker');
       this._lockReturnValue = this.lock();
     }
     const unlock = () => {

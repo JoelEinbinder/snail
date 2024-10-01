@@ -4,7 +4,7 @@ import type { LogItem } from "../../src/LogItem";
 import type { Protocol } from "../../src/protocol";
 import './remoteObject.css';
 import type { FindParams } from "../../src/Find";
-import { startAyncWork } from "../../src/async";
+import { startAsyncWork } from "../../src/async";
 
 export class JSBlock implements LogItem {
   willResizeEvent = new JoelEvent<void>(undefined);
@@ -139,7 +139,7 @@ function renderObjectRemoteObject(
     if (populated)
       return;
     populated = true;
-    const done = startAyncWork('populate js object');
+    const done = startAsyncWork('populate js object');
     const {result, exceptionDetails, internalProperties, privateProperties} = await connection.send('Runtime.getProperties', {
       objectId: object.objectId!,
       generatePreview: true,

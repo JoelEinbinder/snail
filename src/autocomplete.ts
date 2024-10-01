@@ -1,5 +1,5 @@
 import { Editor } from "../slug/editor/js/editor";
-import { startAyncWork } from "./async";
+import { startAsyncWork } from "./async";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import { SuggestBox } from "./SuggestBox";
 
@@ -144,7 +144,7 @@ export class Autocomplete {
         const textBeforeCursor = this._editor.text({ start: { line: location.line, column: 0 }, end: location });
         this._refreshingSuggestions = true;
         const completer = this._activationCode ? this._specialCompleters[this._activationCode] : this._defaultCompleter;
-        const finishWork = startAyncWork('completions');
+        const finishWork = startAsyncWork('completions');
         const completionsPromise = completer(textBeforeCursor, abortController.signal).finally(finishWork);
         this._activeCompletionsPromise = completionsPromise;
         const completions = await completionsPromise;

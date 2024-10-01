@@ -5,7 +5,7 @@ import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { JSConnection } from "./JSConnection";
 import { LogItem } from "./LogItem";
 import { cdpManager, DebuggingInfo } from './CDPManager';
-import { expectingUserInput, startAyncWork } from "./async";
+import { expectingUserInput, startAsyncWork } from "./async";
 import type { FindParams } from "./Find";
 import { getCurrentShortcutActions } from "./actions";
 import type { Action } from './actions';
@@ -273,7 +273,7 @@ export class IFrameBlock implements LogItem {
         case 'startAsyncWork': {
           if (this._finishWorks.has(data.params.id))
             throw new Error('Work already started');
-          this._finishWorks.set(data.params.id, startAyncWork(data.params.name));
+          this._finishWorks.set(data.params.id, startAsyncWork(data.params.name));
           break;
         }
         case 'finishWork': {
@@ -332,7 +332,7 @@ export class IFrameBlock implements LogItem {
     this.readyPromise = new Promise(resolve => {
       this._readyCallback = resolve;
     });
-    this._doneLoading = startAyncWork('iframe loading');
+    this._doneLoading = startAsyncWork('iframe loading');
     this.readyPromise.then(this._doneLoading);
   }
   private setIsFullscreen(isFullscreen: boolean) {

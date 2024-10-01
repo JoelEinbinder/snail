@@ -2,7 +2,7 @@ import type { Shell, ShellDelegate } from './Shell';
 import './shell.css';
 import './logView.css';
 import { Block, BlockDelegate } from './GridPane';
-import { startAyncWork } from './async';
+import { startAsyncWork } from './async';
 import { makeLazyProxy } from './LazyProxy';
 import { UIThrottle } from './UIThrottle';
 import { Action, makeChordShortcut } from './actions';
@@ -133,7 +133,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   async _triggerLLM(): Promise<void> {
     if (!this._prompt)
       return;
-    const done = startAyncWork('ai');
+    const done = startAsyncWork('ai');
     this._llmAbortController?.abort();
     const controller = new AbortController();
     this._llmAbortController = controller;
@@ -272,7 +272,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
 
   async _doSplit(direction: 'horizontal' | 'vertical') {
-    const finishWork = startAyncWork('split');
+    const finishWork = startAsyncWork('split');
     const logViewProxy = makeLazyProxy<ShellDelegate>();
     const shell = new (await import('./Shell')).Shell(logViewProxy.proxy);
     await shell.setupInitialConnection();
@@ -395,7 +395,7 @@ export class LogView implements Block, ShellDelegate, Findable {
       shortcut: makeChordShortcut('D'),
       id: 'log.toggle.daemon',
       callback: () => {
-        const done = startAyncWork('demon mode toggle');
+        const done = startAsyncWork('demon mode toggle');
         this._shell.toggleDaemon().then(done);
       }
     }, {
@@ -422,7 +422,7 @@ export class LogView implements Block, ShellDelegate, Findable {
       shortcut: makeChordShortcut('K'),
       id: 'log.kill',
       callback: async () => {
-        const done = startAyncWork('kill process');
+        const done = startAsyncWork('kill process');
         // TODO do this in the shell and preserve the log
         for (const item of this._log)
           item.dispose();
