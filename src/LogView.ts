@@ -30,9 +30,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _itemToElement = new WeakMap<LogItem, Element>();
   private _itemToParent = new WeakMap<LogItem, LogItem>();
   private _itemToRetainers = new WeakMap<LogItem, Set<LogItem|'forced'>>();
-  private _suffixThrottle = new UIThrottle('', () => {
-    this.blockDelegate?.titleUpdated();
-  });
+  private _suffix = '';
   private _titleThrottle = new UIThrottle('Loading...', () => {
     this.blockDelegate?.titleUpdated();
   });
@@ -96,7 +94,7 @@ export class LogView implements Block, ShellDelegate, Findable {
       item.wasShown?.();
   }
   title(): string {
-    return this._titleThrottle.value + this._suffixThrottle.value;
+    return this._titleThrottle.value + this._suffix;
   }
   close(): void {
     this._element.remove();
@@ -331,6 +329,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     this._prompt = this._shell.addPrompt(this._scroller);
     this._prompt.willResizeEvent.on(() => this._lockScroll());
     this.setActiveItem(this._prompt);
+    this._titleThrottle.flush();
     
     // automaticaly trigger the llm if there was an error
     // it probably will help fix a typo or something
@@ -372,7 +371,8 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
 
   setSuffix(suffix: string): void {
-    this._suffixThrottle.update(suffix);
+    this._suffix = suffix;
+    this.blockDelegate?.titleUpdated();
   }
 
   get _isFullscreen() {
