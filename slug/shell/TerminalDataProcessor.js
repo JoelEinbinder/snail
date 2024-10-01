@@ -44,7 +44,7 @@ class TerminalDataProcessor {
     let start = 0;
     let end = 0;
     /** @type {Uint8Array[]} */
-    const queuedChunks = [];
+    let queuedChunks = [];
     for (let i = 0; i < bufferData.length; i++) {
       const char = bufferData[i];
       if (this.state === ParserState.GROUND) {
@@ -57,6 +57,9 @@ class TerminalDataProcessor {
       } else if (this.state === ParserState.ESCAPE) {
         if (char === 0x1a) {
           pushChunk();
+          for (const chunk of queuedChunks)
+            this.delegate.plainTerminalData(chunk);
+          queuedChunks = [];
           this.state = ParserState.HTML_BLOCK;
         } else {
           this.state = ParserState.GROUND;

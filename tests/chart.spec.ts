@@ -43,8 +43,9 @@ test('chart should reconnect with data intact', async ({ shellFactory, workingDi
   const shell2 = await shellFactory();
   const commandPromise = shell2.runCommand(`reconnect`);
   await shell2.waitForLine(/i am done/);
-  
-  const { log: [,,,chart2]} = await shell2.serialize();
+  // console.log(await shell2.serialize());
+  // reconnecting puts the charts last
+  const { log: [,,,,chart2]} = await shell2.serialize();
 
   // we will be missing some points because of sampling
   // so check that we are within at least 200
