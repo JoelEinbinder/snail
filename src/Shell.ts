@@ -193,8 +193,8 @@ export class Shell {
         let activeChartBlock: ChartBlock = null;
         const terminalTaskQueue = new TaskQueue();
         const processor = new TerminalDataProcessor({
-          htmlTerminalMessage: data => {
-            switch(data[0]) {
+          htmlTerminalMessage: (type, dataStr) => {
+            switch(type) {
               case 67: {
                 // chart data
                 if (!activeChartBlock) {
@@ -205,7 +205,6 @@ export class Shell {
                     await addTerminalBlock();
                   });
                 }
-                const dataStr = new TextDecoder().decode(data.slice(1));
                 const chartData = JSON.parse(dataStr);
                 if (Array.isArray(chartData)) {
                   // if we have steps, sorting will make appending much faster
@@ -229,7 +228,6 @@ export class Shell {
                     activeIframeBlock.didClose();
                     activeIframeBlock = null;
                   }
-                  const dataStr = new TextDecoder().decode(data.slice(1));
                   let dataObj: {entry: string, browserView?: boolean};
                   try {
                   if (dataStr.startsWith('{'))
@@ -265,12 +263,11 @@ export class Shell {
               case 81:
                 // message
                 terminalTaskQueue.queue(async () => {
-                  const dataStr = new TextDecoder().decode(data.slice(1));
                   if (!activeIframeBlock) {
                     console.error('parse error, sending message without iframe');
                     return;
                   }
-                  activeIframeBlock.message(dataStr, /* dontCache */ data[0] === 81);
+                  activeIframeBlock.message(dataStr, /* dontCache */ type === 81);
                 });
                 break;
               case 78:
@@ -283,7 +280,6 @@ export class Shell {
                     await addTerminalBlock();
                   });
                 }
-                const dataStr = new TextDecoder().decode(data.slice(1));
                 activeProgressBlock.setProgress(JSON.parse(dataStr));
                 break;
               case 79:
@@ -299,7 +295,6 @@ export class Shell {
                 break;
               case 80: {
                 // thread stdin
-                const dataStr = new TextDecoder().decode(data.slice(1));
                 // this should only be a uuid. dont notify otherwise in case its some kind of strange injection attempt
                 if (!/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/.test(dataStr))
                   break;

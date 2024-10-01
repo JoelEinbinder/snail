@@ -17,7 +17,7 @@ const ParserState = {
 };
 /**
  * @typedef {Object} TerminalDataProcessorDelegate
- * @property {function(Uint8Array):void} htmlTerminalMessage
+ * @property {function(number,string):void} htmlTerminalMessage
  * @property {function(Uint8Array):void} plainTerminalData 
  */
 
@@ -26,7 +26,7 @@ class TerminalDataProcessor {
   state = ParserState.GROUND;
   /**
    * @private
-   * @type {number[]}
+   * @type {DataView[]}
    */
   html = [];
   /**
@@ -45,6 +45,20 @@ class TerminalDataProcessor {
     let end = 0;
     /** @type {Uint8Array[]} */
     let queuedChunks = [];
+
+    const pushHtmlChunk = () => {
+      if (start === end)
+        return;
+      this.html.push(new DataView(bufferData.buffer, start + bufferData.byteOffset, end - start));
+      start = end;
+    };
+    const pushChunk = () => {
+      if (start === end)
+        return;
+      queuedChunks.push(bufferData.slice(start, end));
+      start = end;
+    };
+
     for (let i = 0; i < bufferData.length; i++) {
       const char = bufferData[i];
       if (this.state === ParserState.GROUND) {
@@ -61,6 +75,8 @@ class TerminalDataProcessor {
             this.delegate.plainTerminalData(chunk);
           queuedChunks = [];
           this.state = ParserState.HTML_BLOCK;
+          start = i + 1;
+          end = i + 1;
         } else {
           this.state = ParserState.GROUND;
           end = i;
@@ -72,24 +88,36 @@ class TerminalDataProcessor {
         }
       } else if (this.state === ParserState.HTML_BLOCK) {
         if (char === 0x00) {
-          this.delegate.htmlTerminalMessage(new Uint8Array(this.html))
+          pushHtmlChunk();
+          if (this.html.length === 1) {
+            const message = this.html[0];
+            const first = message.getUint8(0);
+            const view = new DataView(message.buffer, message.byteOffset + 1, message.byteLength - 1);
+            this.delegate.htmlTerminalMessage(first, new TextDecoder().decode(view));
+          } else {
+            const arrayBuffer = new Uint8Array(this.html.reduce((acc, curr) => acc + curr.byteLength, 0));
+            let offset = 0;
+            for (const chunk of this.html) {
+              arrayBuffer.set(new Uint8Array(chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength)), offset);
+              offset += chunk.byteLength;
+            }
+            const first = arrayBuffer[0];
+            const view = new DataView(arrayBuffer.buffer, arrayBuffer.byteOffset + 1, arrayBuffer.byteLength - 1);
+            this.delegate.htmlTerminalMessage(first, new TextDecoder().decode(view));
+          }
           this.html = [];
           this.state = ParserState.GROUND;
           start = i + 1;
           end = i + 1;
         } else {
-          this.html.push(char);
+          end = i + 1;
         }
       }
     }
     if (this.state === ParserState.GROUND)
       pushChunk();
-    function pushChunk() {
-      if (start === end)
-        return;
-      queuedChunks.push(bufferData.slice(start, end));
-      start = end;
-    }
+    else if (this.state === ParserState.HTML_BLOCK)
+      pushHtmlChunk();
     for (const chunk of queuedChunks)
       this.delegate.plainTerminalData(chunk);
   }

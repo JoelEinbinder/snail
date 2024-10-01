@@ -58,16 +58,15 @@ class ShellState {
         })
         addedMessage = true;
       };
-      /** @type {Uint8Array|null} */
+      /** @type {string|null} */
       let lastProgress = null;
       const chartState = new ChartState();
       this.terminalProcessors.set(params.id, new TerminalDataProcessor({
-        htmlTerminalMessage: (data) => {
+        htmlTerminalMessage: (type, dataStr) => {
           addIfNeeded();
-          switch(data[0]) {
+          switch(type) {
             case 67: {
               // chart data
-              const dataStr = new TextDecoder().decode(data.slice(1));
               try {
                 const chartData = JSON.parse(dataStr);
                 if (Array.isArray(chartData))
@@ -87,7 +86,7 @@ class ShellState {
             }
             case 78: {
               // progress
-              lastProgress = data.slice(1);
+              lastProgress = dataStr;
               return;
             }
             case 80: {
@@ -97,8 +96,8 @@ class ShellState {
               break;
             }
           }
-          addData(new Uint8Array([0x1b, 0x1a]));
-          addData(data);
+          addData(new Uint8Array([0x1b, 0x1a, type]));
+          addData(new TextEncoder().encode(dataStr));
           addData(new Uint8Array([0x0]));
         },
         plainTerminalData: (data) => {

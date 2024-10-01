@@ -70,25 +70,32 @@ function makeRPC(handler) {
   process.stdin.setRawMode(true);
   return RPC(new Transport(), handler);
 }
-const PROGRESS_THROTTLE_SPEED = 16;
+const THROTTLE_SPEED = 16;
 
-class ThrottleProgress {
+class Throttle {
   constructor() {
     process.on('exit', () => {
       if (this.timer)
         this.fire();
     });
   }
-  progress = null;
   lastFired = null;
   timer = null;
+  promise = Promise.resolve();
+  callback = null;
   fire() {
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
     }
-    process.stdout.write(`\x1b\x1a\x4e${JSON.stringify(typeof this.progress === 'function' ? this.progress() : this.progress)}\x00`);
+    this.doFire();
+    this.callback();
+    this.callback = null;
     this.lastFired = Date.now();
+  }
+
+  doFire() {
+    // override this
   }
 
   scheduleFire() {
@@ -96,30 +103,54 @@ class ThrottleProgress {
       return;
     this.timer = setTimeout(() => {
       this.fire();
-    }, PROGRESS_THROTTLE_SPEED);
+    }, THROTTLE_SPEED);
     this.timer.unref();
   }
 
-  update(progress) {
-    this.progress = progress;
-    if (this.lastFired === null || Date.now() - this.lastFired > PROGRESS_THROTTLE_SPEED) {
+  setNeedsToFire() {
+    if (!this.callback)
+      this.promise = new Promise(callback => this.callback = callback);
+    if (this.lastFired === null || Date.now() - this.lastFired > THROTTLE_SPEED) {
       this.fire();
     } else {
       this.scheduleFire();
     }
+    return this.promise;
+  }
+}
+class ThrottleProgress extends Throttle {
+  progress = null;
+  update(progress) {
+    this.progress = progress;
+    return this.setNeedsToFire();
+  }
+  doFire() {
+    process.stdout.write(`\x1b\x1a\x4e${JSON.stringify(typeof this.progress === 'function' ? this.progress() : this.progress)}\x00`);
+  }
+}
+class ThrottleChart extends Throttle {
+  data = [];
+  update(data) {
+    this.data.push(data);
+    return this.setNeedsToFire();
+  }
+  doFire() {
+    process.stdout.write(`\x1b\x1aC${JSON.stringify(this.data.length === 1 ? this.data[0] : this.data)}\x00`);
+    this.data = [];
   }
 }
 const progressThrottle = new ThrottleProgress();
+const chartThrottle = new ThrottleChart();
 /** @typedef {{ progress: number, leftText?: string, rightText?: string }|number} ProgressOptions */
 /**
  * @param {ProgressOptions|(() => ProgressOptions)} progress
  */
 function setProgress(progress) {
-  progressThrottle.update(progress);
+  return progressThrottle.update(progress);
 }
 
 function chart(data) {
-  process.stdout.write(`\x1b\x1aC${JSON.stringify(data)}\x00`);
+  return chartThrottle.update(data);
 }
 
 module.exports = { display, send, makeRPC, setProgress, chart};

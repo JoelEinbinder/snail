@@ -21,9 +21,10 @@ test('chart should reconnect with data intact', async ({ shellFactory, workingDi
   const count = 1_500_000;
   const script = `
   const { chart } = require(${JSON.stringify(require.resolve('../slug/sdk/'))});
+  let lastPromise = null;
   for (let i = 0; i < ${count}; i++)
-    chart({foo: i});
-  console.log('i am done');
+    lastPromise = chart({foo: i});
+  lastPromise.then(() => console.log('i am done'));
   // keepalive
   setInterval(() => {}, 1000);
   `;
