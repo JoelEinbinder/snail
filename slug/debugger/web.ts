@@ -37,7 +37,7 @@ const tabs = new Tabs({
   }
 });
 const elementsPanel = new Elements(targetManager);
-tabs.appendTab({
+await tabs.appendTab({
   focus() {
     elementsPanel.focus();
   },
@@ -49,7 +49,7 @@ tabs.appendTab({
   },
 }, 'Elements');
 const consolePanel = new Console(targetManager);
-tabs.appendTab({
+await tabs.appendTab({
   focus() {
   },
   hide() {
@@ -60,7 +60,7 @@ tabs.appendTab({
   },
 }, 'Console');
 const sourcesPanel = new Sources(targetManager);
-tabs.appendTab({
+await tabs.appendTab({
   focus() {
   },
   hide() {
