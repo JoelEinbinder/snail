@@ -370,6 +370,11 @@ test('clicking below the prompt should focus prompt', async ({ shell }) => {
   expect((await shell.serialize()).prompt.value).toEqual('echo can you see this?');
 });
 
+test('kill while autocompleting', async ({ shell }) => {
+  await shell.page.keyboard.type('echo can you see this?');
+  await shell.kill();
+});
+
 test.skip('should be able to switch tabs wtih cmd+number', async({ shellFactory }) => {
   // This kind of works, but electron lacks the ability to find out the current tab order
   // or the tab groupings. So it just switches between all tabs in creation order. Should fix.

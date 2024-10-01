@@ -145,12 +145,11 @@ export class Autocomplete {
         this._refreshingSuggestions = true;
         const completer = this._activationCode ? this._specialCompleters[this._activationCode] : this._defaultCompleter;
         const finishWork = startAyncWork('completions');
-        const completionsPromise = completer(textBeforeCursor, abortController.signal);;
+        const completionsPromise = completer(textBeforeCursor, abortController.signal).finally(finishWork);
         this._activeCompletionsPromise = completionsPromise;
         const completions = await completionsPromise;
         if (this._activeCompletionsPromise === completionsPromise)
             this._activeCompletionsPromise = null;
-        finishWork();
         this._refreshingSuggestions = false;
         if (abortController.signal.aborted)
             return;
