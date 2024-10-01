@@ -830,7 +830,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                     callbacks.add(callback);
                     pipe.stdin.write(chunk, encoding, err => {
                         // EPIPE is fine, it just means the pipe process was closed
-                        if (err?.code === 'EPIPE')
+                        if (err?.['code'] === 'EPIPE')
                             err = null;
                         callbacks.delete(callback);
                         callback(err);
@@ -839,7 +839,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
             });
             const pipe = execute(expression.pipe, noSideEffects, stdout, stderr);
             pipe.stdin.on('error', err => {
-                if (err.code === 'EPIPE')
+                if (err?.['code'] === 'EPIPE')
                     return;
                 throw err;
             });
