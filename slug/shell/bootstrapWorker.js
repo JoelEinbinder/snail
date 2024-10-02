@@ -362,16 +362,29 @@ const session = new inspector.Session();
 session.connectToMainThread();
 session.on('inspectorNotification', (/** @type {{method: string, params: any}} */ notification) => {
   if (notification.method === 'Runtime.bindingCalled' && notification.params.name === 'magic_binding') {
+    /** @type {{method: keyof import('./runtime-types').Runtime, params: any}} */
     const {method, params} = JSON.parse(notification.params.payload);
     if (method === 'env') {
-      for (const key in params)
-        process.env[key] = params[key];
+      for (const key in params) {
+        if (params[key] === null)
+          delete process.env[key];
+        else
+          process.env[key] = params[key];
+      }
     }
     if (method === 'aliases') {
       const {setAlias} = require('../shjs/index');
       for (const key of Object.keys(params)) {
         setAlias(key, params[key]);
       }
+    }
+    if (method === 'bashState') {
+      const {setBashState} = require('../shjs/index');
+      setBashState(params);
+    }
+    if (method === 'bashFunctions') {
+      const {setBashFunctions} = require('../shjs/index');
+      setBashFunctions(params);
     }
 
     if (method === 'cwd') {

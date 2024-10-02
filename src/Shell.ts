@@ -460,9 +460,17 @@ export class Shell {
       },
       aliases: (aliases) => {
       },
+      bashState: (state) => {
+      },
+      bashFunctions: (functions) => {
+      },
       env: (env: {[key: string]: string}) => {
-        for (const [key, value] of Object.entries(env))
-          connection.env[key] = value;
+        for (const [key, value] of Object.entries(env)) {
+          if (value === null)
+            delete connection.env[key];
+          else
+            connection.env[key] = value;
+        }
       },
       nod: async (args: string[]) => {
         const done = startAsyncWork('nod');

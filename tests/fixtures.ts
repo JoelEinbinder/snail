@@ -172,6 +172,7 @@ export const test = _test.extend<{
         SNAIL_TEST_HOME_DIR: workingDir,
         SNAIL_TEST_TMP_DIR: tmpDirForTest,
         SNAIL_TEST_USER_DATA_DIR: test.info().outputPath('user-data-dir'),
+        SNAIL_OPENAI_KEY: '',
       },
     });
     const err: Buffer[] = [];

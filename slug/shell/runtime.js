@@ -1,21 +1,8 @@
 //@ts-check
 const { EventEmitter } = require('stream');
-const {setAlias, getAndResetChanges, execute, getAliases} = require('../shjs/index');
+const {setAlias, getAliases, setBashState, setBashFunctions} = require('../shjs/index');
 const path = require('path');
 const child_process = require('child_process');
-
-/**
- * @typedef {{
- * env?: {[key: string]: string},
- * aliases?: {[key: string]: string[]},
- * cwd?: string,
- * nod?: string[],
- * ssh?: { sshAddress: string, sshArgs: string[], env: NodeJS.ProcessEnv },
- * reconnect?: string,
- * code?: string,
- * exit?: number,
- * }} Changes
- */
 
 class Shell extends EventEmitter {
   _lock = Promise.resolve();
@@ -237,7 +224,7 @@ class Runtime {
     };
     this._shell.on('data', onData);
     this._shell.resume();
-    /** @type {{changes?: Changes, exitCode: number, died?: boolean}} */
+    /** @type {{changes?: import('../shjs/changes').Changes, exitCode: number, died?: boolean}} */
     const returnValue = await closePromise;
     await waitForDonePromise;
     abortSignal?.removeEventListener('abort', abort);
@@ -264,7 +251,10 @@ class Runtime {
       }
       if (changes.env) {
         for (const key in changes.env) {
-          process.env[key] = changes.env[key];
+          if (changes.env[key] === null)
+            delete process.env[key];
+          else
+            process.env[key] = changes.env[key];
         }
         this._notify('env', changes.env);
       }
@@ -282,6 +272,14 @@ class Runtime {
         this._notify('reconnect', changes.reconnect);
       if (changes.code)
         this._notify('code', changes.code);
+      if (changes.bashState) {
+        this._notify('bashState', changes.bashState);
+        setBashState(changes.bashState);
+      }
+      if (changes.bashFunctions) {
+        this._notify('bashFunctions', changes.bashFunctions);
+        setBashFunctions(changes.bashFunctions);
+      }
       if (changes.exit !== undefined) {
         process.exit(changes.exit);
       }

@@ -4,18 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const pathService = require('../path_service/');
 
-/**
- * @type {{
- * env?: {[key: string]: string},
- * aliases?: {[key: string]: string[]},
- * cwd?: string,
- * nod?: string[],
- * ssh?: { sshAddress: string, sshArgs: string[], env: NodeJS.ProcessEnv },
- * reconnect?: string,
- * code?: string,
- * exit?: number,
- * }}
- */
+/** @type {import('./changes').Changes} */ 
 let changes = null;
 
 /** @type {Object<string, (args: string[], stdout: Writable, stderr: Writable, stdin: Readable, env: NodeJS.ProcessEnv) => Promise<number>|'pass'>} */
@@ -220,11 +209,11 @@ const builtins = {
         changes.exit = args.length ? parseInt(args[0]) : 0;
         return 0;
     },
-    source: async(args, stdout, stderr) => {
-        return runBashAndExtractEnvironment('source', args[0], stdout, stderr);
+    source: async(args, stdout, stderr, stdin) => {
+        return runBashAndExtractEnvironment('source', args, stdout, stderr, stdin);
     },
-    'bash-eval': async(args, stdout, stderr) => {
-        return runBashAndExtractEnvironment('eval', args[0], stdout, stderr);
+    'bash-eval': async(args, stdout, stderr, stdin) => {
+        return runBashAndExtractEnvironment('eval', args, stdout, stderr, stdin);
     },
     __git_ref_name: async (args, stdout, stderr, stdin, inEnv) => {
         const env = {
@@ -285,6 +274,8 @@ const builtins = {
         return 0;
     },
     __command_completions: async (args, stdout, stderr, stdin, env) => {
+        for (const bashFunction of bashFunctions)
+            stdout.write(bashFunction + '\n');
         for (const key of Object.keys(builtins)) {
             if (key.startsWith('__'))
                 continue;
@@ -325,6 +316,10 @@ const builtins = {
     },
     __command_description: async (args, stdout, stderr) => {
         const name = processAlias(args[0], []).executable;
+        if (bashFunctions.includes(name)) {
+            stdout.write('bash function');
+            return 0;
+        }
         if (name in builtins) {
             stdout.write('built in shell command');
             return 0;
@@ -435,50 +430,69 @@ const builtins = {
 };
 
 /**
+ * @param {(Readable|Writable|number)[]} stdio
+ */
+function stdioToPipe(stdio) {
+    const defaultStdio = [process.stdin, process.stdout, process.stderr];
+    return stdio.map((stream, index) => {
+        if (typeof stream === 'number' || stream?.['fd'])
+            return stream;
+        if (stream === null)
+            return 'ignore';
+        if (!stream)
+            return 'pipe';
+        if (stream === defaultStdio[index])
+            return 'inherit';
+        return 'pipe';
+    });
+}
+
+/**
  * @param {"eval"|"source"} command
- * @param {string} arg
+ * @param {string[]} args
  * @param {Writable} stdout
  * @param {Writable} stderr
+ * @param {Readable} stdin
  */
-function runBashAndExtractEnvironment(command, arg, stdout, stderr) {
-    const magicKey = Math.random().toString();
-    const output = spawnSync('bash', ['-c', `env && echo $0 && ${command} $1; echo $0; env;`, magicKey, arg]);
-    stderr.write(output.stderr);
-    if (output.status)
-        return output.status;
-    const lines = output.stdout.toString().split('\n').map(x => x.trim()).filter(x => x);
-    const index = lines.indexOf(magicKey);
-    if (index === -1)
-        return 1;
-    const oldEnv = new Map();
-    for (const line of lines.slice(0, index)) {
-        const equals = line.indexOf('=');
-        const key = line.substring(0, equals);
-        const value = line.substring(equals + 1);
-        oldEnv.set(key, value);
-    }
-    const index2 = lines.indexOf(magicKey, index + 1);
-    if (index2 === -1)
-        return 1;
-    for (const line of lines.slice(index + 1, index2))
-        stdout.write(line + '\n');
-    const newEnv = new Map();
-    for (const line of lines.slice(index2 + 1)) {
-        const equals = line.indexOf('=');
-        const key = line.substring(0, equals);
-        const value = line.substring(equals + 1);
-        newEnv.set(key, value);
-    }
+async function runBashAndExtractEnvironment(command, args, stdout, stderr, stdin) {
+    const key1 = Math.random().toString();
+    const key2 = Math.random().toString();
+    const magicKey = key1 + '\n' + key2;
+    const datas = [];
+    // need to split here otherwise variables include the magic key in the output
+    const separator = `echo "${key1}" >&3; echo "${key2}" >&3`;
+    const exportCode = `pwd >&3 && ${separator} && declare -p >&3 && alias >&3 && ${separator}; compgen -A function -a >&3; ${separator} && declare -x >&3`
+    const child = spawn('bash',
+        ['-c', `${bashState}\nshopt -s expand_aliases; ${exportCode} && ${separator}; ${command} "$@"; echo $? >&3 && ${separator} && ${exportCode};`,
+        'bash',
+        ...args,
+    ], {
+        stdio: [...stdioToPipe([stdin, stdout, stderr, ]), 'pipe'],
+    });
+    child.stdio[3].on('data', data => datas.push(data));
+    await new Promise(resolve => child.on('close', resolve));
+    const output = Buffer.concat(datas).toString('utf-8');
+    const [
+        oldPwd,
+        oldBashState,
+        oldBashFunctions,
+        oldEnvStr,
+        exitCodeString,
+        newPwd,
+        newBashState,
+        newBashFunctions,
+        newEnvStr,
+    ] = output.split(magicKey + '\n');
+    
+    const oldEnv = parseExportedVariables(oldEnvStr);
+    const exitCode = parseInt(exitCodeString)
+    const newEnv = parseExportedVariables(newEnvStr);
     const added = new Map();
     for (const [key, value] of newEnv.entries()) {
         if (!oldEnv.has(key))
             added.set(key, value);
         else if (value !== oldEnv.get(key))
             added.set(key, value);
-    }
-    for (const key of oldEnv.keys()) {
-        if (!newEnv.has(key))
-            stderr.write(`${key} was removed. Currently unsupported\n`);
     }
     for (const [key, value] of added.entries()) {
         if (!changes)
@@ -488,7 +502,99 @@ function runBashAndExtractEnvironment(command, arg, stdout, stderr) {
         process.env[key] = value;
         changes.env[key] = value;
     }
-    return 0;
+    for (const key of oldEnv.keys()) {
+        if (!newEnv.has(key)) {
+            if (!changes)
+                changes = {};
+            if (!changes.env)
+                changes.env = {};
+            delete process.env[key];
+            changes.env[key] = null;
+        }
+    }
+    if (oldPwd !== newPwd) {
+        if (!changes)
+            changes = {};
+        const trimmedPwd = newPwd.endsWith('\n') ? newPwd.substring(0, newPwd.length - 1) : newPwd;
+        changes.cwd = trimmedPwd;
+        process.chdir(trimmedPwd);
+    }
+    const oldProcessedState = processBashState(oldBashState);
+    const newProcessedState = processBashState(newBashState);
+    if (oldProcessedState !== newProcessedState) {
+        bashState = newProcessedState;
+        if (!changes)
+            changes = {};
+        changes.bashState = newProcessedState;
+    }
+    if (oldBashFunctions !== newBashFunctions) {
+        if (!changes)
+            changes = {};
+        const functions = newBashFunctions.split('\n').filter(x => x);
+        changes.bashFunctions = functions;
+        bashFunctions = functions;
+    }
+    return exitCode;
+
+    /**
+     * @param {string} data
+     * @return {Map<string, string>}
+     */
+    function parseExportedVariables(data) {
+        /** @type {Map<string, string>} */
+        const env = new Map();
+        let i = 0;
+        while (i < data.length) {
+            if (!data.startsWith('declare -x ', i))
+                throw new Error('expected declare -x at position ' + i);
+            i += 'declare -x '.length;
+            const newline = data.indexOf('\n', i);
+            const equals = data.indexOf('=', i);
+            if (equals === -1 && newline === -1)
+                throw new Error('expected =');
+            if (equals === -1 || (newline !== -1 && newline < equals)) {
+                const key = data.substring(i, newline);
+                i = newline + 1;
+                let value = '';
+                env.set(key, value);
+            } else {
+                const key = data.substring(i, equals);
+                i = equals + 1;
+                let value = '';
+                if (data[i] !== '"')
+                    throw new Error('expected "');
+                i++;
+                while (data[i] !== '"') {
+                    if (data[i] === '\\') {
+                        i++;
+                        value += data[i];
+                    } else {
+                        value += data[i];
+                    }
+                    i++;
+                }
+                i++;
+                env.set(key, value);
+                if (data[i] === '\n')
+                    i++;
+            }
+
+        }
+        return env;
+    }
+    /**
+     * @param {string} state
+     * @return {string}
+     */
+    function processBashState(state) {
+        return state.split('\n').filter(line => {
+            for (const readonlyBuiltin of ['BASH_VERSINFO', 'EUID', 'PPID', 'SHELLOPTS', 'UID']) {
+                if (line.startsWith(readonlyBuiltin + '='))
+                    return false;
+            }
+            return true;
+        }).join('\n');
+    }
 }
 
 /** @type {Object<string, string[]>} */
@@ -497,6 +603,10 @@ const aliases = {
     'egrep': ['egrep', '--color=auto', '--exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'],
     'fgrep': ['fgrep', '--color=auto', '--exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox}'],
 }
+
+let bashState = '';
+/** @type {string[]} */
+let bashFunctions = [];
 
 function setAlias(name, value) {
     aliases[name] = value;
@@ -746,6 +856,13 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                 if (!entry.args.has(undefined) && !entry.args.has(args[0]))
                     throw new UserError('side effect');
             }
+            if (bashFunctions.includes(executable)) {
+                return {
+                    closePromise: runBashAndExtractEnvironment('eval', [executable, ...args], stdout, stderr, stdin),
+                    stdin: createNullWriter(),
+                    kill: () => void 0,
+                }
+            }
             if (executable in builtins) {
                 const closePromise = builtins[executable](args, stdout, stderr, stdin, env);
                 if (closePromise !== 'pass') {
@@ -938,4 +1055,12 @@ function getAndResetChanges() {
     return c;
 }
 
-module.exports = {execute, getResult, getAndResetChanges, setAlias, getAliases, setAllAliases};
+function setBashState(state) {
+    bashState = state;
+}
+
+function setBashFunctions(functions) {
+    bashFunctions = functions;
+}
+
+module.exports = {execute, getResult, getAndResetChanges, setAlias, getAliases, setAllAliases, setBashState, setBashFunctions};

@@ -18,7 +18,7 @@ test('pty should abort after a delay', async ({runtime}) => {
     await ptyPromise;
 });
 
-test('pty should keep wokring after an abort', async ({runtime}) => {
+test('pty should keep working after an abort', async ({runtime}) => {
     test.setTimeout(5000);
     const ptyPromise = runtime.pty('sleep 1000', 55);
     setTimeout(() => runtime.abortPty(55), 100);

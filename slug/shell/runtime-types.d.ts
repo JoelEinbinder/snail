@@ -11,6 +11,8 @@ export interface Runtime {
     ssh: { sshAddress: string, sshArgs: string[], env: {[key: string]: string} };
     reconnect: string;
     code: string;
+    bashState: string;
+    bashFunctions: string[];
 }
 
 type NotifyFunction = <T extends keyof Runtime>(method: T, params: Runtime[T]) => void;
