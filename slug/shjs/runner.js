@@ -430,7 +430,7 @@ const builtins = {
 };
 
 /**
- * @param {(Readable|Writable|number)[]} stdio
+ * @param {(Readable|Writable|number|null)[]} stdio
  */
 function stdioToPipe(stdio) {
     const defaultStdio = [process.stdin, process.stdout, process.stderr];
@@ -445,6 +445,22 @@ function stdioToPipe(stdio) {
             return 'inherit';
         return 'pipe';
     });
+}
+/**
+ * @param {(Readable|Writable|number|null)[]} stdio
+ * @param {import('child_process').ChildProcess} child
+ */
+function hookUpStdio(stdio, child) {
+    const defaultStdio = [process.stdin, process.stdout, process.stderr];
+    for (let i = 0; i < stdio.length; i++) {
+        const stream = stdio[i];
+        if (stream === defaultStdio[i] || typeof stream === 'number' || !stream || stream['fd'])
+            continue;
+        if ('write' in stream)
+            child.stdio[i].pipe(stream, { end: false });
+        else
+            stream.pipe(/** @type {Writable} */(child.stdio[i]), { end: true });
+    }
 }
 
 /**
@@ -462,14 +478,17 @@ async function runBashAndExtractEnvironment(command, args, stdout, stderr, stdin
     // need to split here otherwise variables include the magic key in the output
     const separator = `echo "${key1}" >&3; echo "${key2}" >&3`;
     const exportCode = `pwd >&3 && ${separator} && declare -p >&3 && alias >&3 && ${separator}; compgen -A function -a >&3; ${separator} && declare -x >&3`
+    const stdio = [stdin, stdout, stderr];
     const child = spawn('bash',
         ['-c', `${bashState}\nshopt -s expand_aliases; ${exportCode} && ${separator}; ${command} "$@"; echo $? >&3 && ${separator} && ${exportCode};`,
         'bash',
         ...args,
     ], {
-        stdio: [...stdioToPipe([stdin, stdout, stderr, ]), 'pipe'],
+        stdio: [...stdioToPipe(stdio), 'pipe'],
     });
     child.stdio[3].on('data', data => datas.push(data));
+    hookUpStdio(stdio, child);
+
     await new Promise(resolve => child.on('close', resolve));
     const output = Buffer.concat(datas).toString('utf-8');
     const [
@@ -892,17 +911,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                 }
                 const defaultStdio = [process.stdin, process.stdout, process.stderr];
                 const child = spawn(executable, args, {
-                    stdio: stdio.map((stream, index) => {
-                        if (typeof stream === 'number' || stream?.['fd'])
-                            return stream;
-                        if (stream === null)
-                            return 'ignore';
-                        if (!stream)
-                            return 'pipe';
-                        if (stream === defaultStdio[index])
-                            return 'inherit';
-                        return 'pipe';
-                    }),
+                    stdio: stdioToPipe(stdio),
                     env,
                 });
                 const closePromise = new Promise(resolve => {
@@ -924,15 +933,7 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                     for (const fd of openFds)
                         fs.close(fd);
                 });
-                for (let i = 0; i < stdio.length; i++) {
-                    const stream = stdio[i];
-                    if (stream === defaultStdio[i] || typeof stream === 'number' || !stream || stream['fd'])
-                        continue;
-                    if ('write' in stream)
-                        child.stdio[i].pipe(stream, { end: false });
-                    else
-                        stream.pipe(/** @type {Writable} */(child.stdio[i]), { end: true });
-                }
+                hookUpStdio(stdio, child);
                 return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
             }
         } else if ('pipe' in expression) {
