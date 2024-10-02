@@ -6,6 +6,7 @@ import { makeShellCompleter } from "./shellCompleter";
 import './completions/git';
 import './completions/npx';
 import './completions/npm';
+import './completions/nvm';
 import './completions/apt';
 import './completions/docker';
 import './completions/ai_model';
