@@ -435,7 +435,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     }]
     if (this._isFullscreen)
       return fullscreenActions;
-    const actions = [...fullscreenActions, {
+    const actions = [...fullscreenActions, ...this._shell.actions(), {
       title: 'Clear log',
       shortcut: 'Ctrl+L',
       id: 'log.clear',

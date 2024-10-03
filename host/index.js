@@ -65,7 +65,7 @@ const handler = {
   async addHistory(item) {
     const database = await getDatabase();
     const runResult = await new Promise((res, rej) => {
-      database.run(`INSERT INTO history (command, start) VALUES (?, ?)`, [item.command, item.start], function (err) {
+      database.run(`INSERT INTO history (command, start, language) VALUES (?, ?, ?)`, [item.command, item.start, item.language], function (err) {
         if (err)
           rej(err)
         else
@@ -182,6 +182,7 @@ async function getDatabase() {
     start INTEGER,
     end INTEGER,
     command TEXT,
+    language TEXT,
     output TEXT,
     git_hash TEXT,
     git_branch TEXT,
@@ -193,6 +194,8 @@ async function getDatabase() {
     hostname TEXT,
     exit_code INTEGER
   )`, x));
+  // this will fail if the column already exists, but it doesn't throw an error
+  await new Promise(x => database.run(`ALTER TABLE history ADD COLUMN language TEXT`, x))
   await new Promise(x => database.run(`CREATE TABLE IF NOT EXISTS preferences (
     key TEXT PRIMARY KEY,
     value TEXT

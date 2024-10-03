@@ -30,7 +30,7 @@ export class JSLogBlock implements LogItem {
   willResizeEvent = new JoelEvent<void>(undefined);
   private _element = document.createElement('div');
   constructor(log: Protocol.Runtime.consoleAPICalledPayload, connection: JSConnection, size: JoelEvent<{cols: number, rows: number}>) {
-    this._element.style.whiteSpace = 'pre';
+    this._element.classList.add('console-log');
     let first = true;
     for (const arg of log.args) {
       if (first)
@@ -124,6 +124,7 @@ function renderObjectRemoteObject(
     return renderStaleRemoteObject(object, charBudget, prefix);
   const innerCharBudget = charBudget - 4;
   const details = document.createElement('details');
+  details.classList.add('remote-object', 'object');
   const summary = renderRemoteObjectSummary(object, charBudget, prefix);
   const openSummary = makeOpenSummary();
   details.appendChild(summary);
@@ -154,7 +155,7 @@ function renderObjectRemoteObject(
       addProperty({configurable: false, enumerable: false, ...property}, true);
     for (const property of internalProperties || [])
       addProperty({configurable: false, enumerable: false, ...property}, true);
-    if (object.type === 'object')
+    if (shouldWrapObjectInBracesOrBrackets(object))
       content.append(object.subtype === 'array' ? ']' : '}');
     function addProperty(property: Protocol.Runtime.PropertyDescriptor, dim = false) {
       const propertyLabel = document.createElement('span');
@@ -171,7 +172,8 @@ function renderObjectRemoteObject(
       } else {
         const div = document.createElement('div');
         div.classList.add('property');
-        div.appendChild(propertyLabel);
+        if (object.preview?.subtype !== 'set' || !object.objectId?.startsWith('py-'))
+          div.appendChild(propertyLabel);
         if (property.value) {
           div.appendChild(renderRemoteObject(property.value, connection, willResize, innerCharBudget));
         } else {
@@ -202,17 +204,40 @@ function renderObjectRemoteObject(
   return details;
 }
 
+function shouldWrapObjectInBracesOrBrackets(object: Protocol.Runtime.RemoteObject) {
+  if (object.type !== 'object')
+    return false;
+  if (!object.objectId?.startsWith('py-'))
+    return true;
+  return object.preview?.subtype === 'array' || object.preview?.subtype === 'map' || object.preview?.subtype === 'set' || object.preview?.entries?.length;
+}
+function shouldDisplayObjectDescription(object: Protocol.Runtime.RemoteObject) {
+  if (object.preview?.subtype === 'array')
+    return false;
+  if (object.objectId?.startsWith('py-')) {
+    if (object.preview?.subtype === 'map' || object.preview?.subtype === 'set')
+      return false;
+    return true;
+  } else {
+    return object.className !== 'Object';
+  }
+}
+
 function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBudget: number, prefix?: Node, open = false) {
   const summary = document.createElement('summary');
   if (prefix)
     summary.appendChild(prefix);
   if (object.preview) {
     charBudget -= 4; // end amount
-    if (object.preview.subtype !== 'array' && object.className !== 'Object')
-      summary.append(object.className!, ' ');
-    summary.append(object.preview.subtype === 'array' ? '[ ' : '{ ');
+    const shouldWrap = shouldWrapObjectInBracesOrBrackets(object);
+    if (shouldDisplayObjectDescription(object))
+      summary.append(object.description || object.className!, ' ');
+    if (shouldWrap)
+      summary.append(object.preview.subtype === 'array' ? '[' : '{');
     if (open)
       return summary;
+    if (shouldWrap)
+      summary.append(' ');
     charBudget -= summary.textContent!.length;
     let first = true;
     let overflow = object.preview.overflow
@@ -229,8 +254,11 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBu
         }
         lastNumber = currentNumber;
       }
-      if (object.preview.subtype !== 'array' || String(Math.abs(parseInt(property.name))) !== property.name) {
-        fragment.append(property.name);
+      if ((object.preview.subtype !== 'array' && object.preview.subtype !== 'set') || String(Math.abs(parseInt(property.name))) !== property.name) {
+        const propertyName = document.createElement('span');
+        propertyName.classList.add('property-name');
+        propertyName.append(property.name);
+        fragment.append(propertyName);
         fragment.append(': ');
       }
       switch (property.type) {
@@ -270,7 +298,8 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBu
         summary.append(', ');
       summary.append('…');
     }
-    summary.append(object.preview.subtype === 'array' ? ' ]' : ' }');
+    if (shouldWrap)
+      summary.append(object.preview.subtype === 'array' ? ' ]' : ' }');
   } else {
     if (object.type === 'function') {
       summary.append(renderFunctionSummary(object))
@@ -282,6 +311,12 @@ function renderRemoteObjectSummary(object: Protocol.Runtime.RemoteObject, charBu
 }
 
 function renderFunctionSummary(object: Protocol.Runtime.RemoteObject) {
+  if (object.objectId?.startsWith('py-') && object.description) {
+    const span = document.createElement('span');
+    span.classList.add('remote-object', 'other');
+    span.textContent = object.description
+    return span;
+  }
   const functionName = /^function\s*(.*)\(/.exec(object.description!);
   if (functionName && functionName[1])
     return renderOther(`Function: ${functionName[1]}`);

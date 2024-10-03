@@ -21,12 +21,13 @@ export class CommandBlock implements LogItem {
     private _connectionName: string,
     public env: {[key: string]: string},
     public cwd: string,
+    private _language: string,
     globalVars?: Set<string>,
     private _sshAddress?: string) {
     this._editor = new Editor('', {
       inline: true,
       lineNumbers: false,
-      language: 'shjs',
+      language: _language,
       padding: 0,
       wordWrap: true,
       colors: themeEditorColors(),
@@ -84,6 +85,7 @@ export class CommandBlock implements LogItem {
     command.classList.add('command');
     command.classList.toggle('canceled', this.wasCanceled);
     this._commandPrefix = new CommandPrefix(this, this._size);
+    this._commandPrefix.element.setAttribute('data-language', this._language);
     this._commandPrefix.element.addEventListener('click', event => {
       this.toggleFold.dispatch(!this.toggleFold.current);
       event.preventDefault();
@@ -161,12 +163,14 @@ export class CommandPrefix {
       paren: sshAddress ? 119 : 75,
       gitName: sshAddress? 119 : 78,
       gitStatus: 214,
+      language: 8,
     } : {
       path: sshAddress? 112 : 'var(--color-4)',
       arrow: sshAddress ? 106 : 'var(--color-12)',
       paren: sshAddress ? 119 : 'var(--color-6)',
       gitName: sshAddress? 119 : 'var(--color-6)',
       gitStatus: 'var(--color-3)',
+      language: 'var(--color-8)',
     };
     const prettyDirName = computePrettyDirName(this._shellOrCommand, this._shellOrCommand.cwd);
     const dir = Color(colors.path, prettyDirName);
@@ -183,13 +187,16 @@ export class CommandPrefix {
     const GitStatus = revName ? Color(colors.paren,"(", Color(colors.gitName, revName), Color(colors.gitStatus, dirtyState ? '*' : ''), ")") : '';
     const renderInner = () => {
       this.element.textContent = '';
-      const badge = makeVenvBadge(this._shellOrCommand) || ' ';
+      const badge = makeVenvBadge(this._shellOrCommand) || '';
       const arrow = Color(colors.arrow, '»');
+      arrow.classList.add('arrow');
+      const language = Color(colors.language, ' ');
+      language.classList.add('language');
       const layouts: (string | Node)[][] = [
-        [dir, GitStatus, badge, arrow],
-        [mediumDir, GitStatus, badge, arrow],
-        [tinyDir, GitStatus, badge, arrow],
-        [badge, arrow],
+        [dir, GitStatus, badge, language, arrow],
+        [mediumDir, GitStatus, badge, language, arrow],
+        [tinyDir, GitStatus, badge, language, arrow],
+        [badge, language, arrow],
       ];
       let firstFittingLayout: (string | Node)[] = null;
       for (const layout of layouts) {

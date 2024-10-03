@@ -1,7 +1,9 @@
 import { host } from "./host";
+import type { Language } from "./Shell";
 
 type HistoryItem = {
   command: string;
+  language: Language;
   start?: number;
 }
 
@@ -26,7 +28,7 @@ async function searchHistory(params: {
     const result = await host.sendMessage({
       method: 'queryDatabase',
       params: {
-        sql: `SELECT command_id, command FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id < ? AND command != ? AND command_id < ? ORDER BY command_id DESC LIMIT 1`,
+        sql: `SELECT command_id, command, language FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id < ? AND command != ? AND command_id < ? ORDER BY command_id DESC LIMIT 1`,
         params: [escapedPrefix, max - start + 1, current, maximumCommand],
       }
     });
@@ -34,13 +36,14 @@ async function searchHistory(params: {
       return 'end';
     return {
       command: result[0].command,
+      language: result[0].language || 'shjs',
       historyIndex: max - result[0].command_id + 1,
     }
   } else {
     const result = await host.sendMessage({
       method: 'queryDatabase',
       params: {
-        sql: `SELECT command_id, command FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id > ? AND command != ? AND command_id < ? ORDER BY command_id ASC LIMIT 1`,
+        sql: `SELECT command_id, command, language FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id > ? AND command != ? AND command_id < ? ORDER BY command_id ASC LIMIT 1`,
         params: [escapedPrefix, max - start + 1, current, maximumCommand],
       }
     });
@@ -48,6 +51,7 @@ async function searchHistory(params: {
       return 'current';
     return {
       command: result[0].command,
+      language: result[0].language || 'shjs',
       historyIndex: max - result[0].command_id + 1,
     }
   }
@@ -73,10 +77,11 @@ type HistoryDatabaseItem = {
 export class History {
   private _localHistory: HistoryItem[] = [];
   private _firstCommandId = Infinity;
-  async addHistory(command: string) {
+  async addHistory(command: string, language: Language) {
     const item = {
       command,
       start: Date.now(),
+      language,
     };
     const id = await host.sendMessage({
       method: 'addHistory',
@@ -95,17 +100,18 @@ export class History {
       });
     };
   }
-  async searchHistory(current: string, prefix: string, start: number, direction: -1|1): Promise<'end'|'current'|{command: string, historyIndex: number}> {
+  async searchHistory(current: string, prefix: string, start: number, direction: -1|1): Promise<'end'|'current'|{command: string, historyIndex: number, language: Language}> {
     const searchLocalHistory = () => {
       let startIndex = start + direction - 1;
       if (direction === -1)
         startIndex = Math.min(startIndex, this._localHistory.length - 1);
       for (let i = startIndex; i < this._localHistory.length && i >= 0; i += direction) {
-        const {command} = this._localHistory[i];
+        const {command, language} = this._localHistory[i];
         if (current === command || !command.startsWith(prefix))
           continue;
         return {
           command,
+          language,
           historyIndex: i + 1,
         }
       }
@@ -125,6 +131,7 @@ export class History {
         return result;
       return {
         command: result.command,
+        language: result.language,
         historyIndex: result.historyIndex + this._localHistory.length,
       };
     }

@@ -279,7 +279,8 @@ body.dark {
   --color-selection: #525252;
   --color-background: #000000;
   --color-cursor: #606060;
-  
+  --color-hover: var(--ansi-236);
+
   --border-color: var(--ansi-237);
   --blurry-background: rgba(0, 0, 0, 0.7);
 
@@ -294,6 +295,7 @@ body.light {
   --color-selection: #b3d7ff;
   --color-background: #fff;
   --color-cursor: #606060;
+  --color-hover: var(--ansi-255);
 
   --border-color: var(--ansi-254);
   --blurry-background: rgba(255, 255, 255, 0.6);

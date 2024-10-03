@@ -28,6 +28,7 @@ export class Highlighter extends Emitter<{
   private _requestLineNumber = 0;
   private _tokenizeTimeout = 0;
   private _colors: [string, string][];
+  private _modeOptions: any;
   constructor(
     private _model: import('./model').Model,
     private _commandManager: import('./commands').CommandManager,
@@ -228,13 +229,25 @@ export class Highlighter extends Emitter<{
     const state = this._lineInfo.get(line)!.state;
     if (!state)
       return 0;
-    const copy = this._copyState(state);
-    this._mode.token(new StringStream('\n'), copy);
-    return this._mode.indent?.(copy, '') || 0;
+    return this._mode.indent?.(state, '') || 0;
   }
 
   setModeOptions(options: any) {
-    this._mode = getMode(this._language)?.({ indentUnit: 2, ...options }, {});
+    this._modeOptions = options;
+    this._refreshMode();
+  }
+
+  setMode(language: string) {
+    this._language = language;
+    this._refreshMode();
+  }
+
+  language() {
+    return this._language;
+  }
+
+  _refreshMode() {
+    this._mode = getMode(this._language)?.({ indentUnit: 2, ...this._modeOptions }, {});
     this._currentLineNumber = 0;
     this.emit('highlight', {
       from: 0,

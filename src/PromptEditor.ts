@@ -1,8 +1,11 @@
 import { Editor } from "../slug/editor/js/editor";
-import { Autocomplete } from "./autocomplete";
-import type { Shell } from "./Shell";
+import { Autocomplete, Completer } from "./autocomplete";
+import type { Language, Shell } from "./Shell";
 import '../slug/shjs/editorMode';
-import { makeShellCompleter } from "./shellCompleter";
+import '../slug/editor/modes/python';
+import '../slug/editor/modes/shell';
+import '../slug/editor/modes/javascript';
+import { makeJSCompleter, makeShellCompleter } from "./shellCompleter";
 import './completions/git';
 import './completions/npx';
 import './completions/npm';
@@ -15,12 +18,20 @@ import { host } from "./host";
 import { makeHistoryCompleter } from "./historyCompleter";
 import { themeEditorColors } from "./theme";
 import { startAsyncWork } from "./async";
+import { makePythonCompleter } from "./pythonCompleter";
+import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
+const languageToMode: {[key in Language]: string} = {
+  'shjs': 'shjs',
+  'javascript': 'js',
+  'python': 'py',
+  'bash': 'sh',
+};
 
-export function makePromptEditor(shell: Shell) {
+export function makePromptEditor(shell: Shell, languageEvent: JoelEvent<Language>) {
   const editor = new Editor('', {
     inline: true,
     lineNumbers: false,
-    language: 'shjs',
+    language: languageToMode[languageEvent.current],
     padding: 0,
     wordWrap: true,
     colors: themeEditorColors(),
@@ -29,11 +40,16 @@ export function makePromptEditor(shell: Shell) {
   shell.globalVars().then(globalVars => {
     editor.setModeOptions({globalVars});
   })
-  const autocomplete = new Autocomplete(editor, makeShellCompleter(shell), ' /.', {
+  const autocomplete = new Autocomplete(editor, {
+    shjs: makeShellCompleter(shell),
+    py: makePythonCompleter(shell),
+    js: makeJSCompleter(shell),
+  }, ' /.', {
     'KeyR': makeHistoryCompleter(shell),
   });
   let historyIndex = 0;
   let currentValue = '';
+  let currentLanguage = languageEvent.current;
   editor.on('selection-changed', () => {
     historyIndex = 0;
     currentValue = '';
@@ -63,13 +79,16 @@ export function makePromptEditor(shell: Shell) {
   }, true);
   async function moveHistory(direction: -1 | 1) {
     const done = startAsyncWork('history');
-    if (historyIndex === 0)
+    if (historyIndex === 0) {
       currentValue = editor.value;
+      currentLanguage = languageEvent.current;
+    }
     const prefix = editor.text({start: {column: 0, line: 0,}, end: editor.selections[0].start});
     const result = await shell.searchHistory(editor.value, prefix, historyIndex, direction);
     done();
     if (result === 'current' && editor.value !== currentValue) {
       editor.value = currentValue;
+      languageEvent.dispatch(currentLanguage);
       historyIndex = 0;
       return;
     }
@@ -79,6 +98,7 @@ export function makePromptEditor(shell: Shell) {
     }
     historyIndex = result.historyIndex;
     editor.value = result.command;
+    languageEvent.dispatch(result.language);
   }
   const observer = new ResizeObserver(() => {
     editor.layout();

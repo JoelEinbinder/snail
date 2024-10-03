@@ -106,19 +106,49 @@
 }
 
 .venv::before {
-  vertical-align: bottom;
+  content: "VENV";
+  font-size: 7px;
+  border: 1px solid black;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  font-weight: bold;
   margin-left: 2px;
   margin-right: 2px;
-  --mask-image: url('./icons/language-python.svg');
+  margin-bottom: 2px;
+  padding: 1px;
+  border-radius: 2px;  
+}
+
+[data-language="py"] > .language,
+[data-language="js"] > .language,
+[data-language="sh"] > .language {
+  vertical-align: bottom;
+  margin-right: 2px;
   -webkit-mask: var(--mask-image);
   mask: var(--mask-image);
   -webkit-mask-size: cover;
   mask-size: cover;
-  content: '';
   display: inline-block;
-  width: 1.4em;
-  height: 1.4em;
-  background-color: var(--ansi-0);
+  width: 1.2em;
+  height: 1.2em;
+  background-color: var(--ansi-8);
+}
+
+[data-language="py"] > .language {
+  --mask-image: url('./icons/language-python.svg');
+}
+
+[data-language="js"] > .language {
+  --mask-image: url('./icons/nodejs.svg');
+}
+
+[data-language="sh"] > .language {
+  --mask-image: url('./icons/bash.svg');
+}
+
+[data-language="shjs"] > .venv + .language {
+  display: none;
 }
 
 .exit-code:empty {

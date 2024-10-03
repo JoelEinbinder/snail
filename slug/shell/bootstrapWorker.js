@@ -88,16 +88,29 @@ const handler = {
     }
     return result;
   },
-  'Shell.runCommand': async ({expression, command}, signal) => {
+  'Shell.runCommand': async ({expression, command, language}, signal) => {
     retainers.add('runCommand');
-    lastCommandPromise = send('Runtime.evaluate', {
-      expression,
-      returnByValue: false,
-      generatePreview: true,
-      userGesture: true,
-      replMode: true,
-      allowUnsafeEvalBlockedByCSP: true,
-    });
+    if (language === 'javascript' || language === 'shjs' || language === 'bash') {
+      lastCommandPromise = send('Runtime.evaluate', {
+        expression,
+        returnByValue: false,
+        generatePreview: true,
+        userGesture: true,
+        replMode: true,
+        allowUnsafeEvalBlockedByCSP: true,
+      });
+    } else if (language === 'python') {
+      lastCommandPromise = getOrCreatePythonController().send('Runtime.evaluate', {
+        expression,
+        returnByValue: false,
+        generatePreview: true,
+        userGesture: true,
+        replMode: true,
+        allowUnsafeEvalBlockedByCSP: true,
+      });
+    } else {
+      throw new Error('Unsupported language: ' + language);
+    }
     /** @type {import('./metadata').Task} */
     const task = {
       command,
@@ -276,6 +289,10 @@ const handler = {
       returnByValue: true,
     });
   },
+  'Python.reset': async() => {
+    closePythonController();
+    getOrCreatePythonController();
+  },
   // @ts-ignore
   __proto__: null,
 };
@@ -330,6 +347,16 @@ function waitForConnection() {
         dispatchToHandler(message, transport);
         return;
       }
+      if (message.method?.startsWith('Python.') || message.params?.objectId?.startsWith('py-')) {
+        getOrCreatePythonController().send(message.method, message.params).then(result => {
+          if ('id' in message)
+            transport?.send({id: message.id, result});
+        }).catch(error => {
+          if ('id' in message)
+            transport?.send({id: message.id, error});
+        });
+        return;
+      }
       let callback = 'id' in message ? (error, result) => {
         if (error)
           transport?.send({id: message.id, error});
@@ -364,12 +391,18 @@ session.on('inspectorNotification', (/** @type {{method: string, params: any}} *
   if (notification.method === 'Runtime.bindingCalled' && notification.params.name === 'magic_binding') {
     /** @type {{method: keyof import('./runtime-types').Runtime, params: any}} */
     const {method, params} = JSON.parse(notification.params.payload);
+    _pythonController?.notify('Python.updateFromOtherLanguage', {method, params});
     if (method === 'env') {
       for (const key in params) {
         if (params[key] === null)
           delete process.env[key];
         else
           process.env[key] = params[key];
+      }
+      if ('PATH' in params) {
+        const newPythonPath = require('child_process').spawnSync('which', ['python3']).stdout.toString().trim();
+        if (newPythonPath !== _pythonController?.pythonPath)
+          closePythonController();
       }
     }
     if (method === 'aliases') {
@@ -503,3 +536,21 @@ function maybeExit() {
 }
 writeMetadata();
 waitForConnection();
+
+/** @type {import('./python/controller').PythonController|null} */
+let _pythonController = null;
+function getOrCreatePythonController() {
+  if (!_pythonController) {
+    _pythonController = new (require('./python/controller').PythonController)(notification => {
+      transport?.send(notification);
+      shellState.addMessage(notification);
+    });
+  }
+  return _pythonController;
+}
+
+function closePythonController() {
+  if (_pythonController)
+    _pythonController.close();
+  _pythonController = null;
+}

@@ -48,3 +48,15 @@ details > .content > .property {
   width: 10.59px;
   display: inline-block;
 }
+
+.remote-object > summary {
+  white-space: pre;
+}
+
+.console-log {
+  white-space: pre;
+}
+
+.console-log > .remote-object {
+  vertical-align: text-top;
+}

@@ -87,6 +87,15 @@ test('sees filter autocomplete properly', async ({ shell }) => {
   expect((await shell.serialize()).prompt.autocomplete).toEqual(['$FOO_BAR', '$FOO_BAZ']);
 });
 
+test('can move up and down in autocomplete', async ({ shell }) => {
+  await shell.runCommand('const r = { hello: 1, world: 2, __proto__: null };');
+  await shell.typeInPrompt('r.');
+  expect((await shell.serialize()).prompt.autocomplete).toEqual(['hello', 'world']);
+  await shell.page.keyboard.press('ArrowDown');
+  await shell.page.keyboard.press('Tab');
+  expect((await shell.serialize()).prompt.value).toEqual('r.world');
+});
+
 test('find the right anchor if the predicate contains a copy of the prefix', async ({ shell }) => {
   await shell.runCommand('const r = { hello: 1, world: 2, __proto__: null };');
   await shell.typeInPrompt('r.wor');

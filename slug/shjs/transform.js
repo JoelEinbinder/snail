@@ -1,4 +1,4 @@
-const {Parser, tokenizer, TokenType, tokTypes} = require('acorn');
+const {Parser, TokenType, tokTypes, parse: jsParse} = require('acorn');
 const {tokenize} = require('./tokenizer');
 const shTokenType = new TokenType('sh', {});
 let gv = new Set();
@@ -138,7 +138,7 @@ function transformCode(code, fnName = 'sh', globalVars = new Set()) {
 /**
  * @return {{ start: number, end: number, isSh: boolean, isComment?: boolean } | null}
  */
-function getAutocompletePrefix(code, globalVars = new Set()) {
+function getAutocompletePrefix(code, globalVars = new Set(), shjs = true) {
   const magicString = 'JOEL_AUTOCOMPLETE_MAGIC';
   /** @type {import('acorn').Token[]} */
   const tokens = [];
@@ -171,7 +171,8 @@ function getAutocompletePrefix(code, globalVars = new Set()) {
         }
       }
     };
-    MyParser.parse(fullCode, {ecmaVersion: 'latest', allowAwaitOutsideFunction: true, onToken: t => tokens.push(t) });
+    const parseFn = (shjs ? MyParser.parse.bind(MyParser) : jsParse);
+    parseFn(fullCode, {ecmaVersion: 'latest', allowAwaitOutsideFunction: true, onToken: t => tokens.push(t) });
   } catch(error) {
   }
   gv = before;

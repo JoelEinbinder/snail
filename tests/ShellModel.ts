@@ -15,6 +15,11 @@ class Split {
     await this.waitForAsyncWorkToFinish();
   }
 
+  async runPretypedCommand() {
+    await this.page.keyboard.press('Enter');
+    await this.waitForAsyncWorkToFinish();
+  }
+
   async typeInPrompt(text: string) {
     const textarea = this._block.locator('textarea:enabled');
     await textarea.type(text);
@@ -162,6 +167,25 @@ class Split {
 
   async triggerLLM() {
     await this.page.keyboard.press('ControlOrMeta+L');
+  }
+
+  async setLanguage(language: import('../src/Shell').Language) {
+    if (language === 'bash') {
+      await this.page.keyboard.press('ControlOrMeta+K');
+      await this.page.keyboard.press('KeyB');
+    } else if (language === 'python') {
+      await this.page.keyboard.press('ControlOrMeta+K');
+      await this.page.keyboard.press('KeyP');
+    } else if (language === 'shjs') {
+      await this.page.keyboard.press('ControlOrMeta+K');
+      await this.page.keyboard.press('KeyS');
+    } else if (language === 'javascript') {
+      await this.page.keyboard.press('ControlOrMeta+K');
+      await this.page.keyboard.press('KeyJ');
+    } else {
+      throw new Error('Unknown language: ' + language);
+    }
+    await this.waitForAsyncWorkToFinish();
   }
 }
 export class ShellModel extends Split {
