@@ -39,7 +39,7 @@ export type ExtraClientMethods = {
 
   'Python.autocomplete': (params: {line: string}) => {
     anchor: number,
-    suggestions: string[]
+    suggestions: {text: string, description?: string}[]
   };
   'Python.isUnexpectedEndOfInput': (params: {code: string}) => boolean;
   'Python.reset': () => void;

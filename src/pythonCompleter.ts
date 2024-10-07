@@ -6,8 +6,12 @@ export function makePythonCompleter(shell: Shell): Completer {
     const {anchor, suggestions} = await shell.pythonCompletions(line);
     return {
       anchor,
-      suggestions: suggestions.map(text => ({ text })),
+      suggestions: suggestions.map(({text, description}) => ({
+        text,
+        description: description ? (async () => description) : undefined
+      })),
       exact: true,
+      cssTag: 'python'
     }
   };
 }

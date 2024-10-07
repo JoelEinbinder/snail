@@ -208,28 +208,38 @@ while True:
           if module not in suggestions:
             suggestions.append(module)
         result = {
-          'suggestions': suggestions,
+          'suggestions': list(map(lambda x: { 'text': x, 'description': 'foo' }, suggestions)),
           'anchor': anchor
         }
       else:
-        suggestions = set()
+        seen = set()
+        suggestions = list()
+        def add_suggestion(key, value):
+          if key in seen:
+            return
+          seen.add(key)
+          if value_to_cdp_type(value) == 'object' and hasattr(value, '__doc__') and value.__doc__:
+            suggestions.append({"text": key,"description": value.__doc__})
+          else:
+            suggestions.append({"text": key})
         prefix = line[prefix_start:prefix_end]
         if (prefix == ''):
           for key in dir(__builtins__):
-            suggestions.add(key)
-          for key in eval('globals()', internal_globals):
-            suggestions.add(key)
+            add_suggestion(key, getattr(__builtins__, key))
+          g = eval('globals()', internal_globals)
+          for key in g:
+            add_suggestion(key, g[key])
           for key in keyword.kwlist:
-            suggestions.add(key)
+            add_suggestion(key, None)
         else:
           try:
             obj = eval(prefix, internal_globals)
             for key in dir(obj):
-              suggestions.add(key)
+              add_suggestion(key, getattr(obj, key))
           except:
             pass
         result = {
-          'suggestions': list(suggestions),
+          'suggestions': suggestions,
           'anchor': anchor
         }
     elif j['method'] == 'Python.isUnexpectedEndOfInput':

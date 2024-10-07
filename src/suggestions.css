@@ -42,8 +42,12 @@ body.vscode-dark .suggestions {
 .suggest-popup {
     display: flex;
     --suggest-width: 160px;
-    width: calc(var(--suggest-width) + 160px + 2px + 2px + 2px);
+    --description-width: 160px;
+    width: calc(var(--suggest-width) + var(--description-width) + 2px + 2px + 2px);
     --suggest-background: var(--blurry-background);
+}
+.suggest-popup[data-css-tag="python"] {
+    --description-width: 480px;
 }
 body.dark .suggest-popup {
     --suggest-selected: var(--ansi-0);
@@ -61,7 +65,7 @@ body.light .suggest-popup[data-css-tag="history"] {
     --suggest-selected: hsl(300, 80%, 95%);
 } 
 .description {
-    width: 160px;
+    width: var(--description-width);
     flex: 1;
     border-radius: 3px;
     border: 1px solid var(--border-color);
@@ -72,6 +76,11 @@ body.light .suggest-popup[data-css-tag="history"] {
     font-size: 1.1em;
     color: var(--ansi-242);
     white-space: pre-wrap;
+}
+.suggest-popup[data-css-tag="python"] > .description {
+    white-space: pre;
+    overflow: auto;
+    max-height: 200px;
 }
 .description:empty {
     visibility: hidden;
