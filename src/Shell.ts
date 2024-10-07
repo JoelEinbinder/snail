@@ -638,8 +638,8 @@ export class Shell {
     });
     if (exitCode === 0)
       await this.runCommand('reconnect --list', 'shjs');
-    console.timeEnd('create shell');
     this._language.dispatch(await host.sendMessage({ method: 'loadItem', params: { key: 'language' }}) || 'shjs');
+    console.timeEnd('create shell');
     this._setupUnlock(); // prompt starts locked
     host.notify({ method: 'reportTime', params: {name: 'create shell' } });
   }

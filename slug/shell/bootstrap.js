@@ -1,7 +1,6 @@
 //@ts-check
 const worker_threads = require('node:worker_threads');
 const worker = new worker_threads.Worker(require.resolve('./bootstrapWorker'));
-
 worker.on('exit', code => {
   process.exit(code);
 });
@@ -20,17 +19,23 @@ process.on('exit', () => {
   }
 });
 
+
+const {Runtime} = require('./runtime');
+const runtime = new Runtime();
+
+const {sh} = require('../shjs/jsapi');
+process.env.SNAIL_NODE_PATH = process.execPath;
+global.sh = sh;
+global.pty = runtime.pty.bind(runtime);
+global._abortPty = runtime.abortPty.bind(runtime);
+
 global.bootstrap = (args) => {
+  delete global.bootstrap;
   const binding = global.magic_binding;
   delete global.magic_binding;
-  delete global.bootstrap;
-  const {sh} = require('../shjs/jsapi');
-  process.env.SNAIL_NODE_PATH = process.execPath;
   function notify(method, params) {
     binding(JSON.stringify({method, params}));
   }
-  const {Runtime} = require('./runtime');
-  const runtime = new Runtime();
   runtime.setNotify(notify);
 
   const origChangeDir = process.chdir;
@@ -44,10 +49,6 @@ global.bootstrap = (args) => {
 
     return returnValue;
   }
-
-  global.sh = sh;
-  global.pty = runtime.pty.bind(runtime);
-  global._abortPty = runtime.abortPty.bind(runtime);
 
   return runtime.respond.bind(runtime);
 };
