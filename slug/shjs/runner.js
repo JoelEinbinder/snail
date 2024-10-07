@@ -220,15 +220,12 @@ const builtins = {
             ...inEnv,
             GIT_OPTIONAL_LOCKS: '0',
         };
-        const isGit = spawnSync('git', ['rev-parse', '--git-dir'], { env });
-        if (isGit.status)
-            return 0;
-        const symbolicRef = spawnSync('git', ['symbolic-ref', '--short', 'HEAD'], { env });
+        const symbolicRef = await spawnPromise('git', ['symbolic-ref', '--short', 'HEAD'], { env });
         if (symbolicRef.status === 0) {
             stdout.write(symbolicRef.stdout);
             return 0;
         }
-        const commit = spawnSync('git', ['rev-parse', 'HEAD'], { env });
+        const commit = await spawnPromise('git', ['rev-parse', 'HEAD'], { env });
         if (commit.status === 0) {
             stdout.write(commit.stdout);
             return 0;
@@ -240,10 +237,7 @@ const builtins = {
             ...inEnv,
             GIT_OPTIONAL_LOCKS: '0',
         };
-        const isGit = spawnSync('git', ['rev-parse', '--git-dir'], { env });
-        if (isGit.status)
-            return 0;
-        const status = spawnSync('git', ['status', '--porcelain'], { env });
+        const status = await spawnPromise('git', ['status', '--porcelain'], { env });
         if (status.status)
             return 0;
         if (!status.stdout)
@@ -255,7 +249,7 @@ const builtins = {
     __npx_completions: async (args, stdout, stderr, stdin, env) => {
         let dir = process.cwd();
         while (true) {
-            const status = spawnSync('find', ['-L', '.', '-type', 'f', '-perm', '+111'], {
+            const status = await spawnPromise('find', ['-L', '.', '-type', 'f', '-perm', '+111'], {
                 cwd: path.join(dir, 'node_modules', '.bin'),
                 env,
             });
@@ -1062,6 +1056,25 @@ function setBashState(state) {
 
 function setBashFunctions(functions) {
     bashFunctions = functions;
+}
+
+/**
+ * @param {string} command
+ * @param {string[]} args
+ * @param {import('child_process').SpawnSyncOptions} options
+ */
+async function spawnPromise(command, args, options) {
+    const child = spawn(command, args, options);
+    const stdout = [];
+    const stderr = [];
+    child.stdout.on('data', data => stdout.push(data));
+    child.stderr.on('data', data => stderr.push(data));
+    const status = await new Promise(resolve => child.on('close', resolve));
+    return {
+        status,
+        stdout: Buffer.concat(stdout),
+        stderr: Buffer.concat(stderr),
+    }
 }
 
 module.exports = {execute, getResult, getAndResetChanges, setAlias, getAliases, setAllAliases, setBashState, setBashFunctions};
