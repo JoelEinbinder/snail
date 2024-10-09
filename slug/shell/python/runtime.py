@@ -114,6 +114,8 @@ while True:
       sys.stderr.write(j['params']['text'])
       sys.stderr.flush()
     elif j['method'] == 'Runtime.evaluate':
+      import_before = sys.path[0]
+      sys.path[0] = os.getcwd()
       try:
         try:
           mode = 'eval'
@@ -125,6 +127,7 @@ while True:
         result = {'result': to_remote_object(value)} if mode == 'eval' else {'result': {'type': 'string', 'value': 'this is the secret secret string:0'}}
       except Exception as error:
         result = {'exceptionDetails': {'exception': to_remote_object(error)}}
+      sys.path[0] = import_before
     elif j['method'] == 'Runtime.getProperties':
       properties = []
       obj = remote_objects[j['params']['objectId']]
@@ -200,8 +203,11 @@ while True:
       elif import_complete:
         import pkgutil
         suggestions = list()
+        import_before = sys.path[0]
+        sys.path[0] = os.getcwd()
         for module in pkgutil.iter_modules():
           suggestions.append(module.name)
+        sys.path[0] = import_before
         for module in sys.modules:
           if module not in suggestions:
             suggestions.append(module)

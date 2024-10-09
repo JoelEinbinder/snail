@@ -194,3 +194,26 @@ test('python stdout should be captured', async ({ shell }) => {
     prompt: { value: '' }
   });
 });
+
+test('python should import from the current directory', async ({ shell, populateFilesystem }) => {
+  await populateFilesystem({
+    'foo.py': 'print("i am foo")',
+    'dir/bar.py': 'print("i am bar")',
+  });
+  await shell.setLanguage('python');
+  await shell.runCommand('import foo');
+  await shell.setLanguage('shjs');
+  await shell.runCommand('cd dir');
+  await shell.setLanguage('python');
+  await shell.runCommand('import bar');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> import foo',
+      'i am foo',
+      '> cd dir',
+      '> import bar',
+      'i am bar',
+    ],
+    prompt: { value: '' }
+  });
+});

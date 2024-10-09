@@ -290,7 +290,6 @@ const overrides = {
     const overflowBottom = bottom + popupBounds.height - display.bounds.y - display.bounds.height;
     const overflowTop = (top + popupBounds.height ) - (display.bounds.y + display.bounds.height) + display.bounds.y;
     const positionAtBottom = (overflowBottom <= 0 || overflowBottom < overflowTop)
-    console.log({overflowBottom, overflowTop, positionAtBottom});
     popup.setBounds({
       x: x,
       y: positionAtBottom ? (bottom) : (top - popupBounds.height),
