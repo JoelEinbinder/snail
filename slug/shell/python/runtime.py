@@ -108,7 +108,12 @@ while True:
   j = json.loads(line)
   result = None
   try:
-    if j['method'] == 'Runtime.evaluate':
+    if j['method'] == 'Python.threadStdio':
+      import sys
+      sys.stdout.flush()
+      sys.stderr.write(j['params']['text'])
+      sys.stderr.flush()
+    elif j['method'] == 'Runtime.evaluate':
       try:
         try:
           mode = 'eval'
@@ -190,13 +195,6 @@ while True:
           last_token = token
       except:
         pass
-      print({
-        'found_magic': found_magic,
-        'can_complete': can_complete,
-        'anchor': anchor,
-        'prefix_start': prefix_start,
-        'prefix': line[prefix_start:prefix_end]
-      })
       if not found_magic or not can_complete:
         result = { 'suggestions': [], 'anchor': 0 }
       elif import_complete:

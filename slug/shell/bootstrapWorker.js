@@ -26,6 +26,7 @@ let lastAskPassId = 0;
 let lastStreamId = 0;
 let lastPreviewToken = 0;
 let lastPushedEvaluationId = 0;
+let shellSize = {rows: 24, cols: 80};
 /** @type {Map<number, any[]>} */
 const previewResults = new Map();
 /** @type {Map<number, (password: string) => void>} */
@@ -50,10 +51,36 @@ const handler = {
     transport.send({method: 'Shell.daemonStatus', params: {isDaemon}});
     if (!objectIdPromise)
       objectIdPromise = initObjectId(params);
-    return {objectId: await objectIdPromise};
+    await objectIdPromise;
   },
   'Shell.disable': async (params) => {
     enabledTransports.delete(transport);
+  },
+  'Shell.input': async({data, id}) => {
+    const objectId = await objectIdPromise;
+    if (typeof id === 'string' && id.startsWith('python')) {
+      _pythonController?.sendInput(data);
+    } else {
+      await send('Runtime.callFunctionOn', {
+        objectId,
+        functionDeclaration: `function(data) { return this(data); }`,
+        arguments: [{
+          value: {method: 'input', params: {data, id}}
+        }]
+      });
+    }
+  },
+  'Shell.resize': async(params) => {
+    shellSize = params;
+    const objectId = await objectIdPromise;
+    await send('Runtime.callFunctionOn', {
+      objectId,
+      functionDeclaration: `function(data) { return this(data); }`,
+      arguments: [{
+        value: {method: 'resize', params}
+      }]
+    });
+    await _pythonController?.resize(params);
   },
   'Shell.evaluate': async (params) => {
     const {getResult} = require('../shjs/index');
@@ -100,14 +127,7 @@ const handler = {
         allowUnsafeEvalBlockedByCSP: true,
       });
     } else if (language === 'python') {
-      lastCommandPromise = getOrCreatePythonController().send('Runtime.evaluate', {
-        expression,
-        returnByValue: false,
-        generatePreview: true,
-        userGesture: true,
-        replMode: true,
-        allowUnsafeEvalBlockedByCSP: true,
-      });
+      lastCommandPromise = getOrCreatePythonController().runCommand(expression);
     } else {
       throw new Error('Unsupported language: ' + language);
     }
@@ -545,6 +565,7 @@ function getOrCreatePythonController() {
       transport?.send(notification);
       shellState.addMessage(notification);
     });
+    _pythonController.resize(shellSize);
   }
   return _pythonController;
 }

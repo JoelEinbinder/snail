@@ -19,8 +19,10 @@ type ExtraServerMethods = {
 type ServerMethods = Protocol.Events & ExtraServerMethods;
 
 export type ExtraClientMethods = {
-  'Shell.enable': (parmas: {args: string[]}) => {objectId: string};
+  'Shell.enable': (parmas: {args: string[]}) => void;
   'Shell.disable': () => void;
+  'Shell.input': (params: {data: string, id: string|number}) => void;
+  'Shell.resize': (params: {rows: number, cols: number}) => void;
   'Shell.setIsDaemon': (params: {isDaemon: boolean}) => void;
   'Shell.evaluate': (params: {code: string}) => {result: string, exitCode: number};
   'Shell.evaluateStreaming': (params: {code: string}) => {streamId: number};

@@ -1,8 +1,8 @@
 export interface Runtime {
-    startTerminal: { id: number, previewToken?: number };
-    endTerminal: { id: number, previewToken?: number };
-    data: { id: number, previewToken?: number, data: string };
-    leftoverStdin: { id: number, previewToken?: number, data: string };
+    startTerminal: { id: number|string, previewToken?: number };
+    endTerminal: { id: number|string, previewToken?: number };
+    data: { id: number|string, previewToken?: number, data: string };
+    leftoverStdin: { id: number|string, previewToken?: number, data: string };
 
     cwd: string;
     env: { [key: string]: string };

@@ -183,3 +183,14 @@ test('should use the correct language for history', async ({ shell }) => {
   });
 });
 
+test('python stdout should be captured', async ({ shell }) => {
+  await shell.setLanguage('python');
+  await shell.runCommand('import sys; sys.stdout.write("stdout")');
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> import sys; sys.stdout.write("stdout")',
+      'stdout'
+    ],
+    prompt: { value: '' }
+  });
+});

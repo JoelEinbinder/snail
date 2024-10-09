@@ -169,19 +169,19 @@ export class Shell {
     socketListeners.set(socketId, message => core.onmessage?.(message));
     return this._setupConnectionInner(core, args);
   }
-  _createTerminalHandler({connection, notify, urlForIframe, addItem, antiFlicker, shouldLockPrompt, setTitle}: {
+  _createTerminalHandler({connection, sendInput, urlForIframe, addItem, antiFlicker, shouldLockPrompt, setTitle}: {
     connection: JSConnection,
-    notify: (method: string, params: any) => Promise<void>,
+    sendInput: (params: {data: string, id: string|number}) => Promise<void>,
     urlForIframe: (filePath: string) => Promise<string>,
     addItem: (item: LogItem, focus: boolean) => void;
     shouldLockPrompt: boolean,
     antiFlicker: AntiFlicker,
     setTitle: (title: string) => void,
   }) {
-    const terminals = new Map<number, {processor: TerminalDataProcessor, cleanup: () => Promise<void>}>();
+    const terminals = new Map<number|string, {processor: TerminalDataProcessor, cleanup: () => Promise<void>}>();
     let myActiveItem: LogItem = null;
     const handler = {
-      data: ({data, id}: {data: string, id: number}) => {
+      data: ({data, id}: {data: string, id: number|string}) => {
         // we might have lost the terminal creation due to data smooshing
         // make it anyway to be nice
         // TODO check if it has already ended?
@@ -189,7 +189,7 @@ export class Shell {
           handler.startTerminal({id});
         terminals.get(id).processor.processRawData(data);
       },
-      endTerminal:async ({id}: {id: number}) => {
+      endTerminal:async ({id}: {id: number|string}) => {
         const {cleanup} = terminals.get(id);
         terminals.delete(id);
         if (myActiveItem === this._activeItem.current)
@@ -197,10 +197,12 @@ export class Shell {
         await cleanup();
         setTitle('');
       },
-      startTerminal:({id}: {id: number}) => {
+      startTerminal:({id}: {id: number|string}) => {
         if (terminals.has(id))
           console.error('terminal already exists', id);
-
+        const sendInputToThisTerminal = (data: string) => {
+          return sendInput({data, id});
+        }    
         const unlockPrompt = shouldLockPrompt ? this._lockPrompt('startTerminal ' + id) : () => void 0;
         let activeTerminalBlock: TerminalBlock = null;
         let activeIframeBlock: IFrameBlock = null;
@@ -257,9 +259,7 @@ export class Shell {
                   if (!dataObj)
                     dataObj = { entry: 'uh-oh-invalid-parse-entry???!!!' };
                   const iframeBlock = new IFrameBlock(String(dataObj.entry), {
-                    async sendInput(data) {
-                        await notify('input', { data });
-                    },
+                    sendInput: sendInputToThisTerminal,
                     connection,
                     urlForIframe,
                     antiFlicker,
@@ -316,7 +316,7 @@ export class Shell {
                 // this should only be a uuid. dont notify otherwise in case its some kind of strange injection attempt
                 if (!/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/.test(dataStr))
                   break;
-                notify('input', { data: dataStr });
+                sendInputToThisTerminal(dataStr);
                 break;
               }
             }
@@ -350,9 +350,7 @@ export class Shell {
         const addTerminalBlock = async () => {
           await closeActiveTerminalBlock();
           const terminalBlock = new TerminalBlock({
-            async sendInput(data) {
-                await notify('input', { data });
-            },
+            sendInput: sendInputToThisTerminal,
             size: this._size,
             antiFlicker,
             setTitle: title => setTitle(title),
@@ -412,15 +410,6 @@ export class Shell {
     this._connectionToSSHAddress.set(connection, sshAddress);
     const filePath = args[0];
     this._connectionToName.set(connection, filePath || sshAddress);
-    const notify = async function(method: string, params: any) {
-      await connection.send('Runtime.callFunctionOn', {
-        objectId: notifyObjectId,
-        functionDeclaration: `function(data) { return this(data); }`,
-        arguments: [{
-          value: {method, params}
-        }]
-      });
-    }
     connection.on('Runtime.consoleAPICalled', message => {
       // console.timeEnd messages are sent twice
       if (message.stackTrace?.callFrames[0]?.functionName === 'timeLogImpl')
@@ -454,8 +443,8 @@ export class Shell {
       evaluationsToPush.delete(id);
     });
     const terminalHandler = this._createTerminalHandler({
+      sendInput: params => connection.send('Shell.input', params),
       connection,
-      notify,
       urlForIframe,
       shouldLockPrompt: false,
       antiFlicker: this._antiFlicker,
@@ -552,12 +541,12 @@ export class Shell {
     }
     this._connectionToDestroy.set(connection, destroy);
     await core.initialize();
-    const {objectId: notifyObjectId} = await connection.send('Shell.enable', {
+    await connection.send('Shell.enable', {
       args
     });
-    const resize = size => notify('resize', size);
+    const resize = (size: {rows: number, cols: number}) => this.connection.send('Shell.resize', size);
     this._size.on(resize);
-    notify('resize', this._size.current);
+    resize(this._size.current);
 
     {
       const {result, exceptionDetails} = await connection.send('Runtime.evaluate', {
