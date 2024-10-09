@@ -49,6 +49,7 @@ export class SuggestBox {
             this.element.removeAttribute('data-css-tag');
         this._refreshDescription();
         this._onSelectionChanged();
+        this._glassPane.resized();
     }
     private _render() {
         this._viewport._refresh();
@@ -124,13 +125,17 @@ export class SuggestBox {
     }
     private async _refreshDescription() {
         const selected = this._selectedSuggestion || this._suggestions[0];
-        this._description.textContent = '';
-        if (!selected || !selected.description)
+        if (!selected || !selected.description) {
+            this._description.textContent = '';
             return;
+        }
         const description = await selected.description();
-        if (selected !== (this._selectedSuggestion || this._suggestions[0]))
+        if (selected !== (this._selectedSuggestion || this._suggestions[0])) {
+            this._description.textContent = '';
             return;
+        }
         this._description.textContent = description;
+        this._glassPane.resized();
     }
     hide() {
         this._glassPane.hide();

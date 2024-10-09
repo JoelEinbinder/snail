@@ -1,6 +1,6 @@
 reportTime('electron top');
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
-const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, session } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, screen } = require('electron');
 const { handler, proxies, preloadJSShell, getTheme } = require('../host');
 const path = require('path');
 const os = require('os');
@@ -142,8 +142,8 @@ app.whenReady().then(() => {
   if (!process.argv.includes('--no-first-window'))
     makeWindow();
 });
-/** @type {Set<BrowserWindow>} */
-const popups = new Set();
+/** @type {BrowserWindow} */
+let popup = null;
 async function makeWindow() {
   reportTime('start make window');
   preloadJSShell();
@@ -184,26 +184,51 @@ async function makeWindow() {
   });
 
   win.webContents.setWindowOpenHandler(details => {
+    if (details.features.includes('width=')) {
+      return {
+        action: 'allow', 
+        overrideBrowserWindowOptions: {
+          transparent: true,
+          roundedCorners: false,
+          frame: false,
+          focusable: false,
+          hasShadow: false,
+          height: 0,
+          width: 0,
+          type: 'panel',
+          parent: win,
+        }
+      };
+    }
     require('electron').shell.openExternal(details.url);
     return { action: 'deny' };
   });
   let lastBounds = win.getBounds();
   win.on('move', () => {
     const newBounds = win.getBounds();
-    for (const popup of popups) {
-      const bounds = popup.getBounds();
-      popup.setBounds({
-        x: bounds.x + (newBounds.x - lastBounds.x),
-        y: bounds.y + (newBounds.y - lastBounds.y),
-        width: bounds.width,
-        height: bounds.height,
-      });
-    }
+    const bounds = popup?.getBounds();
+    popup?.setBounds({
+      x: bounds.x + (newBounds.x - lastBounds.x),
+      y: bounds.y + (newBounds.y - lastBounds.y),
+      width: bounds.width,
+      height: bounds.height,
+    });
     lastBounds = newBounds;
   })
   win.webContents.on('did-create-window', (window, details) => {
+    if (details.options.type !== 'panel')
+      return;
+    window.setOpacity(0);
     window.excludedFromShownWindowsMenu = true;
-    popups.add(window);
+    window.setAlwaysOnTop(true, 'pop-up-menu');
+    if (popup)
+      popup.destroy();
+    popup = window;
+    window.once('closed', () => {
+      if (window !== popup)
+        return;
+      popup = null;
+    });
   })
   if (isDevMode) {
     require('../electron-dev/').createDevServer().then(({url}) => {
@@ -242,10 +267,36 @@ const overrides = {
       return;
     require('electron').shell.beep();
   },
-  async closeAllPopups() {
-    for (const popup of popups)
-      popup.destroy();
-    popups.clear();
+  async destroyPopup() {
+    popup?.destroy();
+    popup = null;
+  },
+  async resizePanel({width, height}, client, sender) {
+    popup?.setBounds({
+      height,
+      width,
+    });
+  },
+  async positionPanel({bottom, top, x}, client, sender) {
+    if (!popup)
+      throw new Error('No popup to position');
+    const window = BrowserWindow.fromWebContents(sender);
+    const windowBounds = window.getContentBounds();
+    top += windowBounds.y;
+    bottom += windowBounds.y;
+    x += windowBounds.x;
+    const display = screen.getDisplayMatching(windowBounds);
+    const popupBounds = popup.getBounds();
+    const overflowBottom = bottom + popupBounds.height - display.bounds.y - display.bounds.height;
+    const overflowTop = (top + popupBounds.height ) - (display.bounds.y + display.bounds.height) + display.bounds.y;
+    const positionAtBottom = (overflowBottom <= 0 || overflowBottom < overflowTop)
+    console.log({overflowBottom, overflowTop, positionAtBottom});
+    popup.setBounds({
+      x: x,
+      y: positionAtBottom ? (bottom) : (top - popupBounds.height),
+    });
+    popup.setOpacity(1);
+    return positionAtBottom;
   },
   setProgress({progress}, client, sender) {
     BrowserWindow.fromWebContents(sender).setProgressBar(progress);
@@ -446,7 +497,7 @@ const clients = new WeakMap();
 ipcMain.handle('message', async (event, ...args) => {
   const {method, params, id} = args[0];
   if (!overrides.hasOwnProperty(method))
-    throw new Error('command not found');
+    throw new Error('command not found: ' + method);
   try {
     if (id)
       reportTime('start ' + method);

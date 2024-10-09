@@ -283,6 +283,7 @@ body.dark {
 
   --border-color: var(--ansi-237);
   --blurry-background: rgba(0, 0, 0, 0.7);
+  --cant-blur-background: rgba(0, 0, 0, 0.9);
 
   --tab-foreground: #444;
   --tab-background: #202020;
@@ -299,6 +300,7 @@ body.light {
 
   --border-color: var(--ansi-254);
   --blurry-background: rgba(255, 255, 255, 0.6);
+  --cant-blur-background: rgba(255, 255, 255, 0.9);
 
   --tab-foreground: #f4f4f4;
   --tab-background: #e5e5e5;

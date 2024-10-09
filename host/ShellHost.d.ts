@@ -31,8 +31,8 @@ export interface ShellHost {
   showBrowserView(params: { uuid: string }): void;
 
   close(params: {}): void;
-  positionPanel(params: { top: number, bottom: number, x: number}): void;
-  closeAllPopups(params: {}): void;
+  positionPanel(params: { top: number, bottom: number, x: number}): boolean;
+  destroyPopup(params: {}): void;
   resizePanel(params: {width: number, height: number}): void;
   sendMessageToCDP(params: {browserViewUUID?: string, message: any}): void;
   attachToCDP(params: {browserViewUUID?: string}): void;

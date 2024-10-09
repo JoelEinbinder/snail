@@ -1,5 +1,6 @@
 import { fontString } from "./font";
 import { host } from "./host";
+import { themeName } from "./theme";
 
 // TODO use https://www.electronjs.org/docs/latest/api/structures/display
 const nativeDPI = 2;
@@ -13,11 +14,8 @@ class ExternalGlassPane {
       // @ts-ignore
       return new InPageGlassPane(element);
     }
-    this.observer = new ResizeObserver(() => {
-      this._resize();
-    });
   }
-  _resize() {
+  resized() {
     if (!this.showing())
       return;
     const rect = this.element.getBoundingClientRect();
@@ -34,19 +32,19 @@ class ExternalGlassPane {
       return;
     window.addEventListener('blur', this.onBlur);
     this.window = window.open('', '', 'width=10,height=10');
-    this.observer.observe(this.element);
     for (const sheet of window.document.styleSheets)
       if (sheet.ownerNode instanceof Element)
         this.window.document.head.appendChild(sheet.ownerNode.cloneNode(true));
     this.window.document.body.appendChild(this.element);
     this.window.document.body.classList.add('glass-pane');
+    this.window.document.body.classList.add(themeName());
     this.window.document.body.style.setProperty('--current-font', fontString());
     // @ts-ignore
     this.window.document.body.style.zoom = window.devicePixelRatio / nativeDPI;
     this.window.onclose = () => {
       delete this.window;
     }
-    this._resize();
+    this.resized();
   }
 
   _cleanupWindow() {
@@ -69,14 +67,13 @@ class ExternalGlassPane {
     if (!this.showing())
       return;
     this._cleanupWindow();
-    this.observer.unobserve(this.element);
     host.sendMessage({
-      method: 'closeAllPopups',
+      method: 'destroyPopup',
       params: {}
     })
   }
-  position(x: number, top: number, bottom: number) {
-    host.sendMessage({
+  async position(x: number, top: number, bottom: number) {
+    const positionedAtBottom = await host.sendMessage({
       method: 'positionPanel',
       params: {
         x,
@@ -84,6 +81,7 @@ class ExternalGlassPane {
         bottom,        
       }
     });
+    this.element?.classList.toggle('positioned-at-bottom', positionedAtBottom);
   }
 }
 
@@ -93,6 +91,8 @@ class InPageGlassPane {
       this.element.style.top = '0';
       this.element.style.left = '0';
       this.element.style.zIndex = '9999';
+  }
+  resized() {
   }
   showing() {
       return !!this.element.parentElement;
@@ -115,6 +115,14 @@ class InPageGlassPane {
   }
 }
 
-export const GlassPlane = ('webkit' in window && !('snail' in window)) ? ExternalGlassPane : InPageGlassPane;
-// export const GlassPlane = InPageGlassPane;
+function supportsExternalGlassPane() {
+  const isMac = navigator['userAgentData']?.platform === 'macOS';
+  if ('electronAPI' in window && isMac)
+    return true;
+  if ('webkit' in window && !('snail' in window))
+    return true;
+  return false;
+}
+
+export const GlassPlane = supportsExternalGlassPane() ? ExternalGlassPane : InPageGlassPane;
 export type GlassPlane = ExternalGlassPane | InPageGlassPane;

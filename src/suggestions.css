@@ -1,10 +1,11 @@
 .description,
 .suggestions {
     background: var(--suggest-background);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: var(--suggest-backdrop);
+    -webkit-backdrop-filter: var(--suggest-backdrop);
 }
 .suggestions {
+    display: inline-block;
     border-radius: 3px;
     border: 1px solid var(--border-color);
     padding: 0;
@@ -17,11 +18,10 @@
     width: var(--suggest-width);
     text-overflow: ellipsis;
     height: fit-content;
+    vertical-align: bottom;
 }
-body.vscode-dark .description,
-body.vscode-dark .suggestions {
-    backdrop-filter: initial;
-    -webkit-backdrop-filter: initial;
+.positioned-at-bottom .suggestions {
+    vertical-align: top;
 }
 .suggestion {
     padding: 0 2px;
@@ -40,12 +40,20 @@ body.vscode-dark .suggestions {
     background: var(--suggest-selected);
 }
 .suggest-popup {
-    display: flex;
     --suggest-width: 160px;
     --description-width: 160px;
-    width: calc(var(--suggest-width) + var(--description-width) + 2px + 2px + 2px);
+    overflow: hidden;
+    white-space: nowrap;
+    position: absolute;
     --suggest-background: var(--blurry-background);
+    --suggest-backdrop: blur(4px);
 }
+body.glass-pane .suggest-popup,
+body.vscode-dark .suggest-popup {
+    --suggest-background: var(--cant-blur-background);
+    --suggest-backdrop: initial;
+}
+
 .suggest-popup[data-css-tag="python"] {
     --description-width: 480px;
 }
@@ -57,16 +65,20 @@ body.light .suggest-popup {
 }
 .suggest-popup[data-css-tag="history"] {
     --suggest-width: 320px;
-    --suggest-background: rgba(30, 0, 30, 0.7);
+}
+body.dark .suggest-popup[data-css-tag="history"] {
+    --suggest-background: rgba(30, 0, 30, 0.9);
     --suggest-selected: hsl(300, 8%, 20%);
 }
 body.light .suggest-popup[data-css-tag="history"] {
-    --suggest-background: hsla(300, 100%, 80%, 0.5);
+    --suggest-background: hsla(300, 100%, 83%, 0.9);
     --suggest-selected: hsl(300, 80%, 95%);
 } 
 .description {
     width: var(--description-width);
     flex: 1;
+    display: inline-block;
+    vertical-align: top;
     border-radius: 3px;
     border: 1px solid var(--border-color);
     margin-left: 2px;
@@ -81,6 +93,10 @@ body.light .suggest-popup[data-css-tag="history"] {
     white-space: pre;
     overflow: auto;
     max-height: 200px;
+    width: auto;
+    min-width: var(--suggest-width);
+    max-width: var(--description-width);
+    
 }
 .description:empty {
     visibility: hidden;
