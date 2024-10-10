@@ -141,6 +141,14 @@ class Runtime {
       },
       resize: (size) => {
         this._shell.resize(size.cols, size.rows);
+      },
+      env: (env) => {
+        for (const key in env) {
+          if (env[key] === null)
+            delete process.env[key];
+          else
+            process.env[key] = env[key];
+        }
       }
     }
   }

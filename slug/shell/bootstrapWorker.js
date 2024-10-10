@@ -46,12 +46,21 @@ const handler = {
     for (const transport of enabledTransports)
       transport.send({method: 'Shell.daemonStatus', params: {isDaemon}});
   },
-  'Shell.enable': async (params) => {
+  'Shell.enable': async ({args, env}) => {
+    for (const key in env)
+      process.env[key] = env[key];
     enabledTransports.add(transport);
     transport.send({method: 'Shell.daemonStatus', params: {isDaemon}});
     if (!objectIdPromise)
-      objectIdPromise = initObjectId(params);
+      objectIdPromise = initObjectId(args);
     await objectIdPromise;
+    await send('Runtime.callFunctionOn', {
+      objectId: await objectIdPromise,
+      functionDeclaration: `function(data) { return this(data); }`,
+      arguments: [{
+        value: {method: 'env', params: env}
+      }]
+    });
   },
   'Shell.disable': async (params) => {
     enabledTransports.delete(transport);
@@ -476,7 +485,7 @@ async function send(method, params) {
   });
 }
 
-async function initObjectId({args}) {
+async function initObjectId(args) {
   await send('Runtime.enable', {});
   await send('Runtime.addBinding', {
     name: 'magic_binding',

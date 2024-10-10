@@ -2,7 +2,11 @@ from matplotlib.backend_bases import (
      FigureCanvasBase, FigureManagerBase)
 from matplotlib.backends import backend_svg
 import matplotlib.pyplot as plt
+import os
+
 plt.ion()
+if 'SNAIL_THEME' in os.environ and os.environ['SNAIL_THEME'] == 'dark':
+    plt.style.use('dark_background')
 
 class FigureManagerTemplate(FigureManagerBase):
   def show(self) -> None:

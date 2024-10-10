@@ -19,7 +19,7 @@ type ExtraServerMethods = {
 type ServerMethods = Protocol.Events & ExtraServerMethods;
 
 export type ExtraClientMethods = {
-  'Shell.enable': (parmas: {args: string[]}) => void;
+  'Shell.enable': (params: {args: string[], env: {[key: string]: string}}) => void;
   'Shell.disable': () => void;
   'Shell.input': (params: {data: string, id: string|number}) => void;
   'Shell.resize': (params: {rows: number, cols: number}) => void;

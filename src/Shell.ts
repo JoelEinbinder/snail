@@ -27,6 +27,7 @@ import { somethingSelected } from './selection';
 import type { Runtime } from '../slug/shell/runtime-types';
 import type { Editor } from '../slug/editor/js/editor';
 import type { Action } from './actions';
+import { themeName } from './theme';
 
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
 const socketCloseListeners = new Map<number, () => void>();
@@ -542,7 +543,10 @@ export class Shell {
     this._connectionToDestroy.set(connection, destroy);
     await core.initialize();
     await connection.send('Shell.enable', {
-      args
+      args,
+      env: {
+        SNAIL_THEME: themeName(),
+      },
     });
     const resize = (size: {rows: number, cols: number}) => this.connection.send('Shell.resize', size);
     this._size.on(resize);
