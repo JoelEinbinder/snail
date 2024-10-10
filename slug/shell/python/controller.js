@@ -26,8 +26,7 @@ class PythonController {
         params: {payload: { method, params }}
       });
     }
-    this._startNewTerminal();
-    this._endTerminal(); // we shouldn't have any stdout on startup
+    this._terminalId = null; // we shouldn't have any stdout on startup. Sending startTerminal will clear the prompt
 
     this._stream.setEncoding('utf8');
     this._stream.on('error', e => {
@@ -40,16 +39,23 @@ class PythonController {
     let magicString = '';
     this._stream.on('data', d => {
       let data = last + d.toString();
+      const sendData = () => {
+        if (!this._terminalId)
+          this._startNewTerminal();
+        this._sendRuntimeNotification('data', {
+          id: this._terminalId,
+          data,
+        });
+      }
       if (threadCallback && data.slice(data.length - magicString.length).toString() === magicString) {
         data = data.slice(0, -magicString.length);
         if (data) {
-          this._sendRuntimeNotification('data', {
-            id: this._terminalId,
-            data,
-          });
+          sendData();
           last = '';
         }
-        threadCallback();
+        const cb = threadCallback;
+        threadCallback = null;
+        cb();
         return;
       }
       const magicMaybeStart = data.lastIndexOf(magicString[0]);
@@ -59,13 +65,8 @@ class PythonController {
       } else {
         last = '';
       }
-      if (data) {
-        this._sendRuntimeNotification('data', {
-          id: this._terminalId,
-          data,
-        });
-      }
-
+      if (data)
+        sendData();
     });
     this._threadStdio = async () => {
       const magicToken = String(Math.random());
@@ -79,6 +80,10 @@ class PythonController {
 
     this.process = spawn(this.pythonPath, [path.join(__dirname, 'runtime.py')], {
       stdio: [slave, slave, slave, 'pipe'],
+      env: {
+        ...process.env,
+        MPLBACKEND: 'module://_snail_plt_backend'
+      }
     });
     const socket = /** @type {import('net').Socket} */(this.process.stdio[3]);
     this._transport = new PipeTransport(socket, socket, '\n');
@@ -95,6 +100,7 @@ class PythonController {
 
   _endTerminal() {
     this._sendRuntimeNotification('endTerminal', { id: this._terminalId })
+    this._terminalId = null;
   }
 
   sendInput(data) {

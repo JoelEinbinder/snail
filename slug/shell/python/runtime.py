@@ -96,11 +96,17 @@ def remote_object_preview(obj):
 # listen for lines on stdio[3]
 connection = io.FileIO(3, 'r+')
 internal_globals = {}
+original_print = print
 def internal_print(*args, **kwargs):
   if kwargs:
-    return print(*args, **kwargs)
+    return original_print(*args, **kwargs)
   connection.write(bytes(json.dumps({'method': 'Runtime.consoleAPICalled', 'params': {'type': 'log', 'args': list(map(to_remote_object, args)) }}) + '\n', 'utf-8'))
 internal_globals["print"] = internal_print
+
+# add modules to path
+dirname = os.path.dirname(__file__)
+sys.path.append(os.path.join(dirname, 'modules'))
+
 while True:
   line = connection.readline()
   if not line:
@@ -116,6 +122,8 @@ while True:
     elif j['method'] == 'Runtime.evaluate':
       import_before = sys.path[0]
       sys.path[0] = os.getcwd()
+      if '_snail_plt_backend' in sys.modules:
+        sys.modules['_snail_plt_backend'].newCommandStarted()
       try:
         try:
           mode = 'eval'
@@ -127,6 +135,8 @@ while True:
         result = {'result': to_remote_object(value)} if mode == 'eval' else {'result': {'type': 'string', 'value': 'this is the secret secret string:0'}}
       except Exception as error:
         result = {'exceptionDetails': {'exception': to_remote_object(error)}}
+      if '_snail_plt_backend' in sys.modules:
+        sys.modules['_snail_plt_backend'].commandFinished()
       sys.path[0] = import_before
     elif j['method'] == 'Runtime.getProperties':
       properties = []
