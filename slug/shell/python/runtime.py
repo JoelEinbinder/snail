@@ -213,16 +213,26 @@ while True:
       elif import_complete:
         import pkgutil
         suggestions = list()
+        seen = set()
+        for module in sys.modules:
+          if module in seen:
+            continue
+          seen.add(module)
+          value = sys.modules[module]
+          if hasattr(value, '__doc__') and value.__doc__:
+            suggestions.append({"text": module, "description": value.__doc__})
+          else:
+            suggestions.append({"text": module})
+        
         import_before = sys.path[0]
         sys.path[0] = os.getcwd()
         for module in pkgutil.iter_modules():
-          suggestions.append(module.name)
+          if module.name not in seen:
+            suggestions.append({"text": module.name})
+            seen.add(module.name)
         sys.path[0] = import_before
-        for module in sys.modules:
-          if module not in suggestions:
-            suggestions.append(module)
         result = {
-          'suggestions': list(map(lambda x: { 'text': x, 'description': 'foo' }, suggestions)),
+          'suggestions': suggestions,
           'anchor': anchor
         }
       else:
