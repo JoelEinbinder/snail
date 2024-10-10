@@ -72,7 +72,7 @@ def remote_object_preview(obj):
         overflow = True
         break
       properties.append({
-        'name': key,
+        'name': str(key),
         'value': str(value),
         'type': value_to_cdp_type(value),
       })
@@ -145,7 +145,7 @@ while True:
         if isinstance(obj, dict):
           for key, value in obj.items():
             properties.append({
-              'name': key,
+              'name': str(key),
               'value': to_remote_object(value)
             })
         elif isinstance(obj, list) or isinstance(obj, set):
