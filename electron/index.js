@@ -6,6 +6,7 @@ const path = require('path');
 const os = require('os');
 reportTime('electron requires');
 const headless = process.argv.includes('--test-headless');
+const forceInteralGlassPane = process.argv.includes('--force-internal-glass-pane');
 let windowNumber = 0;
 if (headless)
   app.dock?.hide();
@@ -197,6 +198,7 @@ async function makeWindow() {
           width: 0,
           type: 'panel',
           parent: win,
+          show: !headless,
         }
       };
     }
@@ -234,14 +236,18 @@ async function makeWindow() {
     require('../electron-dev/').createDevServer().then(({url}) => {
       const parsed = new URL(url);
       parsed.searchParams.set('theme', theme);
+      if (forceInteralGlassPane)
+        parsed.searchParams.set('forceInteralGlassPane', forceInteralGlassPane);
       return win.loadURL(parsed.toString());
     });
   } else if (process.env.SNAIL_DEBUG_URL) {
     const parsed = new URL(process.env.SNAIL_DEBUG_URL);
     parsed.searchParams.set('theme', theme);
+    if (forceInteralGlassPane)
+      parsed.searchParams.set('forceInteralGlassPane', forceInteralGlassPane);
     win.loadURL(parsed.toString());
   } else {
-    win.loadFile(path.join(__dirname, 'index.html'), { query: { theme } });
+    win.loadFile(path.join(__dirname, 'index.html'), { query: { theme, forceInteralGlassPane } });
   }
   win.on('closed', () => windows.delete(win));
   windows.add(win);

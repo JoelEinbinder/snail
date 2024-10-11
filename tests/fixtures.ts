@@ -164,6 +164,7 @@ export const test = _test.extend<{
     if (headless)
       args.push('--test-headless');
     args.push('--no-first-window');
+    args.push('--force-internal-glass-pane');
     const app = await _electron.launch({
       args: [path.join(__dirname, '..'), ...args],
       cwd: workingDir,

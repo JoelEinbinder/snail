@@ -116,6 +116,9 @@ class InPageGlassPane {
 }
 
 function supportsExternalGlassPane() {
+  const forceInteralGlassPane = new URL(window.location.href).searchParams.get('forceInteralGlassPane');
+  if (forceInteralGlassPane)
+    return false;
   const isMac = navigator['userAgentData']?.platform === 'macOS';
   if ('electronAPI' in window && isMac)
     return true;
