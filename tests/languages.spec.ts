@@ -20,7 +20,6 @@ test('should execute with python', async ({ shell }) => {
     log: [
       '> print("python")',
       'python',
-      'None'
     ],
     prompt: { value: '' }
   });
@@ -83,7 +82,6 @@ test('should follow env changes in python', async ({ shell, workingDir }) => {
   expect(await shell.serialize()).toEqual({
     log: [
       '> os.getenv("FOO")',
-      'None',
       '> export FOO=bar',
       '> os.getenv("FOO")',
       "'bar'",
@@ -127,7 +125,6 @@ test('should remember language choice', async ({ shellFactory }) => {
     log: [
       '> print("i am python")',
       'i am python',
-      'None'
     ],
     prompt: { value: '' }
   });
@@ -145,7 +142,6 @@ test('should use the correct language for history', async ({ shell }) => {
     log: [
       '> print("python")',
       'python',
-      'None',
       '> echo bash',
       'bash',
       '> echo shjs',
@@ -170,7 +166,6 @@ test('should use the correct language for history', async ({ shell }) => {
     log: [
       '> print("python")',
       'python',
-      'None',
       '> echo bash',
       'bash',
       '> echo shjs',

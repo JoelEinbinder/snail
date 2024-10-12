@@ -29,6 +29,7 @@
     "esbuild": "^0.15.12",
     "expect": "^27.4.6",
     "get-port": "^5.1.1",
+    "pyodide": "^0.26.2",
     "read": "^2.1.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.5.5"

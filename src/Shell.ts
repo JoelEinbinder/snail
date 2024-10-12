@@ -65,7 +65,11 @@ interface ConnectionCore {
   readonly isRestoration: boolean;
 }
 
-const shellLanguages = ['shjs', 'bash', 'python', 'javascript'] as const;
+let shellLanguages = ['shjs', 'bash', 'python', 'javascript'] as const;
+declare var IS_REPL: boolean|undefined;
+if (typeof IS_REPL !== 'undefined' && IS_REPL)
+  // @ts-ignore
+  shellLanguages = ['python'] as const;
 export type Language = typeof shellLanguages[number];
 const languageToMode: {[key in Language]: string} = {
   'shjs': 'shjs',
@@ -100,7 +104,7 @@ export class Shell {
   private _leftoverStdin = '';
   private _lastCommandWasError = false;
   private _lastCommandWasNew = false;
-  private _language = new JoelEvent<Language>('shjs');
+  private _language = new JoelEvent<Language>(shellLanguages[0]);
   private _prompt: Editor|null = null;
   private _commandPrefix: Element|null = null;
   constructor(private _delegate: ShellDelegate) {
@@ -131,7 +135,6 @@ export class Shell {
 
   async _setupConnection(args: string[]) {
     const socketId = await host.sendMessage({ method: 'obtainWebSocketId' });
-
     socketCloseListeners.set(socketId, () => {
       core.onclose?.();
       socketListeners.delete(socketId);
@@ -552,7 +555,7 @@ export class Shell {
     this._size.on(resize);
     resize(this._size.current);
 
-    {
+    if (typeof IS_REPL === 'undefined' || !IS_REPL) {
       const {result, exceptionDetails} = await connection.send('Runtime.evaluate', {
         expression: `({env: {...process.env}, cwd: process.cwd()})`,
         returnByValue: true
@@ -626,12 +629,14 @@ export class Shell {
     if (this.connection)
       throw new Error('already has a connection');
     await this._setupConnection([]);
-    const { exitCode } = await this.connection.send('Shell.evaluate', {
-      code: 'reconnect --list --quiet',
-    });
-    if (exitCode === 0)
-      await this.runCommand('reconnect --list', 'shjs');
-    this._language.dispatch(await host.sendMessage({ method: 'loadItem', params: { key: 'language' }}) || 'shjs');
+    if (typeof IS_REPL === 'undefined' || !IS_REPL) {
+      const { exitCode } = await this.connection.send('Shell.evaluate', {
+        code: 'reconnect --list --quiet',
+      });
+      if (exitCode === 0)
+        await this.runCommand('reconnect --list', 'shjs');
+    }
+    this._language.dispatch(await host.sendMessage({ method: 'loadItem', params: { key: 'language' }}) || shellLanguages[0]);
     console.timeEnd('create shell');
     this._setupUnlock(); // prompt starts locked
     host.notify({ method: 'reportTime', params: {name: 'create shell' } });
@@ -642,6 +647,8 @@ export class Shell {
   }
 
   async globalVars(): Promise<Set<string>> {
+    if (typeof IS_REPL !== 'undefined' && IS_REPL)
+      return new Set();
     if (this._cachedGlobalVars)
       return this._cachedGlobalVars;
     try {
@@ -758,7 +765,7 @@ export class Shell {
     let error;
     const connection = this.connection;
     this._clearCache();
-    const result = await connection.send('Shell.runCommand', {
+    const result: ReturnType<ExtraClientMethods['Shell.runCommand']> = await connection.send('Shell.runCommand', {
       expression,
       command,
       language,
@@ -813,7 +820,8 @@ export class Shell {
     }
     if (this._activeItem.current === commandBlock)
       this._activeItem.dispatch(null);
-    this._addJSBlock(result, connection, commandBlock);
+    if (language !== 'python' || result.result?.type !== 'undefined')
+      this._addJSBlock(result, connection, commandBlock);
     this._lastCommandWasNew = isNewCommand;
     this._setActiveCommandBlock(null);
     delete this._activeCommandBlock;
@@ -833,6 +841,8 @@ export class Shell {
   }
 
   async _isNewCommand(command: string) {
+    if (typeof IS_REPL !== 'undefined' && IS_REPL)
+      return false;
     const pwd = await this.cachedEvaluation('pwd');
     return this._history.isNewCommand({ command, pwd, sshAddress: this.sshAddress });
   }
@@ -941,44 +951,46 @@ export class Shell {
         }
       }
       
-      const currentPwd = await this.cachedEvaluation('pwd');
       const items: MenuItem[] = [];
-      const currentBranch = await this.cachedEvaluation('__git_ref_name');
-      for (const pwd of recentCwd) {
-        items.push({
-          title: computePrettyDirName(this, pwd),
-          checked: pwd === currentPwd,
-          callback: currentPwd === pwd ? () => {} : async () => {
-            await this.connection.send('Runtime.evaluate', {
-              expression: `process.chdir(${JSON.stringify(pwd)})`,
-              returnByValue: true,
-            });
-            this._clearCache();
-            commandPrefix.render();
-          }
-        });
-      }
-      if (currentBranch) {
-        const branches = (await this.cachedEvaluation(`git for-each-ref --sort=-committerdate refs/heads/ '--format=%(refname:short)'`)).split('\n').filter(x => x);
+      if (typeof IS_REPL === 'undefined' || !IS_REPL) {
+        const currentPwd = await this.cachedEvaluation('pwd');
+        const currentBranch = await this.cachedEvaluation('__git_ref_name');
+        for (const pwd of recentCwd) {
+          items.push({
+            title: computePrettyDirName(this, pwd),
+            checked: pwd === currentPwd,
+            callback: currentPwd === pwd ? () => {} : async () => {
+              await this.connection.send('Runtime.evaluate', {
+                expression: `process.chdir(${JSON.stringify(pwd)})`,
+                returnByValue: true,
+              });
+              this._clearCache();
+              commandPrefix.render();
+            }
+          });
+        }
+        if (currentBranch) {
+          const branches = (await this.cachedEvaluation(`git for-each-ref --sort=-committerdate refs/heads/ '--format=%(refname:short)'`)).split('\n').filter(x => x);
+          items.push({});
+          items.push({
+            title: 'Switch Branch',
+            submenu: branches.map(branch => {
+              return {
+                title: branch,
+                checked: branch === currentBranch,
+                callback: currentBranch === branch ? () => {} : async () => {
+                  const evaluated = await this.evaluate(`git checkout ${JSON.stringify(branch)} || echo "could not checkout"`);
+                  if (evaluated.trim() === 'could not checkout')
+                    alert(`Could not checkout the branch ${JSON.stringify(branch)}.\n\nYou may need to commit or stash your changes first.`);
+                  this._clearCache();
+                  commandPrefix.render();
+                }
+              };
+            })
+          });
+        }
         items.push({});
-        items.push({
-          title: 'Switch Branch',
-          submenu: branches.map(branch => {
-            return {
-              title: branch,
-              checked: branch === currentBranch,
-              callback: currentBranch === branch ? () => {} : async () => {
-                const evaluated = await this.evaluate(`git checkout ${JSON.stringify(branch)} || echo "could not checkout"`);
-                if (evaluated.trim() === 'could not checkout')
-                  alert(`Could not checkout the branch ${JSON.stringify(branch)}.\n\nYou may need to commit or stash your changes first.`);
-                this._clearCache();
-                commandPrefix.render();
-              }
-            };
-          })
-        });
-      }
-      items.push({});
+      }      
       items.push({
         title: 'Shell Language',
         submenu: shellLanguages.map(language => {
@@ -1149,12 +1161,7 @@ export class Shell {
           connection: this.connection,
           antiFlicker,
           shouldLockPrompt: false,
-          notify: async (method, params) => {
-            // await this.connection.send('Shell.sendMessageToSubshell', {
-            //   id: result.id,
-            //   message: { method, params }
-            // });
-          },
+          sendInput: () => {throw new Error('shell preview should not have user input')},
           urlForIframe: this._urlForIframeForConncetion.get(this.connection)!,
           addItem: (item, focus) => {
             if (signal.aborted)
@@ -1298,6 +1305,8 @@ export class Shell {
   async _addToHistory(command: string, langauge: Language) {
     if (!command)
       return;
+    if (typeof IS_REPL !== 'undefined' && IS_REPL)
+      return this._history.addHistory(command, langauge);
     const [updateHistory, pwd, home, revName, dirtyState, hash] = await Promise.all([
       this._history.addHistory(command, langauge),
       this.cachedEvaluation('pwd'),

@@ -524,7 +524,6 @@ test('can start typing a comment', async ({ shell }) => {
 });
 
 test('can start a template', async ({ shell }) => {
-  shell.page.on('console', console.log);
   await shell.typeInPrompt('ls ${o');
   await shell.typeInPrompt('s');
   expect(await shell.serialize()).toEqual({

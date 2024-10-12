@@ -3,6 +3,7 @@ node_modules
 /TODO
 dist
 /esout
+/repl_out
 /slug-out
 
 /test-results/

@@ -122,7 +122,7 @@ def cdp_handler(method, params):
         mode = 'exec'
         compiled = compile(params['expression'], '<string>', 'exec')
       value = (eval if mode == 'eval' else exec)(params['expression'], internal_globals)
-      result = {'result': to_remote_object(value)} if mode == 'eval' else {'result': {'type': 'string', 'value': 'this is the secret secret string:0'}}
+      result = {'result': to_remote_object(value)}
     except Exception as error:
       result = {'exceptionDetails': {'exception': to_remote_object(error)}}
     if '_snail_plt_backend' in sys.modules:
@@ -233,13 +233,13 @@ def cdp_handler(method, params):
           return
         seen.add(key)
         if value_to_cdp_type(value) == 'object' and hasattr(value, '__doc__') and value.__doc__:
-          suggestions.append({"text": key,"description": value.__doc__})
+          suggestions.append({"text": key,"description": str(value.__doc__)})
         else:
           suggestions.append({"text": key})
       prefix = line[prefix_start:prefix_end]
       if (prefix == ''):
-        for key in dir(__builtins__):
-          add_suggestion(key, getattr(__builtins__, key))
+        for key, value in __builtins__.items():
+          add_suggestion(key, value)
         g = eval('globals()', internal_globals)
         for key in g:
           add_suggestion(key, g[key])
@@ -263,7 +263,7 @@ def cdp_handler(method, params):
       compile(code, '<string>', 'exec')
     except Exception as error:
       if error.lineno == len(lines) and error.offset == len(lines[-1]) + 1:
-        if error.msg == 'unexpected EOF while parsing' or error.msg == 'expected an indented block':
+        if error.msg.startswith('unexpected EOF while parsing') or error.msg.startswith('expected an indented block'):
           return True
     return False
   elif method == 'Python.updateFromOtherLanguage':

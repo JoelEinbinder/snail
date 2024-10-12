@@ -1,12 +1,15 @@
 import type { ShellHost } from '../host/ShellHost';
+import { REPLHost } from '../python_repl/REPLHost';
 export interface IHostAPI {
   sendMessage<Key extends keyof ShellHost>(message: {method: Key, params?: Parameters<ShellHost[Key]>[0]}): Promise<ReturnType<ShellHost[Key]>>;
   notify<Key extends keyof ShellHost>(message: {method: Key, params?: Parameters<ShellHost[Key]>[0]}): void;
   onEvent: (eventName: string, listener: (event: any) => void) => void;
   type(): string;
 }
-
+declare var IS_REPL: boolean|undefined;
 function makeHostAPI(): IHostAPI {
+  if (typeof IS_REPL !== 'undefined' && IS_REPL)
+    return new REPLHost();
   if ('electronAPI' in window)
     return window['electronAPI'] as IHostAPI;
   if ('acquireVsCodeApi' in window) {

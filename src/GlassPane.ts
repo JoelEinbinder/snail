@@ -108,10 +108,12 @@ class InPageGlassPane {
     const rect = this.element.getBoundingClientRect();
     const overflowTop = rect.height - top;
     const overflowBottom = (bottom + rect.height) - window.innerHeight;
-    const y =  (overflowBottom <= 0 || (overflowBottom < overflowTop)) ? bottom : top - rect.height;
+    const positionedAtBottom = (overflowBottom <= 0 || (overflowBottom < overflowTop));
+    const y = positionedAtBottom ? bottom : top - rect.height;
 
     this.element.style.left = x + 'px';
     this.element.style.top = y + 'px';
+    this.element?.classList.toggle('positioned-at-bottom', positionedAtBottom);
   }
 }
 

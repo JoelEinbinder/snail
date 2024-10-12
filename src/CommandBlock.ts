@@ -143,7 +143,7 @@ export class CommandBlock implements LogItem {
     }
   }
 }
-
+declare var IS_REPL: boolean|undefined;
 export class CommandPrefix {
   element = document.createElement('div');
   private _cleanup?: () => void;
@@ -152,10 +152,6 @@ export class CommandPrefix {
   }
   async render() {
     this.dispose();
-    const [revName, dirtyState] = await Promise.all([
-      this._shellOrCommand.cachedEvaluation('__git_ref_name'),
-      this._shellOrCommand.cachedEvaluation('__is_git_dirty'),
-    ]);
     const sshAddress = this._shellOrCommand.sshAddress;
     const colors = themeName() === 'dark' ? {
       path: sshAddress? 112 : 32,
@@ -184,7 +180,14 @@ export class CommandPrefix {
       this.element.addEventListener('mousedown', this._onClick);
       this.element.addEventListener('contextmenu', this._onClick);
     }
-    const GitStatus = revName ? Color(colors.paren,"(", Color(colors.gitName, revName), Color(colors.gitStatus, dirtyState ? '*' : ''), ")") : '';
+    let GitStatus: string|Node = '';
+    if (typeof IS_REPL === 'undefined' || !IS_REPL) {
+      const [revName, dirtyState] = await Promise.all([
+        this._shellOrCommand.cachedEvaluation('__git_ref_name'),
+        this._shellOrCommand.cachedEvaluation('__is_git_dirty'),
+      ]);
+      GitStatus = revName ? Color(colors.paren,"(", Color(colors.gitName, revName), Color(colors.gitStatus, dirtyState ? '*' : ''), ")") : '';
+    }
     const renderInner = () => {
       this.element.textContent = '';
       const badge = makeVenvBadge(this._shellOrCommand) || '';
@@ -192,6 +195,8 @@ export class CommandPrefix {
       arrow.classList.add('arrow');
       const language = Color(colors.language, ' ');
       language.classList.add('language');
+      if (typeof IS_REPL !== 'undefined' && IS_REPL)
+        language.style.display = 'none';
       const layouts: (string | Node)[][] = [
         [dir, GitStatus, badge, language, arrow],
         [mediumDir, GitStatus, badge, language, arrow],

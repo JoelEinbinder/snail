@@ -49,7 +49,7 @@ export type ExtraClientMethods = {
   'Protocol.abort': (params: { id: number }) => void;
 }
 
-type ClientMethods = {
+export type ClientMethods = {
   [key in keyof Protocol.CommandParameters]: (params: Protocol.CommandParameters[key]) => Protocol.CommandReturnValues[key];
 } & ExtraClientMethods;
 

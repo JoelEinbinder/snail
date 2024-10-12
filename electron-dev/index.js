@@ -3,10 +3,10 @@ const http = require('http');
 /** @type {Map<string, import('esbuild').OutputFile>} */
 const compiledFiles = new Map();
 
-async function createDevServer(entryPoint = path.join(__dirname, '..', 'src', 'index.ts')) {
+async function createDevServer(entryPoint = path.join(__dirname, '..', 'src', 'index.ts'), isREPL = false) {
   const server = http.createServer(async (req, res) => {
     try {
-      const response = await getFileForURL(new URL('http://localhost' + req.url), entryPoint);
+      const response = await getFileForURL(new URL('http://localhost' + req.url), entryPoint, isREPL);
       const headers = response.headers || {};
       headers['Content-Type'] = response.mimeType;
       res.writeHead(response.statusCode, headers);
@@ -32,22 +32,28 @@ async function createDevServer(entryPoint = path.join(__dirname, '..', 'src', 'i
 /**
  * @param {URL} url
  * @param {string} entryPoint
+ * @param {boolean} isREPL
  */
-async function getFileForURL(url, entryPoint) {
+async function getFileForURL(url, entryPoint, isREPL) {
   const {searchParams, pathname} = url;
   if (searchParams.has('entry')) {
     const esbuild = require('esbuild');
+    const define = {};
+    const entryPoints = [entryPoint];
+    if (isREPL) {
+      define.IS_REPL = 'true';
+      entryPoints.push(path.join(__dirname, '..', 'python_repl', 'python.worker.ts'));
+    }
     const server = await esbuild.build({
       bundle: true,
       write: false,
-      entryPoints: [entryPoint],
+      allowOverwrite: true,
+      entryPoints,
       loader: {
         '.woff': 'file',
         '.svg': 'file',
+        '.py': 'text',
       },
-      assetNames: '[name]-[hash]',
-      chunkNames: '[name]-[hash]',
-      entryNames: '[name]-[hash]',
       sourcemap: true,
       format: 'esm',
       // TODO find a way to do this without creating zombie processes
@@ -55,9 +61,11 @@ async function getFileForURL(url, entryPoint) {
       // incremental: true,
       metafile: true,
       logLevel: 'error',
-      outdir: path.dirname(entryPoint),
+      outdir: path.dirname(entryPoint, '..', 'fake-electron-dev-out'),      
       absWorkingDir: '/',
       watch: false,
+      treeShaking: true,
+      define
     });
     for (const file of server.outputFiles)
       compiledFiles.set(file.path, file);

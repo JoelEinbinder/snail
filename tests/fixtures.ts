@@ -27,11 +27,13 @@ export const test = _test.extend<{
   populateFilesystem: (files: { [filePath: string]: string }) => Promise<void>;
   runtime: import('../slug/shell/runtime.js').Runtime;
   chart: ChartModel;
+  repl: ShellModel
 }, {
   imageId: string|null;
   slugURL: string;
   nodeURL: string;
   chartURL: string;
+  replURL: string
 }>({
   workingDir: async ({ }, use) => {
     const workingDir = test.info().outputPath('working-dir');
@@ -298,8 +300,31 @@ export const test = _test.extend<{
     await page.goto(chartURL);
     await use(await ChartModel.create(page));
   },
+  repl: async ({ page, replURL }, use) => {
+    const logs: string[] = [];
+    page.on('console', log => logs.push(log.text()));
+    await page.goto(replURL);
+    const repl = await ShellModel.create(page);
+    await use(repl);
+    const waits = (await repl.currentWaits()).join('\n');
+    if (waits) {
+      test.info().attach('waits', {
+        body: waits,
+      });
+    }
+    if (logs.length) {
+      test.info().attach('console', {
+        body: logs.join('\n'),
+      });      
+    }
+  },
   chartURL: [async ({}, use) => {
     const {url, close} = await createDevServer(path.join(__dirname, './chartEntry.ts'));
+    await use(url);
+    close();
+  }, { scope: 'worker' }],
+  replURL: [async ({}, use) => {
+    const {url, close} = await createDevServer(undefined, true);
     await use(url);
     close();
   }, { scope: 'worker' }],
