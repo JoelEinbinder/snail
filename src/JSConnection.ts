@@ -27,7 +27,8 @@ export type ExtraClientMethods = {
   'Shell.evaluate': (params: {code: string}) => {result: string, exitCode: number};
   'Shell.evaluateStreaming': (params: {code: string}) => {streamId: number};
   'Shell.runCommand': (params: {command: string, expression: string, language: 'shjs'|'javascript'|'python'|'bash'}) => Protocol.CommandReturnValues['Runtime.evaluate'];
-  'Shell.previewCommand': (params: {command: string}) => { result: Protocol.CommandReturnValues['Runtime.evaluate'], notifications: any[]};
+  'Shell.previewShellCommand': (params: {command: string}) => { result: Protocol.CommandReturnValues['Runtime.evaluate'], notifications: any[]};
+  'Shell.previewExpression': (params: { expression: string, language: 'shjs'|'javascript'|'python'|'bash'}) => Protocol.Runtime.RemoteObject|null;
   'Shell.restore': () => Protocol.CommandReturnValues['Runtime.evaluate']|null;
   'Shell.setCwd': (params: {cwd: string}) => void; // this can be run before Shell.enable
 

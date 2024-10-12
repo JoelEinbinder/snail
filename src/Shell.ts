@@ -690,7 +690,9 @@ export class Shell {
     return code;
   }
   async _isShellLikeCode(code: string, language: Language) {
-    if (language !== 'shjs' && language !== 'bash')
+    if (language === 'bash')
+      return true;
+    if (language !== 'shjs')
       return false;
     const { isShellLike } = await import('../slug/shjs/transform');
     return isShellLike(code, await this.globalVars());
@@ -1121,7 +1123,7 @@ export class Shell {
     }
     let dontCancelLLM = false;
     const onChange = wrapAsyncFunction('shell preview', async () => {
-      if (this._language.current !== 'shjs' && this._language.current !== 'javascript')
+      if (this._language.current === 'bash')
         return;
       if (!dontCancelLLM)
         this._delegate.cancelLLMRequest();
@@ -1143,7 +1145,7 @@ export class Shell {
       if (isShellLike) {
         if (signal.aborted)
           return;
-        const {result, notifications} = await this.connection.send('Shell.previewCommand', {
+        const {result, notifications} = await this.connection.send('Shell.previewShellCommand', {
           command: value,
         }, signal);
         await new Promise(requestAnimationFrame);
@@ -1198,7 +1200,7 @@ export class Shell {
           item.dispose();
         return;
       }
-      const code = preprocessForJS(await this._transformCode(value, this._language.current));
+      const code = await this._transformCode(value, this._language.current);
       // throttle a bit
       await new Promise(requestAnimationFrame);
       if (signal.aborted)
@@ -1207,30 +1209,16 @@ export class Shell {
         clearBelowPrompt();
         return;
       }
-      const result = await this.connection.send('Runtime.evaluate', {
+      const result = await this.connection.send('Shell.previewExpression', {
         expression: code,
-        replMode: true,
-        returnByValue: false,
-        generatePreview: true,
-        userGesture: true,
-        allowUnsafeEvalBlockedByCSP: true,
-        throwOnSideEffect: /^[\.A-Za-z0-9_\s]*$/.test(code) ? false : true,
-        timeout: 1000,
-        objectGroup: 'eager-eval',
+        language: this._language.current,
       });
       if (signal.aborted)
         return;
       clearBelowPrompt();
-      void this.connection.send('Runtime.releaseObjectGroup', {
-        objectGroup: 'eager-eval',
-      });
-      if (result.exceptionDetails) {
-        if (result.exceptionDetails?.exception?.className === 'SyntaxError')
-          return;
-        if (result.exceptionDetails?.exception?.className === 'EvalError')
-          return;
-      }
-      belowPrompt.append(renderRemoteObjectOneLine(result.exceptionDetails ? result.exceptionDetails.exception : result.result, this._size.current.cols));
+      if (!result)
+        return;
+      belowPrompt.append(renderRemoteObjectOneLine(result, this._size.current.cols));
     });
 
     const willResizeEvent = new JoelEvent<void>(undefined);

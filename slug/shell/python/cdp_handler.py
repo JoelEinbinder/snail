@@ -1,6 +1,7 @@
 import sys
 import keyword
 import os
+import re
 
 remote_objects = dict()
 last_object_id = 0
@@ -121,7 +122,7 @@ def cdp_handler(method, params):
       except:
         mode = 'exec'
         compiled = compile(params['expression'], '<string>', 'exec')
-      value = (eval if mode == 'eval' else exec)(params['expression'], internal_globals)
+      value = (eval if mode == 'eval' else exec)(compiled, internal_globals)
       result = {'result': to_remote_object(value)}
     except Exception as error:
       result = {'exceptionDetails': {'exception': to_remote_object(error)}}
@@ -191,7 +192,7 @@ def cdp_handler(method, params):
         elif token.type == tokenize.OP:
           can_complete = True
           prefix_start = token.end[1]
-        elif token.type == tokenize.INDENT:
+        elif token.type == tokenize.INDENT or token.type == tokenize.STRING or token.type == tokenize.NUMBER:
           pass
         else:
           can_complete = False
@@ -274,5 +275,17 @@ def cdp_handler(method, params):
     elif method == 'env':
       for key, value in params.items():
         os.environ[key] = value
+  elif method == 'Shell.previewExpression':
+    internal_globals['log_me'] = method
+    if not re.match(r'^[\.A-Za-z0-9_\s\+\-\/\*\'\"\{\}\[\]\:]*$', params['expression']):
+      return None
+    try:
+      compile(params['expression'], '<string>', 'eval')
+    except:
+      return None
+    evaluation_result = cdp_handler('Runtime.evaluate', {'expression': params['expression']})
+    if 'exceptionDetails' in evaluation_result:
+      return None
+    return evaluation_result['result']
   else:
     raise Exception('Unknown method ' + method)

@@ -195,7 +195,7 @@ const handler = {
     }
     return result;
   },
-  'Shell.previewCommand': async ({command}, signal) => {
+  'Shell.previewShellCommand': async ({command}, signal) => {
     const previewToken = ++lastPreviewToken;
     const notifications = [];
     const abort = () => send('Runtime.evaluate', {
@@ -216,6 +216,35 @@ const handler = {
     signal.removeEventListener('abort', abort);
     previewResults.delete(previewToken);
     return {result, notifications};
+  },
+  'Shell.previewExpression': async ({expression, language}, signal) => {
+    if (language === 'javascript' || language === 'shjs') {
+      const result = await send('Runtime.evaluate', {
+        expression,
+        replMode: true,
+        returnByValue: false,
+        generatePreview: true,
+        userGesture: true,
+        allowUnsafeEvalBlockedByCSP: true,
+        throwOnSideEffect: /^[\.A-Za-z0-9_\s]*$/.test(expression) ? false : true,
+        timeout: 1000,
+        objectGroup: 'eager-eval',
+      });
+      void send('Runtime.releaseObjectGroup', {
+        objectGroup: 'eager-eval',
+      });
+      if (result.exceptionDetails) {
+        if (result.exceptionDetails?.exception?.className === 'SyntaxError')
+          return null;
+        if (result.exceptionDetails?.exception?.className === 'EvalError')
+          return null;
+      }
+      return result.exceptionDetails ? result.exceptionDetails.exception : result.result;
+    } else if (language === 'python') {
+      return getOrCreatePythonController().send('Shell.previewExpression', {expression});
+    } else {
+      throw new Error('Unsupported preview language: ' + language);
+    }
   },
   'Shell.resolveFileForIframe': async (params) => {
     if (params.shellIds.length) {
