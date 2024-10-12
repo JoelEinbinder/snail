@@ -87,11 +87,15 @@ export class SuggestBox {
         return suggestionDiv;
     }
     onKeyDown(event: KeyboardEvent): boolean {
+        if (event.ctrlKey || event.metaKey)
+            return false;
         const suggestion = this._selectedSuggestion || this._suggestions[0];
         if (suggestion.activations && event.key in suggestion.activations) {
             this._onPick({text: suggestion.activations[event.key]});
             return true;
         }
+        if (event.shiftKey || event.altKey)
+            return false;
         switch(event.key) {
             case 'ArrowUp':
                 this._moveSelection(-1);
