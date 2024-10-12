@@ -40,9 +40,18 @@ async function getFileForURL(url, entryPoint, isREPL) {
     const esbuild = require('esbuild');
     const define = {};
     const entryPoints = [entryPoint];
+    // the hash is used to invalidate the cache
+    // but it stops you from being able to create a worker
+    // via a hard coded url. So we don't use it in the REPL
+    let hashThings = {
+      assetNames: '[name]-[hash]',
+      chunkNames: '[name]-[hash]',
+      entryNames: '[name]-[hash]',
+    };
     if (isREPL) {
       define.IS_REPL = 'true';
       entryPoints.push(path.join(__dirname, '..', 'python_repl', 'python.worker.ts'));
+      hashThings = {};
     }
     const server = await esbuild.build({
       bundle: true,
@@ -54,6 +63,7 @@ async function getFileForURL(url, entryPoint, isREPL) {
         '.svg': 'file',
         '.py': 'text',
       },
+      ...hashThings,
       sourcemap: true,
       format: 'esm',
       // TODO find a way to do this without creating zombie processes
