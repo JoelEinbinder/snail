@@ -16,3 +16,4 @@ dist
 
 tsconfig.tsbuildinfo
 .vscode
+__pycache__

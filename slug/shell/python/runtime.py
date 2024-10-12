@@ -1,6 +1,10 @@
 import json
 import io
 from cdp_handler import cdp_handler, convert_print_to_console
+import termios
+import fcntl
+import sys
+fcntl.ioctl(sys.stdout.fileno(), termios.TIOCSCTTY, 0)
 
 connection = io.FileIO(3, 'r+')
 convert_print_to_console(lambda message: connection.write(bytes(json.dumps(message) + '\n', 'utf-8')))

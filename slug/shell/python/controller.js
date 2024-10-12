@@ -80,6 +80,7 @@ class PythonController {
 
     this.process = spawn(this.pythonPath, [path.join(__dirname, 'runtime.py')], {
       stdio: [slave, slave, slave, 'pipe'],
+      detached: true,
       env: {
         ...process.env,
         MPLBACKEND: 'module://_snail_plt_backend'
