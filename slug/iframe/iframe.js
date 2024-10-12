@@ -183,7 +183,7 @@ window.addEventListener('keydown', event => {
   }
   // Synthetic copy
   if (event.shiftKey && event.code === 'KeyC') {
-    const isMac = navigator['userAgentData']?.platform === 'macOS';
+    const isMac = navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
     if (!isMac) {
       const text = window.getSelection();
       if (text)

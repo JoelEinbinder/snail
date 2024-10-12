@@ -1066,7 +1066,7 @@ export class Shell {
         editor.value = '';
         await this.runCommand(command, this._language.current);
       } else if (event.code === 'KeyC' && event.ctrlKey) {
-        const isMac = navigator['userAgentData']?.platform === 'macOS';
+        const isMac = navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
         if (isMac || !somethingSelected()) {
           const commandBlock = new CommandBlock(
             editor.value,

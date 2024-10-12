@@ -27,7 +27,7 @@ export function somethingSelected() {
 document.addEventListener('keydown', event => {
   if (event.code !== 'KeyC' || !event.shiftKey)
     return;
-  const isMac = navigator['userAgentData']?.platform === 'macOS';
+  const isMac = navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
   if (isMac)
     return;
   if (event.defaultPrevented)

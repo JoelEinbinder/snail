@@ -9,7 +9,7 @@ import { FilePathScoreFunction } from './FilePathScoreFunction';
 import { setSelection } from './selection';
 import { AntiFlicker } from './AntiFlicker';
 export let activePick: QuickPick | undefined;
-const isMac = navigator['userAgentData']?.platform === 'macOS';
+const isMac = navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
 interface QuickPickItem {
   title: string;
   shortcut?: string;

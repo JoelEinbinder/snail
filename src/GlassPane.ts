@@ -121,7 +121,7 @@ function supportsExternalGlassPane() {
   const forceInteralGlassPane = new URL(window.location.href).searchParams.get('forceInteralGlassPane');
   if (forceInteralGlassPane)
     return false;
-  const isMac = navigator['userAgentData']?.platform === 'macOS';
+  const isMac = navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
   if ('electronAPI' in window && isMac)
     return true;
   if ('webkit' in window && !('snail' in window))

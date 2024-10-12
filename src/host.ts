@@ -144,7 +144,8 @@ function hostApiHelper(type: string, postMessage: (message: any) => void) {
 
 export const host = makeHostAPI();
 document.body.classList.toggle(`${host.type()}-host`, true);
-document.body.classList.toggle(`${String(navigator['userAgentData']?.platform).toLocaleLowerCase()}-platform`, true);
+const isMac = navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
+document.body.classList.toggle(`${String((isMac ? 'macOS' : navigator['userAgentData']?.platform)).toLocaleLowerCase()}-platform`, true);
 host.onEvent('log', args => console.log(...args));
 
 /** @type {Map<number, CustomAsyncIterator>} */

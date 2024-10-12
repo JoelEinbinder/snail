@@ -29,7 +29,7 @@ export function makeChordShortcut(shortcut: string) {
 let continuationActions: {shortcut: ParsedShortcut, action: Action}[] = null;
 
 export function getCurrentShortcutActions() {
-  const isMac = navigator['userAgentData']?.platform === 'macOS';
+  const isMac = navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
   return  continuationActions ? continuationActions : availableActions().filter(x => x.shortcut).map(x => {
     return {shortcut: shortcutParser(x.shortcut, isMac), action: x};
   });
