@@ -629,7 +629,7 @@ export class Shell {
   async setupInitialConnection() {
     if (this.connection)
       throw new Error('already has a connection');
-    if (typeof IS_REPL !== 'undefined' && !IS_REPL) {
+    if (typeof IS_REPL !== 'undefined' && IS_REPL) {
       const closedIntro = await host.sendMessage({ method: 'loadItem', params: { key: 'closedIntro' }});
       if (!closedIntro)
         this.addItem(new IntroBlock());
