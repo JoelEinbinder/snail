@@ -108,7 +108,11 @@ class REPL implements ShellHostInterface {
     const str = localStorage.getItem('snail-repl-' + key);
     if (!str)
       return undefined;
-    return JSON.parse(str);
+    try {
+      return JSON.parse(str);
+    } catch {
+      return undefined;
+    }
   }
   async saveItem({key, value}) {
     localStorage.setItem('snail-repl-' + key, JSON.stringify(value));

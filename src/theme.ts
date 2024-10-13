@@ -8,11 +8,13 @@ export function themeName(): 'light'|'dark' {
     if (theme !== 'dark' && theme !== 'light') {
         if (typeof IS_REPL !== 'undefined' && IS_REPL) {
             const hasTheme = localStorage.getItem('snail-repl-theme');
-            if (!hasTheme) {
-                const wantsDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                return wantsDark ? 'dark' : 'light';
+            if (hasTheme) {
+                try {
+                    return JSON.parse(hasTheme);
+                } catch {}
             }
-            return JSON.parse(hasTheme);
+            const wantsDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            return wantsDark ? 'dark' : 'light';
         }
         return 'dark';
     }
