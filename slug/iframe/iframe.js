@@ -297,7 +297,7 @@ async function attachToCDP(listener) {
 }
 
 window.addEventListener('contextmenu', event => {
-  if (event.defaultPrevented)
+  if (event.defaultPrevented || document.body.classList.contains('repl-host'))
     return;
   createContextMenu([{
     title: 'Inspect Me',

@@ -23,7 +23,7 @@ export class REPLHost implements IHostAPI {
     this._listeners.get(eventName)!.add(listener);
   }
   type(): string {
-    return 'game';
+    return 'repl';
   }  
 }
 
@@ -38,7 +38,7 @@ class REPL implements ShellHostInterface {
     return ++lastWebSocketId;
   }
   async createJSShell(params: { cwd: string; socketId: number; }): Promise<{ nodePath: string; bootstrapPath: string; }> {
-    this._shells.set(params.socketId, await makeGameShellHandler((eventName: string, data: any) => this._sendEvent('websocket', { socketId: params.socketId, message: { method: eventName, params: data } })));
+    this._shells.set(params.socketId, await makeReplShellHandler((eventName: string, data: any) => this._sendEvent('websocket', { socketId: params.socketId, message: { method: eventName, params: data } })));
     return {
       bootstrapPath: '',
       nodePath: '',
@@ -72,9 +72,7 @@ class REPL implements ShellHostInterface {
   async close() { }
   async beep() { }
   async urlForIFrame(params: {shellIds: number[], filePath: string}) {
-    const url = new URL('game-iframe.html', self.location.href);
-    url.searchParams.set('game', '1');
-    url.searchParams.set('iframe', params.filePath);
+    const url = new URL('./python_repl/matplotlib-iframe.html', self.location.href);
     return url.href;
   };
   async reportTime(name) {
@@ -89,7 +87,7 @@ class REPL implements ShellHostInterface {
 
 }
 type ShellHandler = <T extends keyof ClientMethods>(method: T, params: Parameters<ClientMethods[T]>[0]) => Promise<ReturnType<ClientMethods[T]>>;
-async function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void): Promise<ShellHandler> {
+async function makeReplShellHandler(sendEvent: (eventName: string, data: any) => void): Promise<ShellHandler> {
   const url = new URL('../python_repl/python.worker.js', import.meta.url);
   
   const worker = new Worker(url.href, {type: 'module'});
@@ -114,8 +112,6 @@ async function makeGameShellHandler(sendEvent: (eventName: string, data: any) =>
   };
   
   const handler: Handler = {
-    'Shell.enable': async (params) => {
-    },
     'Shell.resize': async (params) => {
     },
     'Shell.input': async (params) => {

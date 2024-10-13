@@ -3,10 +3,18 @@ import type {Runtime} from '../slug/shell/runtime-types';
 import 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js'
 import runtimeSource from './runtime.py';
 import cdpHandlerSource from '../slug/shell/python/cdp_handler.py';
+import pltBackendSource from '../slug/shell/python/modules/_snail_plt_backend.py';
+
 declare var loadPyodide: typeof import('pyodide').loadPyodide;
 const pyodide = await loadPyodide({
+  env: {
+    MPLBACKEND: 'module://_snail_plt_backend',
+  }
 });
 pyodide.FS.writeFile('cdp_handler.py', cdpHandlerSource);
+pyodide.FS.mkdir('modules');
+pyodide.FS.writeFile('modules/_snail_plt_backend.py', pltBackendSource);
+
 let lastTerminalId = 0;
 
 class StdinCooker {

@@ -15,6 +15,7 @@ try {
   const define = {};
   if (repl) {
     entryPoints.push(path.join(__dirname, '..', 'python_repl', 'python.worker.ts'));
+    entryPoints.push(path.join(__dirname, '..', 'slug', 'shell', 'python', 'modules', 'web.ts'));
     define.IS_REPL = 'true';
   }
 

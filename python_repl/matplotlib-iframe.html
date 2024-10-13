@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../slug/iframe/iframe.css">
+<script src="../slug/iframe/iframe.js" type="module"></script>
+</head>
+<body>
+<script>
+  const searchParams = new URLSearchParams(window.location.search);
+  document.body.className = searchParams.get('class');
+  document.body.setAttribute('style', searchParams.get('css'));
+</script>
+<script src="../repl_out/slug/shell/python/modules/web.js" type="module"></script>
+</body>
+</html>

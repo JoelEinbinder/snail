@@ -20,6 +20,14 @@ def newCommandStarted():
    global shown
    shown = False
 
+def draw_if_interactive():
+  import matplotlib
+  from matplotlib import _pylab_helpers
+  # this is called by older versions of matplotlib
+  if matplotlib.is_interactive():
+    manager = _pylab_helpers.Gcf.get_active()
+    if manager:
+      manager.canvas.draw_idle()
 
 messagesToSend = []
 

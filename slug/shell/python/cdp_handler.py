@@ -296,5 +296,11 @@ def cdp_handler(method, params):
     if 'exceptionDetails' in evaluation_result:
       return None
     return evaluation_result['result']
+  elif method == 'Shell.enable':
+    # we only get here in REPL mode
+    # set the env
+    for key,value in params['env'].items():
+      os.environ[key] = value
+    return None
   else:
     raise Exception('Unknown method ' + method)
