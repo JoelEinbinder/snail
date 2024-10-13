@@ -1,3 +1,8 @@
+function computeIsMac() {
+  // hacky lazy compute so that we can use this file from node in tests
+  return navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
+}
+
 export type ParsedShortcut = {
   ctrlKey?: boolean;
   metaKey?: boolean;
@@ -6,7 +11,7 @@ export type ParsedShortcut = {
   key: string;
   continuation?: ParsedShortcut;
 }
-export function shortcutParser(shortcut: string, isMac: boolean): ParsedShortcut {
+export function shortcutParser(shortcut: string, isMac = computeIsMac()): ParsedShortcut {
   const parsed: ParsedShortcut = {
     key: '',
   };
@@ -47,4 +52,35 @@ export function shortcutParser(shortcut: string, isMac: boolean): ParsedShortcut
   if (!buffer)
     throw new Error('Invalid shortcut: ' + shortcut);
   return parsed;
+}
+export function formatShortcut(shortcut: ParsedShortcut) {
+  const isMac = computeIsMac();
+  const parts = [];
+  if (isMac) {
+    if (shortcut.metaKey)
+      parts.push('⌘');
+    if (shortcut.ctrlKey)
+      parts.push('⌃');
+    if (shortcut.altKey)
+      parts.push('⌥');
+    if (shortcut.shiftKey)
+      parts.push('⇧');
+  } else {
+    if (shortcut.metaKey)
+      parts.push('Win');
+    if (shortcut.ctrlKey)
+      parts.push('Ctrl');
+    if (shortcut.altKey)
+      parts.push('Alt');
+    if (shortcut.shiftKey)
+      parts.push('Shift');
+  }
+  if (isMac && shortcut.key === 'Tab')
+    parts.push('⇥');
+  else
+    parts.push(shortcut.key);
+  const joined = parts.join(' ');
+  if (!shortcut.continuation)
+    return joined;
+  return joined + ' ' + formatShortcut(shortcut.continuation);
 }

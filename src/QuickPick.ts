@@ -1,7 +1,7 @@
 import './quickPick.css'
 import { diff_match_patch, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from './diff_match_patch';
 import { availableActions, registerGlobalAction, Action } from './actions';
-import { type ParsedShortcut, shortcutParser } from './shortcutParser';
+import { type ParsedShortcut, shortcutParser, formatShortcut } from './shortcutParser';
 import { rootBlock } from './GridPane';
 import { startAsyncWork } from './async';
 import { setBrowserViewsHidden } from './BrowserView';
@@ -9,7 +9,6 @@ import { FilePathScoreFunction } from './FilePathScoreFunction';
 import { setSelection } from './selection';
 import { AntiFlicker } from './AntiFlicker';
 export let activePick: QuickPick | undefined;
-const isMac = navigator['userAgentData']?.platform === 'macOS' || navigator.platform === 'MacIntel';
 interface QuickPickItem {
   title: string;
   shortcut?: string;
@@ -163,7 +162,7 @@ class QuickPick {
           if (shortcut) {
             const shortcutElement = document.createElement('span');
             shortcutElement.classList.add('shortcut');
-            shortcutElement.textContent = formatShortcut(shortcutParser(shortcut, isMac));
+            shortcutElement.textContent = formatShortcut(shortcutParser(shortcut));
             element.append(shortcutElement);
           }
         }
@@ -269,33 +268,3 @@ registerGlobalAction({
 //   });
 //   module.hot.accept();
 // }
-function formatShortcut(shortcut: ParsedShortcut) {
-  const parts = [];
-  if (isMac) {
-    if (shortcut.metaKey)
-      parts.push('⌘');
-    if (shortcut.ctrlKey)
-      parts.push('⌃');
-    if (shortcut.altKey)
-      parts.push('⌥');
-    if (shortcut.shiftKey)
-      parts.push('⇧');
-  } else {
-    if (shortcut.metaKey)
-      parts.push('Win');
-    if (shortcut.ctrlKey)
-      parts.push('Ctrl');
-    if (shortcut.altKey)
-      parts.push('Alt');
-    if (shortcut.shiftKey)
-      parts.push('Shift');
-  }
-  if (isMac && shortcut.key === 'Tab')
-    parts.push('⇥');
-  else
-    parts.push(shortcut.key);
-  const joined = parts.join(' ');
-  if (!shortcut.continuation)
-    return joined;
-  return joined + ' ' + formatShortcut(shortcut.continuation);
-}

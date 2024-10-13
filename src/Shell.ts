@@ -28,6 +28,7 @@ import type { Runtime } from '../slug/shell/runtime-types';
 import type { Editor } from '../slug/editor/js/editor';
 import type { Action } from './actions';
 import { themeName } from './theme';
+import { IntroBlock } from './IntroBlock';
 
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
 const socketCloseListeners = new Map<number, () => void>();
@@ -628,6 +629,11 @@ export class Shell {
   async setupInitialConnection() {
     if (this.connection)
       throw new Error('already has a connection');
+    if (typeof IS_REPL !== 'undefined' && !IS_REPL) {
+      const closedIntro = await host.sendMessage({ method: 'loadItem', params: { key: 'closedIntro' }});
+      if (!closedIntro)
+        this.addItem(new IntroBlock());
+    }
     await this._setupConnection([]);
     if (typeof IS_REPL === 'undefined' || !IS_REPL) {
       const { exitCode } = await this.connection.send('Shell.evaluate', {

@@ -16,7 +16,7 @@ export interface ShellHost {
   focusMainContent(): void;
   beep(): void;
   setProgress(params: {progress: number}): void;
-  contextMenu(params: {menuItems: MenuItem}): { id: number };
+  contextMenu(params: {menuItems: MenuItem[]}): { id: number };
   requestInspect(params: {uuid?: string}): void;
   refreshBrowserView(params: { uuid: string }): void;
   setBrowserViewURL(params: { uuid: string, url: string }): void;

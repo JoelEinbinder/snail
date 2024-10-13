@@ -32,6 +32,7 @@ export interface Block {
   asyncActions(): Promise<Action[]>;
   quickPicks(): Promise<QuickPickProvider[]>;
 }
+const initialTitle = document.title;
 class RootBlock {
   element = document.createElement('div');
   block?: Block = null;
@@ -77,7 +78,7 @@ class RootBlock {
           this.setBlock(newBlock);
         },
         titleUpdated: () => {
-          document.title = block.title();
+          document.title = block.title() || initialTitle;
         },
       }
     } else {

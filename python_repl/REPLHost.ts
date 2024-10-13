@@ -106,13 +106,11 @@ class REPL implements ShellHostInterface {
   }
   async loadItem({key}) {
     const str = localStorage.getItem('snail-repl-' + key);
-    console.log('loadItem', key, str);
     if (!str)
       return undefined;
     return JSON.parse(str);
   }
   async saveItem({key, value}) {
-    console.log('saveItem', key, value);
     localStorage.setItem('snail-repl-' + key, JSON.stringify(value));
     return 0;
   }

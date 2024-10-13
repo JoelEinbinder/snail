@@ -38,7 +38,10 @@ export function attachMenuItemsToContextMenuEvent(menuItems: MenuItem[], event: 
   menuItemsForEvent.get(event).push(menuItems);
 }
 
+declare var IS_REPL: boolean|undefined;
 document.body.addEventListener('contextmenu', event => {
+  if (typeof IS_REPL !== 'undefined' && IS_REPL)
+    return;
   const menuItemGroups = menuItemsForEvent.get(event)?.filter(x => x.length);
   if (!menuItemGroups?.length)
     return;

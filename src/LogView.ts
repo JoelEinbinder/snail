@@ -151,6 +151,7 @@ export class LogView implements Block, ShellDelegate, Findable {
 
   addItem(item: LogItem, parent?: LogItem) {
     this._log.push(item);
+    item.removeSelf = () => this.removeItem(item);
     if (parent && !parent.acceptsChildren)
       throw new Error('Parent does not accept children');
     

@@ -1,0 +1,18 @@
+.intro-close-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  font-size: 20px;
+  opacity: 0.6;
+  border-radius: 12px;
+  text-align: center
+}
+.intro-close-button::before {
+  content: '×';
+}
+.intro-close-button:hover {
+  opacity: 1.0;
+  background: rgba(128, 128, 128, 0.2);
+}
