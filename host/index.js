@@ -86,6 +86,49 @@ const handler = {
     });
     return result;
   },
+  /**
+   * @param {{
+   *   current: string,
+   *   prefix: string,
+   *   start: number,
+   *   firstCommandId: number,
+   *   direction: number,
+   * }} params
+   */
+  async searchHistory(params, sender) {
+    const {current, prefix, start, direction} = params;
+    const max = (await handler.queryDatabase({
+        sql: `SELECT MAX(command_id) FROM history`,
+        params: [],
+      }, sender))[0]['MAX(command_id)'];
+    const maximumCommand = Math.min(params.firstCommandId, max + 1);
+    const escapedPrefix = prefix.replace(/[\\%_]/g, '\\$&') + '%';
+    if (direction === 1) {
+      const result = await handler.queryDatabase({
+          sql: `SELECT command_id, command, language FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id < ? AND command != ? AND command_id < ? ORDER BY command_id DESC LIMIT 1`,
+          params: [escapedPrefix, max - start + 1, current, maximumCommand],
+        }, sender);
+      if (result.length === 0)
+        return 'end';
+      return {
+        command: result[0].command,
+        language: result[0].language || 'shjs',
+        historyIndex: max - result[0].command_id + 1,
+      }
+    } else {
+      const result = await handler.queryDatabase({
+          sql: `SELECT command_id, command, language FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id > ? AND command != ? AND command_id < ? ORDER BY command_id ASC LIMIT 1`,
+          params: [escapedPrefix, max - start + 1, current, maximumCommand],
+        }, sender);
+      if (result.length === 0)
+        return 'current';
+      return {
+        command: result[0].command,
+        language: result[0].language || 'shjs',
+        historyIndex: max - result[0].command_id + 1,
+      }
+    }
+  },  
   async updateHistory({id, col, value}) {
     const database = await getDatabase();
     const runResult = await new Promise((res, rej) => {

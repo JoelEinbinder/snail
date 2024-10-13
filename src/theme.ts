@@ -2,10 +2,20 @@ import './theme.css';
 import './actions';
 import { registerGlobalAction } from './actions';
 import { host } from './host';
+declare var IS_REPL: boolean|undefined;
 export function themeName(): 'light'|'dark' {
     const theme = new URL(window.location.href).searchParams.get('theme');
-    if (theme !== 'dark' && theme !== 'light')
+    if (theme !== 'dark' && theme !== 'light') {
+        if (typeof IS_REPL !== 'undefined' && IS_REPL) {
+            const hasTheme = localStorage.getItem('snail-repl-theme');
+            if (!hasTheme) {
+                const wantsDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                return wantsDark ? 'dark' : 'light';
+            }
+            return JSON.parse(hasTheme);
+        }
         return 'dark';
+    }
     return theme;
 }
 
@@ -63,6 +73,10 @@ if (themeName() !== 'dark') {
                     value: 'dark',
                 }
             });
+            if (typeof IS_REPL !== 'undefined' && IS_REPL) {
+                window.location.reload();
+                return;
+            }
             const url = new URL(window.location.href);
             url.searchParams.set('theme', 'dark');
             window.location.href = url.toString();
@@ -81,6 +95,10 @@ if (themeName() !== 'light') {
                     value: 'light',
                 }
             });
+            if (typeof IS_REPL !== 'undefined' && IS_REPL) {
+                window.location.reload();
+                return;
+            }
             const url = new URL(window.location.href);
             url.searchParams.set('theme', 'light');
             window.location.href = url.toString();

@@ -24,7 +24,7 @@ export class REPLHost implements IHostAPI {
   }
   type(): string {
     return 'repl';
-  }  
+  }
 }
 
 type ShellHostInterface = {
@@ -33,16 +33,17 @@ type ShellHostInterface = {
 let lastWebSocketId = 0;
 class REPL implements ShellHostInterface {
   private _shells = new Map<number, ShellHandler>();
-  constructor(private _sendEvent: (eventName: string, data: any) => void) {}
+  private _history = [];
+  constructor(private _sendEvent: (eventName: string, data: any) => void) {
+    const storedHistory = localStorage.getItem('snail-repl-history');
+    if (storedHistory)
+      this._history = JSON.parse(storedHistory);
+  }
   async obtainWebSocketId() {
     return ++lastWebSocketId;
   }
-  async createJSShell(params: { cwd: string; socketId: number; }): Promise<{ nodePath: string; bootstrapPath: string; }> {
+  async createJSShell(params: { cwd: string; socketId: number; }) {
     this._shells.set(params.socketId, await makeReplShellHandler((eventName: string, data: any) => this._sendEvent('websocket', { socketId: params.socketId, message: { method: eventName, params: data } })));
-    return {
-      bootstrapPath: '',
-      nodePath: '',
-    }
   }
   async sendMessageToWebSocket({socketId, message}: { socketId: number; message: { method: string; params: any; id: number; }; }): Promise<void> {
     const shell = this._shells.get(socketId);
@@ -59,12 +60,38 @@ class REPL implements ShellHostInterface {
     }
   }
   async focusMainContent() { }
-  async addHistory() { return -1 }
-  async updateHistory() { return -1 }
-  async queryDatabase(params: { sql: string; params: any[]; }): Promise<any[]> {
-    if (params.sql === 'SELECT MAX(command_id) FROM history')
-      return [{ 'MAX(command_id)': 0 }];
+  async addHistory(item: { command: string; start: number; language: 'shjs' | 'python' | 'javascript' | 'bash'; }) {
+    this._history.push(item);
+    this._history = this._history.slice(-1000);
+    localStorage.setItem('snail-repl-history', JSON.stringify(this._history));
+    return this._history.length - 1;
+  }
+  async updateHistory({id, col, value}: { col: string; id: number; value: any; }) {
+    this._history[id][col] = value;
+    localStorage.setItem('snail-repl-history', JSON.stringify(this._history));
+    return 1;
+  }
+  async queryDatabase({sql, params}: { sql: string; params: any[]; }): Promise<any[]> {
+    console.warn(sql, params);
     return [];
+  }
+  async searchHistory({start, direction, prefix, current}: { current: string; prefix: string; start: number; firstCommandId: number; direction: number; }): Promise<'end' | 'current' | { command: string; historyIndex: number; language: 'shjs' | 'python' | 'javascript' | 'bash'; }> {
+    let startIndex = start + direction - 1;
+    if (direction === -1)
+      startIndex = Math.min(startIndex, this._history.length - 1);
+    for (let i = startIndex; i < this._history.length && i >= 0; i += direction) {
+      const {command, language} = this._history[i];
+      if (current === command || !command.startsWith(prefix))
+        continue;
+      return {
+        command,
+        language,
+        historyIndex: i + 1,
+      }
+    }
+    if (direction === -1)
+      return 'current';
+    return 'end';  
   }
   async destroyWebsocket(params: { socketId: number; }): Promise<void> {
     this._shells.delete(params.socketId);
@@ -78,10 +105,15 @@ class REPL implements ShellHostInterface {
   async reportTime(name) {
   }
   async loadItem({key}) {
-    return localStorage.getItem('snail-repl-' + key);
+    const str = localStorage.getItem('snail-repl-' + key);
+    console.log('loadItem', key, str);
+    if (!str)
+      return undefined;
+    return JSON.parse(str);
   }
   async saveItem({key, value}) {
-    localStorage.setItem('snail-repl-' + key, value);
+    console.log('saveItem', key, value);
+    localStorage.setItem('snail-repl-' + key, JSON.stringify(value));
     return 0;
   }
 

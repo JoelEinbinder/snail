@@ -121,7 +121,7 @@ export class Shell {
     this._language.on(language => {
       this._prompt?.setMode(languageToMode[language]);
       this._commandPrefix?.setAttribute('data-language', languageToMode[this._language.current]);
-      host.notify({ method: 'saveItem', params: { key: 'language', value: language}});  
+      host.notify({ method: 'saveItem', params: { key: 'language', value: language}});
     });
   }
 

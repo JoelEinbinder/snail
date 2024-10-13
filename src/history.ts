@@ -7,56 +7,6 @@ type HistoryItem = {
   start?: number;
 }
 
-async function searchHistory(params: {
-  current: string,
-  prefix: string,
-  start: number,
-  firstCommandId: number,
-  direction: number,
-}) {
-  const {current, prefix, start, direction} = params;
-  const max = (await host.sendMessage({
-    method: 'queryDatabase',
-    params: {
-      sql: `SELECT MAX(command_id) FROM history`,
-      params: [],
-    }
-  }))[0]['MAX(command_id)'];
-  const maximumCommand = Math.min(params.firstCommandId, max + 1);
-  const escapedPrefix = prefix.replace(/[\\%_]/g, '\\$&') + '%';
-  if (direction === 1) {
-    const result = await host.sendMessage({
-      method: 'queryDatabase',
-      params: {
-        sql: `SELECT command_id, command, language FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id < ? AND command != ? AND command_id < ? ORDER BY command_id DESC LIMIT 1`,
-        params: [escapedPrefix, max - start + 1, current, maximumCommand],
-      }
-    });
-    if (result.length === 0)
-      return 'end';
-    return {
-      command: result[0].command,
-      language: result[0].language || 'shjs',
-      historyIndex: max - result[0].command_id + 1,
-    }
-  } else {
-    const result = await host.sendMessage({
-      method: 'queryDatabase',
-      params: {
-        sql: `SELECT command_id, command, language FROM history WHERE command LIKE ? ESCAPE '\\' AND command_id > ? AND command != ? AND command_id < ? ORDER BY command_id ASC LIMIT 1`,
-        params: [escapedPrefix, max - start + 1, current, maximumCommand],
-      }
-    });
-    if (result.length === 0)
-      return 'current';
-    return {
-      command: result[0].command,
-      language: result[0].language || 'shjs',
-      historyIndex: max - result[0].command_id + 1,
-    }
-  }
-}
-
 type HistoryDatabaseItem = {
   command_id: number,
   start: number,
@@ -120,12 +70,15 @@ export class History {
       return 'end';  
     }
     const searchRemoteHistory = async () => {
-      const result = await searchHistory({
-        current,
-        prefix,
-        start: start - this._localHistory.length,
-        direction,
-        firstCommandId: this._firstCommandId,
+      const result = await host.sendMessage({
+        method: 'searchHistory',
+        params: {
+          current,
+          prefix,
+          start: start - this._localHistory.length,
+          direction,
+          firstCommandId: this._firstCommandId,
+        }
       });
       if (result === 'current' || result === 'end')
         return result;

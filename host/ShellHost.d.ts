@@ -2,15 +2,13 @@ import type { MenuItem } from '../slug/sdk/web';
 
 export interface ShellHost {
   obtainWebSocketId(): number;
-  createJSShell(params: {cwd: string, socketId: number}): {
-    nodePath: string,
-    bootstrapPath: string,
-  };
+  createJSShell(params: {cwd: string, socketId: number}): void;
   sendMessageToWebSocket(params: {socketId: number, message: { method: string; params: any; id: number; }}): void;
   destroyWebsocket(params: {socketId: number}): void;
-  addHistory(item: {command: string, start: number}): number;
+  addHistory(item: {command: string, start: number, language: 'shjs'|'python'|'javascript'|'bash'}): number;
   queryDatabase(params: {sql: string, params: any[]}): any[];
   updateHistory(params: {id: number, col: string, value: string|number}): number;
+  searchHistory(params: {current: string, prefix: string, start: number, firstCommandId: number, direction: number}): 'end'|'current'|{command: string, historyIndex: number, language: 'shjs'|'python'|'javascript'|'bash'};
   urlForIFrame(params: {shellIds: number[], filePath: string}): string;
   saveItem(params: {key: string, value: any}): number;
   loadItem(params: {key: string}): any;
