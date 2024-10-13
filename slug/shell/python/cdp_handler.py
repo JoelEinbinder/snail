@@ -1,7 +1,10 @@
+import collections.abc
 import sys
 import keyword
 import os
 import re
+import collections
+import math
 
 remote_objects = dict()
 last_object_id = 0
@@ -23,6 +26,10 @@ def to_remote_object(value):
     if isinstance(value, int):
       return {'type': 'number', 'value': value}
     if isinstance(value, float):
+      if math.isnan(value):
+        return {'type': 'number', 'unserializableValue': 'NaN', 'description': repr(value)}
+      if math.isinf(value):
+        return {'type': 'number', 'unserializableValue': 'Infinity' if value > 0 else '-Infinity', 'description': repr(value)}
       return {'type': 'number', 'value': value, 'description': repr(value)}
     if value is None:
       return {'type': 'undefined', 'value': value, 'description': 'None'}
@@ -41,11 +48,13 @@ def to_remote_object(value):
     }
 
 def remote_object_subtype(obj):
-  if isinstance(obj, dict):
+  if isinstance(obj, collections.abc.Mapping):
     return 'map'
-  if isinstance(obj, list):
+  if isinstance(obj, tuple):
+    return 'tuple'
+  if isinstance(obj, collections.abc.Sequence):
     return 'array'
-  if isinstance(obj, set):
+  if isinstance(obj, collections.abc.Set):
     return 'set'
   return None
 
@@ -65,7 +74,7 @@ def remote_object_type(obj):
 def remote_object_preview(obj):
   properties = []
   overflow = False
-  if isinstance(obj, dict):
+  if isinstance(obj, collections.abc.Mapping):
     for key, value in obj.items():
       if len(properties) >= 3:
         overflow = True
@@ -75,7 +84,7 @@ def remote_object_preview(obj):
         'value': str(value),
         'type': value_to_cdp_type(value),
       })
-  elif isinstance(obj, list) or isinstance(obj, set):
+  elif isinstance(obj, collections.abc.Sequence) or isinstance(obj, collections.abc.Set):
     for i, value in enumerate(obj):
       if len(properties) >= 3:
         overflow = True
@@ -134,13 +143,13 @@ def cdp_handler(method, params):
     properties = []
     obj = remote_objects[params['objectId']]
     try:
-      if isinstance(obj, dict):
+      if isinstance(obj, collections.abc.Mapping):
         for key, value in obj.items():
           properties.append({
             'name': str(key),
             'value': to_remote_object(value)
           })
-      elif isinstance(obj, list) or isinstance(obj, set):
+      elif isinstance(obj, collections.abc.Sequence) or isinstance(obj, collections.abc.Set):
         for i, value in enumerate(obj):
           properties.append({
             'name': str(i),
