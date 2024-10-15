@@ -108,7 +108,7 @@
 .venv::before {
   content: "VENV";
   font-size: 7px;
-  border: 1px solid black;
+  border: 1px solid currentColor;
   display: inline-block;
   vertical-align: middle;
   text-align: center;

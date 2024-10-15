@@ -8,7 +8,7 @@ export function makePythonCompleter(shell: Shell): Completer {
       anchor,
       suggestions: suggestions.map(({text, description}) => ({
         text,
-        description: description ? (async () => description) : undefined
+        description: description ? (async () => description.trim()) : undefined
       })),
       exact: true,
       cssTag: 'python'
