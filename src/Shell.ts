@@ -1392,7 +1392,7 @@ export class Shell {
       'python': 'Meta+K P',
       'javascript': 'Meta+K J',
     };
-    return [...shellLanguages.map(language => {
+    return [...((shellLanguages.length as number) === 1 ? [] : shellLanguages).map(language => {
       return {
         id: `shell-language-${language}`,
         title: `Switch shell to ${language}`,
@@ -1407,6 +1407,7 @@ export class Shell {
       callback: async () => {
         await this.connection.send('Python.reset', void 0);
       },
+      needsFullSnail: true,
     }]
   }
 }

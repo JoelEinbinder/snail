@@ -17,6 +17,7 @@ import { font } from './font';
 import { FakeScrollBar } from './FakeScrollBar';
 import { host, sendStreamingCommandToHost } from './host';
 
+declare var IS_REPL: boolean|undefined;
 export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
   private _scroller = document.createElement('div');
@@ -398,12 +399,14 @@ export class LogView implements Block, ShellDelegate, Findable {
       callback: () => {
         const done = startAsyncWork('demon mode toggle');
         this._shell.toggleDaemon().then(done);
-      }
+      },
+      needsFullSnail: true,
     }, {
       title: 'Refresh active iframe',
       shortcut: makeChordShortcut('R'),
       id: 'log.refresh.active.iframe',
       callback: () => this._shell.refreshActiveIframe(),
+      needsFullSnail: true,
     }, {
       title: 'Find',
       shortcut: 'CmdOrCtrl+F',
@@ -417,7 +420,8 @@ export class LogView implements Block, ShellDelegate, Findable {
       shortcut: 'CmdOrCtrl+P',
       callback: () => {
         showQuickPick('');
-      }
+      },
+      needsFullSnail: true,
     }, {
       title: 'Kill process',
       shortcut: makeChordShortcut('K'),
@@ -433,6 +437,7 @@ export class LogView implements Block, ShellDelegate, Findable {
         await this._shell.kill();
         done();
       },
+      needsFullSnail: true,
     }]
     if (this._isFullscreen)
       return fullscreenActions;
@@ -460,7 +465,7 @@ export class LogView implements Block, ShellDelegate, Findable {
           item?.toggleFold?.dispatch(false);
       }
     }];
-    if (this._prompt) {
+    if (this._prompt && (typeof IS_REPL === 'undefined' || !IS_REPL)) {
       actions.push({
         title: 'Invoke AI Assistant',
         id: 'log.ai',

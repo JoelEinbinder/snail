@@ -11,6 +11,7 @@ export type Action = {
   title: string;
   shortcut?: string;
   callback: () => void;
+  needsFullSnail?: boolean;
 };
 
 export type FindParams = { regex: RegExp, report: (matches: number) => void };

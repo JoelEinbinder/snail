@@ -5,6 +5,7 @@ test('should work', async ({ repl }) => {
   await repl.runCommand('print("hello")')
   expect(await repl.serialize()).toEqual({
     log: [
+      '<Intro Block>',
       '> 2 + 3',
       '5',
       '> print("hello")',

@@ -72,7 +72,8 @@ if (useTabs) {
                     method: 'switchToTab',
                     params: { tabNumber: i },
                 });
-            }
+            },
+            needsFullSnail: true,
         });
     }
 }

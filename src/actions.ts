@@ -4,6 +4,7 @@ import { shortcutParser, type ParsedShortcut } from './shortcutParser';
 import type { Action } from '../slug/sdk/web';
 export type { Action } from '../slug/sdk/web';
 
+declare var IS_REPL: boolean|undefined;
 const globalActions: Action[] = [];
 export function registerGlobalAction(action: Action): void {
   const existing = globalActions.findIndex(a => a.id === action.id);
@@ -15,6 +16,8 @@ export function availableActions(): Action[] {
   const actions = [...rootBlock.actions(), ...globalActions];
   const seenIds = new Set<string>();
   return actions.filter(action => {
+    if (action.needsFullSnail && (typeof IS_REPL !== 'undefined' && IS_REPL))
+      return false;
     if (seenIds.has(action.id))
       return false;
     seenIds.add(action.id);
