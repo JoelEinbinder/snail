@@ -1,5 +1,5 @@
 import type { MenuItem } from '../slug/sdk/web';
-
+import type { LLMMessage } from '../src/LogItem';
 export interface ShellHost {
   obtainWebSocketId(): number;
   createJSShell(params: {cwd: string, socketId: number}): void;
@@ -44,5 +44,5 @@ export interface ShellHost {
 
   reportTime(params: {name: string}): void;
 
-  openai(params: import('openai').OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming & {apiKey: string}): AsyncIterable<import('openai').OpenAI.Chat.Completions.ChatCompletionChunk>;
+  streamFromLLM(params: {model: string, system: string, messages: LLMMessage[], apiKey: string}): AsyncIterable<string>;
 }

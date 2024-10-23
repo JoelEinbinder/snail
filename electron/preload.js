@@ -31,7 +31,7 @@ ipcRenderer.on('message', (sender, event) => {
     if (event.error) {
       callbacks.get(event.id).reject(event.error);
     } else {
-      if (event.streamingResult) {
+      if ('streamingResult' in event) {
         callbacks.get(event.id)?.resolve({ streamingId: event.id });
         callbacks.delete(event.id);
         sendEvent('streaming', { done: false, id: event.id, value: event.streamingResult });

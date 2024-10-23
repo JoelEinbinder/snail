@@ -6,7 +6,7 @@ import { startAsyncWork } from './async';
 import { makeLazyProxy } from './LazyProxy';
 import { UIThrottle } from './UIThrottle';
 import { Action, makeChordShortcut } from './actions';
-import type { LogItem } from './LogItem';
+import type { LLMMessage, LogItem } from './LogItem';
 import { Find, Findable, FindableList, type FindParams } from './Find';
 import { attachMenuItemsToContextMenuEvent } from './contextMenu';
 import { QuickPickProvider, showQuickPick } from './QuickPick';
@@ -140,7 +140,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     await this._prompt.flushForLLM();
     while (!this._prompt)
       await this._promptChangePromise;
-    const iterator = this._isMockAI ? mockCompletions() : await openAICompletions(this._shell, this._log, controller.signal); 
+    const iterator = this._isMockAI ? mockCompletions() : await llmCompletions(this._shell, this._log, controller.signal); 
     if (iterator)
       await this._prompt.recieveLLMAction(iterator, controller.signal);  
     if (this._llmAbortController === controller) {
@@ -573,16 +573,18 @@ export class LogView implements Block, ShellDelegate, Findable {
 }
 
 
-async function openAICompletions(shell: Shell, log: Iterable<LogItem>, signal: AbortSignal) {
-  const apiKey = await shell.cachedEvaluation('echo $SNAIL_OPENAI_KEY');
+async function llmCompletions(shell: Shell, log: Iterable<LogItem>, signal: AbortSignal) {
+  const model = await shell.cachedEvaluation('ai_model');
+  if (signal.aborted)
+    return null;
+  const apiKey = model.startsWith('claude') ?
+    await shell.cachedEvaluation('echo $SNAIL_ANTHROPIC_KEY') :
+    await shell.cachedEvaluation('echo $SNAIL_OPENAI_KEY');
   if (!apiKey)
     return null;
   if (signal.aborted)
     return null;
-  const model = await shell.cachedEvaluation('ai_model');
-  if (signal.aborted)
-    return null;
-  const messages: import('openai').OpenAI.Chat.ChatCompletionMessageParam[] = [];
+  const messages: LLMMessage[] = [];
   let total = 0;
   for (const item of [...log].reverse()) {
     const message = await item.serializeForLLM?.();
@@ -597,9 +599,8 @@ async function openAICompletions(shell: Shell, log: Iterable<LogItem>, signal: A
     if (total >= 10_000)
       break;
   }
-  messages.push({
-    role: 'system',
-    content: `Your messages are being typed directly into a terminal shell.
+  messages.reverse();
+  const system = `Your messages are being typed directly into a terminal shell.
 The user will respond with the result from your command.
 Always respond in the form of a bash command.
 Respond directly with the command to run instead of asking the user to run a given command.
@@ -608,27 +609,17 @@ Make sure any comments in your response are prefixed with a '#'.
 Keep comments to a minimum.
 Refrain from explaining simple commands.
 For example, if you don't know what to do, respond with ls.
-Use uname -a to check whether the system is MacOS or Linux.`
-  });
-  messages.reverse();
+Use uname -a to check whether the system is MacOS or Linux.`;
 
-
-  return sendStreamingCommandToHost('openai', {
-    stream: true,
+  
+  return sendStreamingCommandToHost('streamFromLLM', {
+    system,
     messages,
     model,
     apiKey,
   });
 };
 
-async function * mockCompletions(): AsyncIterable<import('openai').OpenAI.Chat.ChatCompletionChunk> {
-  // chunk.choices[0].delta.content
-  yield {
-    choices: [{ delta: { content: '# fake ai suggestion' },
-      finish_reason: 'stop', index: 0}],
-      created: Date.now(),
-      id: '-1',
-      model: 'mock',
-      object: 'chat.completion.chunk'
-    };
+async function * mockCompletions(): AsyncIterable<string> {
+  yield '# fake ai suggestion';
 }

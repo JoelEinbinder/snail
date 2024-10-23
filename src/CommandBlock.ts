@@ -1,11 +1,10 @@
 import { Editor, type HighlightRanges, type TextRange } from "../slug/editor/js/editor";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
-import { LogItem } from "./LogItem";
+import type { LLMMessage, LogItem } from "./LogItem";
 import { setSelection } from "./selection";
 import type { Shell } from './Shell';
 import { FindParams } from "./Find";
 import { themeName, themeEditorColors } from "./theme";
-import type { ChatCompletionMessageParam } from "openai/resources";
 
 export class CommandBlock implements LogItem {
   public cachedEvaluationResult = new Map<string, Promise<string>>();
@@ -136,7 +135,7 @@ export class CommandBlock implements LogItem {
     return '> ' + this.command;
   }
 
-  async serializeForLLM(): Promise<ChatCompletionMessageParam> {
+  async serializeForLLM(): Promise<LLMMessage> {
     return {
       content: this.command,
       role: 'assistant',

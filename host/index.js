@@ -20,6 +20,8 @@ const proxies = new Map();
 const webServers = new WebServers(false);
 /** @type {import('openai').OpenAI} */
 let openai;
+/** @type {import('@anthropic-ai/sdk').Anthropic} */
+let anthropic;
 /** @typedef {import('./ShellHost').ShellHost} ShellHost */
 /** @type {{[key in keyof ShellHost]: (params: Parameters<ShellHost[key]>[0], sender: Client) => Promise<ReturnType<ShellHost[key]>>}} */
 const handler = {
@@ -183,17 +185,61 @@ const handler = {
     if (parseInt(process.env.SNAIL_TIME_STARTUP))
       console.log(`Time: ${name}`);
   },
-  openai(request){
-    if (!openai || openai.apiKey !== request.apiKey) {
-      const { OpenAI } = require('openai');
-      openai = new OpenAI({
-        apiKey: request.apiKey,
+  streamFromLLM({ apiKey, messages, model, system }) {
+    if (model.startsWith('gpt')) {
+      if (!openai || openai.apiKey !== apiKey) {
+        const { OpenAI } = require('openai');
+        openai = new OpenAI({ apiKey });
+      }
+      messages.unshift({ role: 'system', content: system });
+      return openAIStreamToString(openai.chat.completions.create({
+        model,
+        messages,
+        stream: true,
+      }));
+    } else if (model.startsWith('claude')) {
+      if (!anthropic || anthropic.apiKey !== apiKey) {
+        const { Anthropic } = require('@anthropic-ai/sdk');
+        anthropic = new Anthropic({ apiKey });
+      }
+      messages.unshift({ role: 'user', content: 'Welcome to the terminal!'});
+      for (let i = 0; i < messages.length; i++) {
+        if (messages[i].role === 'user')
+          continue;
+        if (messages[i+1]?.role === 'user')
+          continue;
+        messages.splice(i+1, 0, {content: '<empty response>', role: 'user'});
+      }
+      const stream = anthropic.messages.stream({
+        model,
+        system,
+        messages,
+        max_tokens: 1024,
+        stream: true,
       });
+      return anthropicStreamToString(stream);
     }
-    return openai.chat.completions.create({
-      ...request,
-      apiKey: undefined,
-    });
+
+    /**
+     * @param {Promise<AsyncIterable<import('openai').OpenAI.ChatCompletionChunk>>} stream
+     */
+    async function * openAIStreamToString(stream) {
+      for await (const chunk of await stream)
+        yield chunk.choices[0]?.delta.content || '';
+    }
+    /**
+     * @param {AsyncIterable<import('@anthropic-ai/sdk').Anthropic.MessageStreamEvent>} stream
+     */
+    async function * anthropicStreamToString(stream) {
+      for await (const chunk of stream) {
+        if (chunk.type === 'content_block_start')
+          yield chunk.content_block.text
+        else if (chunk.type === 'content_block_delta')
+          yield chunk.delta.text;
+        else
+          yield '';
+      }
+    }
   },
 }
 

@@ -2,14 +2,13 @@ import { Terminal, IDisposable } from "xterm";
 import type { AntiFlicker } from "./AntiFlicker";
 import { font } from "./font";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
-import type { LogItem } from "./LogItem";
+import type { LLMMessage, LogItem } from "./LogItem";
 import { setSelection } from './selection';
 import { RendererAddon } from "./terminal/RendererAddon";
 import { startAsyncWork } from "./async";
 import type { FindParams } from "./Find";
 import { attachMenuItemsToContextMenuEvent } from "./contextMenu";
 import { themeCursorColor, themeName, themeSelectionColor, themeTextColor } from "./theme";
-import type { ChatCompletionMessageParam } from "openai/resources";
 
 export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
@@ -260,7 +259,7 @@ export class TerminalBlock implements LogItem {
     return lines.join('\n');
   }
 
-  async serializeForLLM(): Promise<ChatCompletionMessageParam> {
+  async serializeForLLM(): Promise<LLMMessage> {
     const content = await this.serializeForTest();
     if (!content)
       return null;

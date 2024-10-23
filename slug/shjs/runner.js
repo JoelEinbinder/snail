@@ -44,7 +44,12 @@ const builtins = {
     ai_model: (args, stdout, stderr, stdin, env) => {
         if (args[0])
             return builtins.export(['SNAIL_LLM_MODEL=' + args[0]], stdout, stderr, stdin, env);
-        stdout.write(env.SNAIL_LLM_MODEL || 'gpt-4o');
+        if (env.SNAIL_LLM_MODEL)
+            stdout.write(env.SNAIL_LLM_MODEL)
+        else if (env.SNAIL_ANTHROPIC_KEY)
+            stdout.write('claude-3-5-sonnet-latest')
+        else
+            stdout.write('gpt-4o');
         return Promise.resolve(0);
     },
     ls: (args, stdout, stderr) => {

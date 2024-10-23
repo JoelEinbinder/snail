@@ -3,7 +3,7 @@ import { font, fontString } from "./font";
 import { host } from "./host";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import type { JSConnection } from "./JSConnection";
-import { LogItem } from "./LogItem";
+import type { LogItem, LLMMessage } from "./LogItem";
 import { cdpManager, DebuggingInfo } from './CDPManager';
 import { expectingUserInput, startAsyncWork } from "./async";
 import type { FindParams } from "./Find";
@@ -12,7 +12,6 @@ import type { Action } from './actions';
 import { BrowserView } from "./BrowserView";
 import { attachMenuItemsToContextMenuEvent } from "./contextMenu";
 import { themeName } from "./theme";
-import type { ChatCompletionMessageParam } from "openai/resources";
 
 const iframeMessageHandler = new Map<HTMLIFrameElement, (data: any) => void>();
 
@@ -459,7 +458,7 @@ export class IFrameBlock implements LogItem {
     return actions;
   }
 
-  async serializeForLLM(): Promise<ChatCompletionMessageParam> {
+  async serializeForLLM(): Promise<LLMMessage> {
     const content = await this.serializeForTest();
     if (!content)
       return null;

@@ -1268,9 +1268,9 @@ export class Shell {
         for await (const chunk of iterator) {
           if (signal.aborted)
             break;
-          if (!chunk.choices[0].delta.content)
+          if (!chunk)
             continue;
-          value += chunk.choices[0].delta.content;
+          value += chunk;
           // a user typing in the prompt will cancel an llm action
           // set this flag so it doesnt.
           dontCancelLLM = true;

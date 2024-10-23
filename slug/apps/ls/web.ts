@@ -371,9 +371,10 @@ function inlineMode() {
     snail.setHeight(document.body.getBoundingClientRect().height);
   }
   snail.setToJSON(() => {
-    return gridContainers.map(x => {
-      return x.element.textContent;
-    });
+    if (gridContainers.length === 1) {
+      return [...gridContainers[0].element.children].map(x => x.textContent).join('\n');
+    }
+    return gridContainers.map(container => [...container.element.children].map(x => x.textContent).join('\n')).join('\n\n');
   });
 }
 let undoFind: (() => void) | null = null;

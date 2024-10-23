@@ -21,7 +21,7 @@ test('can create a file and see it in ls', async ({ shell }) => {
     log: [
       '> touch a.txt',
       '> ls',
-      ['a.txt'],
+      'a.txt',
     ],
     prompt: { value: '' }
   });
