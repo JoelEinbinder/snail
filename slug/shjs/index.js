@@ -14,10 +14,25 @@ module.exports = {
     const ast = parse(tokens);
     return execute(ast, noSideEffects, stdout, stderr, stdin);
   },
-  getResult(command) {
-    const {tokens} = tokenize(command);
-    const ast = parse(tokens);
-    return getResult(ast);
+  /**
+   * @param {string} command
+   */
+  async getResult(command, noSideEffects = false) {
+    let commandLeft = command;
+    let result = { output: '', stderr: '', code: 0 };
+    while (commandLeft.length) {
+      const {tokens, raw} = tokenize(commandLeft);
+      commandLeft = commandLeft.substring(raw.length + 1);
+      const ast = parse(tokens);
+      const tempResult = await getResult(ast, noSideEffects);
+      result.output += tempResult.output;
+      result.code = tempResult.code;
+      result.stderr += tempResult.stderr;
+      if (result.code != 0)
+        break;
+    }
+    return result;
+     
   },
   getAndResetChanges,
   setAlias,

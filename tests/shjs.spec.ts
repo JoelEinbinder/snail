@@ -583,3 +583,30 @@ describe('kill', () => {
         await closePromise;
     });
 });
+
+describe('api', () => {
+    it('should fail on an unsafe command', async () => {
+        const output = await apiGetResult('rm', true);
+        expect(output).toEqual({
+            code: 1,
+            output: '',
+            stderr: 'shjs: side effect\n',
+        });
+    });
+    it('should work with a comment line', async () => {
+        const output = await apiGetResult('# i am a comment', true);
+        expect(output).toEqual({
+            code: 0,
+            output: '',
+            stderr: '',
+        });
+    });
+    it('should work with a comment line prefix', async () => {
+        const output = await apiGetResult('# i am a comment\necho foo', true);
+        expect(output).toEqual({
+            code: 0,
+            output: 'foo\n',
+            stderr: '',
+        });
+    });
+});

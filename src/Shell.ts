@@ -2,7 +2,7 @@ import 'xterm/css/xterm.css';
 import { History } from './history';
 import { makePromptEditor } from './PromptEditor';
 import { JoelEvent } from '../slug/cdp-ui/JoelEvent';
-import type { LogItem } from './LogItem';
+import type { LLMMessage, LogItem } from './LogItem';
 import { CommandBlock, CommandPrefix, computePrettyDirName } from './CommandBlock';
 import { TerminalBlock } from './TerminalBlock';
 import { ExtraClientMethods, JSConnection } from './JSConnection';
@@ -54,6 +54,7 @@ export interface ShellDelegate {
   addRetainer(params: {item: LogItem|'forced', parent: LogItem}): void;
   removeRetainer(params: {item: LogItem|'forced', parent: LogItem}): void;
   cancelLLMRequest(): void;
+  triggerLLMInvestigation(): void;
 }
 
 interface ConnectionCore {
@@ -773,6 +774,7 @@ export class Shell {
     let error;
     const connection = this.connection;
     this._clearCache();
+    const beforeCwd = connection.cwd;
     const result: ReturnType<ExtraClientMethods['Shell.runCommand']> = await connection.send('Shell.runCommand', {
       expression,
       command,
@@ -834,6 +836,8 @@ export class Shell {
     this._setActiveCommandBlock(null);
     delete this._activeCommandBlock;
     unlockPrompt();
+    if (beforeCwd !== connection.cwd)
+      this._delegate.triggerLLMInvestigation();
   }
 
   _addJSBlock(result: Protocol.CommandReturnValues['Runtime.evaluate'], connection: JSConnection, commandBlock?: CommandBlock) {
@@ -1409,6 +1413,24 @@ export class Shell {
       },
       needsFullSnail: true,
     }]
+  }
+
+  async investigateWithAI(command: string): Promise<LLMMessage|null> {
+    console.log('investigateWithAI', command);
+    if (!command)
+      return null;
+    if (!this._isShellLikeCode(command, 'shjs'))
+      return null;
+    const {exitCode, result} = await this.connection.send('Shell.evaluate', {
+      code: command,
+      noSideEffects: true,
+    });
+    if (exitCode !== 0)
+      return null;
+    return {
+      role: 'user',
+      content: result,
+    }
   }
 }
 

@@ -40,6 +40,7 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _find = new Find(this, () => this.focus());
   private _llmAbortController: AbortController|null = null;
   private _isMockAI = false;
+  private _logForLLM: (LogItem|LLMMessage)[] = [];
   blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._updatePromptChangePromise();
@@ -140,7 +141,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     await this._prompt.flushForLLM();
     while (!this._prompt)
       await this._promptChangePromise;
-    const iterator = this._isMockAI ? mockCompletions() : await llmCompletions(this._shell, this._log, controller.signal); 
+    const iterator = this._isMockAI ? mockCompletions() : await llmCompletions(this._shell, this._logForLLM, controller.signal); 
     if (iterator)
       await this._prompt.recieveLLMAction(iterator, controller.signal);  
     if (this._llmAbortController === controller) {
@@ -150,8 +151,26 @@ export class LogView implements Block, ShellDelegate, Findable {
     done();
   }
 
+  async triggerLLMInvestigation(): Promise<void> {
+    const done = startAsyncWork('ai-investigate');
+    for (let i = 0; i < 3; i++) {
+      const controller = new AbortController();
+      const iterator = this._isMockAI ? mockCompletions() : await llmCompletions(this._shell, this._logForLLM, controller.signal); 
+      let command = '';
+      for await (const chunk of iterator)
+        command += chunk;
+      const response = await this._shell.investigateWithAI(command);
+      if (!response)
+        break;
+      this._logForLLM.push({ role: 'assistant', content: command });
+      this._logForLLM.push(response);
+    }
+    done();
+  }
+
   addItem(item: LogItem, parent?: LogItem) {
     this._log.push(item);
+    this._logForLLM.push(item);
     item.removeSelf = () => this.removeItem(item);
     if (parent && !parent.acceptsChildren)
       throw new Error('Parent does not accept children');
@@ -223,6 +242,7 @@ export class LogView implements Block, ShellDelegate, Findable {
     }
     if (!this._log.removeItem(item))
       return;
+    this._logForLLM.splice(this._logForLLM.indexOf(item), 1);
     if (item.acceptsChildren) {
       for (const child of this._log) {
         if (this._itemToParent.get(child) === item)
@@ -573,7 +593,7 @@ export class LogView implements Block, ShellDelegate, Findable {
 }
 
 
-async function llmCompletions(shell: Shell, log: Iterable<LogItem>, signal: AbortSignal) {
+async function llmCompletions(shell: Shell, log: Iterable<LogItem|LLMMessage>, signal: AbortSignal) {
   const model = await shell.cachedEvaluation('ai_model');
   if (signal.aborted)
     return null;
@@ -587,7 +607,7 @@ async function llmCompletions(shell: Shell, log: Iterable<LogItem>, signal: Abor
   const messages: LLMMessage[] = [];
   let total = 0;
   for (const item of [...log].reverse()) {
-    const message = await item.serializeForLLM?.();
+    const message = ('role' in item && 'content' in item) ? item : await item.serializeForLLM?.();
     if (signal.aborted)
       return null;
     if (message) {

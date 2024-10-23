@@ -93,7 +93,7 @@ const handler = {
   },
   'Shell.evaluate': async (params) => {
     const {getResult} = require('../shjs/index');
-    const {output, code} = await getResult(params.code);
+    const {output, code} = await getResult(params.code, params.noSideEffects);
     return { result: output, exitCode: code };
   },
   'Shell.evaluateStreaming': async (params) => {

@@ -735,6 +735,7 @@ const safeExecutables = buildSafeExecutables([
     {name: 'whoami'},
     {name: 'id'},
     {name: 'date'},
+    {name: 'uname'},
 
     // possibly slow
     {name: 'grep'},
@@ -1036,12 +1037,12 @@ function arrayWriter(datas) {
 /**
  * @param {import('./ast').Expression} expression
  */
-async function getResult(expression) {
+async function getResult(expression, noSideEffects = false) {
     const errs = [];
     const errStream = arrayWriter(errs);
     const datas = [];
     const outStream = arrayWriter(datas);
-    const {closePromise, stdin} = execute(expression, false, outStream, errStream);
+    const {closePromise, stdin} = execute(expression, noSideEffects, outStream, errStream);
     stdin.end();
     const code = await closePromise;
     const output = Buffer.concat(datas).toString();
