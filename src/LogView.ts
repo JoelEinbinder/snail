@@ -153,12 +153,18 @@ export class LogView implements Block, ShellDelegate, Findable {
 
   async triggerLLMInvestigation(): Promise<void> {
     const done = startAsyncWork('ai-investigate');
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       const controller = new AbortController();
-      const iterator = this._isMockAI ? mockCompletions() : await llmCompletions(this._shell, this._logForLLM, controller.signal); 
       let command = '';
-      for await (const chunk of iterator)
-        command += chunk;
+      if (i === 0) {
+        command = 'uname -a';
+      } else if (i === 1) {
+        command = 'ls';
+      } else {
+        const iterator = this._isMockAI ? mockCompletions() : await llmCompletions(this._shell, this._logForLLM, controller.signal); 
+        for await (const chunk of iterator)
+          command += chunk;
+      }
       const response = await this._shell.investigateWithAI(command);
       if (!response)
         break;
