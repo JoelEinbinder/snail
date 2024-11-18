@@ -177,6 +177,7 @@ export const test = _test.extend<{
         SNAIL_TEST_USER_DATA_DIR: test.info().outputPath('user-data-dir'),
         SNAIL_OPENAI_KEY: '',
         SNAIL_ANTHROPIC_KEY: '',
+        SNAIL_SHOULD_INVESTIGATE: '',
       },
     });
     const err: Buffer[] = [];
