@@ -1075,6 +1075,10 @@ async function spawnPromise(command, args, options) {
     const stderr = [];
     child.stdout.on('data', data => stdout.push(data));
     child.stderr.on('data', data => stderr.push(data));
+    child.on('error', err => {
+        // close event will fire
+        // just absorb the error to prevent node from crashing
+    });
     const status = await new Promise(resolve => child.on('close', resolve));
     return {
         status,
