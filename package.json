@@ -9,7 +9,7 @@
     "release": "npm run check && node utils/publish-sdk.js && node utils/bundle-and-upload-slugs.js && node utils/package-and-upload.js",
     "check": "npm run type && npm run build && playwright test --forbid-only --workers 1"
   },
-  "version": "0.11.2",
+  "version": "0.12.0",
   "workspaces": [
     "slug",
     "slug/thumbnail_generator",
