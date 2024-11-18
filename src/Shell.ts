@@ -836,7 +836,7 @@ export class Shell {
     this._setActiveCommandBlock(null);
     delete this._activeCommandBlock;
     unlockPrompt();
-    if (beforeCwd !== connection.cwd)
+    if (beforeCwd !== connection.cwd && await this.evaluate('echo $SNAIL_SHOULD_INVESTIGATE'))
       this._delegate.triggerLLMInvestigation();
   }
 
