@@ -288,9 +288,9 @@ const overrides = {
       throw new Error('No popup to position');
     const window = BrowserWindow.fromWebContents(sender);
     const windowBounds = window.getContentBounds();
-    top += windowBounds.y;
-    bottom += windowBounds.y;
-    x += windowBounds.x;
+    top = windowBounds.y + top * sender.zoomFactor;
+    bottom = windowBounds.y + bottom * sender.zoomFactor;
+    x = windowBounds.x + x * sender.zoomFactor;
     const display = screen.getDisplayMatching(windowBounds);
     const popupBounds = popup.getBounds();
     const overflowBottom = bottom + popupBounds.height - display.bounds.y - display.bounds.height;
