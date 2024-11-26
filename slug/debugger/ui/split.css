@@ -1,10 +1,20 @@
+body .split {
+    --border-color-normal: rgba(255,255,255,0.3);
+    --border-color-hover: rgba(255,255,255,0.4);
+    --border-color-active: rgba(255,255,255,0.5);
+}
+body.light .split {
+    --border-color-normal: rgba(0,0,0,0.3);
+    --border-color-hover: rgba(0,0,0,0.4);
+    --border-color-active: rgba(0,0,0,0.5);
+}
 .split {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    --border-color: rgba(255, 255, 255, 0.3);
+    --border-color: var(--border-color-normal);
 }
 .split > .left,
 .split > .right {
@@ -59,14 +69,14 @@
 }
 
 .split > .gutter:hover::before {
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: var(--border-color-hover);
 }
 
 .split > .gutter[data-keyboard-focus="true"]::before,
 .split > .gutter:active::before {
-    border-color: rgba(255, 255, 255, 0.5);
+    border-color: var(--border-color-active);
 }
 
 .split > .gutter[data-keyboard-focus="true"] {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: var(--border-color-active);
 }
