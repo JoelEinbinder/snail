@@ -222,6 +222,8 @@ export class LogView implements Block, ShellDelegate, Findable {
     element.classList.add('log-item-wrapper');
     let folded = false;
     element.addEventListener('contextmenu', event => {
+      if (item.isFullscreen?.())
+        return;
       attachMenuItemsToContextMenuEvent([{
         title: folded ? 'Unfold' : 'Fold',
         callback: () => toggleFold(!folded),
