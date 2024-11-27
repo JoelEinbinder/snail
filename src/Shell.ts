@@ -325,6 +325,8 @@ export class Shell {
                 sendInputToThisTerminal(dataStr);
                 break;
               }
+              default:
+                console.error('unhandled terminal message type', type);
             }
           },
           plainTerminalData: data => {
@@ -1450,6 +1452,8 @@ function measureChar() {
 }
 
 function checkIfCommandLooksSafe(command: string) {
+  if (/^show [\/\w\-\.\"\\]*$/.test(command))
+    return true;
   if (/^reconnect [\/\w\-\.]*$/.test(command))
     return true;
   if (/^ls \"[\/\w\-\.]*\"$/.test(command))

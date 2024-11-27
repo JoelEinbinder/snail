@@ -152,5 +152,9 @@ function setProgress(progress) {
 function chart(data) {
   return chartThrottle.update(data);
 }
+function markdown(data, baseDir = process.cwd()) {
+  display(require('path').join(__dirname, 'views', 'markdown.ts'));
+  send({data, baseDir});
+}
 
-module.exports = { display, send, makeRPC, setProgress, chart};
+module.exports = { display, send, makeRPC, setProgress, chart, markdown };

@@ -5,5 +5,8 @@
   "main": "index.js",
   "author": "Joel Einbinder",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "dompurify": "^3.2.1",
+    "marked": "^15.0.2"
+  }
 }
