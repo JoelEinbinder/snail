@@ -1,8 +1,13 @@
 import * as snail from '../../sdk/web';
-/// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import './index.css';
 import { RPC } from '../../sdk/rpc-js';
+declare var monaco;
 try {
+window['MonacoEnvironment'] = {
+  getWorkerUrl(file, label) {
+    return new URL('./vs/base/worker/' + file, document.location.href).href;
+  }
+}
 await loadScript("./vs/loader.js");
 async function loadScript(path) {
   const script = document.createElement('script');
@@ -144,7 +149,7 @@ snail.setActions(() => {
     return {
       title: `Edit: ${action.label}`,
       id: 'edit.' + action.id,
-      shortcut: binding ? monacoShortcutToSnailShortcut(binding.getParts()) : undefined,
+      shortcut: binding ? monacoShortcutToSnailShortcut(binding.getChords()) : undefined,
       callback: () => action.run(),
     }
   }

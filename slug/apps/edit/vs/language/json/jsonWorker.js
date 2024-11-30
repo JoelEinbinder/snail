@@ -1,36 +1,7884 @@
-"use strict";/*!-----------------------------------------------------------------------------
+/*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * Version: 0.34.1(547870b6881302c5b4ff32173c16d06009e3588f)
+ * Version: 0.52.0(f6dc0eb8fce67e57f6036f4769d92c1666cdf546)
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/
-define("vs/language/json/jsonWorker", ["require","require"],(require)=>{
-var moduleExports=(()=>{var lt=Object.defineProperty;var Hr=Object.getOwnPropertyDescriptor;var Gr=Object.getOwnPropertyNames;var Xr=Object.prototype.hasOwnProperty;var Zr=(t,r)=>{for(var i in r)lt(t,i,{get:r[i],enumerable:!0})},Qr=(t,r,i,e)=>{if(r&&typeof r=="object"||typeof r=="function")for(let n of Gr(r))!Xr.call(t,n)&&n!==i&&lt(t,n,{get:()=>r[n],enumerable:!(e=Hr(r,n))||e.enumerable});return t};var Yr=t=>Qr(lt({},"__esModule",{value:!0}),t);var _n={};Zr(_n,{JSONWorker:()=>st,create:()=>Bn});function Pe(t,r){r===void 0&&(r=!1);var i=t.length,e=0,n="",a=0,s=16,o=0,f=0,l=0,u=0,c=0;function h(v,O){for(var E=0,j=0;E<v||!O;){var A=t.charCodeAt(e);if(A>=48&&A<=57)j=j*16+A-48;else if(A>=65&&A<=70)j=j*16+A-65+10;else if(A>=97&&A<=102)j=j*16+A-97+10;else break;e++,E++}return E<v&&(j=-1),j}function g(v){e=v,n="",a=0,s=16,c=0}function m(){var v=e;if(t.charCodeAt(e)===48)e++;else for(e++;e<t.length&&Ce(t.charCodeAt(e));)e++;if(e<t.length&&t.charCodeAt(e)===46)if(e++,e<t.length&&Ce(t.charCodeAt(e)))for(e++;e<t.length&&Ce(t.charCodeAt(e));)e++;else return c=3,t.substring(v,e);var O=e;if(e<t.length&&(t.charCodeAt(e)===69||t.charCodeAt(e)===101))if(e++,(e<t.length&&t.charCodeAt(e)===43||t.charCodeAt(e)===45)&&e++,e<t.length&&Ce(t.charCodeAt(e))){for(e++;e<t.length&&Ce(t.charCodeAt(e));)e++;O=e}else c=3;return t.substring(v,O)}function p(){for(var v="",O=e;;){if(e>=i){v+=t.substring(O,e),c=2;break}var E=t.charCodeAt(e);if(E===34){v+=t.substring(O,e),e++;break}if(E===92){if(v+=t.substring(O,e),e++,e>=i){c=2;break}var j=t.charCodeAt(e++);switch(j){case 34:v+='"';break;case 92:v+="\\";break;case 47:v+="/";break;case 98:v+="\b";break;case 102:v+="\f";break;case 110:v+=`
-`;break;case 114:v+="\r";break;case 116:v+="	";break;case 117:var A=h(4,!0);A>=0?v+=String.fromCharCode(A):c=4;break;default:c=5}O=e;continue}if(E>=0&&E<=31)if(Le(E)){v+=t.substring(O,e),c=2;break}else c=6;e++}return v}function d(){if(n="",c=0,a=e,f=o,u=l,e>=i)return a=i,s=17;var v=t.charCodeAt(e);if(ht(v)){do e++,n+=String.fromCharCode(v),v=t.charCodeAt(e);while(ht(v));return s=15}if(Le(v))return e++,n+=String.fromCharCode(v),v===13&&t.charCodeAt(e)===10&&(e++,n+=`
-`),o++,l=e,s=14;switch(v){case 123:return e++,s=1;case 125:return e++,s=2;case 91:return e++,s=3;case 93:return e++,s=4;case 58:return e++,s=6;case 44:return e++,s=5;case 34:return e++,n=p(),s=10;case 47:var O=e-1;if(t.charCodeAt(e+1)===47){for(e+=2;e<i&&!Le(t.charCodeAt(e));)e++;return n=t.substring(O,e),s=12}if(t.charCodeAt(e+1)===42){e+=2;for(var E=i-1,j=!1;e<E;){var A=t.charCodeAt(e);if(A===42&&t.charCodeAt(e+1)===47){e+=2,j=!0;break}e++,Le(A)&&(A===13&&t.charCodeAt(e)===10&&e++,o++,l=e)}return j||(e++,c=1),n=t.substring(O,e),s=13}return n+=String.fromCharCode(v),e++,s=16;case 45:if(n+=String.fromCharCode(v),e++,e===i||!Ce(t.charCodeAt(e)))return s=16;case 48:case 49:case 50:case 51:case 52:case 53:case 54:case 55:case 56:case 57:return n+=m(),s=11;default:for(;e<i&&b(v);)e++,v=t.charCodeAt(e);if(a!==e){switch(n=t.substring(a,e),n){case"true":return s=8;case"false":return s=9;case"null":return s=7}return s=16}return n+=String.fromCharCode(v),e++,s=16}}function b(v){if(ht(v)||Le(v))return!1;switch(v){case 125:case 93:case 123:case 91:case 34:case 58:case 44:case 47:return!1}return!0}function y(){var v;do v=d();while(v>=12&&v<=15);return v}return{setPosition:g,getPosition:function(){return e},scan:r?y:d,getToken:function(){return s},getTokenValue:function(){return n},getTokenOffset:function(){return a},getTokenLength:function(){return e-a},getTokenStartLine:function(){return f},getTokenStartCharacter:function(){return a-u},getTokenError:function(){return c}}}function ht(t){return t===32||t===9||t===11||t===12||t===160||t===5760||t>=8192&&t<=8203||t===8239||t===8287||t===12288||t===65279}function Le(t){return t===10||t===13||t===8232||t===8233}function Ce(t){return t>=48&&t<=57}function pt(t,r,i){var e,n,a,s,o;if(r){for(s=r.offset,o=s+r.length,a=s;a>0&&!gt(t,a-1);)a--;for(var f=o;f<t.length&&!gt(t,f);)f++;n=t.substring(a,f),e=en(n,i)}else n=t,e=0,a=0,s=0,o=t.length;var l=tn(i,t),u=!1,c=0,h;i.insertSpaces?h=dt(" ",i.tabSize||4):h="	";var g=Pe(n,!1),m=!1;function p(){return l+dt(h,e+c)}function d(){var N=g.scan();for(u=!1;N===15||N===14;)u=u||N===14,N=g.scan();return m=N===16||g.getTokenError()!==0,N}var b=[];function y(N,V,R){!m&&(!r||V<o&&R>s)&&t.substring(V,R)!==N&&b.push({offset:V,length:R-V,content:N})}var v=d();if(v!==17){var O=g.getTokenOffset()+a,E=dt(h,e);y(E,a,O)}for(;v!==17;){for(var j=g.getTokenOffset()+g.getTokenLength()+a,A=d(),P="",w=!1;!u&&(A===12||A===13);){var C=g.getTokenOffset()+a;y(" ",j,C),j=g.getTokenOffset()+g.getTokenLength()+a,w=A===12,P=w?p():"",A=d()}if(A===2)v!==1&&(c--,P=p());else if(A===4)v!==3&&(c--,P=p());else{switch(v){case 3:case 1:c++,P=p();break;case 5:case 12:P=p();break;case 13:u?P=p():w||(P=" ");break;case 6:w||(P=" ");break;case 10:if(A===6){w||(P="");break}case 7:case 8:case 9:case 11:case 2:case 4:A===12||A===13?w||(P=" "):A!==5&&A!==17&&(m=!0);break;case 16:m=!0;break}u&&(A===12||A===13)&&(P=p())}A===17&&(P=i.insertFinalNewline?l:"");var L=g.getTokenOffset()+a;y(P,j,L),v=A}return b}function dt(t,r){for(var i="",e=0;e<r;e++)i+=t;return i}function en(t,r){for(var i=0,e=0,n=r.tabSize||4;i<t.length;){var a=t.charAt(i);if(a===" ")e++;else if(a==="	")e+=n;else break;i++}return Math.floor(e/n)}function tn(t,r){for(var i=0;i<r.length;i++){var e=r.charAt(i);if(e==="\r")return i+1<r.length&&r.charAt(i+1)===`
-`?`\r
-`:"\r";if(e===`
-`)return`
-`}return t&&t.eol||`
-`}function gt(t,r){return`\r
-`.indexOf(t.charAt(r))!==-1}var Be;(function(t){t.DEFAULT={allowTrailingComma:!1}})(Be||(Be={}));function Xt(t,r,i){r===void 0&&(r=[]),i===void 0&&(i=Be.DEFAULT);var e=null,n=[],a=[];function s(f){Array.isArray(n)?n.push(f):e!==null&&(n[e]=f)}var o={onObjectBegin:function(){var f={};s(f),a.push(n),n=f,e=null},onObjectProperty:function(f){e=f},onObjectEnd:function(){n=a.pop()},onArrayBegin:function(){var f=[];s(f),a.push(n),n=f,e=null},onArrayEnd:function(){n=a.pop()},onLiteralValue:s,onError:function(f,l,u){r.push({error:f,offset:l,length:u})}};return Zt(t,o,i),n[0]}function mt(t){if(!t.parent||!t.parent.children)return[];var r=mt(t.parent);if(t.parent.type==="property"){var i=t.parent.children[0].value;r.push(i)}else if(t.parent.type==="array"){var e=t.parent.children.indexOf(t);e!==-1&&r.push(e)}return r}function _e(t){switch(t.type){case"array":return t.children.map(_e);case"object":for(var r=Object.create(null),i=0,e=t.children;i<e.length;i++){var n=e[i],a=n.children[1];a&&(r[n.children[0].value]=_e(a))}return r;case"null":case"string":case"number":case"boolean":return t.value;default:return}}function nn(t,r,i){return i===void 0&&(i=!1),r>=t.offset&&r<t.offset+t.length||i&&r===t.offset+t.length}function vt(t,r,i){if(i===void 0&&(i=!1),nn(t,r,i)){var e=t.children;if(Array.isArray(e))for(var n=0;n<e.length&&e[n].offset<=r;n++){var a=vt(e[n],r,i);if(a)return a}return t}}function Zt(t,r,i){i===void 0&&(i=Be.DEFAULT);var e=Pe(t,!1);function n(w){return w?function(){return w(e.getTokenOffset(),e.getTokenLength(),e.getTokenStartLine(),e.getTokenStartCharacter())}:function(){return!0}}function a(w){return w?function(C){return w(C,e.getTokenOffset(),e.getTokenLength(),e.getTokenStartLine(),e.getTokenStartCharacter())}:function(){return!0}}var s=n(r.onObjectBegin),o=a(r.onObjectProperty),f=n(r.onObjectEnd),l=n(r.onArrayBegin),u=n(r.onArrayEnd),c=a(r.onLiteralValue),h=a(r.onSeparator),g=n(r.onComment),m=a(r.onError),p=i&&i.disallowComments,d=i&&i.allowTrailingComma;function b(){for(;;){var w=e.scan();switch(e.getTokenError()){case 4:y(14);break;case 5:y(15);break;case 3:y(13);break;case 1:p||y(11);break;case 2:y(12);break;case 6:y(16);break}switch(w){case 12:case 13:p?y(10):g();break;case 16:y(1);break;case 15:case 14:break;default:return w}}}function y(w,C,L){if(C===void 0&&(C=[]),L===void 0&&(L=[]),m(w),C.length+L.length>0)for(var N=e.getToken();N!==17;){if(C.indexOf(N)!==-1){b();break}else if(L.indexOf(N)!==-1)break;N=b()}}function v(w){var C=e.getTokenValue();return w?c(C):o(C),b(),!0}function O(){switch(e.getToken()){case 11:var w=e.getTokenValue(),C=Number(w);isNaN(C)&&(y(2),C=0),c(C);break;case 7:c(null);break;case 8:c(!0);break;case 9:c(!1);break;default:return!1}return b(),!0}function E(){return e.getToken()!==10?(y(3,[],[2,5]),!1):(v(!1),e.getToken()===6?(h(":"),b(),P()||y(4,[],[2,5])):y(5,[],[2,5]),!0)}function j(){s(),b();for(var w=!1;e.getToken()!==2&&e.getToken()!==17;){if(e.getToken()===5){if(w||y(4,[],[]),h(","),b(),e.getToken()===2&&d)break}else w&&y(6,[],[]);E()||y(4,[],[2,5]),w=!0}return f(),e.getToken()!==2?y(7,[2],[]):b(),!0}function A(){l(),b();for(var w=!1;e.getToken()!==4&&e.getToken()!==17;){if(e.getToken()===5){if(w||y(4,[],[]),h(","),b(),e.getToken()===4&&d)break}else w&&y(6,[],[]);P()||y(4,[],[4,5]),w=!0}return u(),e.getToken()!==4?y(8,[4],[]):b(),!0}function P(){switch(e.getToken()){case 3:return A();case 1:return j();case 10:return v(!0);default:return O()}}return b(),e.getToken()===17?i.allowEmptyContent?!0:(y(4,[],[]),!1):P()?(e.getToken()!==17&&y(9,[],[]),!0):(y(4,[],[]),!1)}var le=Pe;var Qt=Xt;var Yt=vt,Kt=mt,er=_e;function tr(t,r,i){return pt(t,r,i)}function Ie(t,r){if(t===r)return!0;if(t==null||r===null||r===void 0||typeof t!=typeof r||typeof t!="object"||Array.isArray(t)!==Array.isArray(r))return!1;var i,e;if(Array.isArray(t)){if(t.length!==r.length)return!1;for(i=0;i<t.length;i++)if(!Ie(t[i],r[i]))return!1}else{var n=[];for(e in t)n.push(e);n.sort();var a=[];for(e in r)a.push(e);if(a.sort(),!Ie(n,a))return!1;for(i=0;i<n.length;i++)if(!Ie(t[n[i]],r[n[i]]))return!1}return!0}function ee(t){return typeof t=="number"}function se(t){return typeof t<"u"}function ie(t){return typeof t=="boolean"}function rr(t){return typeof t=="string"}function un(t,r){if(t.length<r.length)return!1;for(var i=0;i<r.length;i++)if(t[i]!==r[i])return!1;return!0}function pe(t,r){var i=t.length-r.length;return i>0?t.lastIndexOf(r)===i:i===0?t===r:!1}function xe(t){var r="";un(t,"(?i)")&&(t=t.substring(4),r="i");try{return new RegExp(t,r+"u")}catch{try{return new RegExp(t,r)}catch{return}}}var ir;(function(t){t.MIN_VALUE=-2147483648,t.MAX_VALUE=2147483647})(ir||(ir={}));var Ge;(function(t){t.MIN_VALUE=0,t.MAX_VALUE=2147483647})(Ge||(Ge={}));var re;(function(t){function r(e,n){return e===Number.MAX_VALUE&&(e=Ge.MAX_VALUE),n===Number.MAX_VALUE&&(n=Ge.MAX_VALUE),{line:e,character:n}}t.create=r;function i(e){var n=e;return x.objectLiteral(n)&&x.uinteger(n.line)&&x.uinteger(n.character)}t.is=i})(re||(re={}));var U;(function(t){function r(e,n,a,s){if(x.uinteger(e)&&x.uinteger(n)&&x.uinteger(a)&&x.uinteger(s))return{start:re.create(e,n),end:re.create(a,s)};if(re.is(e)&&re.is(n))return{start:e,end:n};throw new Error("Range#create called with invalid arguments["+e+", "+n+", "+a+", "+s+"]")}t.create=r;function i(e){var n=e;return x.objectLiteral(n)&&re.is(n.start)&&re.is(n.end)}t.is=i})(U||(U={}));var Se;(function(t){function r(e,n){return{uri:e,range:n}}t.create=r;function i(e){var n=e;return x.defined(n)&&U.is(n.range)&&(x.string(n.uri)||x.undefined(n.uri))}t.is=i})(Se||(Se={}));var ar;(function(t){function r(e,n,a,s){return{targetUri:e,targetRange:n,targetSelectionRange:a,originSelectionRange:s}}t.create=r;function i(e){var n=e;return x.defined(n)&&U.is(n.targetRange)&&x.string(n.targetUri)&&(U.is(n.targetSelectionRange)||x.undefined(n.targetSelectionRange))&&(U.is(n.originSelectionRange)||x.undefined(n.originSelectionRange))}t.is=i})(ar||(ar={}));var Xe;(function(t){function r(e,n,a,s){return{red:e,green:n,blue:a,alpha:s}}t.create=r;function i(e){var n=e;return x.numberRange(n.red,0,1)&&x.numberRange(n.green,0,1)&&x.numberRange(n.blue,0,1)&&x.numberRange(n.alpha,0,1)}t.is=i})(Xe||(Xe={}));var bt;(function(t){function r(e,n){return{range:e,color:n}}t.create=r;function i(e){var n=e;return U.is(n.range)&&Xe.is(n.color)}t.is=i})(bt||(bt={}));var xt;(function(t){function r(e,n,a){return{label:e,textEdit:n,additionalTextEdits:a}}t.create=r;function i(e){var n=e;return x.string(n.label)&&(x.undefined(n.textEdit)||Y.is(n))&&(x.undefined(n.additionalTextEdits)||x.typedArray(n.additionalTextEdits,Y.is))}t.is=i})(xt||(xt={}));var Ae;(function(t){t.Comment="comment",t.Imports="imports",t.Region="region"})(Ae||(Ae={}));var St;(function(t){function r(e,n,a,s,o){var f={startLine:e,endLine:n};return x.defined(a)&&(f.startCharacter=a),x.defined(s)&&(f.endCharacter=s),x.defined(o)&&(f.kind=o),f}t.create=r;function i(e){var n=e;return x.uinteger(n.startLine)&&x.uinteger(n.startLine)&&(x.undefined(n.startCharacter)||x.uinteger(n.startCharacter))&&(x.undefined(n.endCharacter)||x.uinteger(n.endCharacter))&&(x.undefined(n.kind)||x.string(n.kind))}t.is=i})(St||(St={}));var At;(function(t){function r(e,n){return{location:e,message:n}}t.create=r;function i(e){var n=e;return x.defined(n)&&Se.is(n.location)&&x.string(n.message)}t.is=i})(At||(At={}));var Z;(function(t){t.Error=1,t.Warning=2,t.Information=3,t.Hint=4})(Z||(Z={}));var or;(function(t){t.Unnecessary=1,t.Deprecated=2})(or||(or={}));var sr;(function(t){function r(i){var e=i;return e!=null&&x.string(e.href)}t.is=r})(sr||(sr={}));var ae;(function(t){function r(e,n,a,s,o,f){var l={range:e,message:n};return x.defined(a)&&(l.severity=a),x.defined(s)&&(l.code=s),x.defined(o)&&(l.source=o),x.defined(f)&&(l.relatedInformation=f),l}t.create=r;function i(e){var n,a=e;return x.defined(a)&&U.is(a.range)&&x.string(a.message)&&(x.number(a.severity)||x.undefined(a.severity))&&(x.integer(a.code)||x.string(a.code)||x.undefined(a.code))&&(x.undefined(a.codeDescription)||x.string((n=a.codeDescription)===null||n===void 0?void 0:n.href))&&(x.string(a.source)||x.undefined(a.source))&&(x.undefined(a.relatedInformation)||x.typedArray(a.relatedInformation,At.is))}t.is=i})(ae||(ae={}));var je;(function(t){function r(e,n){for(var a=[],s=2;s<arguments.length;s++)a[s-2]=arguments[s];var o={title:e,command:n};return x.defined(a)&&a.length>0&&(o.arguments=a),o}t.create=r;function i(e){var n=e;return x.defined(n)&&x.string(n.title)&&x.string(n.command)}t.is=i})(je||(je={}));var Y;(function(t){function r(a,s){return{range:a,newText:s}}t.replace=r;function i(a,s){return{range:{start:a,end:a},newText:s}}t.insert=i;function e(a){return{range:a,newText:""}}t.del=e;function n(a){var s=a;return x.objectLiteral(s)&&x.string(s.newText)&&U.is(s.range)}t.is=n})(Y||(Y={}));var Ee;(function(t){function r(e,n,a){var s={label:e};return n!==void 0&&(s.needsConfirmation=n),a!==void 0&&(s.description=a),s}t.create=r;function i(e){var n=e;return n!==void 0&&x.objectLiteral(n)&&x.string(n.label)&&(x.boolean(n.needsConfirmation)||n.needsConfirmation===void 0)&&(x.string(n.description)||n.description===void 0)}t.is=i})(Ee||(Ee={}));var X;(function(t){function r(i){var e=i;return typeof e=="string"}t.is=r})(X||(X={}));var me;(function(t){function r(a,s,o){return{range:a,newText:s,annotationId:o}}t.replace=r;function i(a,s,o){return{range:{start:a,end:a},newText:s,annotationId:o}}t.insert=i;function e(a,s){return{range:a,newText:"",annotationId:s}}t.del=e;function n(a){var s=a;return Y.is(s)&&(Ee.is(s.annotationId)||X.is(s.annotationId))}t.is=n})(me||(me={}));var Ve;(function(t){function r(e,n){return{textDocument:e,edits:n}}t.create=r;function i(e){var n=e;return x.defined(n)&&Qe.is(n.textDocument)&&Array.isArray(n.edits)}t.is=i})(Ve||(Ve={}));var Fe;(function(t){function r(e,n,a){var s={kind:"create",uri:e};return n!==void 0&&(n.overwrite!==void 0||n.ignoreIfExists!==void 0)&&(s.options=n),a!==void 0&&(s.annotationId=a),s}t.create=r;function i(e){var n=e;return n&&n.kind==="create"&&x.string(n.uri)&&(n.options===void 0||(n.options.overwrite===void 0||x.boolean(n.options.overwrite))&&(n.options.ignoreIfExists===void 0||x.boolean(n.options.ignoreIfExists)))&&(n.annotationId===void 0||X.is(n.annotationId))}t.is=i})(Fe||(Fe={}));var $e;(function(t){function r(e,n,a,s){var o={kind:"rename",oldUri:e,newUri:n};return a!==void 0&&(a.overwrite!==void 0||a.ignoreIfExists!==void 0)&&(o.options=a),s!==void 0&&(o.annotationId=s),o}t.create=r;function i(e){var n=e;return n&&n.kind==="rename"&&x.string(n.oldUri)&&x.string(n.newUri)&&(n.options===void 0||(n.options.overwrite===void 0||x.boolean(n.options.overwrite))&&(n.options.ignoreIfExists===void 0||x.boolean(n.options.ignoreIfExists)))&&(n.annotationId===void 0||X.is(n.annotationId))}t.is=i})($e||($e={}));var De;(function(t){function r(e,n,a){var s={kind:"delete",uri:e};return n!==void 0&&(n.recursive!==void 0||n.ignoreIfNotExists!==void 0)&&(s.options=n),a!==void 0&&(s.annotationId=a),s}t.create=r;function i(e){var n=e;return n&&n.kind==="delete"&&x.string(n.uri)&&(n.options===void 0||(n.options.recursive===void 0||x.boolean(n.options.recursive))&&(n.options.ignoreIfNotExists===void 0||x.boolean(n.options.ignoreIfNotExists)))&&(n.annotationId===void 0||X.is(n.annotationId))}t.is=i})(De||(De={}));var Ze;(function(t){function r(i){var e=i;return e&&(e.changes!==void 0||e.documentChanges!==void 0)&&(e.documentChanges===void 0||e.documentChanges.every(function(n){return x.string(n.kind)?Fe.is(n)||$e.is(n)||De.is(n):Ve.is(n)}))}t.is=r})(Ze||(Ze={}));var He=function(){function t(r,i){this.edits=r,this.changeAnnotations=i}return t.prototype.insert=function(r,i,e){var n,a;if(e===void 0?n=Y.insert(r,i):X.is(e)?(a=e,n=me.insert(r,i,e)):(this.assertChangeAnnotations(this.changeAnnotations),a=this.changeAnnotations.manage(e),n=me.insert(r,i,a)),this.edits.push(n),a!==void 0)return a},t.prototype.replace=function(r,i,e){var n,a;if(e===void 0?n=Y.replace(r,i):X.is(e)?(a=e,n=me.replace(r,i,e)):(this.assertChangeAnnotations(this.changeAnnotations),a=this.changeAnnotations.manage(e),n=me.replace(r,i,a)),this.edits.push(n),a!==void 0)return a},t.prototype.delete=function(r,i){var e,n;if(i===void 0?e=Y.del(r):X.is(i)?(n=i,e=me.del(r,i)):(this.assertChangeAnnotations(this.changeAnnotations),n=this.changeAnnotations.manage(i),e=me.del(r,n)),this.edits.push(e),n!==void 0)return n},t.prototype.add=function(r){this.edits.push(r)},t.prototype.all=function(){return this.edits},t.prototype.clear=function(){this.edits.splice(0,this.edits.length)},t.prototype.assertChangeAnnotations=function(r){if(r===void 0)throw new Error("Text edit change is not configured to manage change annotations.")},t}(),fr=function(){function t(r){this._annotations=r===void 0?Object.create(null):r,this._counter=0,this._size=0}return t.prototype.all=function(){return this._annotations},Object.defineProperty(t.prototype,"size",{get:function(){return this._size},enumerable:!1,configurable:!0}),t.prototype.manage=function(r,i){var e;if(X.is(r)?e=r:(e=this.nextId(),i=r),this._annotations[e]!==void 0)throw new Error("Id "+e+" is already in use.");if(i===void 0)throw new Error("No annotation provided for id "+e);return this._annotations[e]=i,this._size++,e},t.prototype.nextId=function(){return this._counter++,this._counter.toString()},t}(),ni=function(){function t(r){var i=this;this._textEditChanges=Object.create(null),r!==void 0?(this._workspaceEdit=r,r.documentChanges?(this._changeAnnotations=new fr(r.changeAnnotations),r.changeAnnotations=this._changeAnnotations.all(),r.documentChanges.forEach(function(e){if(Ve.is(e)){var n=new He(e.edits,i._changeAnnotations);i._textEditChanges[e.textDocument.uri]=n}})):r.changes&&Object.keys(r.changes).forEach(function(e){var n=new He(r.changes[e]);i._textEditChanges[e]=n})):this._workspaceEdit={}}return Object.defineProperty(t.prototype,"edit",{get:function(){return this.initDocumentChanges(),this._changeAnnotations!==void 0&&(this._changeAnnotations.size===0?this._workspaceEdit.changeAnnotations=void 0:this._workspaceEdit.changeAnnotations=this._changeAnnotations.all()),this._workspaceEdit},enumerable:!1,configurable:!0}),t.prototype.getTextEditChange=function(r){if(Qe.is(r)){if(this.initDocumentChanges(),this._workspaceEdit.documentChanges===void 0)throw new Error("Workspace edit is not configured for document changes.");var i={uri:r.uri,version:r.version},e=this._textEditChanges[i.uri];if(!e){var n=[],a={textDocument:i,edits:n};this._workspaceEdit.documentChanges.push(a),e=new He(n,this._changeAnnotations),this._textEditChanges[i.uri]=e}return e}else{if(this.initChanges(),this._workspaceEdit.changes===void 0)throw new Error("Workspace edit is not configured for normal text edit changes.");var e=this._textEditChanges[r];if(!e){var n=[];this._workspaceEdit.changes[r]=n,e=new He(n),this._textEditChanges[r]=e}return e}},t.prototype.initDocumentChanges=function(){this._workspaceEdit.documentChanges===void 0&&this._workspaceEdit.changes===void 0&&(this._changeAnnotations=new fr,this._workspaceEdit.documentChanges=[],this._workspaceEdit.changeAnnotations=this._changeAnnotations.all())},t.prototype.initChanges=function(){this._workspaceEdit.documentChanges===void 0&&this._workspaceEdit.changes===void 0&&(this._workspaceEdit.changes=Object.create(null))},t.prototype.createFile=function(r,i,e){if(this.initDocumentChanges(),this._workspaceEdit.documentChanges===void 0)throw new Error("Workspace edit is not configured for document changes.");var n;Ee.is(i)||X.is(i)?n=i:e=i;var a,s;if(n===void 0?a=Fe.create(r,e):(s=X.is(n)?n:this._changeAnnotations.manage(n),a=Fe.create(r,e,s)),this._workspaceEdit.documentChanges.push(a),s!==void 0)return s},t.prototype.renameFile=function(r,i,e,n){if(this.initDocumentChanges(),this._workspaceEdit.documentChanges===void 0)throw new Error("Workspace edit is not configured for document changes.");var a;Ee.is(e)||X.is(e)?a=e:n=e;var s,o;if(a===void 0?s=$e.create(r,i,n):(o=X.is(a)?a:this._changeAnnotations.manage(a),s=$e.create(r,i,n,o)),this._workspaceEdit.documentChanges.push(s),o!==void 0)return o},t.prototype.deleteFile=function(r,i,e){if(this.initDocumentChanges(),this._workspaceEdit.documentChanges===void 0)throw new Error("Workspace edit is not configured for document changes.");var n;Ee.is(i)||X.is(i)?n=i:e=i;var a,s;if(n===void 0?a=De.create(r,e):(s=X.is(n)?n:this._changeAnnotations.manage(n),a=De.create(r,e,s)),this._workspaceEdit.documentChanges.push(a),s!==void 0)return s},t}();var ur;(function(t){function r(e){return{uri:e}}t.create=r;function i(e){var n=e;return x.defined(n)&&x.string(n.uri)}t.is=i})(ur||(ur={}));var wt;(function(t){function r(e,n){return{uri:e,version:n}}t.create=r;function i(e){var n=e;return x.defined(n)&&x.string(n.uri)&&x.integer(n.version)}t.is=i})(wt||(wt={}));var Qe;(function(t){function r(e,n){return{uri:e,version:n}}t.create=r;function i(e){var n=e;return x.defined(n)&&x.string(n.uri)&&(n.version===null||x.integer(n.version))}t.is=i})(Qe||(Qe={}));var cr;(function(t){function r(e,n,a,s){return{uri:e,languageId:n,version:a,text:s}}t.create=r;function i(e){var n=e;return x.defined(n)&&x.string(n.uri)&&x.string(n.languageId)&&x.integer(n.version)&&x.string(n.text)}t.is=i})(cr||(cr={}));var fe;(function(t){t.PlainText="plaintext",t.Markdown="markdown"})(fe||(fe={}));(function(t){function r(i){var e=i;return e===t.PlainText||e===t.Markdown}t.is=r})(fe||(fe={}));var Ye;(function(t){function r(i){var e=i;return x.objectLiteral(i)&&fe.is(e.kind)&&x.string(e.value)}t.is=r})(Ye||(Ye={}));var Q;(function(t){t.Text=1,t.Method=2,t.Function=3,t.Constructor=4,t.Field=5,t.Variable=6,t.Class=7,t.Interface=8,t.Module=9,t.Property=10,t.Unit=11,t.Value=12,t.Enum=13,t.Keyword=14,t.Snippet=15,t.Color=16,t.File=17,t.Reference=18,t.Folder=19,t.EnumMember=20,t.Constant=21,t.Struct=22,t.Event=23,t.Operator=24,t.TypeParameter=25})(Q||(Q={}));var z;(function(t){t.PlainText=1,t.Snippet=2})(z||(z={}));var Tt;(function(t){t.Deprecated=1})(Tt||(Tt={}));var lr;(function(t){function r(e,n,a){return{newText:e,insert:n,replace:a}}t.create=r;function i(e){var n=e;return n&&x.string(n.newText)&&U.is(n.insert)&&U.is(n.replace)}t.is=i})(lr||(lr={}));var hr;(function(t){t.asIs=1,t.adjustIndentation=2})(hr||(hr={}));var Re;(function(t){function r(i){return{label:i}}t.create=r})(Re||(Re={}));var kt;(function(t){function r(i,e){return{items:i||[],isIncomplete:!!e}}t.create=r})(kt||(kt={}));var Ue;(function(t){function r(e){return e.replace(/[\\`*_{}[\]()#+\-.!]/g,"\\$&")}t.fromPlainText=r;function i(e){var n=e;return x.string(n)||x.objectLiteral(n)&&x.string(n.language)&&x.string(n.value)}t.is=i})(Ue||(Ue={}));var Ot;(function(t){function r(i){var e=i;return!!e&&x.objectLiteral(e)&&(Ye.is(e.contents)||Ue.is(e.contents)||x.typedArray(e.contents,Ue.is))&&(i.range===void 0||U.is(i.range))}t.is=r})(Ot||(Ot={}));var dr;(function(t){function r(i,e){return e?{label:i,documentation:e}:{label:i}}t.create=r})(dr||(dr={}));var gr;(function(t){function r(i,e){for(var n=[],a=2;a<arguments.length;a++)n[a-2]=arguments[a];var s={label:i};return x.defined(e)&&(s.documentation=e),x.defined(n)?s.parameters=n:s.parameters=[],s}t.create=r})(gr||(gr={}));var Ct;(function(t){t.Text=1,t.Read=2,t.Write=3})(Ct||(Ct={}));var Pt;(function(t){function r(i,e){var n={range:i};return x.number(e)&&(n.kind=e),n}t.create=r})(Pt||(Pt={}));var oe;(function(t){t.File=1,t.Module=2,t.Namespace=3,t.Package=4,t.Class=5,t.Method=6,t.Property=7,t.Field=8,t.Constructor=9,t.Enum=10,t.Interface=11,t.Function=12,t.Variable=13,t.Constant=14,t.String=15,t.Number=16,t.Boolean=17,t.Array=18,t.Object=19,t.Key=20,t.Null=21,t.EnumMember=22,t.Struct=23,t.Event=24,t.Operator=25,t.TypeParameter=26})(oe||(oe={}));var pr;(function(t){t.Deprecated=1})(pr||(pr={}));var It;(function(t){function r(i,e,n,a,s){var o={name:i,kind:e,location:{uri:a,range:n}};return s&&(o.containerName=s),o}t.create=r})(It||(It={}));var Et;(function(t){function r(e,n,a,s,o,f){var l={name:e,detail:n,kind:a,range:s,selectionRange:o};return f!==void 0&&(l.children=f),l}t.create=r;function i(e){var n=e;return n&&x.string(n.name)&&x.number(n.kind)&&U.is(n.range)&&U.is(n.selectionRange)&&(n.detail===void 0||x.string(n.detail))&&(n.deprecated===void 0||x.boolean(n.deprecated))&&(n.children===void 0||Array.isArray(n.children))&&(n.tags===void 0||Array.isArray(n.tags))}t.is=i})(Et||(Et={}));var jt;(function(t){t.Empty="",t.QuickFix="quickfix",t.Refactor="refactor",t.RefactorExtract="refactor.extract",t.RefactorInline="refactor.inline",t.RefactorRewrite="refactor.rewrite",t.Source="source",t.SourceOrganizeImports="source.organizeImports",t.SourceFixAll="source.fixAll"})(jt||(jt={}));var Nt;(function(t){function r(e,n){var a={diagnostics:e};return n!=null&&(a.only=n),a}t.create=r;function i(e){var n=e;return x.defined(n)&&x.typedArray(n.diagnostics,ae.is)&&(n.only===void 0||x.typedArray(n.only,x.string))}t.is=i})(Nt||(Nt={}));var Mt;(function(t){function r(e,n,a){var s={title:e},o=!0;return typeof n=="string"?(o=!1,s.kind=n):je.is(n)?s.command=n:s.edit=n,o&&a!==void 0&&(s.kind=a),s}t.create=r;function i(e){var n=e;return n&&x.string(n.title)&&(n.diagnostics===void 0||x.typedArray(n.diagnostics,ae.is))&&(n.kind===void 0||x.string(n.kind))&&(n.edit!==void 0||n.command!==void 0)&&(n.command===void 0||je.is(n.command))&&(n.isPreferred===void 0||x.boolean(n.isPreferred))&&(n.edit===void 0||Ze.is(n.edit))}t.is=i})(Mt||(Mt={}));var mr;(function(t){function r(e,n){var a={range:e};return x.defined(n)&&(a.data=n),a}t.create=r;function i(e){var n=e;return x.defined(n)&&U.is(n.range)&&(x.undefined(n.command)||je.is(n.command))}t.is=i})(mr||(mr={}));var vr;(function(t){function r(e,n){return{tabSize:e,insertSpaces:n}}t.create=r;function i(e){var n=e;return x.defined(n)&&x.uinteger(n.tabSize)&&x.boolean(n.insertSpaces)}t.is=i})(vr||(vr={}));var Lt;(function(t){function r(e,n,a){return{range:e,target:n,data:a}}t.create=r;function i(e){var n=e;return x.defined(n)&&U.is(n.range)&&(x.undefined(n.target)||x.string(n.target))}t.is=i})(Lt||(Lt={}));var Ne;(function(t){function r(e,n){return{range:e,parent:n}}t.create=r;function i(e){var n=e;return n!==void 0&&U.is(n.range)&&(n.parent===void 0||t.is(n.parent))}t.is=i})(Ne||(Ne={}));var yr;(function(t){function r(a,s,o,f){return new cn(a,s,o,f)}t.create=r;function i(a){var s=a;return!!(x.defined(s)&&x.string(s.uri)&&(x.undefined(s.languageId)||x.string(s.languageId))&&x.uinteger(s.lineCount)&&x.func(s.getText)&&x.func(s.positionAt)&&x.func(s.offsetAt))}t.is=i;function e(a,s){for(var o=a.getText(),f=n(s,function(m,p){var d=m.range.start.line-p.range.start.line;return d===0?m.range.start.character-p.range.start.character:d}),l=o.length,u=f.length-1;u>=0;u--){var c=f[u],h=a.offsetAt(c.range.start),g=a.offsetAt(c.range.end);if(g<=l)o=o.substring(0,h)+c.newText+o.substring(g,o.length);else throw new Error("Overlapping edit");l=h}return o}t.applyEdits=e;function n(a,s){if(a.length<=1)return a;var o=a.length/2|0,f=a.slice(0,o),l=a.slice(o);n(f,s),n(l,s);for(var u=0,c=0,h=0;u<f.length&&c<l.length;){var g=s(f[u],l[c]);g<=0?a[h++]=f[u++]:a[h++]=l[c++]}for(;u<f.length;)a[h++]=f[u++];for(;c<l.length;)a[h++]=l[c++];return a}})(yr||(yr={}));var cn=function(){function t(r,i,e,n){this._uri=r,this._languageId=i,this._version=e,this._content=n,this._lineOffsets=void 0}return Object.defineProperty(t.prototype,"uri",{get:function(){return this._uri},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"languageId",{get:function(){return this._languageId},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"version",{get:function(){return this._version},enumerable:!1,configurable:!0}),t.prototype.getText=function(r){if(r){var i=this.offsetAt(r.start),e=this.offsetAt(r.end);return this._content.substring(i,e)}return this._content},t.prototype.update=function(r,i){this._content=r.text,this._version=i,this._lineOffsets=void 0},t.prototype.getLineOffsets=function(){if(this._lineOffsets===void 0){for(var r=[],i=this._content,e=!0,n=0;n<i.length;n++){e&&(r.push(n),e=!1);var a=i.charAt(n);e=a==="\r"||a===`
-`,a==="\r"&&n+1<i.length&&i.charAt(n+1)===`
-`&&n++}e&&i.length>0&&r.push(i.length),this._lineOffsets=r}return this._lineOffsets},t.prototype.positionAt=function(r){r=Math.max(Math.min(r,this._content.length),0);var i=this.getLineOffsets(),e=0,n=i.length;if(n===0)return re.create(0,r);for(;e<n;){var a=Math.floor((e+n)/2);i[a]>r?n=a:e=a+1}var s=e-1;return re.create(s,r-i[s])},t.prototype.offsetAt=function(r){var i=this.getLineOffsets();if(r.line>=i.length)return this._content.length;if(r.line<0)return 0;var e=i[r.line],n=r.line+1<i.length?i[r.line+1]:this._content.length;return Math.max(Math.min(e+r.character,n),e)},Object.defineProperty(t.prototype,"lineCount",{get:function(){return this.getLineOffsets().length},enumerable:!1,configurable:!0}),t}(),x;(function(t){var r=Object.prototype.toString;function i(g){return typeof g<"u"}t.defined=i;function e(g){return typeof g>"u"}t.undefined=e;function n(g){return g===!0||g===!1}t.boolean=n;function a(g){return r.call(g)==="[object String]"}t.string=a;function s(g){return r.call(g)==="[object Number]"}t.number=s;function o(g,m,p){return r.call(g)==="[object Number]"&&m<=g&&g<=p}t.numberRange=o;function f(g){return r.call(g)==="[object Number]"&&-2147483648<=g&&g<=2147483647}t.integer=f;function l(g){return r.call(g)==="[object Number]"&&0<=g&&g<=2147483647}t.uinteger=l;function u(g){return r.call(g)==="[object Function]"}t.func=u;function c(g){return g!==null&&typeof g=="object"}t.objectLiteral=c;function h(g,m){return Array.isArray(g)&&g.every(m)}t.typedArray=h})(x||(x={}));var we=class{constructor(r,i,e,n){this._uri=r,this._languageId=i,this._version=e,this._content=n,this._lineOffsets=void 0}get uri(){return this._uri}get languageId(){return this._languageId}get version(){return this._version}getText(r){if(r){let i=this.offsetAt(r.start),e=this.offsetAt(r.end);return this._content.substring(i,e)}return this._content}update(r,i){for(let e of r)if(we.isIncremental(e)){let n=xr(e.range),a=this.offsetAt(n.start),s=this.offsetAt(n.end);this._content=this._content.substring(0,a)+e.text+this._content.substring(s,this._content.length);let o=Math.max(n.start.line,0),f=Math.max(n.end.line,0),l=this._lineOffsets,u=br(e.text,!1,a);if(f-o===u.length)for(let h=0,g=u.length;h<g;h++)l[h+o+1]=u[h];else u.length<1e4?l.splice(o+1,f-o,...u):this._lineOffsets=l=l.slice(0,o+1).concat(u,l.slice(f+1));let c=e.text.length-(s-a);if(c!==0)for(let h=o+1+u.length,g=l.length;h<g;h++)l[h]=l[h]+c}else if(we.isFull(e))this._content=e.text,this._lineOffsets=void 0;else throw new Error("Unknown change event received");this._version=i}getLineOffsets(){return this._lineOffsets===void 0&&(this._lineOffsets=br(this._content,!0)),this._lineOffsets}positionAt(r){r=Math.max(Math.min(r,this._content.length),0);let i=this.getLineOffsets(),e=0,n=i.length;if(n===0)return{line:0,character:r};for(;e<n;){let s=Math.floor((e+n)/2);i[s]>r?n=s:e=s+1}let a=e-1;return{line:a,character:r-i[a]}}offsetAt(r){let i=this.getLineOffsets();if(r.line>=i.length)return this._content.length;if(r.line<0)return 0;let e=i[r.line],n=r.line+1<i.length?i[r.line+1]:this._content.length;return Math.max(Math.min(e+r.character,n),e)}get lineCount(){return this.getLineOffsets().length}static isIncremental(r){let i=r;return i!=null&&typeof i.text=="string"&&i.range!==void 0&&(i.rangeLength===void 0||typeof i.rangeLength=="number")}static isFull(r){let i=r;return i!=null&&typeof i.text=="string"&&i.range===void 0&&i.rangeLength===void 0}},We;(function(t){function r(n,a,s,o){return new we(n,a,s,o)}t.create=r;function i(n,a,s){if(n instanceof we)return n.update(a,s),n;throw new Error("TextDocument.update: document must be created by TextDocument.create")}t.update=i;function e(n,a){let s=n.getText(),o=Vt(a.map(ln),(u,c)=>{let h=u.range.start.line-c.range.start.line;return h===0?u.range.start.character-c.range.start.character:h}),f=0,l=[];for(let u of o){let c=n.offsetAt(u.range.start);if(c<f)throw new Error("Overlapping edit");c>f&&l.push(s.substring(f,c)),u.newText.length&&l.push(u.newText),f=n.offsetAt(u.range.end)}return l.push(s.substr(f)),l.join("")}t.applyEdits=e})(We||(We={}));function Vt(t,r){if(t.length<=1)return t;let i=t.length/2|0,e=t.slice(0,i),n=t.slice(i);Vt(e,r),Vt(n,r);let a=0,s=0,o=0;for(;a<e.length&&s<n.length;)r(e[a],n[s])<=0?t[o++]=e[a++]:t[o++]=n[s++];for(;a<e.length;)t[o++]=e[a++];for(;s<n.length;)t[o++]=n[s++];return t}function br(t,r,i=0){let e=r?[i]:[];for(let n=0;n<t.length;n++){let a=t.charCodeAt(n);(a===13||a===10)&&(a===13&&n+1<t.length&&t.charCodeAt(n+1)===10&&n++,e.push(i+n+1))}return e}function xr(t){let r=t.start,i=t.end;return r.line>i.line||r.line===i.line&&r.character>i.character?{start:i,end:r}:t}function ln(t){let r=xr(t.range);return r!==t.range?{newText:t.newText,range:r}:t}var W;(function(t){t[t.Undefined=0]="Undefined",t[t.EnumValueMismatch=1]="EnumValueMismatch",t[t.Deprecated=2]="Deprecated",t[t.UnexpectedEndOfComment=257]="UnexpectedEndOfComment",t[t.UnexpectedEndOfString=258]="UnexpectedEndOfString",t[t.UnexpectedEndOfNumber=259]="UnexpectedEndOfNumber",t[t.InvalidUnicode=260]="InvalidUnicode",t[t.InvalidEscapeCharacter=261]="InvalidEscapeCharacter",t[t.InvalidCharacter=262]="InvalidCharacter",t[t.PropertyExpected=513]="PropertyExpected",t[t.CommaExpected=514]="CommaExpected",t[t.ColonExpected=515]="ColonExpected",t[t.ValueExpected=516]="ValueExpected",t[t.CommaOrCloseBacketExpected=517]="CommaOrCloseBacketExpected",t[t.CommaOrCloseBraceExpected=518]="CommaOrCloseBraceExpected",t[t.TrailingComma=519]="TrailingComma",t[t.DuplicateKey=520]="DuplicateKey",t[t.CommentNotPermitted=521]="CommentNotPermitted",t[t.SchemaResolveError=768]="SchemaResolveError"})(W||(W={}));var Sr;(function(t){t.LATEST={textDocument:{completion:{completionItem:{documentationFormat:[fe.Markdown,fe.PlainText],commitCharactersSupport:!0}}}}})(Sr||(Sr={}));function hn(t,r){let i;return r.length===0?i=t:i=t.replace(/\{(\d+)\}/g,(e,n)=>{let a=n[0];return typeof r[a]<"u"?r[a]:e}),i}function dn(t,r,...i){return hn(r,i)}function he(t){return dn}var Te=function(){var t=function(r,i){return t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(e,n){e.__proto__=n}||function(e,n){for(var a in n)Object.prototype.hasOwnProperty.call(n,a)&&(e[a]=n[a])},t(r,i)};return function(r,i){if(typeof i!="function"&&i!==null)throw new TypeError("Class extends value "+String(i)+" is not a constructor or null");t(r,i);function e(){this.constructor=r}r.prototype=i===null?Object.create(i):(e.prototype=i.prototype,new e)}}(),M=he(),gn={"color-hex":{errorMessage:M("colorHexFormatWarning","Invalid color format. Use #RGB, #RGBA, #RRGGBB or #RRGGBBAA."),pattern:/^#([0-9A-Fa-f]{3,4}|([0-9A-Fa-f]{2}){3,4})$/},"date-time":{errorMessage:M("dateTimeFormatWarning","String is not a RFC3339 date-time."),pattern:/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)([01][0-9]|2[0-3]):([0-5][0-9]))$/i},date:{errorMessage:M("dateFormatWarning","String is not a RFC3339 date."),pattern:/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/i},time:{errorMessage:M("timeFormatWarning","String is not a RFC3339 time."),pattern:/^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)([01][0-9]|2[0-3]):([0-5][0-9]))$/i},email:{errorMessage:M("emailFormatWarning","String is not an e-mail address."),pattern:/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}))$/},hostname:{errorMessage:M("hostnameFormatWarning","String is not a hostname."),pattern:/^(?=.{1,253}\.?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*\.?$/i},ipv4:{errorMessage:M("ipv4FormatWarning","String is not an IPv4 address."),pattern:/^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/},ipv6:{errorMessage:M("ipv6FormatWarning","String is not an IPv6 address."),pattern:/^((([0-9a-f]{1,4}:){7}([0-9a-f]{1,4}|:))|(([0-9a-f]{1,4}:){6}(:[0-9a-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9a-f]{1,4}:){5}(((:[0-9a-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9a-f]{1,4}:){4}(((:[0-9a-f]{1,4}){1,3})|((:[0-9a-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9a-f]{1,4}:){3}(((:[0-9a-f]{1,4}){1,4})|((:[0-9a-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9a-f]{1,4}:){2}(((:[0-9a-f]{1,4}){1,5})|((:[0-9a-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9a-f]{1,4}:){1}(((:[0-9a-f]{1,4}){1,6})|((:[0-9a-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9a-f]{1,4}){1,7})|((:[0-9a-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))$/i}},ke=function(){function t(r,i,e){e===void 0&&(e=0),this.offset=i,this.length=e,this.parent=r}return Object.defineProperty(t.prototype,"children",{get:function(){return[]},enumerable:!1,configurable:!0}),t.prototype.toString=function(){return"type: "+this.type+" ("+this.offset+"/"+this.length+")"+(this.parent?" parent: {"+this.parent.toString()+"}":"")},t}();var pn=function(t){Te(r,t);function r(i,e){var n=t.call(this,i,e)||this;return n.type="null",n.value=null,n}return r}(ke);var Ar=function(t){Te(r,t);function r(i,e,n){var a=t.call(this,i,n)||this;return a.type="boolean",a.value=e,a}return r}(ke);var mn=function(t){Te(r,t);function r(i,e){var n=t.call(this,i,e)||this;return n.type="array",n.items=[],n}return Object.defineProperty(r.prototype,"children",{get:function(){return this.items},enumerable:!1,configurable:!0}),r}(ke);var vn=function(t){Te(r,t);function r(i,e){var n=t.call(this,i,e)||this;return n.type="number",n.isInteger=!0,n.value=Number.NaN,n}return r}(ke);var Ft=function(t){Te(r,t);function r(i,e,n){var a=t.call(this,i,e,n)||this;return a.type="string",a.value="",a}return r}(ke);var yn=function(t){Te(r,t);function r(i,e,n){var a=t.call(this,i,e)||this;return a.type="property",a.colonOffset=-1,a.keyNode=n,a}return Object.defineProperty(r.prototype,"children",{get:function(){return this.valueNode?[this.keyNode,this.valueNode]:[this.keyNode]},enumerable:!1,configurable:!0}),r}(ke);var bn=function(t){Te(r,t);function r(i,e){var n=t.call(this,i,e)||this;return n.type="object",n.properties=[],n}return Object.defineProperty(r.prototype,"children",{get:function(){return this.properties},enumerable:!1,configurable:!0}),r}(ke);function K(t){return ie(t)?t?{}:{not:{}}:t}var wr;(function(t){t[t.Key=0]="Key",t[t.Enum=1]="Enum"})(wr||(wr={}));var xn=function(){function t(r,i){r===void 0&&(r=-1),this.focusOffset=r,this.exclude=i,this.schemas=[]}return t.prototype.add=function(r){this.schemas.push(r)},t.prototype.merge=function(r){Array.prototype.push.apply(this.schemas,r.schemas)},t.prototype.include=function(r){return(this.focusOffset===-1||Dt(r,this.focusOffset))&&r!==this.exclude},t.prototype.newSub=function(){return new t(-1,this.exclude)},t}(),$t=function(){function t(){}return Object.defineProperty(t.prototype,"schemas",{get:function(){return[]},enumerable:!1,configurable:!0}),t.prototype.add=function(r){},t.prototype.merge=function(r){},t.prototype.include=function(r){return!0},t.prototype.newSub=function(){return this},t.instance=new t,t}(),te=function(){function t(){this.problems=[],this.propertiesMatches=0,this.propertiesValueMatches=0,this.primaryValueMatches=0,this.enumValueMatch=!1,this.enumValues=void 0}return t.prototype.hasProblems=function(){return!!this.problems.length},t.prototype.mergeAll=function(r){for(var i=0,e=r;i<e.length;i++){var n=e[i];this.merge(n)}},t.prototype.merge=function(r){this.problems=this.problems.concat(r.problems)},t.prototype.mergeEnumValues=function(r){if(!this.enumValueMatch&&!r.enumValueMatch&&this.enumValues&&r.enumValues){this.enumValues=this.enumValues.concat(r.enumValues);for(var i=0,e=this.problems;i<e.length;i++){var n=e[i];n.code===W.EnumValueMismatch&&(n.message=M("enumWarning","Value is not accepted. Valid values: {0}.",this.enumValues.map(function(a){return JSON.stringify(a)}).join(", ")))}}},t.prototype.mergePropertyMatch=function(r){this.merge(r),this.propertiesMatches++,(r.enumValueMatch||!r.hasProblems()&&r.propertiesMatches)&&this.propertiesValueMatches++,r.enumValueMatch&&r.enumValues&&r.enumValues.length===1&&this.primaryValueMatches++},t.prototype.compare=function(r){var i=this.hasProblems();return i!==r.hasProblems()?i?-1:1:this.enumValueMatch!==r.enumValueMatch?r.enumValueMatch?-1:1:this.primaryValueMatches!==r.primaryValueMatches?this.primaryValueMatches-r.primaryValueMatches:this.propertiesValueMatches!==r.propertiesValueMatches?this.propertiesValueMatches-r.propertiesValueMatches:this.propertiesMatches-r.propertiesMatches},t}();function Tr(t,r){return r===void 0&&(r=[]),new kr(t,r,[])}function ge(t){return er(t)}function qe(t){return Kt(t)}function Dt(t,r,i){return i===void 0&&(i=!1),r>=t.offset&&r<t.offset+t.length||i&&r===t.offset+t.length}var kr=function(){function t(r,i,e){i===void 0&&(i=[]),e===void 0&&(e=[]),this.root=r,this.syntaxErrors=i,this.comments=e}return t.prototype.getNodeFromOffset=function(r,i){if(i===void 0&&(i=!1),this.root)return Yt(this.root,r,i)},t.prototype.visit=function(r){if(this.root){var i=function(e){var n=r(e),a=e.children;if(Array.isArray(a))for(var s=0;s<a.length&&n;s++)n=i(a[s]);return n};i(this.root)}},t.prototype.validate=function(r,i,e){if(e===void 0&&(e=Z.Warning),this.root&&i){var n=new te;return _(this.root,i,n,$t.instance),n.problems.map(function(a){var s,o=U.create(r.positionAt(a.location.offset),r.positionAt(a.location.offset+a.location.length));return ae.create(o,a.message,(s=a.severity)!==null&&s!==void 0?s:e,a.code)})}},t.prototype.getMatchingSchemas=function(r,i,e){i===void 0&&(i=-1);var n=new xn(i,e);return this.root&&r&&_(this.root,r,new te,n),n.schemas},t}();function _(t,r,i,e){if(!t||!e.include(t))return;var n=t;switch(n.type){case"object":l(n,r,i,e);break;case"array":f(n,r,i,e);break;case"string":o(n,r,i,e);break;case"number":s(n,r,i,e);break;case"property":return _(n.valueNode,r,i,e)}a(),e.add({node:n,schema:r});function a(){function u(V){return n.type===V||V==="integer"&&n.type==="number"&&n.isInteger}if(Array.isArray(r.type)?r.type.some(u)||i.problems.push({location:{offset:n.offset,length:n.length},message:r.errorMessage||M("typeArrayMismatchWarning","Incorrect type. Expected one of {0}.",r.type.join(", "))}):r.type&&(u(r.type)||i.problems.push({location:{offset:n.offset,length:n.length},message:r.errorMessage||M("typeMismatchWarning",'Incorrect type. Expected "{0}".',r.type)})),Array.isArray(r.allOf))for(var c=0,h=r.allOf;c<h.length;c++){var g=h[c];_(n,K(g),i,e)}var m=K(r.not);if(m){var p=new te,d=e.newSub();_(n,m,p,d),p.hasProblems()||i.problems.push({location:{offset:n.offset,length:n.length},message:M("notSchemaWarning","Matches a schema that is not allowed.")});for(var b=0,y=d.schemas;b<y.length;b++){var v=y[b];v.inverted=!v.inverted,e.add(v)}}var O=function(V,R){for(var H=[],q=void 0,T=0,S=V;T<S.length;T++){var k=S[T],I=K(k),F=new te,D=e.newSub();if(_(n,I,F,D),F.hasProblems()||H.push(I),!q)q={schema:I,validationResult:F,matchingSchemas:D};else if(!R&&!F.hasProblems()&&!q.validationResult.hasProblems())q.matchingSchemas.merge(D),q.validationResult.propertiesMatches+=F.propertiesMatches,q.validationResult.propertiesValueMatches+=F.propertiesValueMatches;else{var J=F.compare(q.validationResult);J>0?q={schema:I,validationResult:F,matchingSchemas:D}:J===0&&(q.matchingSchemas.merge(D),q.validationResult.mergeEnumValues(F))}}return H.length>1&&R&&i.problems.push({location:{offset:n.offset,length:1},message:M("oneOfWarning","Matches multiple schemas when only one must validate.")}),q&&(i.merge(q.validationResult),i.propertiesMatches+=q.validationResult.propertiesMatches,i.propertiesValueMatches+=q.validationResult.propertiesValueMatches,e.merge(q.matchingSchemas)),H.length};Array.isArray(r.anyOf)&&O(r.anyOf,!1),Array.isArray(r.oneOf)&&O(r.oneOf,!0);var E=function(V){var R=new te,H=e.newSub();_(n,K(V),R,H),i.merge(R),i.propertiesMatches+=R.propertiesMatches,i.propertiesValueMatches+=R.propertiesValueMatches,e.merge(H)},j=function(V,R,H){var q=K(V),T=new te,S=e.newSub();_(n,q,T,S),e.merge(S),T.hasProblems()?H&&E(H):R&&E(R)},A=K(r.if);if(A&&j(A,K(r.then),K(r.else)),Array.isArray(r.enum)){for(var P=ge(n),w=!1,C=0,L=r.enum;C<L.length;C++){var N=L[C];if(Ie(P,N)){w=!0;break}}i.enumValues=r.enum,i.enumValueMatch=w,w||i.problems.push({location:{offset:n.offset,length:n.length},code:W.EnumValueMismatch,message:r.errorMessage||M("enumWarning","Value is not accepted. Valid values: {0}.",r.enum.map(function(V){return JSON.stringify(V)}).join(", "))})}if(se(r.const)){var P=ge(n);Ie(P,r.const)?i.enumValueMatch=!0:(i.problems.push({location:{offset:n.offset,length:n.length},code:W.EnumValueMismatch,message:r.errorMessage||M("constWarning","Value must be {0}.",JSON.stringify(r.const))}),i.enumValueMatch=!1),i.enumValues=[r.const]}r.deprecationMessage&&n.parent&&i.problems.push({location:{offset:n.parent.offset,length:n.parent.length},severity:Z.Warning,message:r.deprecationMessage,code:W.Deprecated})}function s(u,c,h,g){var m=u.value;function p(C){var L,N=/^(-?\d+)(?:\.(\d+))?(?:e([-+]\d+))?$/.exec(C.toString());return N&&{value:Number(N[1]+(N[2]||"")),multiplier:(((L=N[2])===null||L===void 0?void 0:L.length)||0)-(parseInt(N[3])||0)}}if(ee(c.multipleOf)){var d=-1;if(Number.isInteger(c.multipleOf))d=m%c.multipleOf;else{var b=p(c.multipleOf),y=p(m);if(b&&y){var v=Math.pow(10,Math.abs(y.multiplier-b.multiplier));y.multiplier<b.multiplier?y.value*=v:b.value*=v,d=y.value%b.value}}d!==0&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("multipleOfWarning","Value is not divisible by {0}.",c.multipleOf)})}function O(C,L){if(ee(L))return L;if(ie(L)&&L)return C}function E(C,L){if(!ie(L)||!L)return C}var j=O(c.minimum,c.exclusiveMinimum);ee(j)&&m<=j&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("exclusiveMinimumWarning","Value is below the exclusive minimum of {0}.",j)});var A=O(c.maximum,c.exclusiveMaximum);ee(A)&&m>=A&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("exclusiveMaximumWarning","Value is above the exclusive maximum of {0}.",A)});var P=E(c.minimum,c.exclusiveMinimum);ee(P)&&m<P&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("minimumWarning","Value is below the minimum of {0}.",P)});var w=E(c.maximum,c.exclusiveMaximum);ee(w)&&m>w&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("maximumWarning","Value is above the maximum of {0}.",w)})}function o(u,c,h,g){if(ee(c.minLength)&&u.value.length<c.minLength&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("minLengthWarning","String is shorter than the minimum length of {0}.",c.minLength)}),ee(c.maxLength)&&u.value.length>c.maxLength&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("maxLengthWarning","String is longer than the maximum length of {0}.",c.maxLength)}),rr(c.pattern)){var m=xe(c.pattern);m?.test(u.value)||h.problems.push({location:{offset:u.offset,length:u.length},message:c.patternErrorMessage||c.errorMessage||M("patternWarning",'String does not match the pattern of "{0}".',c.pattern)})}if(c.format)switch(c.format){case"uri":case"uri-reference":{var p=void 0;if(!u.value)p=M("uriEmpty","URI expected.");else{var d=/^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/.exec(u.value);d?!d[2]&&c.format==="uri"&&(p=M("uriSchemeMissing","URI with a scheme is expected.")):p=M("uriMissing","URI is expected.")}p&&h.problems.push({location:{offset:u.offset,length:u.length},message:c.patternErrorMessage||c.errorMessage||M("uriFormatWarning","String is not a URI: {0}",p)})}break;case"color-hex":case"date-time":case"date":case"time":case"email":case"hostname":case"ipv4":case"ipv6":var b=gn[c.format];(!u.value||!b.pattern.exec(u.value))&&h.problems.push({location:{offset:u.offset,length:u.length},message:c.patternErrorMessage||c.errorMessage||b.errorMessage});default:}}function f(u,c,h,g){if(Array.isArray(c.items)){for(var m=c.items,p=0;p<m.length;p++){var d=m[p],b=K(d),y=new te,v=u.items[p];v?(_(v,b,y,g),h.mergePropertyMatch(y)):u.items.length>=m.length&&h.propertiesValueMatches++}if(u.items.length>m.length)if(typeof c.additionalItems=="object")for(var O=m.length;O<u.items.length;O++){var y=new te;_(u.items[O],c.additionalItems,y,g),h.mergePropertyMatch(y)}else c.additionalItems===!1&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("additionalItemsWarning","Array has too many items according to schema. Expected {0} or fewer.",m.length)})}else{var E=K(c.items);if(E)for(var j=0,A=u.items;j<A.length;j++){var v=A[j],y=new te;_(v,E,y,g),h.mergePropertyMatch(y)}}var P=K(c.contains);if(P){var w=u.items.some(function(N){var V=new te;return _(N,P,V,$t.instance),!V.hasProblems()});w||h.problems.push({location:{offset:u.offset,length:u.length},message:c.errorMessage||M("requiredItemMissingWarning","Array does not contain required item.")})}if(ee(c.minItems)&&u.items.length<c.minItems&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("minItemsWarning","Array has too few items. Expected {0} or more.",c.minItems)}),ee(c.maxItems)&&u.items.length>c.maxItems&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("maxItemsWarning","Array has too many items. Expected {0} or fewer.",c.maxItems)}),c.uniqueItems===!0){var C=ge(u),L=C.some(function(N,V){return V!==C.lastIndexOf(N)});L&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("uniqueItemsWarning","Array has duplicate items.")})}}function l(u,c,h,g){for(var m=Object.create(null),p=[],d=0,b=u.properties;d<b.length;d++){var y=b[d],v=y.keyNode.value;m[v]=y.valueNode,p.push(v)}if(Array.isArray(c.required))for(var O=0,E=c.required;O<E.length;O++){var j=E[O];if(!m[j]){var A=u.parent&&u.parent.type==="property"&&u.parent.keyNode,P=A?{offset:A.offset,length:A.length}:{offset:u.offset,length:1};h.problems.push({location:P,message:M("MissingRequiredPropWarning",'Missing property "{0}".',j)})}}var w=function(Gt){for(var ct=p.indexOf(Gt);ct>=0;)p.splice(ct,1),ct=p.indexOf(Gt)};if(c.properties)for(var C=0,L=Object.keys(c.properties);C<L.length;C++){var j=L[C];w(j);var N=c.properties[j],V=m[j];if(V)if(ie(N))if(N)h.propertiesMatches++,h.propertiesValueMatches++;else{var y=V.parent;h.problems.push({location:{offset:y.keyNode.offset,length:y.keyNode.length},message:c.errorMessage||M("DisallowedExtraPropWarning","Property {0} is not allowed.",j)})}else{var R=new te;_(V,N,R,g),h.mergePropertyMatch(R)}}if(c.patternProperties)for(var H=0,q=Object.keys(c.patternProperties);H<q.length;H++)for(var T=q[H],S=xe(T),k=0,I=p.slice(0);k<I.length;k++){var j=I[k];if(S?.test(j)){w(j);var V=m[j];if(V){var N=c.patternProperties[T];if(ie(N))if(N)h.propertiesMatches++,h.propertiesValueMatches++;else{var y=V.parent;h.problems.push({location:{offset:y.keyNode.offset,length:y.keyNode.length},message:c.errorMessage||M("DisallowedExtraPropWarning","Property {0} is not allowed.",j)})}else{var R=new te;_(V,N,R,g),h.mergePropertyMatch(R)}}}}if(typeof c.additionalProperties=="object")for(var F=0,D=p;F<D.length;F++){var j=D[F],V=m[j];if(V){var R=new te;_(V,c.additionalProperties,R,g),h.mergePropertyMatch(R)}}else if(c.additionalProperties===!1&&p.length>0)for(var J=0,ue=p;J<ue.length;J++){var j=ue[J],V=m[j];if(V){var y=V.parent;h.problems.push({location:{offset:y.keyNode.offset,length:y.keyNode.length},message:c.errorMessage||M("DisallowedExtraPropWarning","Property {0} is not allowed.",j)})}}if(ee(c.maxProperties)&&u.properties.length>c.maxProperties&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("MaxPropWarning","Object has more properties than limit of {0}.",c.maxProperties)}),ee(c.minProperties)&&u.properties.length<c.minProperties&&h.problems.push({location:{offset:u.offset,length:u.length},message:M("MinPropWarning","Object has fewer properties than the required number of {0}",c.minProperties)}),c.dependencies)for(var G=0,ne=Object.keys(c.dependencies);G<ne.length;G++){var v=ne[G],Oe=m[v];if(Oe){var ce=c.dependencies[v];if(Array.isArray(ce))for(var ft=0,zt=ce;ft<zt.length;ft++){var Bt=zt[ft];m[Bt]?h.propertiesValueMatches++:h.problems.push({location:{offset:u.offset,length:u.length},message:M("RequiredDependentPropWarning","Object is missing property {0} required by property {1}.",Bt,v)})}else{var N=K(ce);if(N){var R=new te;_(u,N,R,g),h.mergePropertyMatch(R)}}}}var _t=K(c.propertyNames);if(_t)for(var ut=0,Ht=u.properties;ut<Ht.length;ut++){var _r=Ht[ut],v=_r.keyNode;v&&_(v,_t,h,$t.instance)}}}function Or(t,r){var i=[],e=-1,n=t.getText(),a=le(n,!1),s=r&&r.collectComments?[]:void 0;function o(){for(;;){var A=a.scan();switch(c(),A){case 12:case 13:Array.isArray(s)&&s.push(U.create(t.positionAt(a.getTokenOffset()),t.positionAt(a.getTokenOffset()+a.getTokenLength())));break;case 15:case 14:break;default:return A}}}function f(A){return a.getToken()===A?(o(),!0):!1}function l(A,P,w,C,L){if(L===void 0&&(L=Z.Error),i.length===0||w!==e){var N=U.create(t.positionAt(w),t.positionAt(C));i.push(ae.create(N,A,L,P,t.languageId)),e=w}}function u(A,P,w,C,L){w===void 0&&(w=void 0),C===void 0&&(C=[]),L===void 0&&(L=[]);var N=a.getTokenOffset(),V=a.getTokenOffset()+a.getTokenLength();if(N===V&&N>0){for(N--;N>0&&/\s/.test(n.charAt(N));)N--;V=N+1}if(l(A,P,N,V),w&&h(w,!1),C.length+L.length>0)for(var R=a.getToken();R!==17;){if(C.indexOf(R)!==-1){o();break}else if(L.indexOf(R)!==-1)break;R=o()}return w}function c(){switch(a.getTokenError()){case 4:return u(M("InvalidUnicode","Invalid unicode sequence in string."),W.InvalidUnicode),!0;case 5:return u(M("InvalidEscapeCharacter","Invalid escape character in string."),W.InvalidEscapeCharacter),!0;case 3:return u(M("UnexpectedEndOfNumber","Unexpected end of number."),W.UnexpectedEndOfNumber),!0;case 1:return u(M("UnexpectedEndOfComment","Unexpected end of comment."),W.UnexpectedEndOfComment),!0;case 2:return u(M("UnexpectedEndOfString","Unexpected end of string."),W.UnexpectedEndOfString),!0;case 6:return u(M("InvalidCharacter","Invalid characters in string. Control characters must be escaped."),W.InvalidCharacter),!0}return!1}function h(A,P){return A.length=a.getTokenOffset()+a.getTokenLength()-A.offset,P&&o(),A}function g(A){if(a.getToken()===3){var P=new mn(A,a.getTokenOffset());o();for(var w=0,C=!1;a.getToken()!==4&&a.getToken()!==17;){if(a.getToken()===5){C||u(M("ValueExpected","Value expected"),W.ValueExpected);var L=a.getTokenOffset();if(o(),a.getToken()===4){C&&l(M("TrailingComma","Trailing comma"),W.TrailingComma,L,L+1);continue}}else C&&u(M("ExpectedComma","Expected comma"),W.CommaExpected);var N=O(P);N?P.items.push(N):u(M("PropertyExpected","Value expected"),W.ValueExpected,void 0,[],[4,5]),C=!0}return a.getToken()!==4?u(M("ExpectedCloseBracket","Expected comma or closing bracket"),W.CommaOrCloseBacketExpected,P):h(P,!0)}}var m=new Ft(void 0,0,0);function p(A,P){var w=new yn(A,a.getTokenOffset(),m),C=b(w);if(!C)if(a.getToken()===16){u(M("DoubleQuotesExpected","Property keys must be doublequoted"),W.Undefined);var L=new Ft(w,a.getTokenOffset(),a.getTokenLength());L.value=a.getTokenValue(),C=L,o()}else return;w.keyNode=C;var N=P[C.value];if(N?(l(M("DuplicateKeyWarning","Duplicate object key"),W.DuplicateKey,w.keyNode.offset,w.keyNode.offset+w.keyNode.length,Z.Warning),typeof N=="object"&&l(M("DuplicateKeyWarning","Duplicate object key"),W.DuplicateKey,N.keyNode.offset,N.keyNode.offset+N.keyNode.length,Z.Warning),P[C.value]=!0):P[C.value]=w,a.getToken()===6)w.colonOffset=a.getTokenOffset(),o();else if(u(M("ColonExpected","Colon expected"),W.ColonExpected),a.getToken()===10&&t.positionAt(C.offset+C.length).line<t.positionAt(a.getTokenOffset()).line)return w.length=C.length,w;var V=O(w);return V?(w.valueNode=V,w.length=V.offset+V.length-w.offset,w):u(M("ValueExpected","Value expected"),W.ValueExpected,w,[],[2,5])}function d(A){if(a.getToken()===1){var P=new bn(A,a.getTokenOffset()),w=Object.create(null);o();for(var C=!1;a.getToken()!==2&&a.getToken()!==17;){if(a.getToken()===5){C||u(M("PropertyExpected","Property expected"),W.PropertyExpected);var L=a.getTokenOffset();if(o(),a.getToken()===2){C&&l(M("TrailingComma","Trailing comma"),W.TrailingComma,L,L+1);continue}}else C&&u(M("ExpectedComma","Expected comma"),W.CommaExpected);var N=p(P,w);N?P.properties.push(N):u(M("PropertyExpected","Property expected"),W.PropertyExpected,void 0,[],[2,5]),C=!0}return a.getToken()!==2?u(M("ExpectedCloseBrace","Expected comma or closing brace"),W.CommaOrCloseBraceExpected,P):h(P,!0)}}function b(A){if(a.getToken()===10){var P=new Ft(A,a.getTokenOffset());return P.value=a.getTokenValue(),h(P,!0)}}function y(A){if(a.getToken()===11){var P=new vn(A,a.getTokenOffset());if(a.getTokenError()===0){var w=a.getTokenValue();try{var C=JSON.parse(w);if(!ee(C))return u(M("InvalidNumberFormat","Invalid number format."),W.Undefined,P);P.value=C}catch{return u(M("InvalidNumberFormat","Invalid number format."),W.Undefined,P)}P.isInteger=w.indexOf(".")===-1}return h(P,!0)}}function v(A){var P;switch(a.getToken()){case 7:return h(new pn(A,a.getTokenOffset()),!0);case 8:return h(new Ar(A,!0,a.getTokenOffset()),!0);case 9:return h(new Ar(A,!1,a.getTokenOffset()),!0);default:return}}function O(A){return g(A)||d(A)||b(A)||y(A)||v(A)}var E=void 0,j=o();return j!==17&&(E=O(E),E?a.getToken()!==17&&u(M("End of file expected","End of file expected."),W.Undefined):u(M("Invalid symbol","Expected a JSON object, array or literal."),W.Undefined)),new kr(E,i,s)}function et(t,r,i){if(t!==null&&typeof t=="object"){var e=r+"	";if(Array.isArray(t)){if(t.length===0)return"[]";for(var n=`[
-`,a=0;a<t.length;a++)n+=e+et(t[a],e,i),a<t.length-1&&(n+=","),n+=`
-`;return n+=r+"]",n}else{var s=Object.keys(t);if(s.length===0)return"{}";for(var n=`{
-`,a=0;a<s.length;a++){var o=s[a];n+=e+JSON.stringify(o)+": "+et(t[o],e,i),a<s.length-1&&(n+=","),n+=`
-`}return n+=r+"}",n}}return i(t)}var Rt=he(),Sn=[",","}","]"],An=[":"],Cr=function(){function t(r,i,e,n){i===void 0&&(i=[]),e===void 0&&(e=Promise),n===void 0&&(n={}),this.schemaService=r,this.contributions=i,this.promiseConstructor=e,this.clientCapabilities=n}return t.prototype.doResolve=function(r){for(var i=this.contributions.length-1;i>=0;i--){var e=this.contributions[i].resolveCompletion;if(e){var n=e(r);if(n)return n}}return this.promiseConstructor.resolve(r)},t.prototype.doComplete=function(r,i,e){var n=this,a={items:[],isIncomplete:!1},s=r.getText(),o=r.offsetAt(i),f=e.getNodeFromOffset(o,!0);if(this.isInComment(r,f?f.offset:0,o))return Promise.resolve(a);if(f&&o===f.offset+f.length&&o>0){var l=s[o-1];(f.type==="object"&&l==="}"||f.type==="array"&&l==="]")&&(f=f.parent)}var u=this.getCurrentWord(r,o),c;if(f&&(f.type==="string"||f.type==="number"||f.type==="boolean"||f.type==="null"))c=U.create(r.positionAt(f.offset),r.positionAt(f.offset+f.length));else{var h=o-u.length;h>0&&s[h-1]==='"'&&h--,c=U.create(r.positionAt(h),i)}var g=!1,m={},p={add:function(d){var b=d.label,y=m[b];if(y)y.documentation||(y.documentation=d.documentation),y.detail||(y.detail=d.detail);else{if(b=b.replace(/[\n]/g,"\u21B5"),b.length>60){var v=b.substr(0,57).trim()+"...";m[v]||(b=v)}c&&d.insertText!==void 0&&(d.textEdit=Y.replace(c,d.insertText)),g&&(d.commitCharacters=d.kind===Q.Property?An:Sn),d.label=b,m[b]=d,a.items.push(d)}},setAsIncomplete:function(){a.isIncomplete=!0},error:function(d){console.error(d)},log:function(d){console.log(d)},getNumberOfProposals:function(){return a.items.length}};return this.schemaService.getSchemaForResource(r.uri,e).then(function(d){var b=[],y=!0,v="",O=void 0;if(f&&f.type==="string"){var E=f.parent;E&&E.type==="property"&&E.keyNode===f&&(y=!E.valueNode,O=E,v=s.substr(f.offset+1,f.length-2),E&&(f=E.parent))}if(f&&f.type==="object"){if(f.offset===o)return a;var j=f.properties;j.forEach(function(C){(!O||O!==C)&&(m[C.keyNode.value]=Re.create("__"))});var A="";y&&(A=n.evaluateSeparatorAfter(r,r.offsetAt(c.end))),d?n.getPropertyCompletions(d,e,f,y,A,p):n.getSchemaLessPropertyCompletions(e,f,v,p);var P=qe(f);n.contributions.forEach(function(C){var L=C.collectPropertyCompletions(r.uri,P,u,y,A==="",p);L&&b.push(L)}),!d&&u.length>0&&s.charAt(o-u.length-1)!=='"'&&(p.add({kind:Q.Property,label:n.getLabelForValue(u),insertText:n.getInsertTextForProperty(u,void 0,!1,A),insertTextFormat:z.Snippet,documentation:""}),p.setAsIncomplete())}var w={};return d?n.getValueCompletions(d,e,f,o,r,p,w):n.getSchemaLessValueCompletions(e,f,o,r,p),n.contributions.length>0&&n.getContributedValueCompletions(e,f,o,r,p,b),n.promiseConstructor.all(b).then(function(){if(p.getNumberOfProposals()===0){var C=o;f&&(f.type==="string"||f.type==="number"||f.type==="boolean"||f.type==="null")&&(C=f.offset+f.length);var L=n.evaluateSeparatorAfter(r,C);n.addFillerValueCompletions(w,L,p)}return a})})},t.prototype.getPropertyCompletions=function(r,i,e,n,a,s){var o=this,f=i.getMatchingSchemas(r.schema,e.offset);f.forEach(function(l){if(l.node===e&&!l.inverted){var u=l.schema.properties;u&&Object.keys(u).forEach(function(p){var d=u[p];if(typeof d=="object"&&!d.deprecationMessage&&!d.doNotSuggest){var b={kind:Q.Property,label:p,insertText:o.getInsertTextForProperty(p,d,n,a),insertTextFormat:z.Snippet,filterText:o.getFilterTextForValue(p),documentation:o.fromMarkup(d.markdownDescription)||d.description||""};d.suggestSortText!==void 0&&(b.sortText=d.suggestSortText),b.insertText&&pe(b.insertText,"$1".concat(a))&&(b.command={title:"Suggest",command:"editor.action.triggerSuggest"}),s.add(b)}});var c=l.schema.propertyNames;if(typeof c=="object"&&!c.deprecationMessage&&!c.doNotSuggest){var h=function(p,d){d===void 0&&(d=void 0);var b={kind:Q.Property,label:p,insertText:o.getInsertTextForProperty(p,void 0,n,a),insertTextFormat:z.Snippet,filterText:o.getFilterTextForValue(p),documentation:d||o.fromMarkup(c.markdownDescription)||c.description||""};c.suggestSortText!==void 0&&(b.sortText=c.suggestSortText),b.insertText&&pe(b.insertText,"$1".concat(a))&&(b.command={title:"Suggest",command:"editor.action.triggerSuggest"}),s.add(b)};if(c.enum)for(var g=0;g<c.enum.length;g++){var m=void 0;c.markdownEnumDescriptions&&g<c.markdownEnumDescriptions.length?m=o.fromMarkup(c.markdownEnumDescriptions[g]):c.enumDescriptions&&g<c.enumDescriptions.length&&(m=c.enumDescriptions[g]),h(c.enum[g],m)}c.const&&h(c.const)}}})},t.prototype.getSchemaLessPropertyCompletions=function(r,i,e,n){var a=this,s=function(f){f.properties.forEach(function(l){var u=l.keyNode.value;n.add({kind:Q.Property,label:u,insertText:a.getInsertTextForValue(u,""),insertTextFormat:z.Snippet,filterText:a.getFilterTextForValue(u),documentation:""})})};if(i.parent)if(i.parent.type==="property"){var o=i.parent.keyNode.value;r.visit(function(f){return f.type==="property"&&f!==i.parent&&f.keyNode.value===o&&f.valueNode&&f.valueNode.type==="object"&&s(f.valueNode),!0})}else i.parent.type==="array"&&i.parent.items.forEach(function(f){f.type==="object"&&f!==i&&s(f)});else i.type==="object"&&n.add({kind:Q.Property,label:"$schema",insertText:this.getInsertTextForProperty("$schema",void 0,!0,""),insertTextFormat:z.Snippet,documentation:"",filterText:this.getFilterTextForValue("$schema")})},t.prototype.getSchemaLessValueCompletions=function(r,i,e,n,a){var s=this,o=e;if(i&&(i.type==="string"||i.type==="number"||i.type==="boolean"||i.type==="null")&&(o=i.offset+i.length,i=i.parent),!i){a.add({kind:this.getSuggestionKind("object"),label:"Empty object",insertText:this.getInsertTextForValue({},""),insertTextFormat:z.Snippet,documentation:""}),a.add({kind:this.getSuggestionKind("array"),label:"Empty array",insertText:this.getInsertTextForValue([],""),insertTextFormat:z.Snippet,documentation:""});return}var f=this.evaluateSeparatorAfter(n,o),l=function(g){g.parent&&!Dt(g.parent,e,!0)&&a.add({kind:s.getSuggestionKind(g.type),label:s.getLabelTextForMatchingNode(g,n),insertText:s.getInsertTextForMatchingNode(g,n,f),insertTextFormat:z.Snippet,documentation:""}),g.type==="boolean"&&s.addBooleanValueCompletion(!g.value,f,a)};if(i.type==="property"&&e>(i.colonOffset||0)){var u=i.valueNode;if(u&&(e>u.offset+u.length||u.type==="object"||u.type==="array"))return;var c=i.keyNode.value;r.visit(function(g){return g.type==="property"&&g.keyNode.value===c&&g.valueNode&&l(g.valueNode),!0}),c==="$schema"&&i.parent&&!i.parent.parent&&this.addDollarSchemaCompletions(f,a)}if(i.type==="array")if(i.parent&&i.parent.type==="property"){var h=i.parent.keyNode.value;r.visit(function(g){return g.type==="property"&&g.keyNode.value===h&&g.valueNode&&g.valueNode.type==="array"&&g.valueNode.items.forEach(l),!0})}else i.items.forEach(l)},t.prototype.getValueCompletions=function(r,i,e,n,a,s,o){var f=n,l=void 0,u=void 0;if(e&&(e.type==="string"||e.type==="number"||e.type==="boolean"||e.type==="null")&&(f=e.offset+e.length,u=e,e=e.parent),!e){this.addSchemaValueCompletions(r.schema,"",s,o);return}if(e.type==="property"&&n>(e.colonOffset||0)){var c=e.valueNode;if(c&&n>c.offset+c.length)return;l=e.keyNode.value,e=e.parent}if(e&&(l!==void 0||e.type==="array")){for(var h=this.evaluateSeparatorAfter(a,f),g=i.getMatchingSchemas(r.schema,e.offset,u),m=0,p=g;m<p.length;m++){var d=p[m];if(d.node===e&&!d.inverted&&d.schema){if(e.type==="array"&&d.schema.items)if(Array.isArray(d.schema.items)){var b=this.findItemAtOffset(e,a,n);b<d.schema.items.length&&this.addSchemaValueCompletions(d.schema.items[b],h,s,o)}else this.addSchemaValueCompletions(d.schema.items,h,s,o);if(l!==void 0){var y=!1;if(d.schema.properties){var v=d.schema.properties[l];v&&(y=!0,this.addSchemaValueCompletions(v,h,s,o))}if(d.schema.patternProperties&&!y)for(var O=0,E=Object.keys(d.schema.patternProperties);O<E.length;O++){var j=E[O],A=xe(j);if(A?.test(l)){y=!0;var v=d.schema.patternProperties[j];this.addSchemaValueCompletions(v,h,s,o)}}if(d.schema.additionalProperties&&!y){var v=d.schema.additionalProperties;this.addSchemaValueCompletions(v,h,s,o)}}}}l==="$schema"&&!e.parent&&this.addDollarSchemaCompletions(h,s),o.boolean&&(this.addBooleanValueCompletion(!0,h,s),this.addBooleanValueCompletion(!1,h,s)),o.null&&this.addNullValueCompletion(h,s)}},t.prototype.getContributedValueCompletions=function(r,i,e,n,a,s){if(!i)this.contributions.forEach(function(u){var c=u.collectDefaultCompletions(n.uri,a);c&&s.push(c)});else if((i.type==="string"||i.type==="number"||i.type==="boolean"||i.type==="null")&&(i=i.parent),i&&i.type==="property"&&e>(i.colonOffset||0)){var o=i.keyNode.value,f=i.valueNode;if((!f||e<=f.offset+f.length)&&i.parent){var l=qe(i.parent);this.contributions.forEach(function(u){var c=u.collectValueCompletions(n.uri,l,o,a);c&&s.push(c)})}}},t.prototype.addSchemaValueCompletions=function(r,i,e,n){var a=this;typeof r=="object"&&(this.addEnumValueCompletions(r,i,e),this.addDefaultValueCompletions(r,i,e),this.collectTypes(r,n),Array.isArray(r.allOf)&&r.allOf.forEach(function(s){return a.addSchemaValueCompletions(s,i,e,n)}),Array.isArray(r.anyOf)&&r.anyOf.forEach(function(s){return a.addSchemaValueCompletions(s,i,e,n)}),Array.isArray(r.oneOf)&&r.oneOf.forEach(function(s){return a.addSchemaValueCompletions(s,i,e,n)}))},t.prototype.addDefaultValueCompletions=function(r,i,e,n){var a=this;n===void 0&&(n=0);var s=!1;if(se(r.default)){for(var o=r.type,f=r.default,l=n;l>0;l--)f=[f],o="array";e.add({kind:this.getSuggestionKind(o),label:this.getLabelForValue(f),insertText:this.getInsertTextForValue(f,i),insertTextFormat:z.Snippet,detail:Rt("json.suggest.default","Default value")}),s=!0}Array.isArray(r.examples)&&r.examples.forEach(function(u){for(var c=r.type,h=u,g=n;g>0;g--)h=[h],c="array";e.add({kind:a.getSuggestionKind(c),label:a.getLabelForValue(h),insertText:a.getInsertTextForValue(h,i),insertTextFormat:z.Snippet}),s=!0}),Array.isArray(r.defaultSnippets)&&r.defaultSnippets.forEach(function(u){var c=r.type,h=u.body,g=u.label,m,p;if(se(h)){for(var d=r.type,b=n;b>0;b--)h=[h],d="array";m=a.getInsertTextForSnippetValue(h,i),p=a.getFilterTextForSnippetValue(h),g=g||a.getLabelForSnippetValue(h)}else if(typeof u.bodyText=="string"){for(var y="",v="",O="",b=n;b>0;b--)y=y+O+`[
-`,v=v+`
-`+O+"]",O+="	",c="array";m=y+O+u.bodyText.split(`
-`).join(`
-`+O)+v+i,g=g||m,p=m.replace(/[\n]/g,"")}else return;e.add({kind:a.getSuggestionKind(c),label:g,documentation:a.fromMarkup(u.markdownDescription)||u.description,insertText:m,insertTextFormat:z.Snippet,filterText:p}),s=!0}),!s&&typeof r.items=="object"&&!Array.isArray(r.items)&&n<5&&this.addDefaultValueCompletions(r.items,i,e,n+1)},t.prototype.addEnumValueCompletions=function(r,i,e){if(se(r.const)&&e.add({kind:this.getSuggestionKind(r.type),label:this.getLabelForValue(r.const),insertText:this.getInsertTextForValue(r.const,i),insertTextFormat:z.Snippet,documentation:this.fromMarkup(r.markdownDescription)||r.description}),Array.isArray(r.enum))for(var n=0,a=r.enum.length;n<a;n++){var s=r.enum[n],o=this.fromMarkup(r.markdownDescription)||r.description;r.markdownEnumDescriptions&&n<r.markdownEnumDescriptions.length&&this.doesSupportMarkdown()?o=this.fromMarkup(r.markdownEnumDescriptions[n]):r.enumDescriptions&&n<r.enumDescriptions.length&&(o=r.enumDescriptions[n]),e.add({kind:this.getSuggestionKind(r.type),label:this.getLabelForValue(s),insertText:this.getInsertTextForValue(s,i),insertTextFormat:z.Snippet,documentation:o})}},t.prototype.collectTypes=function(r,i){if(!(Array.isArray(r.enum)||se(r.const))){var e=r.type;Array.isArray(e)?e.forEach(function(n){return i[n]=!0}):e&&(i[e]=!0)}},t.prototype.addFillerValueCompletions=function(r,i,e){r.object&&e.add({kind:this.getSuggestionKind("object"),label:"{}",insertText:this.getInsertTextForGuessedValue({},i),insertTextFormat:z.Snippet,detail:Rt("defaults.object","New object"),documentation:""}),r.array&&e.add({kind:this.getSuggestionKind("array"),label:"[]",insertText:this.getInsertTextForGuessedValue([],i),insertTextFormat:z.Snippet,detail:Rt("defaults.array","New array"),documentation:""})},t.prototype.addBooleanValueCompletion=function(r,i,e){e.add({kind:this.getSuggestionKind("boolean"),label:r?"true":"false",insertText:this.getInsertTextForValue(r,i),insertTextFormat:z.Snippet,documentation:""})},t.prototype.addNullValueCompletion=function(r,i){i.add({kind:this.getSuggestionKind("null"),label:"null",insertText:"null"+r,insertTextFormat:z.Snippet,documentation:""})},t.prototype.addDollarSchemaCompletions=function(r,i){var e=this,n=this.schemaService.getRegisteredSchemaIds(function(a){return a==="http"||a==="https"});n.forEach(function(a){return i.add({kind:Q.Module,label:e.getLabelForValue(a),filterText:e.getFilterTextForValue(a),insertText:e.getInsertTextForValue(a,r),insertTextFormat:z.Snippet,documentation:""})})},t.prototype.getLabelForValue=function(r){return JSON.stringify(r)},t.prototype.getFilterTextForValue=function(r){return JSON.stringify(r)},t.prototype.getFilterTextForSnippetValue=function(r){return JSON.stringify(r).replace(/\$\{\d+:([^}]+)\}|\$\d+/g,"$1")},t.prototype.getLabelForSnippetValue=function(r){var i=JSON.stringify(r);return i.replace(/\$\{\d+:([^}]+)\}|\$\d+/g,"$1")},t.prototype.getInsertTextForPlainText=function(r){return r.replace(/[\\\$\}]/g,"\\$&")},t.prototype.getInsertTextForValue=function(r,i){var e=JSON.stringify(r,null,"	");return e==="{}"?"{$1}"+i:e==="[]"?"[$1]"+i:this.getInsertTextForPlainText(e+i)},t.prototype.getInsertTextForSnippetValue=function(r,i){var e=function(n){return typeof n=="string"&&n[0]==="^"?n.substr(1):JSON.stringify(n)};return et(r,"",e)+i},t.prototype.getInsertTextForGuessedValue=function(r,i){switch(typeof r){case"object":return r===null?"${1:null}"+i:this.getInsertTextForValue(r,i);case"string":var e=JSON.stringify(r);return e=e.substr(1,e.length-2),e=this.getInsertTextForPlainText(e),'"${1:'+e+'}"'+i;case"number":case"boolean":return"${1:"+JSON.stringify(r)+"}"+i}return this.getInsertTextForValue(r,i)},t.prototype.getSuggestionKind=function(r){if(Array.isArray(r)){var i=r;r=i.length>0?i[0]:void 0}if(!r)return Q.Value;switch(r){case"string":return Q.Value;case"object":return Q.Module;case"property":return Q.Property;default:return Q.Value}},t.prototype.getLabelTextForMatchingNode=function(r,i){switch(r.type){case"array":return"[]";case"object":return"{}";default:var e=i.getText().substr(r.offset,r.length);return e}},t.prototype.getInsertTextForMatchingNode=function(r,i,e){switch(r.type){case"array":return this.getInsertTextForValue([],e);case"object":return this.getInsertTextForValue({},e);default:var n=i.getText().substr(r.offset,r.length)+e;return this.getInsertTextForPlainText(n)}},t.prototype.getInsertTextForProperty=function(r,i,e,n){var a=this.getInsertTextForValue(r,"");if(!e)return a;var s=a+": ",o,f=0;if(i){if(Array.isArray(i.defaultSnippets)){if(i.defaultSnippets.length===1){var l=i.defaultSnippets[0].body;se(l)&&(o=this.getInsertTextForSnippetValue(l,""))}f+=i.defaultSnippets.length}if(i.enum&&(!o&&i.enum.length===1&&(o=this.getInsertTextForGuessedValue(i.enum[0],"")),f+=i.enum.length),se(i.default)&&(o||(o=this.getInsertTextForGuessedValue(i.default,"")),f++),Array.isArray(i.examples)&&i.examples.length&&(o||(o=this.getInsertTextForGuessedValue(i.examples[0],"")),f+=i.examples.length),f===0){var u=Array.isArray(i.type)?i.type[0]:i.type;switch(u||(i.properties?u="object":i.items&&(u="array")),u){case"boolean":o="$1";break;case"string":o='"$1"';break;case"object":o="{$1}";break;case"array":o="[$1]";break;case"number":case"integer":o="${1:0}";break;case"null":o="${1:null}";break;default:return a}}}return(!o||f>1)&&(o="$1"),s+o+n},t.prototype.getCurrentWord=function(r,i){for(var e=i-1,n=r.getText();e>=0&&` 	
-\r\v":{[,]}`.indexOf(n.charAt(e))===-1;)e--;return n.substring(e+1,i)},t.prototype.evaluateSeparatorAfter=function(r,i){var e=le(r.getText(),!0);e.setPosition(i);var n=e.scan();switch(n){case 5:case 2:case 4:case 17:return"";default:return","}},t.prototype.findItemAtOffset=function(r,i,e){for(var n=le(i.getText(),!0),a=r.items,s=a.length-1;s>=0;s--){var o=a[s];if(e>o.offset+o.length){n.setPosition(o.offset+o.length);var f=n.scan();return f===5&&e>=n.getTokenOffset()+n.getTokenLength()?s+1:s}else if(e>=o.offset)return s}return 0},t.prototype.isInComment=function(r,i,e){var n=le(r.getText(),!1);n.setPosition(i);for(var a=n.scan();a!==17&&n.getTokenOffset()+n.getTokenLength()<e;)a=n.scan();return(a===12||a===13)&&n.getTokenOffset()<=e},t.prototype.fromMarkup=function(r){if(r&&this.doesSupportMarkdown())return{kind:fe.Markdown,value:r}},t.prototype.doesSupportMarkdown=function(){if(!se(this.supportsMarkdown)){var r=this.clientCapabilities.textDocument&&this.clientCapabilities.textDocument.completion;this.supportsMarkdown=r&&r.completionItem&&Array.isArray(r.completionItem.documentationFormat)&&r.completionItem.documentationFormat.indexOf(fe.Markdown)!==-1}return this.supportsMarkdown},t.prototype.doesSupportsCommitCharacters=function(){if(!se(this.supportsCommitCharacters)){var r=this.clientCapabilities.textDocument&&this.clientCapabilities.textDocument.completion;this.supportsCommitCharacters=r&&r.completionItem&&!!r.completionItem.commitCharactersSupport}return this.supportsCommitCharacters},t}();var Pr=function(){function t(r,i,e){i===void 0&&(i=[]),this.schemaService=r,this.contributions=i,this.promise=e||Promise}return t.prototype.doHover=function(r,i,e){var n=r.offsetAt(i),a=e.getNodeFromOffset(n);if(!a||(a.type==="object"||a.type==="array")&&n>a.offset+1&&n<a.offset+a.length-1)return this.promise.resolve(null);var s=a;if(a.type==="string"){var o=a.parent;if(o&&o.type==="property"&&o.keyNode===a&&(a=o.valueNode,!a))return this.promise.resolve(null)}for(var f=U.create(r.positionAt(s.offset),r.positionAt(s.offset+s.length)),l=function(m){var p={contents:m,range:f};return p},u=qe(a),c=this.contributions.length-1;c>=0;c--){var h=this.contributions[c],g=h.getInfoContribution(r.uri,u);if(g)return g.then(function(m){return l(m)})}return this.schemaService.getSchemaForResource(r.uri,e).then(function(m){if(m&&a){var p=e.getMatchingSchemas(m.schema,a.offset),d=void 0,b=void 0,y=void 0,v=void 0;p.every(function(E){if(E.node===a&&!E.inverted&&E.schema&&(d=d||E.schema.title,b=b||E.schema.markdownDescription||Ut(E.schema.description),E.schema.enum)){var j=E.schema.enum.indexOf(ge(a));E.schema.markdownEnumDescriptions?y=E.schema.markdownEnumDescriptions[j]:E.schema.enumDescriptions&&(y=Ut(E.schema.enumDescriptions[j])),y&&(v=E.schema.enum[j],typeof v!="string"&&(v=JSON.stringify(v)))}return!0});var O="";return d&&(O=Ut(d)),b&&(O.length>0&&(O+=`
+define("vs/language/json/jsonWorker", ["require"],(require)=>{
+"use strict";
+var moduleExports = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-`),O+=b),y&&(O.length>0&&(O+=`
+  // src/language/json/jsonWorker.ts
+  var jsonWorker_exports = {};
+  __export(jsonWorker_exports, {
+    JSONWorker: () => JSONWorker,
+    create: () => create
+  });
 
-`),O+="`".concat(wn(v),"`: ").concat(y)),l([O])}return null})},t}();function Ut(t){if(t){var r=t.replace(/([^\n\r])(\r?\n)([^\n\r])/gm,`$1
+  // node_modules/jsonc-parser/lib/esm/impl/scanner.js
+  function createScanner(text, ignoreTrivia = false) {
+    const len = text.length;
+    let pos = 0, value = "", tokenOffset = 0, token = 16, lineNumber = 0, lineStartOffset = 0, tokenLineStartOffset = 0, prevTokenLineStartOffset = 0, scanError = 0;
+    function scanHexDigits(count, exact) {
+      let digits = 0;
+      let value2 = 0;
+      while (digits < count || !exact) {
+        let ch = text.charCodeAt(pos);
+        if (ch >= 48 && ch <= 57) {
+          value2 = value2 * 16 + ch - 48;
+        } else if (ch >= 65 && ch <= 70) {
+          value2 = value2 * 16 + ch - 65 + 10;
+        } else if (ch >= 97 && ch <= 102) {
+          value2 = value2 * 16 + ch - 97 + 10;
+        } else {
+          break;
+        }
+        pos++;
+        digits++;
+      }
+      if (digits < count) {
+        value2 = -1;
+      }
+      return value2;
+    }
+    function setPosition(newPosition) {
+      pos = newPosition;
+      value = "";
+      tokenOffset = 0;
+      token = 16;
+      scanError = 0;
+    }
+    function scanNumber() {
+      let start = pos;
+      if (text.charCodeAt(pos) === 48) {
+        pos++;
+      } else {
+        pos++;
+        while (pos < text.length && isDigit(text.charCodeAt(pos))) {
+          pos++;
+        }
+      }
+      if (pos < text.length && text.charCodeAt(pos) === 46) {
+        pos++;
+        if (pos < text.length && isDigit(text.charCodeAt(pos))) {
+          pos++;
+          while (pos < text.length && isDigit(text.charCodeAt(pos))) {
+            pos++;
+          }
+        } else {
+          scanError = 3;
+          return text.substring(start, pos);
+        }
+      }
+      let end = pos;
+      if (pos < text.length && (text.charCodeAt(pos) === 69 || text.charCodeAt(pos) === 101)) {
+        pos++;
+        if (pos < text.length && text.charCodeAt(pos) === 43 || text.charCodeAt(pos) === 45) {
+          pos++;
+        }
+        if (pos < text.length && isDigit(text.charCodeAt(pos))) {
+          pos++;
+          while (pos < text.length && isDigit(text.charCodeAt(pos))) {
+            pos++;
+          }
+          end = pos;
+        } else {
+          scanError = 3;
+        }
+      }
+      return text.substring(start, end);
+    }
+    function scanString() {
+      let result = "", start = pos;
+      while (true) {
+        if (pos >= len) {
+          result += text.substring(start, pos);
+          scanError = 2;
+          break;
+        }
+        const ch = text.charCodeAt(pos);
+        if (ch === 34) {
+          result += text.substring(start, pos);
+          pos++;
+          break;
+        }
+        if (ch === 92) {
+          result += text.substring(start, pos);
+          pos++;
+          if (pos >= len) {
+            scanError = 2;
+            break;
+          }
+          const ch2 = text.charCodeAt(pos++);
+          switch (ch2) {
+            case 34:
+              result += '"';
+              break;
+            case 92:
+              result += "\\";
+              break;
+            case 47:
+              result += "/";
+              break;
+            case 98:
+              result += "\b";
+              break;
+            case 102:
+              result += "\f";
+              break;
+            case 110:
+              result += "\n";
+              break;
+            case 114:
+              result += "\r";
+              break;
+            case 116:
+              result += "	";
+              break;
+            case 117:
+              const ch3 = scanHexDigits(4, true);
+              if (ch3 >= 0) {
+                result += String.fromCharCode(ch3);
+              } else {
+                scanError = 4;
+              }
+              break;
+            default:
+              scanError = 5;
+          }
+          start = pos;
+          continue;
+        }
+        if (ch >= 0 && ch <= 31) {
+          if (isLineBreak(ch)) {
+            result += text.substring(start, pos);
+            scanError = 2;
+            break;
+          } else {
+            scanError = 6;
+          }
+        }
+        pos++;
+      }
+      return result;
+    }
+    function scanNext() {
+      value = "";
+      scanError = 0;
+      tokenOffset = pos;
+      lineStartOffset = lineNumber;
+      prevTokenLineStartOffset = tokenLineStartOffset;
+      if (pos >= len) {
+        tokenOffset = len;
+        return token = 17;
+      }
+      let code = text.charCodeAt(pos);
+      if (isWhiteSpace(code)) {
+        do {
+          pos++;
+          value += String.fromCharCode(code);
+          code = text.charCodeAt(pos);
+        } while (isWhiteSpace(code));
+        return token = 15;
+      }
+      if (isLineBreak(code)) {
+        pos++;
+        value += String.fromCharCode(code);
+        if (code === 13 && text.charCodeAt(pos) === 10) {
+          pos++;
+          value += "\n";
+        }
+        lineNumber++;
+        tokenLineStartOffset = pos;
+        return token = 14;
+      }
+      switch (code) {
+        case 123:
+          pos++;
+          return token = 1;
+        case 125:
+          pos++;
+          return token = 2;
+        case 91:
+          pos++;
+          return token = 3;
+        case 93:
+          pos++;
+          return token = 4;
+        case 58:
+          pos++;
+          return token = 6;
+        case 44:
+          pos++;
+          return token = 5;
+        case 34:
+          pos++;
+          value = scanString();
+          return token = 10;
+        case 47:
+          const start = pos - 1;
+          if (text.charCodeAt(pos + 1) === 47) {
+            pos += 2;
+            while (pos < len) {
+              if (isLineBreak(text.charCodeAt(pos))) {
+                break;
+              }
+              pos++;
+            }
+            value = text.substring(start, pos);
+            return token = 12;
+          }
+          if (text.charCodeAt(pos + 1) === 42) {
+            pos += 2;
+            const safeLength = len - 1;
+            let commentClosed = false;
+            while (pos < safeLength) {
+              const ch = text.charCodeAt(pos);
+              if (ch === 42 && text.charCodeAt(pos + 1) === 47) {
+                pos += 2;
+                commentClosed = true;
+                break;
+              }
+              pos++;
+              if (isLineBreak(ch)) {
+                if (ch === 13 && text.charCodeAt(pos) === 10) {
+                  pos++;
+                }
+                lineNumber++;
+                tokenLineStartOffset = pos;
+              }
+            }
+            if (!commentClosed) {
+              pos++;
+              scanError = 1;
+            }
+            value = text.substring(start, pos);
+            return token = 13;
+          }
+          value += String.fromCharCode(code);
+          pos++;
+          return token = 16;
+        case 45:
+          value += String.fromCharCode(code);
+          pos++;
+          if (pos === len || !isDigit(text.charCodeAt(pos))) {
+            return token = 16;
+          }
+        case 48:
+        case 49:
+        case 50:
+        case 51:
+        case 52:
+        case 53:
+        case 54:
+        case 55:
+        case 56:
+        case 57:
+          value += scanNumber();
+          return token = 11;
+        default:
+          while (pos < len && isUnknownContentCharacter(code)) {
+            pos++;
+            code = text.charCodeAt(pos);
+          }
+          if (tokenOffset !== pos) {
+            value = text.substring(tokenOffset, pos);
+            switch (value) {
+              case "true":
+                return token = 8;
+              case "false":
+                return token = 9;
+              case "null":
+                return token = 7;
+            }
+            return token = 16;
+          }
+          value += String.fromCharCode(code);
+          pos++;
+          return token = 16;
+      }
+    }
+    function isUnknownContentCharacter(code) {
+      if (isWhiteSpace(code) || isLineBreak(code)) {
+        return false;
+      }
+      switch (code) {
+        case 125:
+        case 93:
+        case 123:
+        case 91:
+        case 34:
+        case 58:
+        case 44:
+        case 47:
+          return false;
+      }
+      return true;
+    }
+    function scanNextNonTrivia() {
+      let result;
+      do {
+        result = scanNext();
+      } while (result >= 12 && result <= 15);
+      return result;
+    }
+    return {
+      setPosition,
+      getPosition: () => pos,
+      scan: ignoreTrivia ? scanNextNonTrivia : scanNext,
+      getToken: () => token,
+      getTokenValue: () => value,
+      getTokenOffset: () => tokenOffset,
+      getTokenLength: () => pos - tokenOffset,
+      getTokenStartLine: () => lineStartOffset,
+      getTokenStartCharacter: () => tokenOffset - prevTokenLineStartOffset,
+      getTokenError: () => scanError
+    };
+  }
+  function isWhiteSpace(ch) {
+    return ch === 32 || ch === 9;
+  }
+  function isLineBreak(ch) {
+    return ch === 10 || ch === 13;
+  }
+  function isDigit(ch) {
+    return ch >= 48 && ch <= 57;
+  }
+  var CharacterCodes;
+  (function(CharacterCodes2) {
+    CharacterCodes2[CharacterCodes2["lineFeed"] = 10] = "lineFeed";
+    CharacterCodes2[CharacterCodes2["carriageReturn"] = 13] = "carriageReturn";
+    CharacterCodes2[CharacterCodes2["space"] = 32] = "space";
+    CharacterCodes2[CharacterCodes2["_0"] = 48] = "_0";
+    CharacterCodes2[CharacterCodes2["_1"] = 49] = "_1";
+    CharacterCodes2[CharacterCodes2["_2"] = 50] = "_2";
+    CharacterCodes2[CharacterCodes2["_3"] = 51] = "_3";
+    CharacterCodes2[CharacterCodes2["_4"] = 52] = "_4";
+    CharacterCodes2[CharacterCodes2["_5"] = 53] = "_5";
+    CharacterCodes2[CharacterCodes2["_6"] = 54] = "_6";
+    CharacterCodes2[CharacterCodes2["_7"] = 55] = "_7";
+    CharacterCodes2[CharacterCodes2["_8"] = 56] = "_8";
+    CharacterCodes2[CharacterCodes2["_9"] = 57] = "_9";
+    CharacterCodes2[CharacterCodes2["a"] = 97] = "a";
+    CharacterCodes2[CharacterCodes2["b"] = 98] = "b";
+    CharacterCodes2[CharacterCodes2["c"] = 99] = "c";
+    CharacterCodes2[CharacterCodes2["d"] = 100] = "d";
+    CharacterCodes2[CharacterCodes2["e"] = 101] = "e";
+    CharacterCodes2[CharacterCodes2["f"] = 102] = "f";
+    CharacterCodes2[CharacterCodes2["g"] = 103] = "g";
+    CharacterCodes2[CharacterCodes2["h"] = 104] = "h";
+    CharacterCodes2[CharacterCodes2["i"] = 105] = "i";
+    CharacterCodes2[CharacterCodes2["j"] = 106] = "j";
+    CharacterCodes2[CharacterCodes2["k"] = 107] = "k";
+    CharacterCodes2[CharacterCodes2["l"] = 108] = "l";
+    CharacterCodes2[CharacterCodes2["m"] = 109] = "m";
+    CharacterCodes2[CharacterCodes2["n"] = 110] = "n";
+    CharacterCodes2[CharacterCodes2["o"] = 111] = "o";
+    CharacterCodes2[CharacterCodes2["p"] = 112] = "p";
+    CharacterCodes2[CharacterCodes2["q"] = 113] = "q";
+    CharacterCodes2[CharacterCodes2["r"] = 114] = "r";
+    CharacterCodes2[CharacterCodes2["s"] = 115] = "s";
+    CharacterCodes2[CharacterCodes2["t"] = 116] = "t";
+    CharacterCodes2[CharacterCodes2["u"] = 117] = "u";
+    CharacterCodes2[CharacterCodes2["v"] = 118] = "v";
+    CharacterCodes2[CharacterCodes2["w"] = 119] = "w";
+    CharacterCodes2[CharacterCodes2["x"] = 120] = "x";
+    CharacterCodes2[CharacterCodes2["y"] = 121] = "y";
+    CharacterCodes2[CharacterCodes2["z"] = 122] = "z";
+    CharacterCodes2[CharacterCodes2["A"] = 65] = "A";
+    CharacterCodes2[CharacterCodes2["B"] = 66] = "B";
+    CharacterCodes2[CharacterCodes2["C"] = 67] = "C";
+    CharacterCodes2[CharacterCodes2["D"] = 68] = "D";
+    CharacterCodes2[CharacterCodes2["E"] = 69] = "E";
+    CharacterCodes2[CharacterCodes2["F"] = 70] = "F";
+    CharacterCodes2[CharacterCodes2["G"] = 71] = "G";
+    CharacterCodes2[CharacterCodes2["H"] = 72] = "H";
+    CharacterCodes2[CharacterCodes2["I"] = 73] = "I";
+    CharacterCodes2[CharacterCodes2["J"] = 74] = "J";
+    CharacterCodes2[CharacterCodes2["K"] = 75] = "K";
+    CharacterCodes2[CharacterCodes2["L"] = 76] = "L";
+    CharacterCodes2[CharacterCodes2["M"] = 77] = "M";
+    CharacterCodes2[CharacterCodes2["N"] = 78] = "N";
+    CharacterCodes2[CharacterCodes2["O"] = 79] = "O";
+    CharacterCodes2[CharacterCodes2["P"] = 80] = "P";
+    CharacterCodes2[CharacterCodes2["Q"] = 81] = "Q";
+    CharacterCodes2[CharacterCodes2["R"] = 82] = "R";
+    CharacterCodes2[CharacterCodes2["S"] = 83] = "S";
+    CharacterCodes2[CharacterCodes2["T"] = 84] = "T";
+    CharacterCodes2[CharacterCodes2["U"] = 85] = "U";
+    CharacterCodes2[CharacterCodes2["V"] = 86] = "V";
+    CharacterCodes2[CharacterCodes2["W"] = 87] = "W";
+    CharacterCodes2[CharacterCodes2["X"] = 88] = "X";
+    CharacterCodes2[CharacterCodes2["Y"] = 89] = "Y";
+    CharacterCodes2[CharacterCodes2["Z"] = 90] = "Z";
+    CharacterCodes2[CharacterCodes2["asterisk"] = 42] = "asterisk";
+    CharacterCodes2[CharacterCodes2["backslash"] = 92] = "backslash";
+    CharacterCodes2[CharacterCodes2["closeBrace"] = 125] = "closeBrace";
+    CharacterCodes2[CharacterCodes2["closeBracket"] = 93] = "closeBracket";
+    CharacterCodes2[CharacterCodes2["colon"] = 58] = "colon";
+    CharacterCodes2[CharacterCodes2["comma"] = 44] = "comma";
+    CharacterCodes2[CharacterCodes2["dot"] = 46] = "dot";
+    CharacterCodes2[CharacterCodes2["doubleQuote"] = 34] = "doubleQuote";
+    CharacterCodes2[CharacterCodes2["minus"] = 45] = "minus";
+    CharacterCodes2[CharacterCodes2["openBrace"] = 123] = "openBrace";
+    CharacterCodes2[CharacterCodes2["openBracket"] = 91] = "openBracket";
+    CharacterCodes2[CharacterCodes2["plus"] = 43] = "plus";
+    CharacterCodes2[CharacterCodes2["slash"] = 47] = "slash";
+    CharacterCodes2[CharacterCodes2["formFeed"] = 12] = "formFeed";
+    CharacterCodes2[CharacterCodes2["tab"] = 9] = "tab";
+  })(CharacterCodes || (CharacterCodes = {}));
 
-$3`);return r.replace(/[\\`*_{}[\]()#+\-.!]/g,"\\$&")}}function wn(t){return t.indexOf("`")!==-1?"`` "+t+" ``":t}var Tn=he(),Ir=function(){function t(r,i){this.jsonSchemaService=r,this.promise=i,this.validationEnabled=!0}return t.prototype.configure=function(r){r&&(this.validationEnabled=r.validate!==!1,this.commentSeverity=r.allowComments?void 0:Z.Error)},t.prototype.doValidation=function(r,i,e,n){var a=this;if(!this.validationEnabled)return this.promise.resolve([]);var s=[],o={},f=function(h){var g=h.range.start.line+" "+h.range.start.character+" "+h.message;o[g]||(o[g]=!0,s.push(h))},l=function(h){var g=e?.trailingCommas?tt(e.trailingCommas):Z.Error,m=e?.comments?tt(e.comments):a.commentSeverity,p=e?.schemaValidation?tt(e.schemaValidation):Z.Warning,d=e?.schemaRequest?tt(e.schemaRequest):Z.Warning;if(h){if(h.errors.length&&i.root&&d){var b=i.root,y=b.type==="object"?b.properties[0]:void 0;if(y&&y.keyNode.value==="$schema"){var v=y.valueNode||y,O=U.create(r.positionAt(v.offset),r.positionAt(v.offset+v.length));f(ae.create(O,h.errors[0],d,W.SchemaResolveError))}else{var O=U.create(r.positionAt(b.offset),r.positionAt(b.offset+1));f(ae.create(O,h.errors[0],d,W.SchemaResolveError))}}else if(p){var E=i.validate(r,h.schema,p);E&&E.forEach(f)}Er(h.schema)&&(m=void 0),jr(h.schema)&&(g=void 0)}for(var j=0,A=i.syntaxErrors;j<A.length;j++){var P=A[j];if(P.code===W.TrailingComma){if(typeof g!="number")continue;P.severity=g}f(P)}if(typeof m=="number"){var w=Tn("InvalidCommentToken","Comments are not permitted in JSON.");i.comments.forEach(function(C){f(ae.create(C,w,m,W.CommentNotPermitted))})}return s};if(n){var u=n.id||"schemaservice://untitled/"+kn++,c=this.jsonSchemaService.registerExternalSchema(u,[],n);return c.getResolvedSchema().then(function(h){return l(h)})}return this.jsonSchemaService.getSchemaForResource(r.uri,i).then(function(h){return l(h)})},t.prototype.getLanguageStatus=function(r,i){return{schemas:this.jsonSchemaService.getSchemaURIsForResource(r.uri,i)}},t}();var kn=0;function Er(t){if(t&&typeof t=="object"){if(ie(t.allowComments))return t.allowComments;if(t.allOf)for(var r=0,i=t.allOf;r<i.length;r++){var e=i[r],n=Er(e);if(ie(n))return n}}}function jr(t){if(t&&typeof t=="object"){if(ie(t.allowTrailingCommas))return t.allowTrailingCommas;var r=t;if(ie(r.allowsTrailingCommas))return r.allowsTrailingCommas;if(t.allOf)for(var i=0,e=t.allOf;i<e.length;i++){var n=e[i],a=jr(n);if(ie(a))return a}}}function tt(t){switch(t){case"error":return Z.Error;case"warning":return Z.Warning;case"ignore":return}}var Nr=48,On=57,Cn=65,rt=97,Pn=102;function B(t){return t<Nr?0:t<=On?t-Nr:(t<rt&&(t+=rt-Cn),t>=rt&&t<=Pn?t-rt+10:0)}function Mr(t){if(t[0]==="#")switch(t.length){case 4:return{red:B(t.charCodeAt(1))*17/255,green:B(t.charCodeAt(2))*17/255,blue:B(t.charCodeAt(3))*17/255,alpha:1};case 5:return{red:B(t.charCodeAt(1))*17/255,green:B(t.charCodeAt(2))*17/255,blue:B(t.charCodeAt(3))*17/255,alpha:B(t.charCodeAt(4))*17/255};case 7:return{red:(B(t.charCodeAt(1))*16+B(t.charCodeAt(2)))/255,green:(B(t.charCodeAt(3))*16+B(t.charCodeAt(4)))/255,blue:(B(t.charCodeAt(5))*16+B(t.charCodeAt(6)))/255,alpha:1};case 9:return{red:(B(t.charCodeAt(1))*16+B(t.charCodeAt(2)))/255,green:(B(t.charCodeAt(3))*16+B(t.charCodeAt(4)))/255,blue:(B(t.charCodeAt(5))*16+B(t.charCodeAt(6)))/255,alpha:(B(t.charCodeAt(7))*16+B(t.charCodeAt(8)))/255}}}var Lr=function(){function t(r){this.schemaService=r}return t.prototype.findDocumentSymbols=function(r,i,e){var n=this;e===void 0&&(e={resultLimit:Number.MAX_VALUE});var a=i.root;if(!a)return[];var s=e.resultLimit||Number.MAX_VALUE,o=r.uri;if((o==="vscode://defaultsettings/keybindings.json"||pe(o.toLowerCase(),"/user/keybindings.json"))&&a.type==="array"){for(var f=[],l=0,u=a.items;l<u.length;l++){var c=u[l];if(c.type==="object")for(var h=0,g=c.properties;h<g.length;h++){var m=g[h];if(m.keyNode.value==="key"&&m.valueNode){var p=Se.create(r.uri,ve(r,c));if(f.push({name:ge(m.valueNode),kind:oe.Function,location:p}),s--,s<=0)return e&&e.onResultLimitExceeded&&e.onResultLimitExceeded(o),f}}}return f}for(var d=[{node:a,containerName:""}],b=0,y=!1,v=[],O=function(j,A){j.type==="array"?j.items.forEach(function(P){P&&d.push({node:P,containerName:A})}):j.type==="object"&&j.properties.forEach(function(P){var w=P.valueNode;if(w)if(s>0){s--;var C=Se.create(r.uri,ve(r,P)),L=A?A+"."+P.keyNode.value:P.keyNode.value;v.push({name:n.getKeyLabel(P),kind:n.getSymbolKind(w.type),location:C,containerName:A}),d.push({node:w,containerName:L})}else y=!0})};b<d.length;){var E=d[b++];O(E.node,E.containerName)}return y&&e&&e.onResultLimitExceeded&&e.onResultLimitExceeded(o),v},t.prototype.findDocumentSymbols2=function(r,i,e){var n=this;e===void 0&&(e={resultLimit:Number.MAX_VALUE});var a=i.root;if(!a)return[];var s=e.resultLimit||Number.MAX_VALUE,o=r.uri;if((o==="vscode://defaultsettings/keybindings.json"||pe(o.toLowerCase(),"/user/keybindings.json"))&&a.type==="array"){for(var f=[],l=0,u=a.items;l<u.length;l++){var c=u[l];if(c.type==="object")for(var h=0,g=c.properties;h<g.length;h++){var m=g[h];if(m.keyNode.value==="key"&&m.valueNode){var p=ve(r,c),d=ve(r,m.keyNode);if(f.push({name:ge(m.valueNode),kind:oe.Function,range:p,selectionRange:d}),s--,s<=0)return e&&e.onResultLimitExceeded&&e.onResultLimitExceeded(o),f}}}return f}for(var b=[],y=[{node:a,result:b}],v=0,O=!1,E=function(A,P){A.type==="array"?A.items.forEach(function(w,C){if(w)if(s>0){s--;var L=ve(r,w),N=L,V=String(C),R={name:V,kind:n.getSymbolKind(w.type),range:L,selectionRange:N,children:[]};P.push(R),y.push({result:R.children,node:w})}else O=!0}):A.type==="object"&&A.properties.forEach(function(w){var C=w.valueNode;if(C)if(s>0){s--;var L=ve(r,w),N=ve(r,w.keyNode),V=[],R={name:n.getKeyLabel(w),kind:n.getSymbolKind(C.type),range:L,selectionRange:N,children:V,detail:n.getDetail(C)};P.push(R),y.push({result:V,node:C})}else O=!0})};v<y.length;){var j=y[v++];E(j.node,j.result)}return O&&e&&e.onResultLimitExceeded&&e.onResultLimitExceeded(o),b},t.prototype.getSymbolKind=function(r){switch(r){case"object":return oe.Module;case"string":return oe.String;case"number":return oe.Number;case"array":return oe.Array;case"boolean":return oe.Boolean;default:return oe.Variable}},t.prototype.getKeyLabel=function(r){var i=r.keyNode.value;return i&&(i=i.replace(/[\n]/g,"\u21B5")),i&&i.trim()?i:'"'.concat(i,'"')},t.prototype.getDetail=function(r){if(!!r){if(r.type==="boolean"||r.type==="number"||r.type==="null"||r.type==="string")return String(r.value);if(r.type==="array")return r.children.length?void 0:"[]";if(r.type==="object")return r.children.length?void 0:"{}"}},t.prototype.findDocumentColors=function(r,i,e){return this.schemaService.getSchemaForResource(r.uri,i).then(function(n){var a=[];if(n)for(var s=e&&typeof e.resultLimit=="number"?e.resultLimit:Number.MAX_VALUE,o=i.getMatchingSchemas(n.schema),f={},l=0,u=o;l<u.length;l++){var c=u[l];if(!c.inverted&&c.schema&&(c.schema.format==="color"||c.schema.format==="color-hex")&&c.node&&c.node.type==="string"){var h=String(c.node.offset);if(!f[h]){var g=Mr(ge(c.node));if(g){var m=ve(r,c.node);a.push({color:g,range:m})}if(f[h]=!0,s--,s<=0)return e&&e.onResultLimitExceeded&&e.onResultLimitExceeded(r.uri),a}}}return a})},t.prototype.getColorPresentations=function(r,i,e,n){var a=[],s=Math.round(e.red*255),o=Math.round(e.green*255),f=Math.round(e.blue*255);function l(c){var h=c.toString(16);return h.length!==2?"0"+h:h}var u;return e.alpha===1?u="#".concat(l(s)).concat(l(o)).concat(l(f)):u="#".concat(l(s)).concat(l(o)).concat(l(f)).concat(l(Math.round(e.alpha*255))),a.push({label:u,textEdit:Y.replace(n,JSON.stringify(u))}),a},t}();function ve(t,r){return U.create(t.positionAt(r.offset),t.positionAt(r.offset+r.length))}var $=he(),at={schemaAssociations:[],schemas:{"http://json-schema.org/schema#":{$ref:"http://json-schema.org/draft-07/schema#"},"http://json-schema.org/draft-04/schema#":{$schema:"http://json-schema.org/draft-04/schema#",definitions:{schemaArray:{type:"array",minItems:1,items:{$ref:"#"}},positiveInteger:{type:"integer",minimum:0},positiveIntegerDefault0:{allOf:[{$ref:"#/definitions/positiveInteger"},{default:0}]},simpleTypes:{type:"string",enum:["array","boolean","integer","null","number","object","string"]},stringArray:{type:"array",items:{type:"string"},minItems:1,uniqueItems:!0}},type:"object",properties:{id:{type:"string",format:"uri"},$schema:{type:"string",format:"uri"},title:{type:"string"},description:{type:"string"},default:{},multipleOf:{type:"number",minimum:0,exclusiveMinimum:!0},maximum:{type:"number"},exclusiveMaximum:{type:"boolean",default:!1},minimum:{type:"number"},exclusiveMinimum:{type:"boolean",default:!1},maxLength:{allOf:[{$ref:"#/definitions/positiveInteger"}]},minLength:{allOf:[{$ref:"#/definitions/positiveIntegerDefault0"}]},pattern:{type:"string",format:"regex"},additionalItems:{anyOf:[{type:"boolean"},{$ref:"#"}],default:{}},items:{anyOf:[{$ref:"#"},{$ref:"#/definitions/schemaArray"}],default:{}},maxItems:{allOf:[{$ref:"#/definitions/positiveInteger"}]},minItems:{allOf:[{$ref:"#/definitions/positiveIntegerDefault0"}]},uniqueItems:{type:"boolean",default:!1},maxProperties:{allOf:[{$ref:"#/definitions/positiveInteger"}]},minProperties:{allOf:[{$ref:"#/definitions/positiveIntegerDefault0"}]},required:{allOf:[{$ref:"#/definitions/stringArray"}]},additionalProperties:{anyOf:[{type:"boolean"},{$ref:"#"}],default:{}},definitions:{type:"object",additionalProperties:{$ref:"#"},default:{}},properties:{type:"object",additionalProperties:{$ref:"#"},default:{}},patternProperties:{type:"object",additionalProperties:{$ref:"#"},default:{}},dependencies:{type:"object",additionalProperties:{anyOf:[{$ref:"#"},{$ref:"#/definitions/stringArray"}]}},enum:{type:"array",minItems:1,uniqueItems:!0},type:{anyOf:[{$ref:"#/definitions/simpleTypes"},{type:"array",items:{$ref:"#/definitions/simpleTypes"},minItems:1,uniqueItems:!0}]},format:{anyOf:[{type:"string",enum:["date-time","uri","email","hostname","ipv4","ipv6","regex"]},{type:"string"}]},allOf:{allOf:[{$ref:"#/definitions/schemaArray"}]},anyOf:{allOf:[{$ref:"#/definitions/schemaArray"}]},oneOf:{allOf:[{$ref:"#/definitions/schemaArray"}]},not:{allOf:[{$ref:"#"}]}},dependencies:{exclusiveMaximum:["maximum"],exclusiveMinimum:["minimum"]},default:{}},"http://json-schema.org/draft-07/schema#":{definitions:{schemaArray:{type:"array",minItems:1,items:{$ref:"#"}},nonNegativeInteger:{type:"integer",minimum:0},nonNegativeIntegerDefault0:{allOf:[{$ref:"#/definitions/nonNegativeInteger"},{default:0}]},simpleTypes:{enum:["array","boolean","integer","null","number","object","string"]},stringArray:{type:"array",items:{type:"string"},uniqueItems:!0,default:[]}},type:["object","boolean"],properties:{$id:{type:"string",format:"uri-reference"},$schema:{type:"string",format:"uri"},$ref:{type:"string",format:"uri-reference"},$comment:{type:"string"},title:{type:"string"},description:{type:"string"},default:!0,readOnly:{type:"boolean",default:!1},examples:{type:"array",items:!0},multipleOf:{type:"number",exclusiveMinimum:0},maximum:{type:"number"},exclusiveMaximum:{type:"number"},minimum:{type:"number"},exclusiveMinimum:{type:"number"},maxLength:{$ref:"#/definitions/nonNegativeInteger"},minLength:{$ref:"#/definitions/nonNegativeIntegerDefault0"},pattern:{type:"string",format:"regex"},additionalItems:{$ref:"#"},items:{anyOf:[{$ref:"#"},{$ref:"#/definitions/schemaArray"}],default:!0},maxItems:{$ref:"#/definitions/nonNegativeInteger"},minItems:{$ref:"#/definitions/nonNegativeIntegerDefault0"},uniqueItems:{type:"boolean",default:!1},contains:{$ref:"#"},maxProperties:{$ref:"#/definitions/nonNegativeInteger"},minProperties:{$ref:"#/definitions/nonNegativeIntegerDefault0"},required:{$ref:"#/definitions/stringArray"},additionalProperties:{$ref:"#"},definitions:{type:"object",additionalProperties:{$ref:"#"},default:{}},properties:{type:"object",additionalProperties:{$ref:"#"},default:{}},patternProperties:{type:"object",additionalProperties:{$ref:"#"},propertyNames:{format:"regex"},default:{}},dependencies:{type:"object",additionalProperties:{anyOf:[{$ref:"#"},{$ref:"#/definitions/stringArray"}]}},propertyNames:{$ref:"#"},const:!0,enum:{type:"array",items:!0,minItems:1,uniqueItems:!0},type:{anyOf:[{$ref:"#/definitions/simpleTypes"},{type:"array",items:{$ref:"#/definitions/simpleTypes"},minItems:1,uniqueItems:!0}]},format:{type:"string"},contentMediaType:{type:"string"},contentEncoding:{type:"string"},if:{$ref:"#"},then:{$ref:"#"},else:{$ref:"#"},allOf:{$ref:"#/definitions/schemaArray"},anyOf:{$ref:"#/definitions/schemaArray"},oneOf:{$ref:"#/definitions/schemaArray"},not:{$ref:"#"}},default:!0}}},In={id:$("schema.json.id","A unique identifier for the schema."),$schema:$("schema.json.$schema","The schema to verify this document against."),title:$("schema.json.title","A descriptive title of the element."),description:$("schema.json.description","A long description of the element. Used in hover menus and suggestions."),default:$("schema.json.default","A default value. Used by suggestions."),multipleOf:$("schema.json.multipleOf","A number that should cleanly divide the current value (i.e. have no remainder)."),maximum:$("schema.json.maximum","The maximum numerical value, inclusive by default."),exclusiveMaximum:$("schema.json.exclusiveMaximum","Makes the maximum property exclusive."),minimum:$("schema.json.minimum","The minimum numerical value, inclusive by default."),exclusiveMinimum:$("schema.json.exclusiveMininum","Makes the minimum property exclusive."),maxLength:$("schema.json.maxLength","The maximum length of a string."),minLength:$("schema.json.minLength","The minimum length of a string."),pattern:$("schema.json.pattern","A regular expression to match the string against. It is not implicitly anchored."),additionalItems:$("schema.json.additionalItems","For arrays, only when items is set as an array. If it is a schema, then this schema validates items after the ones specified by the items array. If it is false, then additional items will cause validation to fail."),items:$("schema.json.items","For arrays. Can either be a schema to validate every element against or an array of schemas to validate each item against in order (the first schema will validate the first element, the second schema will validate the second element, and so on."),maxItems:$("schema.json.maxItems","The maximum number of items that can be inside an array. Inclusive."),minItems:$("schema.json.minItems","The minimum number of items that can be inside an array. Inclusive."),uniqueItems:$("schema.json.uniqueItems","If all of the items in the array must be unique. Defaults to false."),maxProperties:$("schema.json.maxProperties","The maximum number of properties an object can have. Inclusive."),minProperties:$("schema.json.minProperties","The minimum number of properties an object can have. Inclusive."),required:$("schema.json.required","An array of strings that lists the names of all properties required on this object."),additionalProperties:$("schema.json.additionalProperties","Either a schema or a boolean. If a schema, then used to validate all properties not matched by 'properties' or 'patternProperties'. If false, then any properties not matched by either will cause this schema to fail."),definitions:$("schema.json.definitions","Not used for validation. Place subschemas here that you wish to reference inline with $ref."),properties:$("schema.json.properties","A map of property names to schemas for each property."),patternProperties:$("schema.json.patternProperties","A map of regular expressions on property names to schemas for matching properties."),dependencies:$("schema.json.dependencies","A map of property names to either an array of property names or a schema. An array of property names means the property named in the key depends on the properties in the array being present in the object in order to be valid. If the value is a schema, then the schema is only applied to the object if the property in the key exists on the object."),enum:$("schema.json.enum","The set of literal values that are valid."),type:$("schema.json.type","Either a string of one of the basic schema types (number, integer, null, array, object, boolean, string) or an array of strings specifying a subset of those types."),format:$("schema.json.format","Describes the format expected for the value."),allOf:$("schema.json.allOf","An array of schemas, all of which must match."),anyOf:$("schema.json.anyOf","An array of schemas, where at least one must match."),oneOf:$("schema.json.oneOf","An array of schemas, exactly one of which must match."),not:$("schema.json.not","A schema which must not match."),$id:$("schema.json.$id","A unique identifier for the schema."),$ref:$("schema.json.$ref","Reference a definition hosted on any location."),$comment:$("schema.json.$comment","Comments from schema authors to readers or maintainers of the schema."),readOnly:$("schema.json.readOnly","Indicates that the value of the instance is managed exclusively by the owning authority."),examples:$("schema.json.examples","Sample JSON values associated with a particular schema, for the purpose of illustrating usage."),contains:$("schema.json.contains",'An array instance is valid against "contains" if at least one of its elements is valid against the given schema.'),propertyNames:$("schema.json.propertyNames","If the instance is an object, this keyword validates if every property name in the instance validates against the provided schema."),const:$("schema.json.const","An instance validates successfully against this keyword if its value is equal to the value of the keyword."),contentMediaType:$("schema.json.contentMediaType","Describes the media type of a string property."),contentEncoding:$("schema.json.contentEncoding","Describes the content encoding of a string property."),if:$("schema.json.if",'The validation outcome of the "if" subschema controls which of the "then" or "else" keywords are evaluated.'),then:$("schema.json.then",'The "if" subschema is used for validation when the "if" subschema succeeds.'),else:$("schema.json.else",'The "else" subschema is used for validation when the "if" subschema fails.')};for(Vr in at.schemas){nt=at.schemas[Vr];for(Me in nt.properties)it=nt.properties[Me],typeof it=="boolean"&&(it=nt.properties[Me]={}),Wt=In[Me],Wt?it.description=Wt:console.log("".concat(Me,": localize('schema.json.").concat(Me,`', "")`))}var nt,it,Wt,Me,Vr;var Fr;Fr=(()=>{"use strict";var t={470:e=>{function n(o){if(typeof o!="string")throw new TypeError("Path must be a string. Received "+JSON.stringify(o))}function a(o,f){for(var l,u="",c=0,h=-1,g=0,m=0;m<=o.length;++m){if(m<o.length)l=o.charCodeAt(m);else{if(l===47)break;l=47}if(l===47){if(!(h===m-1||g===1))if(h!==m-1&&g===2){if(u.length<2||c!==2||u.charCodeAt(u.length-1)!==46||u.charCodeAt(u.length-2)!==46){if(u.length>2){var p=u.lastIndexOf("/");if(p!==u.length-1){p===-1?(u="",c=0):c=(u=u.slice(0,p)).length-1-u.lastIndexOf("/"),h=m,g=0;continue}}else if(u.length===2||u.length===1){u="",c=0,h=m,g=0;continue}}f&&(u.length>0?u+="/..":u="..",c=2)}else u.length>0?u+="/"+o.slice(h+1,m):u=o.slice(h+1,m),c=m-h-1;h=m,g=0}else l===46&&g!==-1?++g:g=-1}return u}var s={resolve:function(){for(var o,f="",l=!1,u=arguments.length-1;u>=-1&&!l;u--){var c;u>=0?c=arguments[u]:(o===void 0&&(o=process.cwd()),c=o),n(c),c.length!==0&&(f=c+"/"+f,l=c.charCodeAt(0)===47)}return f=a(f,!l),l?f.length>0?"/"+f:"/":f.length>0?f:"."},normalize:function(o){if(n(o),o.length===0)return".";var f=o.charCodeAt(0)===47,l=o.charCodeAt(o.length-1)===47;return(o=a(o,!f)).length!==0||f||(o="."),o.length>0&&l&&(o+="/"),f?"/"+o:o},isAbsolute:function(o){return n(o),o.length>0&&o.charCodeAt(0)===47},join:function(){if(arguments.length===0)return".";for(var o,f=0;f<arguments.length;++f){var l=arguments[f];n(l),l.length>0&&(o===void 0?o=l:o+="/"+l)}return o===void 0?".":s.normalize(o)},relative:function(o,f){if(n(o),n(f),o===f||(o=s.resolve(o))===(f=s.resolve(f)))return"";for(var l=1;l<o.length&&o.charCodeAt(l)===47;++l);for(var u=o.length,c=u-l,h=1;h<f.length&&f.charCodeAt(h)===47;++h);for(var g=f.length-h,m=c<g?c:g,p=-1,d=0;d<=m;++d){if(d===m){if(g>m){if(f.charCodeAt(h+d)===47)return f.slice(h+d+1);if(d===0)return f.slice(h+d)}else c>m&&(o.charCodeAt(l+d)===47?p=d:d===0&&(p=0));break}var b=o.charCodeAt(l+d);if(b!==f.charCodeAt(h+d))break;b===47&&(p=d)}var y="";for(d=l+p+1;d<=u;++d)d!==u&&o.charCodeAt(d)!==47||(y.length===0?y+="..":y+="/..");return y.length>0?y+f.slice(h+p):(h+=p,f.charCodeAt(h)===47&&++h,f.slice(h))},_makeLong:function(o){return o},dirname:function(o){if(n(o),o.length===0)return".";for(var f=o.charCodeAt(0),l=f===47,u=-1,c=!0,h=o.length-1;h>=1;--h)if((f=o.charCodeAt(h))===47){if(!c){u=h;break}}else c=!1;return u===-1?l?"/":".":l&&u===1?"//":o.slice(0,u)},basename:function(o,f){if(f!==void 0&&typeof f!="string")throw new TypeError('"ext" argument must be a string');n(o);var l,u=0,c=-1,h=!0;if(f!==void 0&&f.length>0&&f.length<=o.length){if(f.length===o.length&&f===o)return"";var g=f.length-1,m=-1;for(l=o.length-1;l>=0;--l){var p=o.charCodeAt(l);if(p===47){if(!h){u=l+1;break}}else m===-1&&(h=!1,m=l+1),g>=0&&(p===f.charCodeAt(g)?--g==-1&&(c=l):(g=-1,c=m))}return u===c?c=m:c===-1&&(c=o.length),o.slice(u,c)}for(l=o.length-1;l>=0;--l)if(o.charCodeAt(l)===47){if(!h){u=l+1;break}}else c===-1&&(h=!1,c=l+1);return c===-1?"":o.slice(u,c)},extname:function(o){n(o);for(var f=-1,l=0,u=-1,c=!0,h=0,g=o.length-1;g>=0;--g){var m=o.charCodeAt(g);if(m!==47)u===-1&&(c=!1,u=g+1),m===46?f===-1?f=g:h!==1&&(h=1):f!==-1&&(h=-1);else if(!c){l=g+1;break}}return f===-1||u===-1||h===0||h===1&&f===u-1&&f===l+1?"":o.slice(f,u)},format:function(o){if(o===null||typeof o!="object")throw new TypeError('The "pathObject" argument must be of type Object. Received type '+typeof o);return function(f,l){var u=l.dir||l.root,c=l.base||(l.name||"")+(l.ext||"");return u?u===l.root?u+c:u+"/"+c:c}(0,o)},parse:function(o){n(o);var f={root:"",dir:"",base:"",ext:"",name:""};if(o.length===0)return f;var l,u=o.charCodeAt(0),c=u===47;c?(f.root="/",l=1):l=0;for(var h=-1,g=0,m=-1,p=!0,d=o.length-1,b=0;d>=l;--d)if((u=o.charCodeAt(d))!==47)m===-1&&(p=!1,m=d+1),u===46?h===-1?h=d:b!==1&&(b=1):h!==-1&&(b=-1);else if(!p){g=d+1;break}return h===-1||m===-1||b===0||b===1&&h===m-1&&h===g+1?m!==-1&&(f.base=f.name=g===0&&c?o.slice(1,m):o.slice(g,m)):(g===0&&c?(f.name=o.slice(1,h),f.base=o.slice(1,m)):(f.name=o.slice(g,h),f.base=o.slice(g,m)),f.ext=o.slice(h,m)),g>0?f.dir=o.slice(0,g-1):c&&(f.dir="/"),f},sep:"/",delimiter:":",win32:null,posix:null};s.posix=s,e.exports=s},447:(e,n,a)=>{var s;if(a.r(n),a.d(n,{URI:()=>y,Utils:()=>V}),typeof process=="object")s=process.platform==="win32";else if(typeof navigator=="object"){var o=navigator.userAgent;s=o.indexOf("Windows")>=0}var f,l,u=(f=function(T,S){return(f=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(k,I){k.__proto__=I}||function(k,I){for(var F in I)Object.prototype.hasOwnProperty.call(I,F)&&(k[F]=I[F])})(T,S)},function(T,S){if(typeof S!="function"&&S!==null)throw new TypeError("Class extends value "+String(S)+" is not a constructor or null");function k(){this.constructor=T}f(T,S),T.prototype=S===null?Object.create(S):(k.prototype=S.prototype,new k)}),c=/^\w[\w\d+.-]*$/,h=/^\//,g=/^\/\//;function m(T,S){if(!T.scheme&&S)throw new Error('[UriError]: Scheme is missing: {scheme: "", authority: "'.concat(T.authority,'", path: "').concat(T.path,'", query: "').concat(T.query,'", fragment: "').concat(T.fragment,'"}'));if(T.scheme&&!c.test(T.scheme))throw new Error("[UriError]: Scheme contains illegal characters.");if(T.path){if(T.authority){if(!h.test(T.path))throw new Error('[UriError]: If a URI contains an authority component, then the path component must either be empty or begin with a slash ("/") character')}else if(g.test(T.path))throw new Error('[UriError]: If a URI does not contain an authority component, then the path cannot begin with two slash characters ("//")')}}var p="",d="/",b=/^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/,y=function(){function T(S,k,I,F,D,J){J===void 0&&(J=!1),typeof S=="object"?(this.scheme=S.scheme||p,this.authority=S.authority||p,this.path=S.path||p,this.query=S.query||p,this.fragment=S.fragment||p):(this.scheme=function(ue,G){return ue||G?ue:"file"}(S,J),this.authority=k||p,this.path=function(ue,G){switch(ue){case"https":case"http":case"file":G?G[0]!==d&&(G=d+G):G=d}return G}(this.scheme,I||p),this.query=F||p,this.fragment=D||p,m(this,J))}return T.isUri=function(S){return S instanceof T||!!S&&typeof S.authority=="string"&&typeof S.fragment=="string"&&typeof S.path=="string"&&typeof S.query=="string"&&typeof S.scheme=="string"&&typeof S.fsPath=="string"&&typeof S.with=="function"&&typeof S.toString=="function"},Object.defineProperty(T.prototype,"fsPath",{get:function(){return P(this,!1)},enumerable:!1,configurable:!0}),T.prototype.with=function(S){if(!S)return this;var k=S.scheme,I=S.authority,F=S.path,D=S.query,J=S.fragment;return k===void 0?k=this.scheme:k===null&&(k=p),I===void 0?I=this.authority:I===null&&(I=p),F===void 0?F=this.path:F===null&&(F=p),D===void 0?D=this.query:D===null&&(D=p),J===void 0?J=this.fragment:J===null&&(J=p),k===this.scheme&&I===this.authority&&F===this.path&&D===this.query&&J===this.fragment?this:new O(k,I,F,D,J)},T.parse=function(S,k){k===void 0&&(k=!1);var I=b.exec(S);return I?new O(I[2]||p,N(I[4]||p),N(I[5]||p),N(I[7]||p),N(I[9]||p),k):new O(p,p,p,p,p)},T.file=function(S){var k=p;if(s&&(S=S.replace(/\\/g,d)),S[0]===d&&S[1]===d){var I=S.indexOf(d,2);I===-1?(k=S.substring(2),S=d):(k=S.substring(2,I),S=S.substring(I)||d)}return new O("file",k,S,p,p)},T.from=function(S){var k=new O(S.scheme,S.authority,S.path,S.query,S.fragment);return m(k,!0),k},T.prototype.toString=function(S){return S===void 0&&(S=!1),w(this,S)},T.prototype.toJSON=function(){return this},T.revive=function(S){if(S){if(S instanceof T)return S;var k=new O(S);return k._formatted=S.external,k._fsPath=S._sep===v?S.fsPath:null,k}return S},T}(),v=s?1:void 0,O=function(T){function S(){var k=T!==null&&T.apply(this,arguments)||this;return k._formatted=null,k._fsPath=null,k}return u(S,T),Object.defineProperty(S.prototype,"fsPath",{get:function(){return this._fsPath||(this._fsPath=P(this,!1)),this._fsPath},enumerable:!1,configurable:!0}),S.prototype.toString=function(k){return k===void 0&&(k=!1),k?w(this,!0):(this._formatted||(this._formatted=w(this,!1)),this._formatted)},S.prototype.toJSON=function(){var k={$mid:1};return this._fsPath&&(k.fsPath=this._fsPath,k._sep=v),this._formatted&&(k.external=this._formatted),this.path&&(k.path=this.path),this.scheme&&(k.scheme=this.scheme),this.authority&&(k.authority=this.authority),this.query&&(k.query=this.query),this.fragment&&(k.fragment=this.fragment),k},S}(y),E=((l={})[58]="%3A",l[47]="%2F",l[63]="%3F",l[35]="%23",l[91]="%5B",l[93]="%5D",l[64]="%40",l[33]="%21",l[36]="%24",l[38]="%26",l[39]="%27",l[40]="%28",l[41]="%29",l[42]="%2A",l[43]="%2B",l[44]="%2C",l[59]="%3B",l[61]="%3D",l[32]="%20",l);function j(T,S){for(var k=void 0,I=-1,F=0;F<T.length;F++){var D=T.charCodeAt(F);if(D>=97&&D<=122||D>=65&&D<=90||D>=48&&D<=57||D===45||D===46||D===95||D===126||S&&D===47)I!==-1&&(k+=encodeURIComponent(T.substring(I,F)),I=-1),k!==void 0&&(k+=T.charAt(F));else{k===void 0&&(k=T.substr(0,F));var J=E[D];J!==void 0?(I!==-1&&(k+=encodeURIComponent(T.substring(I,F)),I=-1),k+=J):I===-1&&(I=F)}}return I!==-1&&(k+=encodeURIComponent(T.substring(I))),k!==void 0?k:T}function A(T){for(var S=void 0,k=0;k<T.length;k++){var I=T.charCodeAt(k);I===35||I===63?(S===void 0&&(S=T.substr(0,k)),S+=E[I]):S!==void 0&&(S+=T[k])}return S!==void 0?S:T}function P(T,S){var k;return k=T.authority&&T.path.length>1&&T.scheme==="file"?"//".concat(T.authority).concat(T.path):T.path.charCodeAt(0)===47&&(T.path.charCodeAt(1)>=65&&T.path.charCodeAt(1)<=90||T.path.charCodeAt(1)>=97&&T.path.charCodeAt(1)<=122)&&T.path.charCodeAt(2)===58?S?T.path.substr(1):T.path[1].toLowerCase()+T.path.substr(2):T.path,s&&(k=k.replace(/\//g,"\\")),k}function w(T,S){var k=S?A:j,I="",F=T.scheme,D=T.authority,J=T.path,ue=T.query,G=T.fragment;if(F&&(I+=F,I+=":"),(D||F==="file")&&(I+=d,I+=d),D){var ne=D.indexOf("@");if(ne!==-1){var Oe=D.substr(0,ne);D=D.substr(ne+1),(ne=Oe.indexOf(":"))===-1?I+=k(Oe,!1):(I+=k(Oe.substr(0,ne),!1),I+=":",I+=k(Oe.substr(ne+1),!1)),I+="@"}(ne=(D=D.toLowerCase()).indexOf(":"))===-1?I+=k(D,!1):(I+=k(D.substr(0,ne),!1),I+=D.substr(ne))}if(J){if(J.length>=3&&J.charCodeAt(0)===47&&J.charCodeAt(2)===58)(ce=J.charCodeAt(1))>=65&&ce<=90&&(J="/".concat(String.fromCharCode(ce+32),":").concat(J.substr(3)));else if(J.length>=2&&J.charCodeAt(1)===58){var ce;(ce=J.charCodeAt(0))>=65&&ce<=90&&(J="".concat(String.fromCharCode(ce+32),":").concat(J.substr(2)))}I+=k(J,!0)}return ue&&(I+="?",I+=k(ue,!1)),G&&(I+="#",I+=S?G:j(G,!1)),I}function C(T){try{return decodeURIComponent(T)}catch{return T.length>3?T.substr(0,3)+C(T.substr(3)):T}}var L=/(%[0-9A-Za-z][0-9A-Za-z])+/g;function N(T){return T.match(L)?T.replace(L,function(S){return C(S)}):T}var V,R=a(470),H=function(T,S,k){if(k||arguments.length===2)for(var I,F=0,D=S.length;F<D;F++)!I&&F in S||(I||(I=Array.prototype.slice.call(S,0,F)),I[F]=S[F]);return T.concat(I||Array.prototype.slice.call(S))},q=R.posix||R;(function(T){T.joinPath=function(S){for(var k=[],I=1;I<arguments.length;I++)k[I-1]=arguments[I];return S.with({path:q.join.apply(q,H([S.path],k,!1))})},T.resolvePath=function(S){for(var k=[],I=1;I<arguments.length;I++)k[I-1]=arguments[I];var F=S.path||"/";return S.with({path:q.resolve.apply(q,H([F],k,!1))})},T.dirname=function(S){var k=q.dirname(S.path);return k.length===1&&k.charCodeAt(0)===46?S:S.with({path:k})},T.basename=function(S){return q.basename(S.path)},T.extname=function(S){return q.extname(S.path)}})(V||(V={}))}},r={};function i(e){if(r[e])return r[e].exports;var n=r[e]={exports:{}};return t[e](n,n.exports,i),n.exports}return i.d=(e,n)=>{for(var a in n)i.o(n,a)&&!i.o(e,a)&&Object.defineProperty(e,a,{enumerable:!0,get:n[a]})},i.o=(e,n)=>Object.prototype.hasOwnProperty.call(e,n),i.r=e=>{typeof Symbol<"u"&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},i(447)})();var{URI:ye,Utils:Pi}=Fr;function $r(t,r){if(typeof t!="string")throw new TypeError("Expected a string");for(var i=String(t),e="",n=r?!!r.extended:!1,a=r?!!r.globstar:!1,s=!1,o=r&&typeof r.flags=="string"?r.flags:"",f,l=0,u=i.length;l<u;l++)switch(f=i[l],f){case"/":case"$":case"^":case"+":case".":case"(":case")":case"=":case"!":case"|":e+="\\"+f;break;case"?":if(n){e+=".";break}case"[":case"]":if(n){e+=f;break}case"{":if(n){s=!0,e+="(";break}case"}":if(n){s=!1,e+=")";break}case",":if(s){e+="|";break}e+="\\"+f;break;case"*":for(var c=i[l-1],h=1;i[l+1]==="*";)h++,l++;var g=i[l+1];if(!a)e+=".*";else{var m=h>1&&(c==="/"||c===void 0||c==="{"||c===",")&&(g==="/"||g===void 0||g===","||g==="}");m?(g==="/"?l++:c==="/"&&e.endsWith("\\/")&&(e=e.substr(0,e.length-2)),e+="((?:[^/]*(?:/|$))*)"):e+="([^/]*)"}break;default:e+=f}return(!o||!~o.indexOf("g"))&&(e="^"+e+"$"),new RegExp(e,o)}var de=he(),En="!",jn="/",Nn=function(){function t(r,i){this.globWrappers=[];try{for(var e=0,n=r;e<n.length;e++){var a=n[e],s=a[0]!==En;s||(a=a.substring(1)),a.length>0&&(a[0]===jn&&(a=a.substring(1)),this.globWrappers.push({regexp:$r("**/"+a,{extended:!0,globstar:!0}),include:s}))}this.uris=i}catch{this.globWrappers.length=0,this.uris=[]}}return t.prototype.matchesPattern=function(r){for(var i=!1,e=0,n=this.globWrappers;e<n.length;e++){var a=n[e],s=a.regexp,o=a.include;s.test(r)&&(i=o)}return i},t.prototype.getURIs=function(){return this.uris},t}(),Mn=function(){function t(r,i,e){this.service=r,this.uri=i,this.dependencies=new Set,this.anchors=void 0,e&&(this.unresolvedSchema=this.service.promise.resolve(new ze(e)))}return t.prototype.getUnresolvedSchema=function(){return this.unresolvedSchema||(this.unresolvedSchema=this.service.loadSchema(this.uri)),this.unresolvedSchema},t.prototype.getResolvedSchema=function(){var r=this;return this.resolvedSchema||(this.resolvedSchema=this.getUnresolvedSchema().then(function(i){return r.service.resolveSchemaContent(i,r)})),this.resolvedSchema},t.prototype.clearSchema=function(){var r=!!this.unresolvedSchema;return this.resolvedSchema=void 0,this.unresolvedSchema=void 0,this.dependencies.clear(),this.anchors=void 0,r},t}(),ze=function(){function t(r,i){i===void 0&&(i=[]),this.schema=r,this.errors=i}return t}();var Dr=function(){function t(r,i){i===void 0&&(i=[]),this.schema=r,this.errors=i}return t.prototype.getSection=function(r){var i=this.getSectionRecursive(r,this.schema);if(i)return K(i)},t.prototype.getSectionRecursive=function(r,i){if(!i||typeof i=="boolean"||r.length===0)return i;var e=r.shift();if(i.properties&&typeof i.properties[e])return this.getSectionRecursive(r,i.properties[e]);if(i.patternProperties)for(var n=0,a=Object.keys(i.patternProperties);n<a.length;n++){var s=a[n],o=xe(s);if(o?.test(e))return this.getSectionRecursive(r,i.patternProperties[s])}else{if(typeof i.additionalProperties=="object")return this.getSectionRecursive(r,i.additionalProperties);if(e.match("[0-9]+")){if(Array.isArray(i.items)){var f=parseInt(e,10);if(!isNaN(f)&&i.items[f])return this.getSectionRecursive(r,i.items[f])}else if(i.items)return this.getSectionRecursive(r,i.items)}}},t}();var Rr=function(){function t(r,i,e){this.contextService=i,this.requestService=r,this.promiseConstructor=e||Promise,this.callOnDispose=[],this.contributionSchemas={},this.contributionAssociations=[],this.schemasById={},this.filePatternAssociations=[],this.registeredSchemasIds={}}return t.prototype.getRegisteredSchemaIds=function(r){return Object.keys(this.registeredSchemasIds).filter(function(i){var e=ye.parse(i).scheme;return e!=="schemaservice"&&(!r||r(e))})},Object.defineProperty(t.prototype,"promise",{get:function(){return this.promiseConstructor},enumerable:!1,configurable:!0}),t.prototype.dispose=function(){for(;this.callOnDispose.length>0;)this.callOnDispose.pop()()},t.prototype.onResourceChange=function(r){var i=this;this.cachedSchemaForResource=void 0;var e=!1;r=be(r);for(var n=[r],a=Object.keys(this.schemasById).map(function(l){return i.schemasById[l]});n.length;)for(var s=n.pop(),o=0;o<a.length;o++){var f=a[o];f&&(f.uri===s||f.dependencies.has(s))&&(f.uri!==s&&n.push(f.uri),f.clearSchema()&&(e=!0),a[o]=void 0)}return e},t.prototype.setSchemaContributions=function(r){if(r.schemas){var i=r.schemas;for(var e in i){var n=be(e);this.contributionSchemas[n]=this.addSchemaHandle(n,i[e])}}if(Array.isArray(r.schemaAssociations))for(var a=r.schemaAssociations,s=0,o=a;s<o.length;s++){var f=o[s],l=f.uris.map(be),u=this.addFilePatternAssociation(f.pattern,l);this.contributionAssociations.push(u)}},t.prototype.addSchemaHandle=function(r,i){var e=new Mn(this,r,i);return this.schemasById[r]=e,e},t.prototype.getOrAddSchemaHandle=function(r,i){return this.schemasById[r]||this.addSchemaHandle(r,i)},t.prototype.addFilePatternAssociation=function(r,i){var e=new Nn(r,i);return this.filePatternAssociations.push(e),e},t.prototype.registerExternalSchema=function(r,i,e){var n=be(r);return this.registeredSchemasIds[n]=!0,this.cachedSchemaForResource=void 0,i&&this.addFilePatternAssociation(i,[n]),e?this.addSchemaHandle(n,e):this.getOrAddSchemaHandle(n)},t.prototype.clearExternalSchemas=function(){this.schemasById={},this.filePatternAssociations=[],this.registeredSchemasIds={},this.cachedSchemaForResource=void 0;for(var r in this.contributionSchemas)this.schemasById[r]=this.contributionSchemas[r],this.registeredSchemasIds[r]=!0;for(var i=0,e=this.contributionAssociations;i<e.length;i++){var n=e[i];this.filePatternAssociations.push(n)}},t.prototype.getResolvedSchema=function(r){var i=be(r),e=this.schemasById[i];return e?e.getResolvedSchema():this.promise.resolve(void 0)},t.prototype.loadSchema=function(r){if(!this.requestService){var i=de("json.schema.norequestservice","Unable to load schema from '{0}'. No schema request service available",ot(r));return this.promise.resolve(new ze({},[i]))}return this.requestService(r).then(function(e){if(!e){var n=de("json.schema.nocontent","Unable to load schema from '{0}': No content.",ot(r));return new ze({},[n])}var a={},s=[];a=Qt(e,s);var o=s.length?[de("json.schema.invalidFormat","Unable to parse content from '{0}': Parse error at offset {1}.",ot(r),s[0].offset)]:[];return new ze(a,o)},function(e){var n=e.toString(),a=e.toString().split("Error: ");return a.length>1&&(n=a[1]),pe(n,".")&&(n=n.substr(0,n.length-1)),new ze({},[de("json.schema.nocontent","Unable to load schema from '{0}': {1}.",ot(r),n)])})},t.prototype.resolveSchemaContent=function(r,i){var e=this,n=r.errors.slice(0),a=r.schema;if(a.$schema){var s=be(a.$schema);if(s==="http://json-schema.org/draft-03/schema")return this.promise.resolve(new Dr({},[de("json.schema.draft03.notsupported","Draft-03 schemas are not supported.")]));s==="https://json-schema.org/draft/2019-09/schema"?n.push(de("json.schema.draft201909.notsupported","Draft 2019-09 schemas are not yet fully supported.")):s==="https://json-schema.org/draft/2020-12/schema"&&n.push(de("json.schema.draft202012.notsupported","Draft 2020-12 schemas are not yet fully supported."))}var o=this.contextService,f=function(p,d){d=decodeURIComponent(d);var b=p;return d[0]==="/"&&(d=d.substring(1)),d.split("/").some(function(y){return y=y.replace(/~1/g,"/").replace(/~0/g,"~"),b=b[y],!b}),b},l=function(p,d,b){return d.anchors||(d.anchors=m(p)),d.anchors.get(b)},u=function(p,d){for(var b in d)d.hasOwnProperty(b)&&!p.hasOwnProperty(b)&&b!=="id"&&b!=="$id"&&(p[b]=d[b])},c=function(p,d,b,y){var v;y===void 0||y.length===0?v=d:y.charAt(0)==="/"?v=f(d,y):v=l(d,b,y),v?u(p,v):n.push(de("json.schema.invalidid","$ref '{0}' in '{1}' can not be resolved.",y,b.uri))},h=function(p,d,b,y){o&&!/^[A-Za-z][A-Za-z0-9+\-.+]*:\/\/.*/.test(d)&&(d=o.resolveRelativePath(d,y.uri)),d=be(d);var v=e.getOrAddSchemaHandle(d);return v.getUnresolvedSchema().then(function(O){if(y.dependencies.add(d),O.errors.length){var E=b?d+"#"+b:d;n.push(de("json.schema.problemloadingref","Problems loading reference '{0}': {1}",E,O.errors[0]))}return c(p,O.schema,v,b),g(p,O.schema,v)})},g=function(p,d,b){var y=[];return e.traverseNodes(p,function(v){for(var O=new Set;v.$ref;){var E=v.$ref,j=E.split("#",2);if(delete v.$ref,j[0].length>0){y.push(h(v,j[0],j[1],b));return}else if(!O.has(E)){var A=j[1];c(v,d,b,A),O.add(E)}}}),e.promise.all(y)},m=function(p){var d=new Map;return e.traverseNodes(p,function(b){var y=b.$id||b.id;if(typeof y=="string"&&y.charAt(0)==="#"){var v=y.substring(1);d.has(v)?n.push(de("json.schema.duplicateid","Duplicate id declaration: '{0}'",y)):d.set(v,b)}}),d};return g(a,a,i).then(function(p){return new Dr(a,n)})},t.prototype.traverseNodes=function(r,i){if(!r||typeof r!="object")return Promise.resolve(null);for(var e=new Set,n=function(){for(var l=[],u=0;u<arguments.length;u++)l[u]=arguments[u];for(var c=0,h=l;c<h.length;c++){var g=h[c];typeof g=="object"&&o.push(g)}},a=function(){for(var l=[],u=0;u<arguments.length;u++)l[u]=arguments[u];for(var c=0,h=l;c<h.length;c++){var g=h[c];if(typeof g=="object")for(var m in g){var p=m,d=g[p];typeof d=="object"&&o.push(d)}}},s=function(){for(var l=[],u=0;u<arguments.length;u++)l[u]=arguments[u];for(var c=0,h=l;c<h.length;c++){var g=h[c];if(Array.isArray(g))for(var m=0,p=g;m<p.length;m++){var d=p[m];typeof d=="object"&&o.push(d)}}},o=[r],f=o.pop();f;)e.has(f)||(e.add(f),i(f),n(f.items,f.additionalItems,f.additionalProperties,f.not,f.contains,f.propertyNames,f.if,f.then,f.else),a(f.definitions,f.properties,f.patternProperties,f.dependencies),s(f.anyOf,f.allOf,f.oneOf,f.items)),f=o.pop()},t.prototype.getSchemaFromProperty=function(r,i){var e,n;if(((e=i.root)===null||e===void 0?void 0:e.type)==="object")for(var a=0,s=i.root.properties;a<s.length;a++){var o=s[a];if(o.keyNode.value==="$schema"&&((n=o.valueNode)===null||n===void 0?void 0:n.type)==="string"){var f=o.valueNode.value;return this.contextService&&!/^\w[\w\d+.-]*:/.test(f)&&(f=this.contextService.resolveRelativePath(f,r)),f}}},t.prototype.getAssociatedSchemas=function(r){for(var i=Object.create(null),e=[],n=Vn(r),a=0,s=this.filePatternAssociations;a<s.length;a++){var o=s[a];if(o.matchesPattern(n))for(var f=0,l=o.getURIs();f<l.length;f++){var u=l[f];i[u]||(e.push(u),i[u]=!0)}}return e},t.prototype.getSchemaURIsForResource=function(r,i){var e=i&&this.getSchemaFromProperty(r,i);return e?[e]:this.getAssociatedSchemas(r)},t.prototype.getSchemaForResource=function(r,i){if(i){var e=this.getSchemaFromProperty(r,i);if(e){var n=be(e);return this.getOrAddSchemaHandle(n).getResolvedSchema()}}if(this.cachedSchemaForResource&&this.cachedSchemaForResource.resource===r)return this.cachedSchemaForResource.resolvedSchema;var a=this.getAssociatedSchemas(r),s=a.length>0?this.createCombinedSchema(r,a).getResolvedSchema():this.promise.resolve(void 0);return this.cachedSchemaForResource={resource:r,resolvedSchema:s},s},t.prototype.createCombinedSchema=function(r,i){if(i.length===1)return this.getOrAddSchemaHandle(i[0]);var e="schemaservice://combinedSchema/"+encodeURIComponent(r),n={allOf:i.map(function(a){return{$ref:a}})};return this.addSchemaHandle(e,n)},t.prototype.getMatchingSchemas=function(r,i,e){if(e){var n=e.id||"schemaservice://untitled/matchingSchemas/"+Ln++,a=this.addSchemaHandle(n,e);return a.getResolvedSchema().then(function(s){return i.getMatchingSchemas(s.schema).filter(function(o){return!o.inverted})})}return this.getSchemaForResource(r.uri,i).then(function(s){return s?i.getMatchingSchemas(s.schema).filter(function(o){return!o.inverted}):[]})},t}();var Ln=0;function be(t){try{return ye.parse(t).toString(!0)}catch{return t}}function Vn(t){try{return ye.parse(t).with({fragment:null,query:null}).toString(!0)}catch{return t}}function ot(t){try{var r=ye.parse(t);if(r.scheme==="file")return r.fsPath}catch{}return t}function Ur(t,r){var i=[],e=[],n=[],a=-1,s=le(t.getText(),!1),o=s.scan();function f(C){i.push(C),e.push(n.length)}for(;o!==17;){switch(o){case 1:case 3:{var l=t.positionAt(s.getTokenOffset()).line,u={startLine:l,endLine:l,kind:o===1?"object":"array"};n.push(u);break}case 2:case 4:{var c=o===2?"object":"array";if(n.length>0&&n[n.length-1].kind===c){var u=n.pop(),h=t.positionAt(s.getTokenOffset()).line;u&&h>u.startLine+1&&a!==u.startLine&&(u.endLine=h-1,f(u),a=u.startLine)}break}case 13:{var l=t.positionAt(s.getTokenOffset()).line,g=t.positionAt(s.getTokenOffset()+s.getTokenLength()).line;s.getTokenError()===1&&l+1<t.lineCount?s.setPosition(t.offsetAt(re.create(l+1,0))):l<g&&(f({startLine:l,endLine:g,kind:Ae.Comment}),a=l);break}case 12:{var m=t.getText().substr(s.getTokenOffset(),s.getTokenLength()),p=m.match(/^\/\/\s*#(region\b)|(endregion\b)/);if(p){var h=t.positionAt(s.getTokenOffset()).line;if(p[1]){var u={startLine:h,endLine:h,kind:Ae.Region};n.push(u)}else{for(var d=n.length-1;d>=0&&n[d].kind!==Ae.Region;)d--;if(d>=0){var u=n[d];n.length=d,h>u.startLine&&a!==u.startLine&&(u.endLine=h,f(u),a=u.startLine)}}}break}}o=s.scan()}var b=r&&r.rangeLimit;if(typeof b!="number"||i.length<=b)return i;r&&r.onRangeLimitExceeded&&r.onRangeLimitExceeded(t.uri);for(var y=[],v=0,O=e;v<O.length;v++){var E=O[v];E<30&&(y[E]=(y[E]||0)+1)}for(var j=0,A=0,d=0;d<y.length;d++){var P=y[d];if(P){if(P+j>b){A=d;break}j+=P}}for(var w=[],d=0;d<i.length;d++){var E=e[d];typeof E=="number"&&(E<A||E===A&&j++<b)&&w.push(i[d])}return w}function Wr(t,r,i){function e(o){for(var f=t.offsetAt(o),l=i.getNodeFromOffset(f,!0),u=[];l;){switch(l.type){case"string":case"object":case"array":var c=l.offset+1,h=l.offset+l.length-1;c<h&&f>=c&&f<=h&&u.push(n(c,h)),u.push(n(l.offset,l.offset+l.length));break;case"number":case"boolean":case"null":case"property":u.push(n(l.offset,l.offset+l.length));break}if(l.type==="property"||l.parent&&l.parent.type==="array"){var g=s(l.offset+l.length,5);g!==-1&&u.push(n(l.offset,g))}l=l.parent}for(var m=void 0,p=u.length-1;p>=0;p--)m=Ne.create(u[p],m);return m||(m=Ne.create(U.create(o,o))),m}function n(o,f){return U.create(t.positionAt(o),t.positionAt(f))}var a=le(t.getText(),!0);function s(o,f){a.setPosition(o);var l=a.scan();return l===f?a.getTokenOffset()+a.getTokenLength():-1}return r.map(e)}function Jr(t,r){var i=[];return r.visit(function(e){var n;if(e.type==="property"&&e.keyNode.value==="$ref"&&((n=e.valueNode)===null||n===void 0?void 0:n.type)==="string"){var a=e.valueNode.value,s=$n(r,a);if(s){var o=t.positionAt(s.offset);i.push({target:"".concat(t.uri,"#").concat(o.line+1,",").concat(o.character+1),range:Fn(t,e.valueNode)})}}return!0}),Promise.resolve(i)}function Fn(t,r){return U.create(t.positionAt(r.offset+1),t.positionAt(r.offset+r.length-1))}function $n(t,r){var i=Dn(r);return i?Jt(i,t.root):null}function Jt(t,r){if(!r)return null;if(t.length===0)return r;var i=t.shift();if(r&&r.type==="object"){var e=r.properties.find(function(s){return s.keyNode.value===i});return e?Jt(t,e.valueNode):null}else if(r&&r.type==="array"&&i.match(/^(0|[1-9][0-9]*)$/)){var n=Number.parseInt(i),a=r.items[n];return a?Jt(t,a):null}return null}function Dn(t){return t==="#"?[]:t[0]!=="#"||t[1]!=="/"?null:t.substring(2).split(/\//).map(Rn)}function Rn(t){return t.replace(/~1/g,"/").replace(/~0/g,"~")}function qr(t){var r=t.promiseConstructor||Promise,i=new Rr(t.schemaRequestService,t.workspaceContext,r);i.setSchemaContributions(at);var e=new Cr(i,t.contributions,r,t.clientCapabilities),n=new Pr(i,t.contributions,r),a=new Lr(i),s=new Ir(i,r);return{configure:function(o){i.clearExternalSchemas(),o.schemas&&o.schemas.forEach(function(f){i.registerExternalSchema(f.uri,f.fileMatch,f.schema)}),s.configure(o)},resetSchema:function(o){return i.onResourceChange(o)},doValidation:s.doValidation.bind(s),getLanguageStatus:s.getLanguageStatus.bind(s),parseJSONDocument:function(o){return Or(o,{collectComments:!0})},newJSONDocument:function(o,f){return Tr(o,f)},getMatchingSchemas:i.getMatchingSchemas.bind(i),doResolve:e.doResolve.bind(e),doComplete:e.doComplete.bind(e),findDocumentSymbols:a.findDocumentSymbols.bind(a),findDocumentSymbols2:a.findDocumentSymbols2.bind(a),findDocumentColors:a.findDocumentColors.bind(a),getColorPresentations:a.getColorPresentations.bind(a),doHover:n.doHover.bind(n),getFoldingRanges:Ur,getSelectionRanges:Wr,findDefinition:function(){return Promise.resolve([])},findLinks:Jr,format:function(o,f,l){var u=void 0;if(f){var c=o.offsetAt(f.start),h=o.offsetAt(f.end)-c;u={offset:c,length:h}}var g={tabSize:l?l.tabSize:4,insertSpaces:l?.insertSpaces===!0,insertFinalNewline:l?.insertFinalNewline===!0,eol:`
-`};return tr(o.getText(),u,g).map(function(m){return Y.replace(U.create(o.positionAt(m.offset),o.positionAt(m.offset+m.length)),m.content)})}}}var zr;typeof fetch<"u"&&(zr=function(t){return fetch(t).then(r=>r.text())});var st=class{_ctx;_languageService;_languageSettings;_languageId;constructor(r,i){this._ctx=r,this._languageSettings=i.languageSettings,this._languageId=i.languageId,this._languageService=qr({workspaceContext:{resolveRelativePath:(e,n)=>{let a=n.substr(0,n.lastIndexOf("/")+1);return qn(a,e)}},schemaRequestService:i.enableSchemaRequest?zr:void 0}),this._languageService.configure(this._languageSettings)}async doValidation(r){let i=this._getTextDocument(r);if(i){let e=this._languageService.parseJSONDocument(i);return this._languageService.doValidation(i,e,this._languageSettings)}return Promise.resolve([])}async doComplete(r,i){let e=this._getTextDocument(r);if(!e)return null;let n=this._languageService.parseJSONDocument(e);return this._languageService.doComplete(e,i,n)}async doResolve(r){return this._languageService.doResolve(r)}async doHover(r,i){let e=this._getTextDocument(r);if(!e)return null;let n=this._languageService.parseJSONDocument(e);return this._languageService.doHover(e,i,n)}async format(r,i,e){let n=this._getTextDocument(r);if(!n)return[];let a=this._languageService.format(n,i,e);return Promise.resolve(a)}async resetSchema(r){return Promise.resolve(this._languageService.resetSchema(r))}async findDocumentSymbols(r){let i=this._getTextDocument(r);if(!i)return[];let e=this._languageService.parseJSONDocument(i),n=this._languageService.findDocumentSymbols(i,e);return Promise.resolve(n)}async findDocumentColors(r){let i=this._getTextDocument(r);if(!i)return[];let e=this._languageService.parseJSONDocument(i),n=this._languageService.findDocumentColors(i,e);return Promise.resolve(n)}async getColorPresentations(r,i,e){let n=this._getTextDocument(r);if(!n)return[];let a=this._languageService.parseJSONDocument(n),s=this._languageService.getColorPresentations(n,a,i,e);return Promise.resolve(s)}async getFoldingRanges(r,i){let e=this._getTextDocument(r);if(!e)return[];let n=this._languageService.getFoldingRanges(e,i);return Promise.resolve(n)}async getSelectionRanges(r,i){let e=this._getTextDocument(r);if(!e)return[];let n=this._languageService.parseJSONDocument(e),a=this._languageService.getSelectionRanges(e,i,n);return Promise.resolve(a)}_getTextDocument(r){let i=this._ctx.getMirrorModels();for(let e of i)if(e.uri.toString()===r)return We.create(r,this._languageId,e.version,e.getValue());return null}},Wn="/".charCodeAt(0),qt=".".charCodeAt(0);function Jn(t){return t.charCodeAt(0)===Wn}function qn(t,r){if(Jn(r)){let i=ye.parse(t),e=r.split("/");return i.with({path:Br(e)}).toString()}return zn(t,r)}function Br(t){let r=[];for(let e of t)e.length===0||e.length===1&&e.charCodeAt(0)===qt||(e.length===2&&e.charCodeAt(0)===qt&&e.charCodeAt(1)===qt?r.pop():r.push(e));t.length>1&&t[t.length-1].length===0&&r.push("");let i=r.join("/");return t[0].length===0&&(i="/"+i),i}function zn(t,...r){let i=ye.parse(t),e=i.path.split("/");for(let n of r)e.push(...n.split("/"));return i.with({path:Br(e)}).toString()}function Bn(t,r){return new st(t,r)}return Yr(_n);})();
+  // node_modules/jsonc-parser/lib/esm/impl/string-intern.js
+  var cachedSpaces = new Array(20).fill(0).map((_, index) => {
+    return " ".repeat(index);
+  });
+  var maxCachedValues = 200;
+  var cachedBreakLinesWithSpaces = {
+    " ": {
+      "\n": new Array(maxCachedValues).fill(0).map((_, index) => {
+        return "\n" + " ".repeat(index);
+      }),
+      "\r": new Array(maxCachedValues).fill(0).map((_, index) => {
+        return "\r" + " ".repeat(index);
+      }),
+      "\r\n": new Array(maxCachedValues).fill(0).map((_, index) => {
+        return "\r\n" + " ".repeat(index);
+      })
+    },
+    "	": {
+      "\n": new Array(maxCachedValues).fill(0).map((_, index) => {
+        return "\n" + "	".repeat(index);
+      }),
+      "\r": new Array(maxCachedValues).fill(0).map((_, index) => {
+        return "\r" + "	".repeat(index);
+      }),
+      "\r\n": new Array(maxCachedValues).fill(0).map((_, index) => {
+        return "\r\n" + "	".repeat(index);
+      })
+    }
+  };
+  var supportedEols = ["\n", "\r", "\r\n"];
+
+  // node_modules/jsonc-parser/lib/esm/impl/format.js
+  function format(documentText, range, options) {
+    let initialIndentLevel;
+    let formatText;
+    let formatTextStart;
+    let rangeStart;
+    let rangeEnd;
+    if (range) {
+      rangeStart = range.offset;
+      rangeEnd = rangeStart + range.length;
+      formatTextStart = rangeStart;
+      while (formatTextStart > 0 && !isEOL(documentText, formatTextStart - 1)) {
+        formatTextStart--;
+      }
+      let endOffset = rangeEnd;
+      while (endOffset < documentText.length && !isEOL(documentText, endOffset)) {
+        endOffset++;
+      }
+      formatText = documentText.substring(formatTextStart, endOffset);
+      initialIndentLevel = computeIndentLevel(formatText, options);
+    } else {
+      formatText = documentText;
+      initialIndentLevel = 0;
+      formatTextStart = 0;
+      rangeStart = 0;
+      rangeEnd = documentText.length;
+    }
+    const eol = getEOL(options, documentText);
+    const eolFastPathSupported = supportedEols.includes(eol);
+    let numberLineBreaks = 0;
+    let indentLevel = 0;
+    let indentValue;
+    if (options.insertSpaces) {
+      indentValue = cachedSpaces[options.tabSize || 4] ?? repeat(cachedSpaces[1], options.tabSize || 4);
+    } else {
+      indentValue = "	";
+    }
+    const indentType = indentValue === "	" ? "	" : " ";
+    let scanner = createScanner(formatText, false);
+    let hasError = false;
+    function newLinesAndIndent() {
+      if (numberLineBreaks > 1) {
+        return repeat(eol, numberLineBreaks) + repeat(indentValue, initialIndentLevel + indentLevel);
+      }
+      const amountOfSpaces = indentValue.length * (initialIndentLevel + indentLevel);
+      if (!eolFastPathSupported || amountOfSpaces > cachedBreakLinesWithSpaces[indentType][eol].length) {
+        return eol + repeat(indentValue, initialIndentLevel + indentLevel);
+      }
+      if (amountOfSpaces <= 0) {
+        return eol;
+      }
+      return cachedBreakLinesWithSpaces[indentType][eol][amountOfSpaces];
+    }
+    function scanNext() {
+      let token = scanner.scan();
+      numberLineBreaks = 0;
+      while (token === 15 || token === 14) {
+        if (token === 14 && options.keepLines) {
+          numberLineBreaks += 1;
+        } else if (token === 14) {
+          numberLineBreaks = 1;
+        }
+        token = scanner.scan();
+      }
+      hasError = token === 16 || scanner.getTokenError() !== 0;
+      return token;
+    }
+    const editOperations = [];
+    function addEdit(text, startOffset, endOffset) {
+      if (!hasError && (!range || startOffset < rangeEnd && endOffset > rangeStart) && documentText.substring(startOffset, endOffset) !== text) {
+        editOperations.push({ offset: startOffset, length: endOffset - startOffset, content: text });
+      }
+    }
+    let firstToken = scanNext();
+    if (options.keepLines && numberLineBreaks > 0) {
+      addEdit(repeat(eol, numberLineBreaks), 0, 0);
+    }
+    if (firstToken !== 17) {
+      let firstTokenStart = scanner.getTokenOffset() + formatTextStart;
+      let initialIndent = indentValue.length * initialIndentLevel < 20 && options.insertSpaces ? cachedSpaces[indentValue.length * initialIndentLevel] : repeat(indentValue, initialIndentLevel);
+      addEdit(initialIndent, formatTextStart, firstTokenStart);
+    }
+    while (firstToken !== 17) {
+      let firstTokenEnd = scanner.getTokenOffset() + scanner.getTokenLength() + formatTextStart;
+      let secondToken = scanNext();
+      let replaceContent = "";
+      let needsLineBreak = false;
+      while (numberLineBreaks === 0 && (secondToken === 12 || secondToken === 13)) {
+        let commentTokenStart = scanner.getTokenOffset() + formatTextStart;
+        addEdit(cachedSpaces[1], firstTokenEnd, commentTokenStart);
+        firstTokenEnd = scanner.getTokenOffset() + scanner.getTokenLength() + formatTextStart;
+        needsLineBreak = secondToken === 12;
+        replaceContent = needsLineBreak ? newLinesAndIndent() : "";
+        secondToken = scanNext();
+      }
+      if (secondToken === 2) {
+        if (firstToken !== 1) {
+          indentLevel--;
+        }
+        ;
+        if (options.keepLines && numberLineBreaks > 0 || !options.keepLines && firstToken !== 1) {
+          replaceContent = newLinesAndIndent();
+        } else if (options.keepLines) {
+          replaceContent = cachedSpaces[1];
+        }
+      } else if (secondToken === 4) {
+        if (firstToken !== 3) {
+          indentLevel--;
+        }
+        ;
+        if (options.keepLines && numberLineBreaks > 0 || !options.keepLines && firstToken !== 3) {
+          replaceContent = newLinesAndIndent();
+        } else if (options.keepLines) {
+          replaceContent = cachedSpaces[1];
+        }
+      } else {
+        switch (firstToken) {
+          case 3:
+          case 1:
+            indentLevel++;
+            if (options.keepLines && numberLineBreaks > 0 || !options.keepLines) {
+              replaceContent = newLinesAndIndent();
+            } else {
+              replaceContent = cachedSpaces[1];
+            }
+            break;
+          case 5:
+            if (options.keepLines && numberLineBreaks > 0 || !options.keepLines) {
+              replaceContent = newLinesAndIndent();
+            } else {
+              replaceContent = cachedSpaces[1];
+            }
+            break;
+          case 12:
+            replaceContent = newLinesAndIndent();
+            break;
+          case 13:
+            if (numberLineBreaks > 0) {
+              replaceContent = newLinesAndIndent();
+            } else if (!needsLineBreak) {
+              replaceContent = cachedSpaces[1];
+            }
+            break;
+          case 6:
+            if (options.keepLines && numberLineBreaks > 0) {
+              replaceContent = newLinesAndIndent();
+            } else if (!needsLineBreak) {
+              replaceContent = cachedSpaces[1];
+            }
+            break;
+          case 10:
+            if (options.keepLines && numberLineBreaks > 0) {
+              replaceContent = newLinesAndIndent();
+            } else if (secondToken === 6 && !needsLineBreak) {
+              replaceContent = "";
+            }
+            break;
+          case 7:
+          case 8:
+          case 9:
+          case 11:
+          case 2:
+          case 4:
+            if (options.keepLines && numberLineBreaks > 0) {
+              replaceContent = newLinesAndIndent();
+            } else {
+              if ((secondToken === 12 || secondToken === 13) && !needsLineBreak) {
+                replaceContent = cachedSpaces[1];
+              } else if (secondToken !== 5 && secondToken !== 17) {
+                hasError = true;
+              }
+            }
+            break;
+          case 16:
+            hasError = true;
+            break;
+        }
+        if (numberLineBreaks > 0 && (secondToken === 12 || secondToken === 13)) {
+          replaceContent = newLinesAndIndent();
+        }
+      }
+      if (secondToken === 17) {
+        if (options.keepLines && numberLineBreaks > 0) {
+          replaceContent = newLinesAndIndent();
+        } else {
+          replaceContent = options.insertFinalNewline ? eol : "";
+        }
+      }
+      const secondTokenStart = scanner.getTokenOffset() + formatTextStart;
+      addEdit(replaceContent, firstTokenEnd, secondTokenStart);
+      firstToken = secondToken;
+    }
+    return editOperations;
+  }
+  function repeat(s, count) {
+    let result = "";
+    for (let i = 0; i < count; i++) {
+      result += s;
+    }
+    return result;
+  }
+  function computeIndentLevel(content, options) {
+    let i = 0;
+    let nChars = 0;
+    const tabSize = options.tabSize || 4;
+    while (i < content.length) {
+      let ch = content.charAt(i);
+      if (ch === cachedSpaces[1]) {
+        nChars++;
+      } else if (ch === "	") {
+        nChars += tabSize;
+      } else {
+        break;
+      }
+      i++;
+    }
+    return Math.floor(nChars / tabSize);
+  }
+  function getEOL(options, text) {
+    for (let i = 0; i < text.length; i++) {
+      const ch = text.charAt(i);
+      if (ch === "\r") {
+        if (i + 1 < text.length && text.charAt(i + 1) === "\n") {
+          return "\r\n";
+        }
+        return "\r";
+      } else if (ch === "\n") {
+        return "\n";
+      }
+    }
+    return options && options.eol || "\n";
+  }
+  function isEOL(text, offset) {
+    return "\r\n".indexOf(text.charAt(offset)) !== -1;
+  }
+
+  // node_modules/jsonc-parser/lib/esm/impl/parser.js
+  var ParseOptions;
+  (function(ParseOptions2) {
+    ParseOptions2.DEFAULT = {
+      allowTrailingComma: false
+    };
+  })(ParseOptions || (ParseOptions = {}));
+  function parse(text, errors = [], options = ParseOptions.DEFAULT) {
+    let currentProperty = null;
+    let currentParent = [];
+    const previousParents = [];
+    function onValue(value) {
+      if (Array.isArray(currentParent)) {
+        currentParent.push(value);
+      } else if (currentProperty !== null) {
+        currentParent[currentProperty] = value;
+      }
+    }
+    const visitor = {
+      onObjectBegin: () => {
+        const object = {};
+        onValue(object);
+        previousParents.push(currentParent);
+        currentParent = object;
+        currentProperty = null;
+      },
+      onObjectProperty: (name) => {
+        currentProperty = name;
+      },
+      onObjectEnd: () => {
+        currentParent = previousParents.pop();
+      },
+      onArrayBegin: () => {
+        const array = [];
+        onValue(array);
+        previousParents.push(currentParent);
+        currentParent = array;
+        currentProperty = null;
+      },
+      onArrayEnd: () => {
+        currentParent = previousParents.pop();
+      },
+      onLiteralValue: onValue,
+      onError: (error, offset, length) => {
+        errors.push({ error, offset, length });
+      }
+    };
+    visit(text, visitor, options);
+    return currentParent[0];
+  }
+  function getNodePath(node) {
+    if (!node.parent || !node.parent.children) {
+      return [];
+    }
+    const path = getNodePath(node.parent);
+    if (node.parent.type === "property") {
+      const key = node.parent.children[0].value;
+      path.push(key);
+    } else if (node.parent.type === "array") {
+      const index = node.parent.children.indexOf(node);
+      if (index !== -1) {
+        path.push(index);
+      }
+    }
+    return path;
+  }
+  function getNodeValue(node) {
+    switch (node.type) {
+      case "array":
+        return node.children.map(getNodeValue);
+      case "object":
+        const obj = /* @__PURE__ */ Object.create(null);
+        for (let prop of node.children) {
+          const valueNode = prop.children[1];
+          if (valueNode) {
+            obj[prop.children[0].value] = getNodeValue(valueNode);
+          }
+        }
+        return obj;
+      case "null":
+      case "string":
+      case "number":
+      case "boolean":
+        return node.value;
+      default:
+        return void 0;
+    }
+  }
+  function contains(node, offset, includeRightBound = false) {
+    return offset >= node.offset && offset < node.offset + node.length || includeRightBound && offset === node.offset + node.length;
+  }
+  function findNodeAtOffset(node, offset, includeRightBound = false) {
+    if (contains(node, offset, includeRightBound)) {
+      const children = node.children;
+      if (Array.isArray(children)) {
+        for (let i = 0; i < children.length && children[i].offset <= offset; i++) {
+          const item = findNodeAtOffset(children[i], offset, includeRightBound);
+          if (item) {
+            return item;
+          }
+        }
+      }
+      return node;
+    }
+    return void 0;
+  }
+  function visit(text, visitor, options = ParseOptions.DEFAULT) {
+    const _scanner = createScanner(text, false);
+    const _jsonPath = [];
+    function toNoArgVisit(visitFunction) {
+      return visitFunction ? () => visitFunction(_scanner.getTokenOffset(), _scanner.getTokenLength(), _scanner.getTokenStartLine(), _scanner.getTokenStartCharacter()) : () => true;
+    }
+    function toNoArgVisitWithPath(visitFunction) {
+      return visitFunction ? () => visitFunction(_scanner.getTokenOffset(), _scanner.getTokenLength(), _scanner.getTokenStartLine(), _scanner.getTokenStartCharacter(), () => _jsonPath.slice()) : () => true;
+    }
+    function toOneArgVisit(visitFunction) {
+      return visitFunction ? (arg) => visitFunction(arg, _scanner.getTokenOffset(), _scanner.getTokenLength(), _scanner.getTokenStartLine(), _scanner.getTokenStartCharacter()) : () => true;
+    }
+    function toOneArgVisitWithPath(visitFunction) {
+      return visitFunction ? (arg) => visitFunction(arg, _scanner.getTokenOffset(), _scanner.getTokenLength(), _scanner.getTokenStartLine(), _scanner.getTokenStartCharacter(), () => _jsonPath.slice()) : () => true;
+    }
+    const onObjectBegin = toNoArgVisitWithPath(visitor.onObjectBegin), onObjectProperty = toOneArgVisitWithPath(visitor.onObjectProperty), onObjectEnd = toNoArgVisit(visitor.onObjectEnd), onArrayBegin = toNoArgVisitWithPath(visitor.onArrayBegin), onArrayEnd = toNoArgVisit(visitor.onArrayEnd), onLiteralValue = toOneArgVisitWithPath(visitor.onLiteralValue), onSeparator = toOneArgVisit(visitor.onSeparator), onComment = toNoArgVisit(visitor.onComment), onError = toOneArgVisit(visitor.onError);
+    const disallowComments = options && options.disallowComments;
+    const allowTrailingComma = options && options.allowTrailingComma;
+    function scanNext() {
+      while (true) {
+        const token = _scanner.scan();
+        switch (_scanner.getTokenError()) {
+          case 4:
+            handleError(
+              14
+              /* ParseErrorCode.InvalidUnicode */
+            );
+            break;
+          case 5:
+            handleError(
+              15
+              /* ParseErrorCode.InvalidEscapeCharacter */
+            );
+            break;
+          case 3:
+            handleError(
+              13
+              /* ParseErrorCode.UnexpectedEndOfNumber */
+            );
+            break;
+          case 1:
+            if (!disallowComments) {
+              handleError(
+                11
+                /* ParseErrorCode.UnexpectedEndOfComment */
+              );
+            }
+            break;
+          case 2:
+            handleError(
+              12
+              /* ParseErrorCode.UnexpectedEndOfString */
+            );
+            break;
+          case 6:
+            handleError(
+              16
+              /* ParseErrorCode.InvalidCharacter */
+            );
+            break;
+        }
+        switch (token) {
+          case 12:
+          case 13:
+            if (disallowComments) {
+              handleError(
+                10
+                /* ParseErrorCode.InvalidCommentToken */
+              );
+            } else {
+              onComment();
+            }
+            break;
+          case 16:
+            handleError(
+              1
+              /* ParseErrorCode.InvalidSymbol */
+            );
+            break;
+          case 15:
+          case 14:
+            break;
+          default:
+            return token;
+        }
+      }
+    }
+    function handleError(error, skipUntilAfter = [], skipUntil = []) {
+      onError(error);
+      if (skipUntilAfter.length + skipUntil.length > 0) {
+        let token = _scanner.getToken();
+        while (token !== 17) {
+          if (skipUntilAfter.indexOf(token) !== -1) {
+            scanNext();
+            break;
+          } else if (skipUntil.indexOf(token) !== -1) {
+            break;
+          }
+          token = scanNext();
+        }
+      }
+    }
+    function parseString(isValue) {
+      const value = _scanner.getTokenValue();
+      if (isValue) {
+        onLiteralValue(value);
+      } else {
+        onObjectProperty(value);
+        _jsonPath.push(value);
+      }
+      scanNext();
+      return true;
+    }
+    function parseLiteral() {
+      switch (_scanner.getToken()) {
+        case 11:
+          const tokenValue = _scanner.getTokenValue();
+          let value = Number(tokenValue);
+          if (isNaN(value)) {
+            handleError(
+              2
+              /* ParseErrorCode.InvalidNumberFormat */
+            );
+            value = 0;
+          }
+          onLiteralValue(value);
+          break;
+        case 7:
+          onLiteralValue(null);
+          break;
+        case 8:
+          onLiteralValue(true);
+          break;
+        case 9:
+          onLiteralValue(false);
+          break;
+        default:
+          return false;
+      }
+      scanNext();
+      return true;
+    }
+    function parseProperty() {
+      if (_scanner.getToken() !== 10) {
+        handleError(3, [], [
+          2,
+          5
+          /* SyntaxKind.CommaToken */
+        ]);
+        return false;
+      }
+      parseString(false);
+      if (_scanner.getToken() === 6) {
+        onSeparator(":");
+        scanNext();
+        if (!parseValue()) {
+          handleError(4, [], [
+            2,
+            5
+            /* SyntaxKind.CommaToken */
+          ]);
+        }
+      } else {
+        handleError(5, [], [
+          2,
+          5
+          /* SyntaxKind.CommaToken */
+        ]);
+      }
+      _jsonPath.pop();
+      return true;
+    }
+    function parseObject() {
+      onObjectBegin();
+      scanNext();
+      let needsComma = false;
+      while (_scanner.getToken() !== 2 && _scanner.getToken() !== 17) {
+        if (_scanner.getToken() === 5) {
+          if (!needsComma) {
+            handleError(4, [], []);
+          }
+          onSeparator(",");
+          scanNext();
+          if (_scanner.getToken() === 2 && allowTrailingComma) {
+            break;
+          }
+        } else if (needsComma) {
+          handleError(6, [], []);
+        }
+        if (!parseProperty()) {
+          handleError(4, [], [
+            2,
+            5
+            /* SyntaxKind.CommaToken */
+          ]);
+        }
+        needsComma = true;
+      }
+      onObjectEnd();
+      if (_scanner.getToken() !== 2) {
+        handleError(7, [
+          2
+          /* SyntaxKind.CloseBraceToken */
+        ], []);
+      } else {
+        scanNext();
+      }
+      return true;
+    }
+    function parseArray() {
+      onArrayBegin();
+      scanNext();
+      let isFirstElement = true;
+      let needsComma = false;
+      while (_scanner.getToken() !== 4 && _scanner.getToken() !== 17) {
+        if (_scanner.getToken() === 5) {
+          if (!needsComma) {
+            handleError(4, [], []);
+          }
+          onSeparator(",");
+          scanNext();
+          if (_scanner.getToken() === 4 && allowTrailingComma) {
+            break;
+          }
+        } else if (needsComma) {
+          handleError(6, [], []);
+        }
+        if (isFirstElement) {
+          _jsonPath.push(0);
+          isFirstElement = false;
+        } else {
+          _jsonPath[_jsonPath.length - 1]++;
+        }
+        if (!parseValue()) {
+          handleError(4, [], [
+            4,
+            5
+            /* SyntaxKind.CommaToken */
+          ]);
+        }
+        needsComma = true;
+      }
+      onArrayEnd();
+      if (!isFirstElement) {
+        _jsonPath.pop();
+      }
+      if (_scanner.getToken() !== 4) {
+        handleError(8, [
+          4
+          /* SyntaxKind.CloseBracketToken */
+        ], []);
+      } else {
+        scanNext();
+      }
+      return true;
+    }
+    function parseValue() {
+      switch (_scanner.getToken()) {
+        case 3:
+          return parseArray();
+        case 1:
+          return parseObject();
+        case 10:
+          return parseString(true);
+        default:
+          return parseLiteral();
+      }
+    }
+    scanNext();
+    if (_scanner.getToken() === 17) {
+      if (options.allowEmptyContent) {
+        return true;
+      }
+      handleError(4, [], []);
+      return false;
+    }
+    if (!parseValue()) {
+      handleError(4, [], []);
+      return false;
+    }
+    if (_scanner.getToken() !== 17) {
+      handleError(9, [], []);
+    }
+    return true;
+  }
+
+  // node_modules/jsonc-parser/lib/esm/main.js
+  var createScanner2 = createScanner;
+  var ScanError;
+  (function(ScanError2) {
+    ScanError2[ScanError2["None"] = 0] = "None";
+    ScanError2[ScanError2["UnexpectedEndOfComment"] = 1] = "UnexpectedEndOfComment";
+    ScanError2[ScanError2["UnexpectedEndOfString"] = 2] = "UnexpectedEndOfString";
+    ScanError2[ScanError2["UnexpectedEndOfNumber"] = 3] = "UnexpectedEndOfNumber";
+    ScanError2[ScanError2["InvalidUnicode"] = 4] = "InvalidUnicode";
+    ScanError2[ScanError2["InvalidEscapeCharacter"] = 5] = "InvalidEscapeCharacter";
+    ScanError2[ScanError2["InvalidCharacter"] = 6] = "InvalidCharacter";
+  })(ScanError || (ScanError = {}));
+  var SyntaxKind;
+  (function(SyntaxKind2) {
+    SyntaxKind2[SyntaxKind2["OpenBraceToken"] = 1] = "OpenBraceToken";
+    SyntaxKind2[SyntaxKind2["CloseBraceToken"] = 2] = "CloseBraceToken";
+    SyntaxKind2[SyntaxKind2["OpenBracketToken"] = 3] = "OpenBracketToken";
+    SyntaxKind2[SyntaxKind2["CloseBracketToken"] = 4] = "CloseBracketToken";
+    SyntaxKind2[SyntaxKind2["CommaToken"] = 5] = "CommaToken";
+    SyntaxKind2[SyntaxKind2["ColonToken"] = 6] = "ColonToken";
+    SyntaxKind2[SyntaxKind2["NullKeyword"] = 7] = "NullKeyword";
+    SyntaxKind2[SyntaxKind2["TrueKeyword"] = 8] = "TrueKeyword";
+    SyntaxKind2[SyntaxKind2["FalseKeyword"] = 9] = "FalseKeyword";
+    SyntaxKind2[SyntaxKind2["StringLiteral"] = 10] = "StringLiteral";
+    SyntaxKind2[SyntaxKind2["NumericLiteral"] = 11] = "NumericLiteral";
+    SyntaxKind2[SyntaxKind2["LineCommentTrivia"] = 12] = "LineCommentTrivia";
+    SyntaxKind2[SyntaxKind2["BlockCommentTrivia"] = 13] = "BlockCommentTrivia";
+    SyntaxKind2[SyntaxKind2["LineBreakTrivia"] = 14] = "LineBreakTrivia";
+    SyntaxKind2[SyntaxKind2["Trivia"] = 15] = "Trivia";
+    SyntaxKind2[SyntaxKind2["Unknown"] = 16] = "Unknown";
+    SyntaxKind2[SyntaxKind2["EOF"] = 17] = "EOF";
+  })(SyntaxKind || (SyntaxKind = {}));
+  var parse2 = parse;
+  var findNodeAtOffset2 = findNodeAtOffset;
+  var getNodePath2 = getNodePath;
+  var getNodeValue2 = getNodeValue;
+  var ParseErrorCode;
+  (function(ParseErrorCode2) {
+    ParseErrorCode2[ParseErrorCode2["InvalidSymbol"] = 1] = "InvalidSymbol";
+    ParseErrorCode2[ParseErrorCode2["InvalidNumberFormat"] = 2] = "InvalidNumberFormat";
+    ParseErrorCode2[ParseErrorCode2["PropertyNameExpected"] = 3] = "PropertyNameExpected";
+    ParseErrorCode2[ParseErrorCode2["ValueExpected"] = 4] = "ValueExpected";
+    ParseErrorCode2[ParseErrorCode2["ColonExpected"] = 5] = "ColonExpected";
+    ParseErrorCode2[ParseErrorCode2["CommaExpected"] = 6] = "CommaExpected";
+    ParseErrorCode2[ParseErrorCode2["CloseBraceExpected"] = 7] = "CloseBraceExpected";
+    ParseErrorCode2[ParseErrorCode2["CloseBracketExpected"] = 8] = "CloseBracketExpected";
+    ParseErrorCode2[ParseErrorCode2["EndOfFileExpected"] = 9] = "EndOfFileExpected";
+    ParseErrorCode2[ParseErrorCode2["InvalidCommentToken"] = 10] = "InvalidCommentToken";
+    ParseErrorCode2[ParseErrorCode2["UnexpectedEndOfComment"] = 11] = "UnexpectedEndOfComment";
+    ParseErrorCode2[ParseErrorCode2["UnexpectedEndOfString"] = 12] = "UnexpectedEndOfString";
+    ParseErrorCode2[ParseErrorCode2["UnexpectedEndOfNumber"] = 13] = "UnexpectedEndOfNumber";
+    ParseErrorCode2[ParseErrorCode2["InvalidUnicode"] = 14] = "InvalidUnicode";
+    ParseErrorCode2[ParseErrorCode2["InvalidEscapeCharacter"] = 15] = "InvalidEscapeCharacter";
+    ParseErrorCode2[ParseErrorCode2["InvalidCharacter"] = 16] = "InvalidCharacter";
+  })(ParseErrorCode || (ParseErrorCode = {}));
+  function format2(documentText, range, options) {
+    return format(documentText, range, options);
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/utils/objects.js
+  function equals(one, other) {
+    if (one === other) {
+      return true;
+    }
+    if (one === null || one === void 0 || other === null || other === void 0) {
+      return false;
+    }
+    if (typeof one !== typeof other) {
+      return false;
+    }
+    if (typeof one !== "object") {
+      return false;
+    }
+    if (Array.isArray(one) !== Array.isArray(other)) {
+      return false;
+    }
+    let i, key;
+    if (Array.isArray(one)) {
+      if (one.length !== other.length) {
+        return false;
+      }
+      for (i = 0; i < one.length; i++) {
+        if (!equals(one[i], other[i])) {
+          return false;
+        }
+      }
+    } else {
+      const oneKeys = [];
+      for (key in one) {
+        oneKeys.push(key);
+      }
+      oneKeys.sort();
+      const otherKeys = [];
+      for (key in other) {
+        otherKeys.push(key);
+      }
+      otherKeys.sort();
+      if (!equals(oneKeys, otherKeys)) {
+        return false;
+      }
+      for (i = 0; i < oneKeys.length; i++) {
+        if (!equals(one[oneKeys[i]], other[oneKeys[i]])) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  function isNumber(val) {
+    return typeof val === "number";
+  }
+  function isDefined(val) {
+    return typeof val !== "undefined";
+  }
+  function isBoolean(val) {
+    return typeof val === "boolean";
+  }
+  function isString(val) {
+    return typeof val === "string";
+  }
+  function isObject(val) {
+    return typeof val === "object" && val !== null && !Array.isArray(val);
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/utils/strings.js
+  function startsWith(haystack, needle) {
+    if (haystack.length < needle.length) {
+      return false;
+    }
+    for (let i = 0; i < needle.length; i++) {
+      if (haystack[i] !== needle[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function endsWith(haystack, needle) {
+    const diff = haystack.length - needle.length;
+    if (diff > 0) {
+      return haystack.lastIndexOf(needle) === diff;
+    } else if (diff === 0) {
+      return haystack === needle;
+    } else {
+      return false;
+    }
+  }
+  function extendedRegExp(pattern) {
+    let flags = "";
+    if (startsWith(pattern, "(?i)")) {
+      pattern = pattern.substring(4);
+      flags = "i";
+    }
+    try {
+      return new RegExp(pattern, flags + "u");
+    } catch (e) {
+      try {
+        return new RegExp(pattern, flags);
+      } catch (e2) {
+        return void 0;
+      }
+    }
+  }
+  function stringLength(str) {
+    let count = 0;
+    for (let i = 0; i < str.length; i++) {
+      count++;
+      const code = str.charCodeAt(i);
+      if (55296 <= code && code <= 56319) {
+        i++;
+      }
+    }
+    return count;
+  }
+
+  // node_modules/vscode-languageserver-types/lib/esm/main.js
+  var DocumentUri;
+  (function(DocumentUri2) {
+    function is(value) {
+      return typeof value === "string";
+    }
+    DocumentUri2.is = is;
+  })(DocumentUri || (DocumentUri = {}));
+  var URI;
+  (function(URI3) {
+    function is(value) {
+      return typeof value === "string";
+    }
+    URI3.is = is;
+  })(URI || (URI = {}));
+  var integer;
+  (function(integer2) {
+    integer2.MIN_VALUE = -2147483648;
+    integer2.MAX_VALUE = 2147483647;
+    function is(value) {
+      return typeof value === "number" && integer2.MIN_VALUE <= value && value <= integer2.MAX_VALUE;
+    }
+    integer2.is = is;
+  })(integer || (integer = {}));
+  var uinteger;
+  (function(uinteger2) {
+    uinteger2.MIN_VALUE = 0;
+    uinteger2.MAX_VALUE = 2147483647;
+    function is(value) {
+      return typeof value === "number" && uinteger2.MIN_VALUE <= value && value <= uinteger2.MAX_VALUE;
+    }
+    uinteger2.is = is;
+  })(uinteger || (uinteger = {}));
+  var Position;
+  (function(Position2) {
+    function create2(line, character) {
+      if (line === Number.MAX_VALUE) {
+        line = uinteger.MAX_VALUE;
+      }
+      if (character === Number.MAX_VALUE) {
+        character = uinteger.MAX_VALUE;
+      }
+      return { line, character };
+    }
+    Position2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Is.uinteger(candidate.line) && Is.uinteger(candidate.character);
+    }
+    Position2.is = is;
+  })(Position || (Position = {}));
+  var Range;
+  (function(Range2) {
+    function create2(one, two, three, four) {
+      if (Is.uinteger(one) && Is.uinteger(two) && Is.uinteger(three) && Is.uinteger(four)) {
+        return { start: Position.create(one, two), end: Position.create(three, four) };
+      } else if (Position.is(one) && Position.is(two)) {
+        return { start: one, end: two };
+      } else {
+        throw new Error(`Range#create called with invalid arguments[${one}, ${two}, ${three}, ${four}]`);
+      }
+    }
+    Range2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Position.is(candidate.start) && Position.is(candidate.end);
+    }
+    Range2.is = is;
+  })(Range || (Range = {}));
+  var Location;
+  (function(Location2) {
+    function create2(uri, range) {
+      return { uri, range };
+    }
+    Location2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Range.is(candidate.range) && (Is.string(candidate.uri) || Is.undefined(candidate.uri));
+    }
+    Location2.is = is;
+  })(Location || (Location = {}));
+  var LocationLink;
+  (function(LocationLink2) {
+    function create2(targetUri, targetRange, targetSelectionRange, originSelectionRange) {
+      return { targetUri, targetRange, targetSelectionRange, originSelectionRange };
+    }
+    LocationLink2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Range.is(candidate.targetRange) && Is.string(candidate.targetUri) && Range.is(candidate.targetSelectionRange) && (Range.is(candidate.originSelectionRange) || Is.undefined(candidate.originSelectionRange));
+    }
+    LocationLink2.is = is;
+  })(LocationLink || (LocationLink = {}));
+  var Color;
+  (function(Color2) {
+    function create2(red, green, blue, alpha) {
+      return {
+        red,
+        green,
+        blue,
+        alpha
+      };
+    }
+    Color2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.numberRange(candidate.red, 0, 1) && Is.numberRange(candidate.green, 0, 1) && Is.numberRange(candidate.blue, 0, 1) && Is.numberRange(candidate.alpha, 0, 1);
+    }
+    Color2.is = is;
+  })(Color || (Color = {}));
+  var ColorInformation;
+  (function(ColorInformation2) {
+    function create2(range, color) {
+      return {
+        range,
+        color
+      };
+    }
+    ColorInformation2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Range.is(candidate.range) && Color.is(candidate.color);
+    }
+    ColorInformation2.is = is;
+  })(ColorInformation || (ColorInformation = {}));
+  var ColorPresentation;
+  (function(ColorPresentation2) {
+    function create2(label, textEdit, additionalTextEdits) {
+      return {
+        label,
+        textEdit,
+        additionalTextEdits
+      };
+    }
+    ColorPresentation2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.string(candidate.label) && (Is.undefined(candidate.textEdit) || TextEdit.is(candidate)) && (Is.undefined(candidate.additionalTextEdits) || Is.typedArray(candidate.additionalTextEdits, TextEdit.is));
+    }
+    ColorPresentation2.is = is;
+  })(ColorPresentation || (ColorPresentation = {}));
+  var FoldingRangeKind;
+  (function(FoldingRangeKind2) {
+    FoldingRangeKind2.Comment = "comment";
+    FoldingRangeKind2.Imports = "imports";
+    FoldingRangeKind2.Region = "region";
+  })(FoldingRangeKind || (FoldingRangeKind = {}));
+  var FoldingRange;
+  (function(FoldingRange2) {
+    function create2(startLine, endLine, startCharacter, endCharacter, kind, collapsedText) {
+      const result = {
+        startLine,
+        endLine
+      };
+      if (Is.defined(startCharacter)) {
+        result.startCharacter = startCharacter;
+      }
+      if (Is.defined(endCharacter)) {
+        result.endCharacter = endCharacter;
+      }
+      if (Is.defined(kind)) {
+        result.kind = kind;
+      }
+      if (Is.defined(collapsedText)) {
+        result.collapsedText = collapsedText;
+      }
+      return result;
+    }
+    FoldingRange2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.uinteger(candidate.startLine) && Is.uinteger(candidate.startLine) && (Is.undefined(candidate.startCharacter) || Is.uinteger(candidate.startCharacter)) && (Is.undefined(candidate.endCharacter) || Is.uinteger(candidate.endCharacter)) && (Is.undefined(candidate.kind) || Is.string(candidate.kind));
+    }
+    FoldingRange2.is = is;
+  })(FoldingRange || (FoldingRange = {}));
+  var DiagnosticRelatedInformation;
+  (function(DiagnosticRelatedInformation2) {
+    function create2(location, message) {
+      return {
+        location,
+        message
+      };
+    }
+    DiagnosticRelatedInformation2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Location.is(candidate.location) && Is.string(candidate.message);
+    }
+    DiagnosticRelatedInformation2.is = is;
+  })(DiagnosticRelatedInformation || (DiagnosticRelatedInformation = {}));
+  var DiagnosticSeverity;
+  (function(DiagnosticSeverity2) {
+    DiagnosticSeverity2.Error = 1;
+    DiagnosticSeverity2.Warning = 2;
+    DiagnosticSeverity2.Information = 3;
+    DiagnosticSeverity2.Hint = 4;
+  })(DiagnosticSeverity || (DiagnosticSeverity = {}));
+  var DiagnosticTag;
+  (function(DiagnosticTag2) {
+    DiagnosticTag2.Unnecessary = 1;
+    DiagnosticTag2.Deprecated = 2;
+  })(DiagnosticTag || (DiagnosticTag = {}));
+  var CodeDescription;
+  (function(CodeDescription2) {
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.string(candidate.href);
+    }
+    CodeDescription2.is = is;
+  })(CodeDescription || (CodeDescription = {}));
+  var Diagnostic;
+  (function(Diagnostic2) {
+    function create2(range, message, severity, code, source, relatedInformation) {
+      let result = { range, message };
+      if (Is.defined(severity)) {
+        result.severity = severity;
+      }
+      if (Is.defined(code)) {
+        result.code = code;
+      }
+      if (Is.defined(source)) {
+        result.source = source;
+      }
+      if (Is.defined(relatedInformation)) {
+        result.relatedInformation = relatedInformation;
+      }
+      return result;
+    }
+    Diagnostic2.create = create2;
+    function is(value) {
+      var _a;
+      let candidate = value;
+      return Is.defined(candidate) && Range.is(candidate.range) && Is.string(candidate.message) && (Is.number(candidate.severity) || Is.undefined(candidate.severity)) && (Is.integer(candidate.code) || Is.string(candidate.code) || Is.undefined(candidate.code)) && (Is.undefined(candidate.codeDescription) || Is.string((_a = candidate.codeDescription) === null || _a === void 0 ? void 0 : _a.href)) && (Is.string(candidate.source) || Is.undefined(candidate.source)) && (Is.undefined(candidate.relatedInformation) || Is.typedArray(candidate.relatedInformation, DiagnosticRelatedInformation.is));
+    }
+    Diagnostic2.is = is;
+  })(Diagnostic || (Diagnostic = {}));
+  var Command;
+  (function(Command2) {
+    function create2(title, command, ...args) {
+      let result = { title, command };
+      if (Is.defined(args) && args.length > 0) {
+        result.arguments = args;
+      }
+      return result;
+    }
+    Command2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.title) && Is.string(candidate.command);
+    }
+    Command2.is = is;
+  })(Command || (Command = {}));
+  var TextEdit;
+  (function(TextEdit2) {
+    function replace(range, newText) {
+      return { range, newText };
+    }
+    TextEdit2.replace = replace;
+    function insert(position, newText) {
+      return { range: { start: position, end: position }, newText };
+    }
+    TextEdit2.insert = insert;
+    function del(range) {
+      return { range, newText: "" };
+    }
+    TextEdit2.del = del;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.string(candidate.newText) && Range.is(candidate.range);
+    }
+    TextEdit2.is = is;
+  })(TextEdit || (TextEdit = {}));
+  var ChangeAnnotation;
+  (function(ChangeAnnotation2) {
+    function create2(label, needsConfirmation, description) {
+      const result = { label };
+      if (needsConfirmation !== void 0) {
+        result.needsConfirmation = needsConfirmation;
+      }
+      if (description !== void 0) {
+        result.description = description;
+      }
+      return result;
+    }
+    ChangeAnnotation2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.string(candidate.label) && (Is.boolean(candidate.needsConfirmation) || candidate.needsConfirmation === void 0) && (Is.string(candidate.description) || candidate.description === void 0);
+    }
+    ChangeAnnotation2.is = is;
+  })(ChangeAnnotation || (ChangeAnnotation = {}));
+  var ChangeAnnotationIdentifier;
+  (function(ChangeAnnotationIdentifier2) {
+    function is(value) {
+      const candidate = value;
+      return Is.string(candidate);
+    }
+    ChangeAnnotationIdentifier2.is = is;
+  })(ChangeAnnotationIdentifier || (ChangeAnnotationIdentifier = {}));
+  var AnnotatedTextEdit;
+  (function(AnnotatedTextEdit2) {
+    function replace(range, newText, annotation) {
+      return { range, newText, annotationId: annotation };
+    }
+    AnnotatedTextEdit2.replace = replace;
+    function insert(position, newText, annotation) {
+      return { range: { start: position, end: position }, newText, annotationId: annotation };
+    }
+    AnnotatedTextEdit2.insert = insert;
+    function del(range, annotation) {
+      return { range, newText: "", annotationId: annotation };
+    }
+    AnnotatedTextEdit2.del = del;
+    function is(value) {
+      const candidate = value;
+      return TextEdit.is(candidate) && (ChangeAnnotation.is(candidate.annotationId) || ChangeAnnotationIdentifier.is(candidate.annotationId));
+    }
+    AnnotatedTextEdit2.is = is;
+  })(AnnotatedTextEdit || (AnnotatedTextEdit = {}));
+  var TextDocumentEdit;
+  (function(TextDocumentEdit2) {
+    function create2(textDocument, edits) {
+      return { textDocument, edits };
+    }
+    TextDocumentEdit2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && OptionalVersionedTextDocumentIdentifier.is(candidate.textDocument) && Array.isArray(candidate.edits);
+    }
+    TextDocumentEdit2.is = is;
+  })(TextDocumentEdit || (TextDocumentEdit = {}));
+  var CreateFile;
+  (function(CreateFile2) {
+    function create2(uri, options, annotation) {
+      let result = {
+        kind: "create",
+        uri
+      };
+      if (options !== void 0 && (options.overwrite !== void 0 || options.ignoreIfExists !== void 0)) {
+        result.options = options;
+      }
+      if (annotation !== void 0) {
+        result.annotationId = annotation;
+      }
+      return result;
+    }
+    CreateFile2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return candidate && candidate.kind === "create" && Is.string(candidate.uri) && (candidate.options === void 0 || (candidate.options.overwrite === void 0 || Is.boolean(candidate.options.overwrite)) && (candidate.options.ignoreIfExists === void 0 || Is.boolean(candidate.options.ignoreIfExists))) && (candidate.annotationId === void 0 || ChangeAnnotationIdentifier.is(candidate.annotationId));
+    }
+    CreateFile2.is = is;
+  })(CreateFile || (CreateFile = {}));
+  var RenameFile;
+  (function(RenameFile2) {
+    function create2(oldUri, newUri, options, annotation) {
+      let result = {
+        kind: "rename",
+        oldUri,
+        newUri
+      };
+      if (options !== void 0 && (options.overwrite !== void 0 || options.ignoreIfExists !== void 0)) {
+        result.options = options;
+      }
+      if (annotation !== void 0) {
+        result.annotationId = annotation;
+      }
+      return result;
+    }
+    RenameFile2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return candidate && candidate.kind === "rename" && Is.string(candidate.oldUri) && Is.string(candidate.newUri) && (candidate.options === void 0 || (candidate.options.overwrite === void 0 || Is.boolean(candidate.options.overwrite)) && (candidate.options.ignoreIfExists === void 0 || Is.boolean(candidate.options.ignoreIfExists))) && (candidate.annotationId === void 0 || ChangeAnnotationIdentifier.is(candidate.annotationId));
+    }
+    RenameFile2.is = is;
+  })(RenameFile || (RenameFile = {}));
+  var DeleteFile;
+  (function(DeleteFile2) {
+    function create2(uri, options, annotation) {
+      let result = {
+        kind: "delete",
+        uri
+      };
+      if (options !== void 0 && (options.recursive !== void 0 || options.ignoreIfNotExists !== void 0)) {
+        result.options = options;
+      }
+      if (annotation !== void 0) {
+        result.annotationId = annotation;
+      }
+      return result;
+    }
+    DeleteFile2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return candidate && candidate.kind === "delete" && Is.string(candidate.uri) && (candidate.options === void 0 || (candidate.options.recursive === void 0 || Is.boolean(candidate.options.recursive)) && (candidate.options.ignoreIfNotExists === void 0 || Is.boolean(candidate.options.ignoreIfNotExists))) && (candidate.annotationId === void 0 || ChangeAnnotationIdentifier.is(candidate.annotationId));
+    }
+    DeleteFile2.is = is;
+  })(DeleteFile || (DeleteFile = {}));
+  var WorkspaceEdit;
+  (function(WorkspaceEdit2) {
+    function is(value) {
+      let candidate = value;
+      return candidate && (candidate.changes !== void 0 || candidate.documentChanges !== void 0) && (candidate.documentChanges === void 0 || candidate.documentChanges.every((change) => {
+        if (Is.string(change.kind)) {
+          return CreateFile.is(change) || RenameFile.is(change) || DeleteFile.is(change);
+        } else {
+          return TextDocumentEdit.is(change);
+        }
+      }));
+    }
+    WorkspaceEdit2.is = is;
+  })(WorkspaceEdit || (WorkspaceEdit = {}));
+  var TextDocumentIdentifier;
+  (function(TextDocumentIdentifier2) {
+    function create2(uri) {
+      return { uri };
+    }
+    TextDocumentIdentifier2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri);
+    }
+    TextDocumentIdentifier2.is = is;
+  })(TextDocumentIdentifier || (TextDocumentIdentifier = {}));
+  var VersionedTextDocumentIdentifier;
+  (function(VersionedTextDocumentIdentifier2) {
+    function create2(uri, version) {
+      return { uri, version };
+    }
+    VersionedTextDocumentIdentifier2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri) && Is.integer(candidate.version);
+    }
+    VersionedTextDocumentIdentifier2.is = is;
+  })(VersionedTextDocumentIdentifier || (VersionedTextDocumentIdentifier = {}));
+  var OptionalVersionedTextDocumentIdentifier;
+  (function(OptionalVersionedTextDocumentIdentifier2) {
+    function create2(uri, version) {
+      return { uri, version };
+    }
+    OptionalVersionedTextDocumentIdentifier2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri) && (candidate.version === null || Is.integer(candidate.version));
+    }
+    OptionalVersionedTextDocumentIdentifier2.is = is;
+  })(OptionalVersionedTextDocumentIdentifier || (OptionalVersionedTextDocumentIdentifier = {}));
+  var TextDocumentItem;
+  (function(TextDocumentItem2) {
+    function create2(uri, languageId, version, text) {
+      return { uri, languageId, version, text };
+    }
+    TextDocumentItem2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri) && Is.string(candidate.languageId) && Is.integer(candidate.version) && Is.string(candidate.text);
+    }
+    TextDocumentItem2.is = is;
+  })(TextDocumentItem || (TextDocumentItem = {}));
+  var MarkupKind;
+  (function(MarkupKind2) {
+    MarkupKind2.PlainText = "plaintext";
+    MarkupKind2.Markdown = "markdown";
+    function is(value) {
+      const candidate = value;
+      return candidate === MarkupKind2.PlainText || candidate === MarkupKind2.Markdown;
+    }
+    MarkupKind2.is = is;
+  })(MarkupKind || (MarkupKind = {}));
+  var MarkupContent;
+  (function(MarkupContent2) {
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(value) && MarkupKind.is(candidate.kind) && Is.string(candidate.value);
+    }
+    MarkupContent2.is = is;
+  })(MarkupContent || (MarkupContent = {}));
+  var CompletionItemKind;
+  (function(CompletionItemKind2) {
+    CompletionItemKind2.Text = 1;
+    CompletionItemKind2.Method = 2;
+    CompletionItemKind2.Function = 3;
+    CompletionItemKind2.Constructor = 4;
+    CompletionItemKind2.Field = 5;
+    CompletionItemKind2.Variable = 6;
+    CompletionItemKind2.Class = 7;
+    CompletionItemKind2.Interface = 8;
+    CompletionItemKind2.Module = 9;
+    CompletionItemKind2.Property = 10;
+    CompletionItemKind2.Unit = 11;
+    CompletionItemKind2.Value = 12;
+    CompletionItemKind2.Enum = 13;
+    CompletionItemKind2.Keyword = 14;
+    CompletionItemKind2.Snippet = 15;
+    CompletionItemKind2.Color = 16;
+    CompletionItemKind2.File = 17;
+    CompletionItemKind2.Reference = 18;
+    CompletionItemKind2.Folder = 19;
+    CompletionItemKind2.EnumMember = 20;
+    CompletionItemKind2.Constant = 21;
+    CompletionItemKind2.Struct = 22;
+    CompletionItemKind2.Event = 23;
+    CompletionItemKind2.Operator = 24;
+    CompletionItemKind2.TypeParameter = 25;
+  })(CompletionItemKind || (CompletionItemKind = {}));
+  var InsertTextFormat;
+  (function(InsertTextFormat2) {
+    InsertTextFormat2.PlainText = 1;
+    InsertTextFormat2.Snippet = 2;
+  })(InsertTextFormat || (InsertTextFormat = {}));
+  var CompletionItemTag;
+  (function(CompletionItemTag2) {
+    CompletionItemTag2.Deprecated = 1;
+  })(CompletionItemTag || (CompletionItemTag = {}));
+  var InsertReplaceEdit;
+  (function(InsertReplaceEdit2) {
+    function create2(newText, insert, replace) {
+      return { newText, insert, replace };
+    }
+    InsertReplaceEdit2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return candidate && Is.string(candidate.newText) && Range.is(candidate.insert) && Range.is(candidate.replace);
+    }
+    InsertReplaceEdit2.is = is;
+  })(InsertReplaceEdit || (InsertReplaceEdit = {}));
+  var InsertTextMode;
+  (function(InsertTextMode2) {
+    InsertTextMode2.asIs = 1;
+    InsertTextMode2.adjustIndentation = 2;
+  })(InsertTextMode || (InsertTextMode = {}));
+  var CompletionItemLabelDetails;
+  (function(CompletionItemLabelDetails2) {
+    function is(value) {
+      const candidate = value;
+      return candidate && (Is.string(candidate.detail) || candidate.detail === void 0) && (Is.string(candidate.description) || candidate.description === void 0);
+    }
+    CompletionItemLabelDetails2.is = is;
+  })(CompletionItemLabelDetails || (CompletionItemLabelDetails = {}));
+  var CompletionItem;
+  (function(CompletionItem2) {
+    function create2(label) {
+      return { label };
+    }
+    CompletionItem2.create = create2;
+  })(CompletionItem || (CompletionItem = {}));
+  var CompletionList;
+  (function(CompletionList2) {
+    function create2(items, isIncomplete) {
+      return { items: items ? items : [], isIncomplete: !!isIncomplete };
+    }
+    CompletionList2.create = create2;
+  })(CompletionList || (CompletionList = {}));
+  var MarkedString;
+  (function(MarkedString2) {
+    function fromPlainText(plainText) {
+      return plainText.replace(/[\\`*_{}[\]()#+\-.!]/g, "\\$&");
+    }
+    MarkedString2.fromPlainText = fromPlainText;
+    function is(value) {
+      const candidate = value;
+      return Is.string(candidate) || Is.objectLiteral(candidate) && Is.string(candidate.language) && Is.string(candidate.value);
+    }
+    MarkedString2.is = is;
+  })(MarkedString || (MarkedString = {}));
+  var Hover;
+  (function(Hover2) {
+    function is(value) {
+      let candidate = value;
+      return !!candidate && Is.objectLiteral(candidate) && (MarkupContent.is(candidate.contents) || MarkedString.is(candidate.contents) || Is.typedArray(candidate.contents, MarkedString.is)) && (value.range === void 0 || Range.is(value.range));
+    }
+    Hover2.is = is;
+  })(Hover || (Hover = {}));
+  var ParameterInformation;
+  (function(ParameterInformation2) {
+    function create2(label, documentation) {
+      return documentation ? { label, documentation } : { label };
+    }
+    ParameterInformation2.create = create2;
+  })(ParameterInformation || (ParameterInformation = {}));
+  var SignatureInformation;
+  (function(SignatureInformation2) {
+    function create2(label, documentation, ...parameters) {
+      let result = { label };
+      if (Is.defined(documentation)) {
+        result.documentation = documentation;
+      }
+      if (Is.defined(parameters)) {
+        result.parameters = parameters;
+      } else {
+        result.parameters = [];
+      }
+      return result;
+    }
+    SignatureInformation2.create = create2;
+  })(SignatureInformation || (SignatureInformation = {}));
+  var DocumentHighlightKind;
+  (function(DocumentHighlightKind2) {
+    DocumentHighlightKind2.Text = 1;
+    DocumentHighlightKind2.Read = 2;
+    DocumentHighlightKind2.Write = 3;
+  })(DocumentHighlightKind || (DocumentHighlightKind = {}));
+  var DocumentHighlight;
+  (function(DocumentHighlight2) {
+    function create2(range, kind) {
+      let result = { range };
+      if (Is.number(kind)) {
+        result.kind = kind;
+      }
+      return result;
+    }
+    DocumentHighlight2.create = create2;
+  })(DocumentHighlight || (DocumentHighlight = {}));
+  var SymbolKind;
+  (function(SymbolKind2) {
+    SymbolKind2.File = 1;
+    SymbolKind2.Module = 2;
+    SymbolKind2.Namespace = 3;
+    SymbolKind2.Package = 4;
+    SymbolKind2.Class = 5;
+    SymbolKind2.Method = 6;
+    SymbolKind2.Property = 7;
+    SymbolKind2.Field = 8;
+    SymbolKind2.Constructor = 9;
+    SymbolKind2.Enum = 10;
+    SymbolKind2.Interface = 11;
+    SymbolKind2.Function = 12;
+    SymbolKind2.Variable = 13;
+    SymbolKind2.Constant = 14;
+    SymbolKind2.String = 15;
+    SymbolKind2.Number = 16;
+    SymbolKind2.Boolean = 17;
+    SymbolKind2.Array = 18;
+    SymbolKind2.Object = 19;
+    SymbolKind2.Key = 20;
+    SymbolKind2.Null = 21;
+    SymbolKind2.EnumMember = 22;
+    SymbolKind2.Struct = 23;
+    SymbolKind2.Event = 24;
+    SymbolKind2.Operator = 25;
+    SymbolKind2.TypeParameter = 26;
+  })(SymbolKind || (SymbolKind = {}));
+  var SymbolTag;
+  (function(SymbolTag2) {
+    SymbolTag2.Deprecated = 1;
+  })(SymbolTag || (SymbolTag = {}));
+  var SymbolInformation;
+  (function(SymbolInformation2) {
+    function create2(name, kind, range, uri, containerName) {
+      let result = {
+        name,
+        kind,
+        location: { uri, range }
+      };
+      if (containerName) {
+        result.containerName = containerName;
+      }
+      return result;
+    }
+    SymbolInformation2.create = create2;
+  })(SymbolInformation || (SymbolInformation = {}));
+  var WorkspaceSymbol;
+  (function(WorkspaceSymbol2) {
+    function create2(name, kind, uri, range) {
+      return range !== void 0 ? { name, kind, location: { uri, range } } : { name, kind, location: { uri } };
+    }
+    WorkspaceSymbol2.create = create2;
+  })(WorkspaceSymbol || (WorkspaceSymbol = {}));
+  var DocumentSymbol;
+  (function(DocumentSymbol2) {
+    function create2(name, detail, kind, range, selectionRange, children) {
+      let result = {
+        name,
+        detail,
+        kind,
+        range,
+        selectionRange
+      };
+      if (children !== void 0) {
+        result.children = children;
+      }
+      return result;
+    }
+    DocumentSymbol2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return candidate && Is.string(candidate.name) && Is.number(candidate.kind) && Range.is(candidate.range) && Range.is(candidate.selectionRange) && (candidate.detail === void 0 || Is.string(candidate.detail)) && (candidate.deprecated === void 0 || Is.boolean(candidate.deprecated)) && (candidate.children === void 0 || Array.isArray(candidate.children)) && (candidate.tags === void 0 || Array.isArray(candidate.tags));
+    }
+    DocumentSymbol2.is = is;
+  })(DocumentSymbol || (DocumentSymbol = {}));
+  var CodeActionKind;
+  (function(CodeActionKind2) {
+    CodeActionKind2.Empty = "";
+    CodeActionKind2.QuickFix = "quickfix";
+    CodeActionKind2.Refactor = "refactor";
+    CodeActionKind2.RefactorExtract = "refactor.extract";
+    CodeActionKind2.RefactorInline = "refactor.inline";
+    CodeActionKind2.RefactorRewrite = "refactor.rewrite";
+    CodeActionKind2.Source = "source";
+    CodeActionKind2.SourceOrganizeImports = "source.organizeImports";
+    CodeActionKind2.SourceFixAll = "source.fixAll";
+  })(CodeActionKind || (CodeActionKind = {}));
+  var CodeActionTriggerKind;
+  (function(CodeActionTriggerKind2) {
+    CodeActionTriggerKind2.Invoked = 1;
+    CodeActionTriggerKind2.Automatic = 2;
+  })(CodeActionTriggerKind || (CodeActionTriggerKind = {}));
+  var CodeActionContext;
+  (function(CodeActionContext2) {
+    function create2(diagnostics, only, triggerKind) {
+      let result = { diagnostics };
+      if (only !== void 0 && only !== null) {
+        result.only = only;
+      }
+      if (triggerKind !== void 0 && triggerKind !== null) {
+        result.triggerKind = triggerKind;
+      }
+      return result;
+    }
+    CodeActionContext2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.typedArray(candidate.diagnostics, Diagnostic.is) && (candidate.only === void 0 || Is.typedArray(candidate.only, Is.string)) && (candidate.triggerKind === void 0 || candidate.triggerKind === CodeActionTriggerKind.Invoked || candidate.triggerKind === CodeActionTriggerKind.Automatic);
+    }
+    CodeActionContext2.is = is;
+  })(CodeActionContext || (CodeActionContext = {}));
+  var CodeAction;
+  (function(CodeAction2) {
+    function create2(title, kindOrCommandOrEdit, kind) {
+      let result = { title };
+      let checkKind = true;
+      if (typeof kindOrCommandOrEdit === "string") {
+        checkKind = false;
+        result.kind = kindOrCommandOrEdit;
+      } else if (Command.is(kindOrCommandOrEdit)) {
+        result.command = kindOrCommandOrEdit;
+      } else {
+        result.edit = kindOrCommandOrEdit;
+      }
+      if (checkKind && kind !== void 0) {
+        result.kind = kind;
+      }
+      return result;
+    }
+    CodeAction2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return candidate && Is.string(candidate.title) && (candidate.diagnostics === void 0 || Is.typedArray(candidate.diagnostics, Diagnostic.is)) && (candidate.kind === void 0 || Is.string(candidate.kind)) && (candidate.edit !== void 0 || candidate.command !== void 0) && (candidate.command === void 0 || Command.is(candidate.command)) && (candidate.isPreferred === void 0 || Is.boolean(candidate.isPreferred)) && (candidate.edit === void 0 || WorkspaceEdit.is(candidate.edit));
+    }
+    CodeAction2.is = is;
+  })(CodeAction || (CodeAction = {}));
+  var CodeLens;
+  (function(CodeLens2) {
+    function create2(range, data) {
+      let result = { range };
+      if (Is.defined(data)) {
+        result.data = data;
+      }
+      return result;
+    }
+    CodeLens2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Range.is(candidate.range) && (Is.undefined(candidate.command) || Command.is(candidate.command));
+    }
+    CodeLens2.is = is;
+  })(CodeLens || (CodeLens = {}));
+  var FormattingOptions;
+  (function(FormattingOptions2) {
+    function create2(tabSize, insertSpaces) {
+      return { tabSize, insertSpaces };
+    }
+    FormattingOptions2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.uinteger(candidate.tabSize) && Is.boolean(candidate.insertSpaces);
+    }
+    FormattingOptions2.is = is;
+  })(FormattingOptions || (FormattingOptions = {}));
+  var DocumentLink;
+  (function(DocumentLink2) {
+    function create2(range, target, data) {
+      return { range, target, data };
+    }
+    DocumentLink2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Range.is(candidate.range) && (Is.undefined(candidate.target) || Is.string(candidate.target));
+    }
+    DocumentLink2.is = is;
+  })(DocumentLink || (DocumentLink = {}));
+  var SelectionRange;
+  (function(SelectionRange2) {
+    function create2(range, parent) {
+      return { range, parent };
+    }
+    SelectionRange2.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Range.is(candidate.range) && (candidate.parent === void 0 || SelectionRange2.is(candidate.parent));
+    }
+    SelectionRange2.is = is;
+  })(SelectionRange || (SelectionRange = {}));
+  var SemanticTokenTypes;
+  (function(SemanticTokenTypes2) {
+    SemanticTokenTypes2["namespace"] = "namespace";
+    SemanticTokenTypes2["type"] = "type";
+    SemanticTokenTypes2["class"] = "class";
+    SemanticTokenTypes2["enum"] = "enum";
+    SemanticTokenTypes2["interface"] = "interface";
+    SemanticTokenTypes2["struct"] = "struct";
+    SemanticTokenTypes2["typeParameter"] = "typeParameter";
+    SemanticTokenTypes2["parameter"] = "parameter";
+    SemanticTokenTypes2["variable"] = "variable";
+    SemanticTokenTypes2["property"] = "property";
+    SemanticTokenTypes2["enumMember"] = "enumMember";
+    SemanticTokenTypes2["event"] = "event";
+    SemanticTokenTypes2["function"] = "function";
+    SemanticTokenTypes2["method"] = "method";
+    SemanticTokenTypes2["macro"] = "macro";
+    SemanticTokenTypes2["keyword"] = "keyword";
+    SemanticTokenTypes2["modifier"] = "modifier";
+    SemanticTokenTypes2["comment"] = "comment";
+    SemanticTokenTypes2["string"] = "string";
+    SemanticTokenTypes2["number"] = "number";
+    SemanticTokenTypes2["regexp"] = "regexp";
+    SemanticTokenTypes2["operator"] = "operator";
+    SemanticTokenTypes2["decorator"] = "decorator";
+  })(SemanticTokenTypes || (SemanticTokenTypes = {}));
+  var SemanticTokenModifiers;
+  (function(SemanticTokenModifiers2) {
+    SemanticTokenModifiers2["declaration"] = "declaration";
+    SemanticTokenModifiers2["definition"] = "definition";
+    SemanticTokenModifiers2["readonly"] = "readonly";
+    SemanticTokenModifiers2["static"] = "static";
+    SemanticTokenModifiers2["deprecated"] = "deprecated";
+    SemanticTokenModifiers2["abstract"] = "abstract";
+    SemanticTokenModifiers2["async"] = "async";
+    SemanticTokenModifiers2["modification"] = "modification";
+    SemanticTokenModifiers2["documentation"] = "documentation";
+    SemanticTokenModifiers2["defaultLibrary"] = "defaultLibrary";
+  })(SemanticTokenModifiers || (SemanticTokenModifiers = {}));
+  var SemanticTokens;
+  (function(SemanticTokens2) {
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && (candidate.resultId === void 0 || typeof candidate.resultId === "string") && Array.isArray(candidate.data) && (candidate.data.length === 0 || typeof candidate.data[0] === "number");
+    }
+    SemanticTokens2.is = is;
+  })(SemanticTokens || (SemanticTokens = {}));
+  var InlineValueText;
+  (function(InlineValueText2) {
+    function create2(range, text) {
+      return { range, text };
+    }
+    InlineValueText2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return candidate !== void 0 && candidate !== null && Range.is(candidate.range) && Is.string(candidate.text);
+    }
+    InlineValueText2.is = is;
+  })(InlineValueText || (InlineValueText = {}));
+  var InlineValueVariableLookup;
+  (function(InlineValueVariableLookup2) {
+    function create2(range, variableName, caseSensitiveLookup) {
+      return { range, variableName, caseSensitiveLookup };
+    }
+    InlineValueVariableLookup2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return candidate !== void 0 && candidate !== null && Range.is(candidate.range) && Is.boolean(candidate.caseSensitiveLookup) && (Is.string(candidate.variableName) || candidate.variableName === void 0);
+    }
+    InlineValueVariableLookup2.is = is;
+  })(InlineValueVariableLookup || (InlineValueVariableLookup = {}));
+  var InlineValueEvaluatableExpression;
+  (function(InlineValueEvaluatableExpression2) {
+    function create2(range, expression) {
+      return { range, expression };
+    }
+    InlineValueEvaluatableExpression2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return candidate !== void 0 && candidate !== null && Range.is(candidate.range) && (Is.string(candidate.expression) || candidate.expression === void 0);
+    }
+    InlineValueEvaluatableExpression2.is = is;
+  })(InlineValueEvaluatableExpression || (InlineValueEvaluatableExpression = {}));
+  var InlineValueContext;
+  (function(InlineValueContext2) {
+    function create2(frameId, stoppedLocation) {
+      return { frameId, stoppedLocation };
+    }
+    InlineValueContext2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return Is.defined(candidate) && Range.is(value.stoppedLocation);
+    }
+    InlineValueContext2.is = is;
+  })(InlineValueContext || (InlineValueContext = {}));
+  var InlayHintKind;
+  (function(InlayHintKind2) {
+    InlayHintKind2.Type = 1;
+    InlayHintKind2.Parameter = 2;
+    function is(value) {
+      return value === 1 || value === 2;
+    }
+    InlayHintKind2.is = is;
+  })(InlayHintKind || (InlayHintKind = {}));
+  var InlayHintLabelPart;
+  (function(InlayHintLabelPart2) {
+    function create2(value) {
+      return { value };
+    }
+    InlayHintLabelPart2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && (candidate.tooltip === void 0 || Is.string(candidate.tooltip) || MarkupContent.is(candidate.tooltip)) && (candidate.location === void 0 || Location.is(candidate.location)) && (candidate.command === void 0 || Command.is(candidate.command));
+    }
+    InlayHintLabelPart2.is = is;
+  })(InlayHintLabelPart || (InlayHintLabelPart = {}));
+  var InlayHint;
+  (function(InlayHint2) {
+    function create2(position, label, kind) {
+      const result = { position, label };
+      if (kind !== void 0) {
+        result.kind = kind;
+      }
+      return result;
+    }
+    InlayHint2.create = create2;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Position.is(candidate.position) && (Is.string(candidate.label) || Is.typedArray(candidate.label, InlayHintLabelPart.is)) && (candidate.kind === void 0 || InlayHintKind.is(candidate.kind)) && candidate.textEdits === void 0 || Is.typedArray(candidate.textEdits, TextEdit.is) && (candidate.tooltip === void 0 || Is.string(candidate.tooltip) || MarkupContent.is(candidate.tooltip)) && (candidate.paddingLeft === void 0 || Is.boolean(candidate.paddingLeft)) && (candidate.paddingRight === void 0 || Is.boolean(candidate.paddingRight));
+    }
+    InlayHint2.is = is;
+  })(InlayHint || (InlayHint = {}));
+  var StringValue;
+  (function(StringValue2) {
+    function createSnippet(value) {
+      return { kind: "snippet", value };
+    }
+    StringValue2.createSnippet = createSnippet;
+  })(StringValue || (StringValue = {}));
+  var InlineCompletionItem;
+  (function(InlineCompletionItem2) {
+    function create2(insertText, filterText, range, command) {
+      return { insertText, filterText, range, command };
+    }
+    InlineCompletionItem2.create = create2;
+  })(InlineCompletionItem || (InlineCompletionItem = {}));
+  var InlineCompletionList;
+  (function(InlineCompletionList2) {
+    function create2(items) {
+      return { items };
+    }
+    InlineCompletionList2.create = create2;
+  })(InlineCompletionList || (InlineCompletionList = {}));
+  var InlineCompletionTriggerKind;
+  (function(InlineCompletionTriggerKind2) {
+    InlineCompletionTriggerKind2.Invoked = 0;
+    InlineCompletionTriggerKind2.Automatic = 1;
+  })(InlineCompletionTriggerKind || (InlineCompletionTriggerKind = {}));
+  var SelectedCompletionInfo;
+  (function(SelectedCompletionInfo2) {
+    function create2(range, text) {
+      return { range, text };
+    }
+    SelectedCompletionInfo2.create = create2;
+  })(SelectedCompletionInfo || (SelectedCompletionInfo = {}));
+  var InlineCompletionContext;
+  (function(InlineCompletionContext2) {
+    function create2(triggerKind, selectedCompletionInfo) {
+      return { triggerKind, selectedCompletionInfo };
+    }
+    InlineCompletionContext2.create = create2;
+  })(InlineCompletionContext || (InlineCompletionContext = {}));
+  var WorkspaceFolder;
+  (function(WorkspaceFolder2) {
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && URI.is(candidate.uri) && Is.string(candidate.name);
+    }
+    WorkspaceFolder2.is = is;
+  })(WorkspaceFolder || (WorkspaceFolder = {}));
+  var TextDocument;
+  (function(TextDocument3) {
+    function create2(uri, languageId, version, content) {
+      return new FullTextDocument(uri, languageId, version, content);
+    }
+    TextDocument3.create = create2;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri) && (Is.undefined(candidate.languageId) || Is.string(candidate.languageId)) && Is.uinteger(candidate.lineCount) && Is.func(candidate.getText) && Is.func(candidate.positionAt) && Is.func(candidate.offsetAt) ? true : false;
+    }
+    TextDocument3.is = is;
+    function applyEdits(document, edits) {
+      let text = document.getText();
+      let sortedEdits = mergeSort2(edits, (a2, b) => {
+        let diff = a2.range.start.line - b.range.start.line;
+        if (diff === 0) {
+          return a2.range.start.character - b.range.start.character;
+        }
+        return diff;
+      });
+      let lastModifiedOffset = text.length;
+      for (let i = sortedEdits.length - 1; i >= 0; i--) {
+        let e = sortedEdits[i];
+        let startOffset = document.offsetAt(e.range.start);
+        let endOffset = document.offsetAt(e.range.end);
+        if (endOffset <= lastModifiedOffset) {
+          text = text.substring(0, startOffset) + e.newText + text.substring(endOffset, text.length);
+        } else {
+          throw new Error("Overlapping edit");
+        }
+        lastModifiedOffset = startOffset;
+      }
+      return text;
+    }
+    TextDocument3.applyEdits = applyEdits;
+    function mergeSort2(data, compare) {
+      if (data.length <= 1) {
+        return data;
+      }
+      const p = data.length / 2 | 0;
+      const left = data.slice(0, p);
+      const right = data.slice(p);
+      mergeSort2(left, compare);
+      mergeSort2(right, compare);
+      let leftIdx = 0;
+      let rightIdx = 0;
+      let i = 0;
+      while (leftIdx < left.length && rightIdx < right.length) {
+        let ret = compare(left[leftIdx], right[rightIdx]);
+        if (ret <= 0) {
+          data[i++] = left[leftIdx++];
+        } else {
+          data[i++] = right[rightIdx++];
+        }
+      }
+      while (leftIdx < left.length) {
+        data[i++] = left[leftIdx++];
+      }
+      while (rightIdx < right.length) {
+        data[i++] = right[rightIdx++];
+      }
+      return data;
+    }
+  })(TextDocument || (TextDocument = {}));
+  var FullTextDocument = class {
+    constructor(uri, languageId, version, content) {
+      this._uri = uri;
+      this._languageId = languageId;
+      this._version = version;
+      this._content = content;
+      this._lineOffsets = void 0;
+    }
+    get uri() {
+      return this._uri;
+    }
+    get languageId() {
+      return this._languageId;
+    }
+    get version() {
+      return this._version;
+    }
+    getText(range) {
+      if (range) {
+        let start = this.offsetAt(range.start);
+        let end = this.offsetAt(range.end);
+        return this._content.substring(start, end);
+      }
+      return this._content;
+    }
+    update(event, version) {
+      this._content = event.text;
+      this._version = version;
+      this._lineOffsets = void 0;
+    }
+    getLineOffsets() {
+      if (this._lineOffsets === void 0) {
+        let lineOffsets = [];
+        let text = this._content;
+        let isLineStart = true;
+        for (let i = 0; i < text.length; i++) {
+          if (isLineStart) {
+            lineOffsets.push(i);
+            isLineStart = false;
+          }
+          let ch = text.charAt(i);
+          isLineStart = ch === "\r" || ch === "\n";
+          if (ch === "\r" && i + 1 < text.length && text.charAt(i + 1) === "\n") {
+            i++;
+          }
+        }
+        if (isLineStart && text.length > 0) {
+          lineOffsets.push(text.length);
+        }
+        this._lineOffsets = lineOffsets;
+      }
+      return this._lineOffsets;
+    }
+    positionAt(offset) {
+      offset = Math.max(Math.min(offset, this._content.length), 0);
+      let lineOffsets = this.getLineOffsets();
+      let low = 0, high = lineOffsets.length;
+      if (high === 0) {
+        return Position.create(0, offset);
+      }
+      while (low < high) {
+        let mid = Math.floor((low + high) / 2);
+        if (lineOffsets[mid] > offset) {
+          high = mid;
+        } else {
+          low = mid + 1;
+        }
+      }
+      let line = low - 1;
+      return Position.create(line, offset - lineOffsets[line]);
+    }
+    offsetAt(position) {
+      let lineOffsets = this.getLineOffsets();
+      if (position.line >= lineOffsets.length) {
+        return this._content.length;
+      } else if (position.line < 0) {
+        return 0;
+      }
+      let lineOffset = lineOffsets[position.line];
+      let nextLineOffset = position.line + 1 < lineOffsets.length ? lineOffsets[position.line + 1] : this._content.length;
+      return Math.max(Math.min(lineOffset + position.character, nextLineOffset), lineOffset);
+    }
+    get lineCount() {
+      return this.getLineOffsets().length;
+    }
+  };
+  var Is;
+  (function(Is2) {
+    const toString = Object.prototype.toString;
+    function defined(value) {
+      return typeof value !== "undefined";
+    }
+    Is2.defined = defined;
+    function undefined2(value) {
+      return typeof value === "undefined";
+    }
+    Is2.undefined = undefined2;
+    function boolean(value) {
+      return value === true || value === false;
+    }
+    Is2.boolean = boolean;
+    function string(value) {
+      return toString.call(value) === "[object String]";
+    }
+    Is2.string = string;
+    function number(value) {
+      return toString.call(value) === "[object Number]";
+    }
+    Is2.number = number;
+    function numberRange(value, min, max) {
+      return toString.call(value) === "[object Number]" && min <= value && value <= max;
+    }
+    Is2.numberRange = numberRange;
+    function integer2(value) {
+      return toString.call(value) === "[object Number]" && -2147483648 <= value && value <= 2147483647;
+    }
+    Is2.integer = integer2;
+    function uinteger2(value) {
+      return toString.call(value) === "[object Number]" && 0 <= value && value <= 2147483647;
+    }
+    Is2.uinteger = uinteger2;
+    function func(value) {
+      return toString.call(value) === "[object Function]";
+    }
+    Is2.func = func;
+    function objectLiteral(value) {
+      return value !== null && typeof value === "object";
+    }
+    Is2.objectLiteral = objectLiteral;
+    function typedArray(value, check) {
+      return Array.isArray(value) && value.every(check);
+    }
+    Is2.typedArray = typedArray;
+  })(Is || (Is = {}));
+
+  // node_modules/vscode-languageserver-textdocument/lib/esm/main.js
+  var FullTextDocument2 = class _FullTextDocument {
+    constructor(uri, languageId, version, content) {
+      this._uri = uri;
+      this._languageId = languageId;
+      this._version = version;
+      this._content = content;
+      this._lineOffsets = void 0;
+    }
+    get uri() {
+      return this._uri;
+    }
+    get languageId() {
+      return this._languageId;
+    }
+    get version() {
+      return this._version;
+    }
+    getText(range) {
+      if (range) {
+        const start = this.offsetAt(range.start);
+        const end = this.offsetAt(range.end);
+        return this._content.substring(start, end);
+      }
+      return this._content;
+    }
+    update(changes, version) {
+      for (let change of changes) {
+        if (_FullTextDocument.isIncremental(change)) {
+          const range = getWellformedRange(change.range);
+          const startOffset = this.offsetAt(range.start);
+          const endOffset = this.offsetAt(range.end);
+          this._content = this._content.substring(0, startOffset) + change.text + this._content.substring(endOffset, this._content.length);
+          const startLine = Math.max(range.start.line, 0);
+          const endLine = Math.max(range.end.line, 0);
+          let lineOffsets = this._lineOffsets;
+          const addedLineOffsets = computeLineOffsets(change.text, false, startOffset);
+          if (endLine - startLine === addedLineOffsets.length) {
+            for (let i = 0, len = addedLineOffsets.length; i < len; i++) {
+              lineOffsets[i + startLine + 1] = addedLineOffsets[i];
+            }
+          } else {
+            if (addedLineOffsets.length < 1e4) {
+              lineOffsets.splice(startLine + 1, endLine - startLine, ...addedLineOffsets);
+            } else {
+              this._lineOffsets = lineOffsets = lineOffsets.slice(0, startLine + 1).concat(addedLineOffsets, lineOffsets.slice(endLine + 1));
+            }
+          }
+          const diff = change.text.length - (endOffset - startOffset);
+          if (diff !== 0) {
+            for (let i = startLine + 1 + addedLineOffsets.length, len = lineOffsets.length; i < len; i++) {
+              lineOffsets[i] = lineOffsets[i] + diff;
+            }
+          }
+        } else if (_FullTextDocument.isFull(change)) {
+          this._content = change.text;
+          this._lineOffsets = void 0;
+        } else {
+          throw new Error("Unknown change event received");
+        }
+      }
+      this._version = version;
+    }
+    getLineOffsets() {
+      if (this._lineOffsets === void 0) {
+        this._lineOffsets = computeLineOffsets(this._content, true);
+      }
+      return this._lineOffsets;
+    }
+    positionAt(offset) {
+      offset = Math.max(Math.min(offset, this._content.length), 0);
+      let lineOffsets = this.getLineOffsets();
+      let low = 0, high = lineOffsets.length;
+      if (high === 0) {
+        return { line: 0, character: offset };
+      }
+      while (low < high) {
+        let mid = Math.floor((low + high) / 2);
+        if (lineOffsets[mid] > offset) {
+          high = mid;
+        } else {
+          low = mid + 1;
+        }
+      }
+      let line = low - 1;
+      return { line, character: offset - lineOffsets[line] };
+    }
+    offsetAt(position) {
+      let lineOffsets = this.getLineOffsets();
+      if (position.line >= lineOffsets.length) {
+        return this._content.length;
+      } else if (position.line < 0) {
+        return 0;
+      }
+      let lineOffset = lineOffsets[position.line];
+      let nextLineOffset = position.line + 1 < lineOffsets.length ? lineOffsets[position.line + 1] : this._content.length;
+      return Math.max(Math.min(lineOffset + position.character, nextLineOffset), lineOffset);
+    }
+    get lineCount() {
+      return this.getLineOffsets().length;
+    }
+    static isIncremental(event) {
+      let candidate = event;
+      return candidate !== void 0 && candidate !== null && typeof candidate.text === "string" && candidate.range !== void 0 && (candidate.rangeLength === void 0 || typeof candidate.rangeLength === "number");
+    }
+    static isFull(event) {
+      let candidate = event;
+      return candidate !== void 0 && candidate !== null && typeof candidate.text === "string" && candidate.range === void 0 && candidate.rangeLength === void 0;
+    }
+  };
+  var TextDocument2;
+  (function(TextDocument3) {
+    function create2(uri, languageId, version, content) {
+      return new FullTextDocument2(uri, languageId, version, content);
+    }
+    TextDocument3.create = create2;
+    function update(document, changes, version) {
+      if (document instanceof FullTextDocument2) {
+        document.update(changes, version);
+        return document;
+      } else {
+        throw new Error("TextDocument.update: document must be created by TextDocument.create");
+      }
+    }
+    TextDocument3.update = update;
+    function applyEdits(document, edits) {
+      let text = document.getText();
+      let sortedEdits = mergeSort(edits.map(getWellformedEdit), (a2, b) => {
+        let diff = a2.range.start.line - b.range.start.line;
+        if (diff === 0) {
+          return a2.range.start.character - b.range.start.character;
+        }
+        return diff;
+      });
+      let lastModifiedOffset = 0;
+      const spans = [];
+      for (const e of sortedEdits) {
+        let startOffset = document.offsetAt(e.range.start);
+        if (startOffset < lastModifiedOffset) {
+          throw new Error("Overlapping edit");
+        } else if (startOffset > lastModifiedOffset) {
+          spans.push(text.substring(lastModifiedOffset, startOffset));
+        }
+        if (e.newText.length) {
+          spans.push(e.newText);
+        }
+        lastModifiedOffset = document.offsetAt(e.range.end);
+      }
+      spans.push(text.substr(lastModifiedOffset));
+      return spans.join("");
+    }
+    TextDocument3.applyEdits = applyEdits;
+  })(TextDocument2 || (TextDocument2 = {}));
+  function mergeSort(data, compare) {
+    if (data.length <= 1) {
+      return data;
+    }
+    const p = data.length / 2 | 0;
+    const left = data.slice(0, p);
+    const right = data.slice(p);
+    mergeSort(left, compare);
+    mergeSort(right, compare);
+    let leftIdx = 0;
+    let rightIdx = 0;
+    let i = 0;
+    while (leftIdx < left.length && rightIdx < right.length) {
+      let ret = compare(left[leftIdx], right[rightIdx]);
+      if (ret <= 0) {
+        data[i++] = left[leftIdx++];
+      } else {
+        data[i++] = right[rightIdx++];
+      }
+    }
+    while (leftIdx < left.length) {
+      data[i++] = left[leftIdx++];
+    }
+    while (rightIdx < right.length) {
+      data[i++] = right[rightIdx++];
+    }
+    return data;
+  }
+  function computeLineOffsets(text, isAtLineStart, textOffset = 0) {
+    const result = isAtLineStart ? [textOffset] : [];
+    for (let i = 0; i < text.length; i++) {
+      let ch = text.charCodeAt(i);
+      if (ch === 13 || ch === 10) {
+        if (ch === 13 && i + 1 < text.length && text.charCodeAt(i + 1) === 10) {
+          i++;
+        }
+        result.push(textOffset + i + 1);
+      }
+    }
+    return result;
+  }
+  function getWellformedRange(range) {
+    const start = range.start;
+    const end = range.end;
+    if (start.line > end.line || start.line === end.line && start.character > end.character) {
+      return { start: end, end: start };
+    }
+    return range;
+  }
+  function getWellformedEdit(textEdit) {
+    const range = getWellformedRange(textEdit.range);
+    if (range !== textEdit.range) {
+      return { newText: textEdit.newText, range };
+    }
+    return textEdit;
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/jsonLanguageTypes.js
+  var ErrorCode;
+  (function(ErrorCode2) {
+    ErrorCode2[ErrorCode2["Undefined"] = 0] = "Undefined";
+    ErrorCode2[ErrorCode2["EnumValueMismatch"] = 1] = "EnumValueMismatch";
+    ErrorCode2[ErrorCode2["Deprecated"] = 2] = "Deprecated";
+    ErrorCode2[ErrorCode2["UnexpectedEndOfComment"] = 257] = "UnexpectedEndOfComment";
+    ErrorCode2[ErrorCode2["UnexpectedEndOfString"] = 258] = "UnexpectedEndOfString";
+    ErrorCode2[ErrorCode2["UnexpectedEndOfNumber"] = 259] = "UnexpectedEndOfNumber";
+    ErrorCode2[ErrorCode2["InvalidUnicode"] = 260] = "InvalidUnicode";
+    ErrorCode2[ErrorCode2["InvalidEscapeCharacter"] = 261] = "InvalidEscapeCharacter";
+    ErrorCode2[ErrorCode2["InvalidCharacter"] = 262] = "InvalidCharacter";
+    ErrorCode2[ErrorCode2["PropertyExpected"] = 513] = "PropertyExpected";
+    ErrorCode2[ErrorCode2["CommaExpected"] = 514] = "CommaExpected";
+    ErrorCode2[ErrorCode2["ColonExpected"] = 515] = "ColonExpected";
+    ErrorCode2[ErrorCode2["ValueExpected"] = 516] = "ValueExpected";
+    ErrorCode2[ErrorCode2["CommaOrCloseBacketExpected"] = 517] = "CommaOrCloseBacketExpected";
+    ErrorCode2[ErrorCode2["CommaOrCloseBraceExpected"] = 518] = "CommaOrCloseBraceExpected";
+    ErrorCode2[ErrorCode2["TrailingComma"] = 519] = "TrailingComma";
+    ErrorCode2[ErrorCode2["DuplicateKey"] = 520] = "DuplicateKey";
+    ErrorCode2[ErrorCode2["CommentNotPermitted"] = 521] = "CommentNotPermitted";
+    ErrorCode2[ErrorCode2["PropertyKeysMustBeDoublequoted"] = 528] = "PropertyKeysMustBeDoublequoted";
+    ErrorCode2[ErrorCode2["SchemaResolveError"] = 768] = "SchemaResolveError";
+    ErrorCode2[ErrorCode2["SchemaUnsupportedFeature"] = 769] = "SchemaUnsupportedFeature";
+  })(ErrorCode || (ErrorCode = {}));
+  var SchemaDraft;
+  (function(SchemaDraft2) {
+    SchemaDraft2[SchemaDraft2["v3"] = 3] = "v3";
+    SchemaDraft2[SchemaDraft2["v4"] = 4] = "v4";
+    SchemaDraft2[SchemaDraft2["v6"] = 6] = "v6";
+    SchemaDraft2[SchemaDraft2["v7"] = 7] = "v7";
+    SchemaDraft2[SchemaDraft2["v2019_09"] = 19] = "v2019_09";
+    SchemaDraft2[SchemaDraft2["v2020_12"] = 20] = "v2020_12";
+  })(SchemaDraft || (SchemaDraft = {}));
+  var ClientCapabilities;
+  (function(ClientCapabilities2) {
+    ClientCapabilities2.LATEST = {
+      textDocument: {
+        completion: {
+          completionItem: {
+            documentationFormat: [MarkupKind.Markdown, MarkupKind.PlainText],
+            commitCharactersSupport: true,
+            labelDetailsSupport: true
+          }
+        }
+      }
+    };
+  })(ClientCapabilities || (ClientCapabilities = {}));
+
+  // node_modules/@vscode/l10n/dist/browser.js
+  var bundle;
+  function t(...args) {
+    const firstArg = args[0];
+    let key;
+    let message;
+    let formatArgs;
+    if (typeof firstArg === "string") {
+      key = firstArg;
+      message = firstArg;
+      args.splice(0, 1);
+      formatArgs = !args || typeof args[0] !== "object" ? args : args[0];
+    } else if (firstArg instanceof Array) {
+      const replacements = args.slice(1);
+      if (firstArg.length !== replacements.length + 1) {
+        throw new Error("expected a string as the first argument to l10n.t");
+      }
+      let str = firstArg[0];
+      for (let i = 1; i < firstArg.length; i++) {
+        str += `{${i - 1}}` + firstArg[i];
+      }
+      return t(str, ...replacements);
+    } else {
+      message = firstArg.message;
+      key = message;
+      if (firstArg.comment && firstArg.comment.length > 0) {
+        key += `/${Array.isArray(firstArg.comment) ? firstArg.comment.join("") : firstArg.comment}`;
+      }
+      formatArgs = firstArg.args ?? {};
+    }
+    const messageFromBundle = bundle?.[key];
+    if (!messageFromBundle) {
+      return format3(message, formatArgs);
+    }
+    if (typeof messageFromBundle === "string") {
+      return format3(messageFromBundle, formatArgs);
+    }
+    if (messageFromBundle.comment) {
+      return format3(messageFromBundle.message, formatArgs);
+    }
+    return format3(message, formatArgs);
+  }
+  var _format2Regexp = /{([^}]+)}/g;
+  function format3(template, values) {
+    if (Object.keys(values).length === 0) {
+      return template;
+    }
+    return template.replace(_format2Regexp, (match, group) => values[group] ?? match);
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/parser/jsonParser.js
+  var formats = {
+    "color-hex": { errorMessage: t("Invalid color format. Use #RGB, #RGBA, #RRGGBB or #RRGGBBAA."), pattern: /^#([0-9A-Fa-f]{3,4}|([0-9A-Fa-f]{2}){3,4})$/ },
+    "date-time": { errorMessage: t("String is not a RFC3339 date-time."), pattern: /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)([01][0-9]|2[0-3]):([0-5][0-9]))$/i },
+    "date": { errorMessage: t("String is not a RFC3339 date."), pattern: /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/i },
+    "time": { errorMessage: t("String is not a RFC3339 time."), pattern: /^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)([01][0-9]|2[0-3]):([0-5][0-9]))$/i },
+    "email": { errorMessage: t("String is not an e-mail address."), pattern: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}))$/ },
+    "hostname": { errorMessage: t("String is not a hostname."), pattern: /^(?=.{1,253}\.?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*\.?$/i },
+    "ipv4": { errorMessage: t("String is not an IPv4 address."), pattern: /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/ },
+    "ipv6": { errorMessage: t("String is not an IPv6 address."), pattern: /^((([0-9a-f]{1,4}:){7}([0-9a-f]{1,4}|:))|(([0-9a-f]{1,4}:){6}(:[0-9a-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9a-f]{1,4}:){5}(((:[0-9a-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9a-f]{1,4}:){4}(((:[0-9a-f]{1,4}){1,3})|((:[0-9a-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9a-f]{1,4}:){3}(((:[0-9a-f]{1,4}){1,4})|((:[0-9a-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9a-f]{1,4}:){2}(((:[0-9a-f]{1,4}){1,5})|((:[0-9a-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9a-f]{1,4}:){1}(((:[0-9a-f]{1,4}){1,6})|((:[0-9a-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9a-f]{1,4}){1,7})|((:[0-9a-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))$/i }
+  };
+  var ASTNodeImpl = class {
+    constructor(parent, offset, length = 0) {
+      this.offset = offset;
+      this.length = length;
+      this.parent = parent;
+    }
+    get children() {
+      return [];
+    }
+    toString() {
+      return "type: " + this.type + " (" + this.offset + "/" + this.length + ")" + (this.parent ? " parent: {" + this.parent.toString() + "}" : "");
+    }
+  };
+  var NullASTNodeImpl = class extends ASTNodeImpl {
+    constructor(parent, offset) {
+      super(parent, offset);
+      this.type = "null";
+      this.value = null;
+    }
+  };
+  var BooleanASTNodeImpl = class extends ASTNodeImpl {
+    constructor(parent, boolValue, offset) {
+      super(parent, offset);
+      this.type = "boolean";
+      this.value = boolValue;
+    }
+  };
+  var ArrayASTNodeImpl = class extends ASTNodeImpl {
+    constructor(parent, offset) {
+      super(parent, offset);
+      this.type = "array";
+      this.items = [];
+    }
+    get children() {
+      return this.items;
+    }
+  };
+  var NumberASTNodeImpl = class extends ASTNodeImpl {
+    constructor(parent, offset) {
+      super(parent, offset);
+      this.type = "number";
+      this.isInteger = true;
+      this.value = Number.NaN;
+    }
+  };
+  var StringASTNodeImpl = class extends ASTNodeImpl {
+    constructor(parent, offset, length) {
+      super(parent, offset, length);
+      this.type = "string";
+      this.value = "";
+    }
+  };
+  var PropertyASTNodeImpl = class extends ASTNodeImpl {
+    constructor(parent, offset, keyNode) {
+      super(parent, offset);
+      this.type = "property";
+      this.colonOffset = -1;
+      this.keyNode = keyNode;
+    }
+    get children() {
+      return this.valueNode ? [this.keyNode, this.valueNode] : [this.keyNode];
+    }
+  };
+  var ObjectASTNodeImpl = class extends ASTNodeImpl {
+    constructor(parent, offset) {
+      super(parent, offset);
+      this.type = "object";
+      this.properties = [];
+    }
+    get children() {
+      return this.properties;
+    }
+  };
+  function asSchema(schema) {
+    if (isBoolean(schema)) {
+      return schema ? {} : { "not": {} };
+    }
+    return schema;
+  }
+  var EnumMatch;
+  (function(EnumMatch2) {
+    EnumMatch2[EnumMatch2["Key"] = 0] = "Key";
+    EnumMatch2[EnumMatch2["Enum"] = 1] = "Enum";
+  })(EnumMatch || (EnumMatch = {}));
+  var schemaDraftFromId = {
+    "http://json-schema.org/draft-03/schema#": SchemaDraft.v3,
+    "http://json-schema.org/draft-04/schema#": SchemaDraft.v4,
+    "http://json-schema.org/draft-06/schema#": SchemaDraft.v6,
+    "http://json-schema.org/draft-07/schema#": SchemaDraft.v7,
+    "https://json-schema.org/draft/2019-09/schema": SchemaDraft.v2019_09,
+    "https://json-schema.org/draft/2020-12/schema": SchemaDraft.v2020_12
+  };
+  var EvaluationContext = class {
+    constructor(schemaDraft) {
+      this.schemaDraft = schemaDraft;
+    }
+  };
+  var SchemaCollector = class _SchemaCollector {
+    constructor(focusOffset = -1, exclude) {
+      this.focusOffset = focusOffset;
+      this.exclude = exclude;
+      this.schemas = [];
+    }
+    add(schema) {
+      this.schemas.push(schema);
+    }
+    merge(other) {
+      Array.prototype.push.apply(this.schemas, other.schemas);
+    }
+    include(node) {
+      return (this.focusOffset === -1 || contains2(node, this.focusOffset)) && node !== this.exclude;
+    }
+    newSub() {
+      return new _SchemaCollector(-1, this.exclude);
+    }
+  };
+  var NoOpSchemaCollector = class {
+    constructor() {
+    }
+    get schemas() {
+      return [];
+    }
+    add(_schema) {
+    }
+    merge(_other) {
+    }
+    include(_node) {
+      return true;
+    }
+    newSub() {
+      return this;
+    }
+  };
+  NoOpSchemaCollector.instance = new NoOpSchemaCollector();
+  var ValidationResult = class {
+    constructor() {
+      this.problems = [];
+      this.propertiesMatches = 0;
+      this.processedProperties = /* @__PURE__ */ new Set();
+      this.propertiesValueMatches = 0;
+      this.primaryValueMatches = 0;
+      this.enumValueMatch = false;
+      this.enumValues = void 0;
+    }
+    hasProblems() {
+      return !!this.problems.length;
+    }
+    merge(validationResult) {
+      this.problems = this.problems.concat(validationResult.problems);
+      this.propertiesMatches += validationResult.propertiesMatches;
+      this.propertiesValueMatches += validationResult.propertiesValueMatches;
+      this.mergeProcessedProperties(validationResult);
+    }
+    mergeEnumValues(validationResult) {
+      if (!this.enumValueMatch && !validationResult.enumValueMatch && this.enumValues && validationResult.enumValues) {
+        this.enumValues = this.enumValues.concat(validationResult.enumValues);
+        for (const error of this.problems) {
+          if (error.code === ErrorCode.EnumValueMismatch) {
+            error.message = t("Value is not accepted. Valid values: {0}.", this.enumValues.map((v) => JSON.stringify(v)).join(", "));
+          }
+        }
+      }
+    }
+    mergePropertyMatch(propertyValidationResult) {
+      this.problems = this.problems.concat(propertyValidationResult.problems);
+      this.propertiesMatches++;
+      if (propertyValidationResult.enumValueMatch || !propertyValidationResult.hasProblems() && propertyValidationResult.propertiesMatches) {
+        this.propertiesValueMatches++;
+      }
+      if (propertyValidationResult.enumValueMatch && propertyValidationResult.enumValues && propertyValidationResult.enumValues.length === 1) {
+        this.primaryValueMatches++;
+      }
+    }
+    mergeProcessedProperties(validationResult) {
+      validationResult.processedProperties.forEach((p) => this.processedProperties.add(p));
+    }
+    compare(other) {
+      const hasProblems = this.hasProblems();
+      if (hasProblems !== other.hasProblems()) {
+        return hasProblems ? -1 : 1;
+      }
+      if (this.enumValueMatch !== other.enumValueMatch) {
+        return other.enumValueMatch ? -1 : 1;
+      }
+      if (this.primaryValueMatches !== other.primaryValueMatches) {
+        return this.primaryValueMatches - other.primaryValueMatches;
+      }
+      if (this.propertiesValueMatches !== other.propertiesValueMatches) {
+        return this.propertiesValueMatches - other.propertiesValueMatches;
+      }
+      return this.propertiesMatches - other.propertiesMatches;
+    }
+  };
+  function newJSONDocument(root, diagnostics = []) {
+    return new JSONDocument(root, diagnostics, []);
+  }
+  function getNodeValue3(node) {
+    return getNodeValue2(node);
+  }
+  function getNodePath3(node) {
+    return getNodePath2(node);
+  }
+  function contains2(node, offset, includeRightBound = false) {
+    return offset >= node.offset && offset < node.offset + node.length || includeRightBound && offset === node.offset + node.length;
+  }
+  var JSONDocument = class {
+    constructor(root, syntaxErrors = [], comments = []) {
+      this.root = root;
+      this.syntaxErrors = syntaxErrors;
+      this.comments = comments;
+    }
+    getNodeFromOffset(offset, includeRightBound = false) {
+      if (this.root) {
+        return findNodeAtOffset2(this.root, offset, includeRightBound);
+      }
+      return void 0;
+    }
+    visit(visitor) {
+      if (this.root) {
+        const doVisit = (node) => {
+          let ctn = visitor(node);
+          const children = node.children;
+          if (Array.isArray(children)) {
+            for (let i = 0; i < children.length && ctn; i++) {
+              ctn = doVisit(children[i]);
+            }
+          }
+          return ctn;
+        };
+        doVisit(this.root);
+      }
+    }
+    validate(textDocument, schema, severity = DiagnosticSeverity.Warning, schemaDraft) {
+      if (this.root && schema) {
+        const validationResult = new ValidationResult();
+        validate(this.root, schema, validationResult, NoOpSchemaCollector.instance, new EvaluationContext(schemaDraft ?? getSchemaDraft(schema)));
+        return validationResult.problems.map((p) => {
+          const range = Range.create(textDocument.positionAt(p.location.offset), textDocument.positionAt(p.location.offset + p.location.length));
+          return Diagnostic.create(range, p.message, p.severity ?? severity, p.code);
+        });
+      }
+      return void 0;
+    }
+    getMatchingSchemas(schema, focusOffset = -1, exclude) {
+      if (this.root && schema) {
+        const matchingSchemas = new SchemaCollector(focusOffset, exclude);
+        const schemaDraft = getSchemaDraft(schema);
+        const context = new EvaluationContext(schemaDraft);
+        validate(this.root, schema, new ValidationResult(), matchingSchemas, context);
+        return matchingSchemas.schemas;
+      }
+      return [];
+    }
+  };
+  function getSchemaDraft(schema, fallBack = SchemaDraft.v2020_12) {
+    let schemaId = schema.$schema;
+    if (schemaId) {
+      return schemaDraftFromId[schemaId] ?? fallBack;
+    }
+    return fallBack;
+  }
+  function validate(n, schema, validationResult, matchingSchemas, context) {
+    if (!n || !matchingSchemas.include(n)) {
+      return;
+    }
+    if (n.type === "property") {
+      return validate(n.valueNode, schema, validationResult, matchingSchemas, context);
+    }
+    const node = n;
+    _validateNode();
+    switch (node.type) {
+      case "object":
+        _validateObjectNode(node);
+        break;
+      case "array":
+        _validateArrayNode(node);
+        break;
+      case "string":
+        _validateStringNode(node);
+        break;
+      case "number":
+        _validateNumberNode(node);
+        break;
+    }
+    matchingSchemas.add({ node, schema });
+    function _validateNode() {
+      function matchesType(type) {
+        return node.type === type || type === "integer" && node.type === "number" && node.isInteger;
+      }
+      if (Array.isArray(schema.type)) {
+        if (!schema.type.some(matchesType)) {
+          validationResult.problems.push({
+            location: { offset: node.offset, length: node.length },
+            message: schema.errorMessage || t("Incorrect type. Expected one of {0}.", schema.type.join(", "))
+          });
+        }
+      } else if (schema.type) {
+        if (!matchesType(schema.type)) {
+          validationResult.problems.push({
+            location: { offset: node.offset, length: node.length },
+            message: schema.errorMessage || t('Incorrect type. Expected "{0}".', schema.type)
+          });
+        }
+      }
+      if (Array.isArray(schema.allOf)) {
+        for (const subSchemaRef of schema.allOf) {
+          const subValidationResult = new ValidationResult();
+          const subMatchingSchemas = matchingSchemas.newSub();
+          validate(node, asSchema(subSchemaRef), subValidationResult, subMatchingSchemas, context);
+          validationResult.merge(subValidationResult);
+          matchingSchemas.merge(subMatchingSchemas);
+        }
+      }
+      const notSchema = asSchema(schema.not);
+      if (notSchema) {
+        const subValidationResult = new ValidationResult();
+        const subMatchingSchemas = matchingSchemas.newSub();
+        validate(node, notSchema, subValidationResult, subMatchingSchemas, context);
+        if (!subValidationResult.hasProblems()) {
+          validationResult.problems.push({
+            location: { offset: node.offset, length: node.length },
+            message: schema.errorMessage || t("Matches a schema that is not allowed.")
+          });
+        }
+        for (const ms of subMatchingSchemas.schemas) {
+          ms.inverted = !ms.inverted;
+          matchingSchemas.add(ms);
+        }
+      }
+      const testAlternatives = (alternatives, maxOneMatch) => {
+        const matches = [];
+        let bestMatch = void 0;
+        for (const subSchemaRef of alternatives) {
+          const subSchema = asSchema(subSchemaRef);
+          const subValidationResult = new ValidationResult();
+          const subMatchingSchemas = matchingSchemas.newSub();
+          validate(node, subSchema, subValidationResult, subMatchingSchemas, context);
+          if (!subValidationResult.hasProblems()) {
+            matches.push(subSchema);
+          }
+          if (!bestMatch) {
+            bestMatch = { schema: subSchema, validationResult: subValidationResult, matchingSchemas: subMatchingSchemas };
+          } else {
+            if (!maxOneMatch && !subValidationResult.hasProblems() && !bestMatch.validationResult.hasProblems()) {
+              bestMatch.matchingSchemas.merge(subMatchingSchemas);
+              bestMatch.validationResult.propertiesMatches += subValidationResult.propertiesMatches;
+              bestMatch.validationResult.propertiesValueMatches += subValidationResult.propertiesValueMatches;
+              bestMatch.validationResult.mergeProcessedProperties(subValidationResult);
+            } else {
+              const compareResult = subValidationResult.compare(bestMatch.validationResult);
+              if (compareResult > 0) {
+                bestMatch = { schema: subSchema, validationResult: subValidationResult, matchingSchemas: subMatchingSchemas };
+              } else if (compareResult === 0) {
+                bestMatch.matchingSchemas.merge(subMatchingSchemas);
+                bestMatch.validationResult.mergeEnumValues(subValidationResult);
+              }
+            }
+          }
+        }
+        if (matches.length > 1 && maxOneMatch) {
+          validationResult.problems.push({
+            location: { offset: node.offset, length: 1 },
+            message: t("Matches multiple schemas when only one must validate.")
+          });
+        }
+        if (bestMatch) {
+          validationResult.merge(bestMatch.validationResult);
+          matchingSchemas.merge(bestMatch.matchingSchemas);
+        }
+        return matches.length;
+      };
+      if (Array.isArray(schema.anyOf)) {
+        testAlternatives(schema.anyOf, false);
+      }
+      if (Array.isArray(schema.oneOf)) {
+        testAlternatives(schema.oneOf, true);
+      }
+      const testBranch = (schema2) => {
+        const subValidationResult = new ValidationResult();
+        const subMatchingSchemas = matchingSchemas.newSub();
+        validate(node, asSchema(schema2), subValidationResult, subMatchingSchemas, context);
+        validationResult.merge(subValidationResult);
+        matchingSchemas.merge(subMatchingSchemas);
+      };
+      const testCondition = (ifSchema2, thenSchema, elseSchema) => {
+        const subSchema = asSchema(ifSchema2);
+        const subValidationResult = new ValidationResult();
+        const subMatchingSchemas = matchingSchemas.newSub();
+        validate(node, subSchema, subValidationResult, subMatchingSchemas, context);
+        matchingSchemas.merge(subMatchingSchemas);
+        validationResult.mergeProcessedProperties(subValidationResult);
+        if (!subValidationResult.hasProblems()) {
+          if (thenSchema) {
+            testBranch(thenSchema);
+          }
+        } else if (elseSchema) {
+          testBranch(elseSchema);
+        }
+      };
+      const ifSchema = asSchema(schema.if);
+      if (ifSchema) {
+        testCondition(ifSchema, asSchema(schema.then), asSchema(schema.else));
+      }
+      if (Array.isArray(schema.enum)) {
+        const val = getNodeValue3(node);
+        let enumValueMatch = false;
+        for (const e of schema.enum) {
+          if (equals(val, e)) {
+            enumValueMatch = true;
+            break;
+          }
+        }
+        validationResult.enumValues = schema.enum;
+        validationResult.enumValueMatch = enumValueMatch;
+        if (!enumValueMatch) {
+          validationResult.problems.push({
+            location: { offset: node.offset, length: node.length },
+            code: ErrorCode.EnumValueMismatch,
+            message: schema.errorMessage || t("Value is not accepted. Valid values: {0}.", schema.enum.map((v) => JSON.stringify(v)).join(", "))
+          });
+        }
+      }
+      if (isDefined(schema.const)) {
+        const val = getNodeValue3(node);
+        if (!equals(val, schema.const)) {
+          validationResult.problems.push({
+            location: { offset: node.offset, length: node.length },
+            code: ErrorCode.EnumValueMismatch,
+            message: schema.errorMessage || t("Value must be {0}.", JSON.stringify(schema.const))
+          });
+          validationResult.enumValueMatch = false;
+        } else {
+          validationResult.enumValueMatch = true;
+        }
+        validationResult.enumValues = [schema.const];
+      }
+      let deprecationMessage = schema.deprecationMessage;
+      if (deprecationMessage || schema.deprecated) {
+        deprecationMessage = deprecationMessage || t("Value is deprecated");
+        let targetNode = node.parent?.type === "property" ? node.parent : node;
+        validationResult.problems.push({
+          location: { offset: targetNode.offset, length: targetNode.length },
+          severity: DiagnosticSeverity.Warning,
+          message: deprecationMessage,
+          code: ErrorCode.Deprecated
+        });
+      }
+    }
+    function _validateNumberNode(node2) {
+      const val = node2.value;
+      function normalizeFloats(float) {
+        const parts = /^(-?\d+)(?:\.(\d+))?(?:e([-+]\d+))?$/.exec(float.toString());
+        return parts && {
+          value: Number(parts[1] + (parts[2] || "")),
+          multiplier: (parts[2]?.length || 0) - (parseInt(parts[3]) || 0)
+        };
+      }
+      ;
+      if (isNumber(schema.multipleOf)) {
+        let remainder = -1;
+        if (Number.isInteger(schema.multipleOf)) {
+          remainder = val % schema.multipleOf;
+        } else {
+          let normMultipleOf = normalizeFloats(schema.multipleOf);
+          let normValue = normalizeFloats(val);
+          if (normMultipleOf && normValue) {
+            const multiplier = 10 ** Math.abs(normValue.multiplier - normMultipleOf.multiplier);
+            if (normValue.multiplier < normMultipleOf.multiplier) {
+              normValue.value *= multiplier;
+            } else {
+              normMultipleOf.value *= multiplier;
+            }
+            remainder = normValue.value % normMultipleOf.value;
+          }
+        }
+        if (remainder !== 0) {
+          validationResult.problems.push({
+            location: { offset: node2.offset, length: node2.length },
+            message: t("Value is not divisible by {0}.", schema.multipleOf)
+          });
+        }
+      }
+      function getExclusiveLimit(limit, exclusive) {
+        if (isNumber(exclusive)) {
+          return exclusive;
+        }
+        if (isBoolean(exclusive) && exclusive) {
+          return limit;
+        }
+        return void 0;
+      }
+      function getLimit(limit, exclusive) {
+        if (!isBoolean(exclusive) || !exclusive) {
+          return limit;
+        }
+        return void 0;
+      }
+      const exclusiveMinimum = getExclusiveLimit(schema.minimum, schema.exclusiveMinimum);
+      if (isNumber(exclusiveMinimum) && val <= exclusiveMinimum) {
+        validationResult.problems.push({
+          location: { offset: node2.offset, length: node2.length },
+          message: t("Value is below the exclusive minimum of {0}.", exclusiveMinimum)
+        });
+      }
+      const exclusiveMaximum = getExclusiveLimit(schema.maximum, schema.exclusiveMaximum);
+      if (isNumber(exclusiveMaximum) && val >= exclusiveMaximum) {
+        validationResult.problems.push({
+          location: { offset: node2.offset, length: node2.length },
+          message: t("Value is above the exclusive maximum of {0}.", exclusiveMaximum)
+        });
+      }
+      const minimum = getLimit(schema.minimum, schema.exclusiveMinimum);
+      if (isNumber(minimum) && val < minimum) {
+        validationResult.problems.push({
+          location: { offset: node2.offset, length: node2.length },
+          message: t("Value is below the minimum of {0}.", minimum)
+        });
+      }
+      const maximum = getLimit(schema.maximum, schema.exclusiveMaximum);
+      if (isNumber(maximum) && val > maximum) {
+        validationResult.problems.push({
+          location: { offset: node2.offset, length: node2.length },
+          message: t("Value is above the maximum of {0}.", maximum)
+        });
+      }
+    }
+    function _validateStringNode(node2) {
+      if (isNumber(schema.minLength) && stringLength(node2.value) < schema.minLength) {
+        validationResult.problems.push({
+          location: { offset: node2.offset, length: node2.length },
+          message: t("String is shorter than the minimum length of {0}.", schema.minLength)
+        });
+      }
+      if (isNumber(schema.maxLength) && stringLength(node2.value) > schema.maxLength) {
+        validationResult.problems.push({
+          location: { offset: node2.offset, length: node2.length },
+          message: t("String is longer than the maximum length of {0}.", schema.maxLength)
+        });
+      }
+      if (isString(schema.pattern)) {
+        const regex = extendedRegExp(schema.pattern);
+        if (!regex?.test(node2.value)) {
+          validationResult.problems.push({
+            location: { offset: node2.offset, length: node2.length },
+            message: schema.patternErrorMessage || schema.errorMessage || t('String does not match the pattern of "{0}".', schema.pattern)
+          });
+        }
+      }
+      if (schema.format) {
+        switch (schema.format) {
+          case "uri":
+          case "uri-reference":
+            {
+              let errorMessage;
+              if (!node2.value) {
+                errorMessage = t("URI expected.");
+              } else {
+                const match = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/.exec(node2.value);
+                if (!match) {
+                  errorMessage = t("URI is expected.");
+                } else if (!match[2] && schema.format === "uri") {
+                  errorMessage = t("URI with a scheme is expected.");
+                }
+              }
+              if (errorMessage) {
+                validationResult.problems.push({
+                  location: { offset: node2.offset, length: node2.length },
+                  message: schema.patternErrorMessage || schema.errorMessage || t("String is not a URI: {0}", errorMessage)
+                });
+              }
+            }
+            break;
+          case "color-hex":
+          case "date-time":
+          case "date":
+          case "time":
+          case "email":
+          case "hostname":
+          case "ipv4":
+          case "ipv6":
+            const format5 = formats[schema.format];
+            if (!node2.value || !format5.pattern.exec(node2.value)) {
+              validationResult.problems.push({
+                location: { offset: node2.offset, length: node2.length },
+                message: schema.patternErrorMessage || schema.errorMessage || format5.errorMessage
+              });
+            }
+          default:
+        }
+      }
+    }
+    function _validateArrayNode(node2) {
+      let prefixItemsSchemas;
+      let additionalItemSchema;
+      if (context.schemaDraft >= SchemaDraft.v2020_12) {
+        prefixItemsSchemas = schema.prefixItems;
+        additionalItemSchema = !Array.isArray(schema.items) ? schema.items : void 0;
+      } else {
+        prefixItemsSchemas = Array.isArray(schema.items) ? schema.items : void 0;
+        additionalItemSchema = !Array.isArray(schema.items) ? schema.items : schema.additionalItems;
+      }
+      let index = 0;
+      if (prefixItemsSchemas !== void 0) {
+        const max = Math.min(prefixItemsSchemas.length, node2.items.length);
+        for (; index < max; index++) {
+          const subSchemaRef = prefixItemsSchemas[index];
+          const subSchema = asSchema(subSchemaRef);
+          const itemValidationResult = new ValidationResult();
+          const item = node2.items[index];
+          if (item) {
+            validate(item, subSchema, itemValidationResult, matchingSchemas, context);
+            validationResult.mergePropertyMatch(itemValidationResult);
+          }
+          validationResult.processedProperties.add(String(index));
+        }
+      }
+      if (additionalItemSchema !== void 0 && index < node2.items.length) {
+        if (typeof additionalItemSchema === "boolean") {
+          if (additionalItemSchema === false) {
+            validationResult.problems.push({
+              location: { offset: node2.offset, length: node2.length },
+              message: t("Array has too many items according to schema. Expected {0} or fewer.", index)
+            });
+          }
+          for (; index < node2.items.length; index++) {
+            validationResult.processedProperties.add(String(index));
+            validationResult.propertiesValueMatches++;
+          }
+        } else {
+          for (; index < node2.items.length; index++) {
+            const itemValidationResult = new ValidationResult();
+            validate(node2.items[index], additionalItemSchema, itemValidationResult, matchingSchemas, context);
+            validationResult.mergePropertyMatch(itemValidationResult);
+            validationResult.processedProperties.add(String(index));
+          }
+        }
+      }
+      const containsSchema = asSchema(schema.contains);
+      if (containsSchema) {
+        let containsCount = 0;
+        for (let index2 = 0; index2 < node2.items.length; index2++) {
+          const item = node2.items[index2];
+          const itemValidationResult = new ValidationResult();
+          validate(item, containsSchema, itemValidationResult, NoOpSchemaCollector.instance, context);
+          if (!itemValidationResult.hasProblems()) {
+            containsCount++;
+            if (context.schemaDraft >= SchemaDraft.v2020_12) {
+              validationResult.processedProperties.add(String(index2));
+            }
+          }
+        }
+        if (containsCount === 0 && !isNumber(schema.minContains)) {
+          validationResult.problems.push({
+            location: { offset: node2.offset, length: node2.length },
+            message: schema.errorMessage || t("Array does not contain required item.")
+          });
+        }
+        if (isNumber(schema.minContains) && containsCount < schema.minContains) {
+          validationResult.problems.push({
+            location: { offset: node2.offset, length: node2.length },
+            message: schema.errorMessage || t("Array has too few items that match the contains contraint. Expected {0} or more.", schema.minContains)
+          });
+        }
+        if (isNumber(schema.maxContains) && containsCount > schema.maxContains) {
+          validationResult.problems.push({
+            location: { offset: node2.offset, length: node2.length },
+            message: schema.errorMessage || t("Array has too many items that match the contains contraint. Expected {0} or less.", schema.maxContains)
+          });
+        }
+      }
+      const unevaluatedItems = schema.unevaluatedItems;
+      if (unevaluatedItems !== void 0) {
+        for (let i = 0; i < node2.items.length; i++) {
+          if (!validationResult.processedProperties.has(String(i))) {
+            if (unevaluatedItems === false) {
+              validationResult.problems.push({
+                location: { offset: node2.offset, length: node2.length },
+                message: t("Item does not match any validation rule from the array.")
+              });
+            } else {
+              const itemValidationResult = new ValidationResult();
+              validate(node2.items[i], schema.unevaluatedItems, itemValidationResult, matchingSchemas, context);
+              validationResult.mergePropertyMatch(itemValidationResult);
+            }
+          }
+          validationResult.processedProperties.add(String(i));
+          validationResult.propertiesValueMatches++;
+        }
+      }
+      if (isNumber(schema.minItems) && node2.items.length < schema.minItems) {
+        validationResult.problems.push({
+          location: { offset: node2.offset, length: node2.length },
+          message: t("Array has too few items. Expected {0} or more.", schema.minItems)
+        });
+      }
+      if (isNumber(schema.maxItems) && node2.items.length > schema.maxItems) {
+        validationResult.problems.push({
+          location: { offset: node2.offset, length: node2.length },
+          message: t("Array has too many items. Expected {0} or fewer.", schema.maxItems)
+        });
+      }
+      if (schema.uniqueItems === true) {
+        let hasDuplicates = function() {
+          for (let i = 0; i < values.length - 1; i++) {
+            const value = values[i];
+            for (let j = i + 1; j < values.length; j++) {
+              if (equals(value, values[j])) {
+                return true;
+              }
+            }
+          }
+          return false;
+        };
+        const values = getNodeValue3(node2);
+        if (hasDuplicates()) {
+          validationResult.problems.push({
+            location: { offset: node2.offset, length: node2.length },
+            message: t("Array has duplicate items.")
+          });
+        }
+      }
+    }
+    function _validateObjectNode(node2) {
+      const seenKeys = /* @__PURE__ */ Object.create(null);
+      const unprocessedProperties = /* @__PURE__ */ new Set();
+      for (const propertyNode of node2.properties) {
+        const key = propertyNode.keyNode.value;
+        seenKeys[key] = propertyNode.valueNode;
+        unprocessedProperties.add(key);
+      }
+      if (Array.isArray(schema.required)) {
+        for (const propertyName of schema.required) {
+          if (!seenKeys[propertyName]) {
+            const keyNode = node2.parent && node2.parent.type === "property" && node2.parent.keyNode;
+            const location = keyNode ? { offset: keyNode.offset, length: keyNode.length } : { offset: node2.offset, length: 1 };
+            validationResult.problems.push({
+              location,
+              message: t('Missing property "{0}".', propertyName)
+            });
+          }
+        }
+      }
+      const propertyProcessed = (prop) => {
+        unprocessedProperties.delete(prop);
+        validationResult.processedProperties.add(prop);
+      };
+      if (schema.properties) {
+        for (const propertyName of Object.keys(schema.properties)) {
+          propertyProcessed(propertyName);
+          const propertySchema = schema.properties[propertyName];
+          const child = seenKeys[propertyName];
+          if (child) {
+            if (isBoolean(propertySchema)) {
+              if (!propertySchema) {
+                const propertyNode = child.parent;
+                validationResult.problems.push({
+                  location: { offset: propertyNode.keyNode.offset, length: propertyNode.keyNode.length },
+                  message: schema.errorMessage || t("Property {0} is not allowed.", propertyName)
+                });
+              } else {
+                validationResult.propertiesMatches++;
+                validationResult.propertiesValueMatches++;
+              }
+            } else {
+              const propertyValidationResult = new ValidationResult();
+              validate(child, propertySchema, propertyValidationResult, matchingSchemas, context);
+              validationResult.mergePropertyMatch(propertyValidationResult);
+            }
+          }
+        }
+      }
+      if (schema.patternProperties) {
+        for (const propertyPattern of Object.keys(schema.patternProperties)) {
+          const regex = extendedRegExp(propertyPattern);
+          if (regex) {
+            const processed = [];
+            for (const propertyName of unprocessedProperties) {
+              if (regex.test(propertyName)) {
+                processed.push(propertyName);
+                const child = seenKeys[propertyName];
+                if (child) {
+                  const propertySchema = schema.patternProperties[propertyPattern];
+                  if (isBoolean(propertySchema)) {
+                    if (!propertySchema) {
+                      const propertyNode = child.parent;
+                      validationResult.problems.push({
+                        location: { offset: propertyNode.keyNode.offset, length: propertyNode.keyNode.length },
+                        message: schema.errorMessage || t("Property {0} is not allowed.", propertyName)
+                      });
+                    } else {
+                      validationResult.propertiesMatches++;
+                      validationResult.propertiesValueMatches++;
+                    }
+                  } else {
+                    const propertyValidationResult = new ValidationResult();
+                    validate(child, propertySchema, propertyValidationResult, matchingSchemas, context);
+                    validationResult.mergePropertyMatch(propertyValidationResult);
+                  }
+                }
+              }
+            }
+            processed.forEach(propertyProcessed);
+          }
+        }
+      }
+      const additionalProperties = schema.additionalProperties;
+      if (additionalProperties !== void 0) {
+        for (const propertyName of unprocessedProperties) {
+          propertyProcessed(propertyName);
+          const child = seenKeys[propertyName];
+          if (child) {
+            if (additionalProperties === false) {
+              const propertyNode = child.parent;
+              validationResult.problems.push({
+                location: { offset: propertyNode.keyNode.offset, length: propertyNode.keyNode.length },
+                message: schema.errorMessage || t("Property {0} is not allowed.", propertyName)
+              });
+            } else if (additionalProperties !== true) {
+              const propertyValidationResult = new ValidationResult();
+              validate(child, additionalProperties, propertyValidationResult, matchingSchemas, context);
+              validationResult.mergePropertyMatch(propertyValidationResult);
+            }
+          }
+        }
+      }
+      const unevaluatedProperties = schema.unevaluatedProperties;
+      if (unevaluatedProperties !== void 0) {
+        const processed = [];
+        for (const propertyName of unprocessedProperties) {
+          if (!validationResult.processedProperties.has(propertyName)) {
+            processed.push(propertyName);
+            const child = seenKeys[propertyName];
+            if (child) {
+              if (unevaluatedProperties === false) {
+                const propertyNode = child.parent;
+                validationResult.problems.push({
+                  location: { offset: propertyNode.keyNode.offset, length: propertyNode.keyNode.length },
+                  message: schema.errorMessage || t("Property {0} is not allowed.", propertyName)
+                });
+              } else if (unevaluatedProperties !== true) {
+                const propertyValidationResult = new ValidationResult();
+                validate(child, unevaluatedProperties, propertyValidationResult, matchingSchemas, context);
+                validationResult.mergePropertyMatch(propertyValidationResult);
+              }
+            }
+          }
+        }
+        processed.forEach(propertyProcessed);
+      }
+      if (isNumber(schema.maxProperties)) {
+        if (node2.properties.length > schema.maxProperties) {
+          validationResult.problems.push({
+            location: { offset: node2.offset, length: node2.length },
+            message: t("Object has more properties than limit of {0}.", schema.maxProperties)
+          });
+        }
+      }
+      if (isNumber(schema.minProperties)) {
+        if (node2.properties.length < schema.minProperties) {
+          validationResult.problems.push({
+            location: { offset: node2.offset, length: node2.length },
+            message: t("Object has fewer properties than the required number of {0}", schema.minProperties)
+          });
+        }
+      }
+      if (schema.dependentRequired) {
+        for (const key in schema.dependentRequired) {
+          const prop = seenKeys[key];
+          const propertyDeps = schema.dependentRequired[key];
+          if (prop && Array.isArray(propertyDeps)) {
+            _validatePropertyDependencies(key, propertyDeps);
+          }
+        }
+      }
+      if (schema.dependentSchemas) {
+        for (const key in schema.dependentSchemas) {
+          const prop = seenKeys[key];
+          const propertyDeps = schema.dependentSchemas[key];
+          if (prop && isObject(propertyDeps)) {
+            _validatePropertyDependencies(key, propertyDeps);
+          }
+        }
+      }
+      if (schema.dependencies) {
+        for (const key in schema.dependencies) {
+          const prop = seenKeys[key];
+          if (prop) {
+            _validatePropertyDependencies(key, schema.dependencies[key]);
+          }
+        }
+      }
+      const propertyNames = asSchema(schema.propertyNames);
+      if (propertyNames) {
+        for (const f2 of node2.properties) {
+          const key = f2.keyNode;
+          if (key) {
+            validate(key, propertyNames, validationResult, NoOpSchemaCollector.instance, context);
+          }
+        }
+      }
+      function _validatePropertyDependencies(key, propertyDep) {
+        if (Array.isArray(propertyDep)) {
+          for (const requiredProp of propertyDep) {
+            if (!seenKeys[requiredProp]) {
+              validationResult.problems.push({
+                location: { offset: node2.offset, length: node2.length },
+                message: t("Object is missing property {0} required by property {1}.", requiredProp, key)
+              });
+            } else {
+              validationResult.propertiesValueMatches++;
+            }
+          }
+        } else {
+          const propertySchema = asSchema(propertyDep);
+          if (propertySchema) {
+            const propertyValidationResult = new ValidationResult();
+            validate(node2, propertySchema, propertyValidationResult, matchingSchemas, context);
+            validationResult.mergePropertyMatch(propertyValidationResult);
+          }
+        }
+      }
+    }
+  }
+  function parse3(textDocument, config) {
+    const problems = [];
+    let lastProblemOffset = -1;
+    const text = textDocument.getText();
+    const scanner = createScanner2(text, false);
+    const commentRanges = config && config.collectComments ? [] : void 0;
+    function _scanNext() {
+      while (true) {
+        const token2 = scanner.scan();
+        _checkScanError();
+        switch (token2) {
+          case 12:
+          case 13:
+            if (Array.isArray(commentRanges)) {
+              commentRanges.push(Range.create(textDocument.positionAt(scanner.getTokenOffset()), textDocument.positionAt(scanner.getTokenOffset() + scanner.getTokenLength())));
+            }
+            break;
+          case 15:
+          case 14:
+            break;
+          default:
+            return token2;
+        }
+      }
+    }
+    function _accept(token2) {
+      if (scanner.getToken() === token2) {
+        _scanNext();
+        return true;
+      }
+      return false;
+    }
+    function _errorAtRange(message, code, startOffset, endOffset, severity = DiagnosticSeverity.Error) {
+      if (problems.length === 0 || startOffset !== lastProblemOffset) {
+        const range = Range.create(textDocument.positionAt(startOffset), textDocument.positionAt(endOffset));
+        problems.push(Diagnostic.create(range, message, severity, code, textDocument.languageId));
+        lastProblemOffset = startOffset;
+      }
+    }
+    function _error(message, code, node = void 0, skipUntilAfter = [], skipUntil = []) {
+      let start = scanner.getTokenOffset();
+      let end = scanner.getTokenOffset() + scanner.getTokenLength();
+      if (start === end && start > 0) {
+        start--;
+        while (start > 0 && /\s/.test(text.charAt(start))) {
+          start--;
+        }
+        end = start + 1;
+      }
+      _errorAtRange(message, code, start, end);
+      if (node) {
+        _finalize(node, false);
+      }
+      if (skipUntilAfter.length + skipUntil.length > 0) {
+        let token2 = scanner.getToken();
+        while (token2 !== 17) {
+          if (skipUntilAfter.indexOf(token2) !== -1) {
+            _scanNext();
+            break;
+          } else if (skipUntil.indexOf(token2) !== -1) {
+            break;
+          }
+          token2 = _scanNext();
+        }
+      }
+      return node;
+    }
+    function _checkScanError() {
+      switch (scanner.getTokenError()) {
+        case 4:
+          _error(t("Invalid unicode sequence in string."), ErrorCode.InvalidUnicode);
+          return true;
+        case 5:
+          _error(t("Invalid escape character in string."), ErrorCode.InvalidEscapeCharacter);
+          return true;
+        case 3:
+          _error(t("Unexpected end of number."), ErrorCode.UnexpectedEndOfNumber);
+          return true;
+        case 1:
+          _error(t("Unexpected end of comment."), ErrorCode.UnexpectedEndOfComment);
+          return true;
+        case 2:
+          _error(t("Unexpected end of string."), ErrorCode.UnexpectedEndOfString);
+          return true;
+        case 6:
+          _error(t("Invalid characters in string. Control characters must be escaped."), ErrorCode.InvalidCharacter);
+          return true;
+      }
+      return false;
+    }
+    function _finalize(node, scanNext) {
+      node.length = scanner.getTokenOffset() + scanner.getTokenLength() - node.offset;
+      if (scanNext) {
+        _scanNext();
+      }
+      return node;
+    }
+    function _parseArray(parent) {
+      if (scanner.getToken() !== 3) {
+        return void 0;
+      }
+      const node = new ArrayASTNodeImpl(parent, scanner.getTokenOffset());
+      _scanNext();
+      const count = 0;
+      let needsComma = false;
+      while (scanner.getToken() !== 4 && scanner.getToken() !== 17) {
+        if (scanner.getToken() === 5) {
+          if (!needsComma) {
+            _error(t("Value expected"), ErrorCode.ValueExpected);
+          }
+          const commaOffset = scanner.getTokenOffset();
+          _scanNext();
+          if (scanner.getToken() === 4) {
+            if (needsComma) {
+              _errorAtRange(t("Trailing comma"), ErrorCode.TrailingComma, commaOffset, commaOffset + 1);
+            }
+            continue;
+          }
+        } else if (needsComma) {
+          _error(t("Expected comma"), ErrorCode.CommaExpected);
+        }
+        const item = _parseValue(node);
+        if (!item) {
+          _error(t("Value expected"), ErrorCode.ValueExpected, void 0, [], [
+            4,
+            5
+            /* Json.SyntaxKind.CommaToken */
+          ]);
+        } else {
+          node.items.push(item);
+        }
+        needsComma = true;
+      }
+      if (scanner.getToken() !== 4) {
+        return _error(t("Expected comma or closing bracket"), ErrorCode.CommaOrCloseBacketExpected, node);
+      }
+      return _finalize(node, true);
+    }
+    const keyPlaceholder = new StringASTNodeImpl(void 0, 0, 0);
+    function _parseProperty(parent, keysSeen) {
+      const node = new PropertyASTNodeImpl(parent, scanner.getTokenOffset(), keyPlaceholder);
+      let key = _parseString(node);
+      if (!key) {
+        if (scanner.getToken() === 16) {
+          _error(t("Property keys must be doublequoted"), ErrorCode.PropertyKeysMustBeDoublequoted);
+          const keyNode = new StringASTNodeImpl(node, scanner.getTokenOffset(), scanner.getTokenLength());
+          keyNode.value = scanner.getTokenValue();
+          key = keyNode;
+          _scanNext();
+        } else {
+          return void 0;
+        }
+      }
+      node.keyNode = key;
+      if (key.value !== "//") {
+        const seen = keysSeen[key.value];
+        if (seen) {
+          _errorAtRange(t("Duplicate object key"), ErrorCode.DuplicateKey, node.keyNode.offset, node.keyNode.offset + node.keyNode.length, DiagnosticSeverity.Warning);
+          if (isObject(seen)) {
+            _errorAtRange(t("Duplicate object key"), ErrorCode.DuplicateKey, seen.keyNode.offset, seen.keyNode.offset + seen.keyNode.length, DiagnosticSeverity.Warning);
+          }
+          keysSeen[key.value] = true;
+        } else {
+          keysSeen[key.value] = node;
+        }
+      }
+      if (scanner.getToken() === 6) {
+        node.colonOffset = scanner.getTokenOffset();
+        _scanNext();
+      } else {
+        _error(t("Colon expected"), ErrorCode.ColonExpected);
+        if (scanner.getToken() === 10 && textDocument.positionAt(key.offset + key.length).line < textDocument.positionAt(scanner.getTokenOffset()).line) {
+          node.length = key.length;
+          return node;
+        }
+      }
+      const value = _parseValue(node);
+      if (!value) {
+        return _error(t("Value expected"), ErrorCode.ValueExpected, node, [], [
+          2,
+          5
+          /* Json.SyntaxKind.CommaToken */
+        ]);
+      }
+      node.valueNode = value;
+      node.length = value.offset + value.length - node.offset;
+      return node;
+    }
+    function _parseObject(parent) {
+      if (scanner.getToken() !== 1) {
+        return void 0;
+      }
+      const node = new ObjectASTNodeImpl(parent, scanner.getTokenOffset());
+      const keysSeen = /* @__PURE__ */ Object.create(null);
+      _scanNext();
+      let needsComma = false;
+      while (scanner.getToken() !== 2 && scanner.getToken() !== 17) {
+        if (scanner.getToken() === 5) {
+          if (!needsComma) {
+            _error(t("Property expected"), ErrorCode.PropertyExpected);
+          }
+          const commaOffset = scanner.getTokenOffset();
+          _scanNext();
+          if (scanner.getToken() === 2) {
+            if (needsComma) {
+              _errorAtRange(t("Trailing comma"), ErrorCode.TrailingComma, commaOffset, commaOffset + 1);
+            }
+            continue;
+          }
+        } else if (needsComma) {
+          _error(t("Expected comma"), ErrorCode.CommaExpected);
+        }
+        const property = _parseProperty(node, keysSeen);
+        if (!property) {
+          _error(t("Property expected"), ErrorCode.PropertyExpected, void 0, [], [
+            2,
+            5
+            /* Json.SyntaxKind.CommaToken */
+          ]);
+        } else {
+          node.properties.push(property);
+        }
+        needsComma = true;
+      }
+      if (scanner.getToken() !== 2) {
+        return _error(t("Expected comma or closing brace"), ErrorCode.CommaOrCloseBraceExpected, node);
+      }
+      return _finalize(node, true);
+    }
+    function _parseString(parent) {
+      if (scanner.getToken() !== 10) {
+        return void 0;
+      }
+      const node = new StringASTNodeImpl(parent, scanner.getTokenOffset());
+      node.value = scanner.getTokenValue();
+      return _finalize(node, true);
+    }
+    function _parseNumber(parent) {
+      if (scanner.getToken() !== 11) {
+        return void 0;
+      }
+      const node = new NumberASTNodeImpl(parent, scanner.getTokenOffset());
+      if (scanner.getTokenError() === 0) {
+        const tokenValue = scanner.getTokenValue();
+        try {
+          const numberValue = JSON.parse(tokenValue);
+          if (!isNumber(numberValue)) {
+            return _error(t("Invalid number format."), ErrorCode.Undefined, node);
+          }
+          node.value = numberValue;
+        } catch (e) {
+          return _error(t("Invalid number format."), ErrorCode.Undefined, node);
+        }
+        node.isInteger = tokenValue.indexOf(".") === -1;
+      }
+      return _finalize(node, true);
+    }
+    function _parseLiteral(parent) {
+      let node;
+      switch (scanner.getToken()) {
+        case 7:
+          return _finalize(new NullASTNodeImpl(parent, scanner.getTokenOffset()), true);
+        case 8:
+          return _finalize(new BooleanASTNodeImpl(parent, true, scanner.getTokenOffset()), true);
+        case 9:
+          return _finalize(new BooleanASTNodeImpl(parent, false, scanner.getTokenOffset()), true);
+        default:
+          return void 0;
+      }
+    }
+    function _parseValue(parent) {
+      return _parseArray(parent) || _parseObject(parent) || _parseString(parent) || _parseNumber(parent) || _parseLiteral(parent);
+    }
+    let _root = void 0;
+    const token = _scanNext();
+    if (token !== 17) {
+      _root = _parseValue(_root);
+      if (!_root) {
+        _error(t("Expected a JSON object, array or literal."), ErrorCode.Undefined);
+      } else if (scanner.getToken() !== 17) {
+        _error(t("End of file expected."), ErrorCode.Undefined);
+      }
+    }
+    return new JSONDocument(_root, problems, commentRanges);
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/utils/json.js
+  function stringifyObject(obj, indent, stringifyLiteral) {
+    if (obj !== null && typeof obj === "object") {
+      const newIndent = indent + "	";
+      if (Array.isArray(obj)) {
+        if (obj.length === 0) {
+          return "[]";
+        }
+        let result = "[\n";
+        for (let i = 0; i < obj.length; i++) {
+          result += newIndent + stringifyObject(obj[i], newIndent, stringifyLiteral);
+          if (i < obj.length - 1) {
+            result += ",";
+          }
+          result += "\n";
+        }
+        result += indent + "]";
+        return result;
+      } else {
+        const keys = Object.keys(obj);
+        if (keys.length === 0) {
+          return "{}";
+        }
+        let result = "{\n";
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          result += newIndent + JSON.stringify(key) + ": " + stringifyObject(obj[key], newIndent, stringifyLiteral);
+          if (i < keys.length - 1) {
+            result += ",";
+          }
+          result += "\n";
+        }
+        result += indent + "}";
+        return result;
+      }
+    }
+    return stringifyLiteral(obj);
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/services/jsonCompletion.js
+  var valueCommitCharacters = [",", "}", "]"];
+  var propertyCommitCharacters = [":"];
+  var JSONCompletion = class {
+    constructor(schemaService, contributions = [], promiseConstructor = Promise, clientCapabilities = {}) {
+      this.schemaService = schemaService;
+      this.contributions = contributions;
+      this.promiseConstructor = promiseConstructor;
+      this.clientCapabilities = clientCapabilities;
+    }
+    doResolve(item) {
+      for (let i = this.contributions.length - 1; i >= 0; i--) {
+        const resolveCompletion = this.contributions[i].resolveCompletion;
+        if (resolveCompletion) {
+          const resolver = resolveCompletion(item);
+          if (resolver) {
+            return resolver;
+          }
+        }
+      }
+      return this.promiseConstructor.resolve(item);
+    }
+    doComplete(document, position, doc) {
+      const result = {
+        items: [],
+        isIncomplete: false
+      };
+      const text = document.getText();
+      const offset = document.offsetAt(position);
+      let node = doc.getNodeFromOffset(offset, true);
+      if (this.isInComment(document, node ? node.offset : 0, offset)) {
+        return Promise.resolve(result);
+      }
+      if (node && offset === node.offset + node.length && offset > 0) {
+        const ch = text[offset - 1];
+        if (node.type === "object" && ch === "}" || node.type === "array" && ch === "]") {
+          node = node.parent;
+        }
+      }
+      const currentWord = this.getCurrentWord(document, offset);
+      let overwriteRange;
+      if (node && (node.type === "string" || node.type === "number" || node.type === "boolean" || node.type === "null")) {
+        overwriteRange = Range.create(document.positionAt(node.offset), document.positionAt(node.offset + node.length));
+      } else {
+        let overwriteStart = offset - currentWord.length;
+        if (overwriteStart > 0 && text[overwriteStart - 1] === '"') {
+          overwriteStart--;
+        }
+        overwriteRange = Range.create(document.positionAt(overwriteStart), position);
+      }
+      const supportsCommitCharacters = false;
+      const proposed = /* @__PURE__ */ new Map();
+      const collector = {
+        add: (suggestion) => {
+          let label = suggestion.label;
+          const existing = proposed.get(label);
+          if (!existing) {
+            label = label.replace(/[\n]/g, "\u21B5");
+            if (label.length > 60) {
+              const shortendedLabel = label.substr(0, 57).trim() + "...";
+              if (!proposed.has(shortendedLabel)) {
+                label = shortendedLabel;
+              }
+            }
+            suggestion.textEdit = TextEdit.replace(overwriteRange, suggestion.insertText);
+            if (supportsCommitCharacters) {
+              suggestion.commitCharacters = suggestion.kind === CompletionItemKind.Property ? propertyCommitCharacters : valueCommitCharacters;
+            }
+            suggestion.label = label;
+            proposed.set(label, suggestion);
+            result.items.push(suggestion);
+          } else {
+            if (!existing.documentation) {
+              existing.documentation = suggestion.documentation;
+            }
+            if (!existing.detail) {
+              existing.detail = suggestion.detail;
+            }
+            if (!existing.labelDetails) {
+              existing.labelDetails = suggestion.labelDetails;
+            }
+          }
+        },
+        setAsIncomplete: () => {
+          result.isIncomplete = true;
+        },
+        error: (message) => {
+          console.error(message);
+        },
+        getNumberOfProposals: () => {
+          return result.items.length;
+        }
+      };
+      return this.schemaService.getSchemaForResource(document.uri, doc).then((schema) => {
+        const collectionPromises = [];
+        let addValue = true;
+        let currentKey = "";
+        let currentProperty = void 0;
+        if (node) {
+          if (node.type === "string") {
+            const parent = node.parent;
+            if (parent && parent.type === "property" && parent.keyNode === node) {
+              addValue = !parent.valueNode;
+              currentProperty = parent;
+              currentKey = text.substr(node.offset + 1, node.length - 2);
+              if (parent) {
+                node = parent.parent;
+              }
+            }
+          }
+        }
+        if (node && node.type === "object") {
+          if (node.offset === offset) {
+            return result;
+          }
+          const properties = node.properties;
+          properties.forEach((p) => {
+            if (!currentProperty || currentProperty !== p) {
+              proposed.set(p.keyNode.value, CompletionItem.create("__"));
+            }
+          });
+          let separatorAfter = "";
+          if (addValue) {
+            separatorAfter = this.evaluateSeparatorAfter(document, document.offsetAt(overwriteRange.end));
+          }
+          if (schema) {
+            this.getPropertyCompletions(schema, doc, node, addValue, separatorAfter, collector);
+          } else {
+            this.getSchemaLessPropertyCompletions(doc, node, currentKey, collector);
+          }
+          const location = getNodePath3(node);
+          this.contributions.forEach((contribution) => {
+            const collectPromise = contribution.collectPropertyCompletions(document.uri, location, currentWord, addValue, separatorAfter === "", collector);
+            if (collectPromise) {
+              collectionPromises.push(collectPromise);
+            }
+          });
+          if (!schema && currentWord.length > 0 && text.charAt(offset - currentWord.length - 1) !== '"') {
+            collector.add({
+              kind: CompletionItemKind.Property,
+              label: this.getLabelForValue(currentWord),
+              insertText: this.getInsertTextForProperty(currentWord, void 0, false, separatorAfter),
+              insertTextFormat: InsertTextFormat.Snippet,
+              documentation: ""
+            });
+            collector.setAsIncomplete();
+          }
+        }
+        const types = {};
+        if (schema) {
+          this.getValueCompletions(schema, doc, node, offset, document, collector, types);
+        } else {
+          this.getSchemaLessValueCompletions(doc, node, offset, document, collector);
+        }
+        if (this.contributions.length > 0) {
+          this.getContributedValueCompletions(doc, node, offset, document, collector, collectionPromises);
+        }
+        return this.promiseConstructor.all(collectionPromises).then(() => {
+          if (collector.getNumberOfProposals() === 0) {
+            let offsetForSeparator = offset;
+            if (node && (node.type === "string" || node.type === "number" || node.type === "boolean" || node.type === "null")) {
+              offsetForSeparator = node.offset + node.length;
+            }
+            const separatorAfter = this.evaluateSeparatorAfter(document, offsetForSeparator);
+            this.addFillerValueCompletions(types, separatorAfter, collector);
+          }
+          return result;
+        });
+      });
+    }
+    getPropertyCompletions(schema, doc, node, addValue, separatorAfter, collector) {
+      const matchingSchemas = doc.getMatchingSchemas(schema.schema, node.offset);
+      matchingSchemas.forEach((s) => {
+        if (s.node === node && !s.inverted) {
+          const schemaProperties = s.schema.properties;
+          if (schemaProperties) {
+            Object.keys(schemaProperties).forEach((key) => {
+              const propertySchema = schemaProperties[key];
+              if (typeof propertySchema === "object" && !propertySchema.deprecationMessage && !propertySchema.doNotSuggest) {
+                const proposal = {
+                  kind: CompletionItemKind.Property,
+                  label: key,
+                  insertText: this.getInsertTextForProperty(key, propertySchema, addValue, separatorAfter),
+                  insertTextFormat: InsertTextFormat.Snippet,
+                  filterText: this.getFilterTextForValue(key),
+                  documentation: this.fromMarkup(propertySchema.markdownDescription) || propertySchema.description || ""
+                };
+                if (propertySchema.suggestSortText !== void 0) {
+                  proposal.sortText = propertySchema.suggestSortText;
+                }
+                if (proposal.insertText && endsWith(proposal.insertText, `$1${separatorAfter}`)) {
+                  proposal.command = {
+                    title: "Suggest",
+                    command: "editor.action.triggerSuggest"
+                  };
+                }
+                collector.add(proposal);
+              }
+            });
+          }
+          const schemaPropertyNames = s.schema.propertyNames;
+          if (typeof schemaPropertyNames === "object" && !schemaPropertyNames.deprecationMessage && !schemaPropertyNames.doNotSuggest) {
+            const propertyNameCompletionItem = (name, enumDescription = void 0) => {
+              const proposal = {
+                kind: CompletionItemKind.Property,
+                label: name,
+                insertText: this.getInsertTextForProperty(name, void 0, addValue, separatorAfter),
+                insertTextFormat: InsertTextFormat.Snippet,
+                filterText: this.getFilterTextForValue(name),
+                documentation: enumDescription || this.fromMarkup(schemaPropertyNames.markdownDescription) || schemaPropertyNames.description || ""
+              };
+              if (schemaPropertyNames.suggestSortText !== void 0) {
+                proposal.sortText = schemaPropertyNames.suggestSortText;
+              }
+              if (proposal.insertText && endsWith(proposal.insertText, `$1${separatorAfter}`)) {
+                proposal.command = {
+                  title: "Suggest",
+                  command: "editor.action.triggerSuggest"
+                };
+              }
+              collector.add(proposal);
+            };
+            if (schemaPropertyNames.enum) {
+              for (let i = 0; i < schemaPropertyNames.enum.length; i++) {
+                let enumDescription = void 0;
+                if (schemaPropertyNames.markdownEnumDescriptions && i < schemaPropertyNames.markdownEnumDescriptions.length) {
+                  enumDescription = this.fromMarkup(schemaPropertyNames.markdownEnumDescriptions[i]);
+                } else if (schemaPropertyNames.enumDescriptions && i < schemaPropertyNames.enumDescriptions.length) {
+                  enumDescription = schemaPropertyNames.enumDescriptions[i];
+                }
+                propertyNameCompletionItem(schemaPropertyNames.enum[i], enumDescription);
+              }
+            }
+            if (schemaPropertyNames.const) {
+              propertyNameCompletionItem(schemaPropertyNames.const);
+            }
+          }
+        }
+      });
+    }
+    getSchemaLessPropertyCompletions(doc, node, currentKey, collector) {
+      const collectCompletionsForSimilarObject = (obj) => {
+        obj.properties.forEach((p) => {
+          const key = p.keyNode.value;
+          collector.add({
+            kind: CompletionItemKind.Property,
+            label: key,
+            insertText: this.getInsertTextForValue(key, ""),
+            insertTextFormat: InsertTextFormat.Snippet,
+            filterText: this.getFilterTextForValue(key),
+            documentation: ""
+          });
+        });
+      };
+      if (node.parent) {
+        if (node.parent.type === "property") {
+          const parentKey = node.parent.keyNode.value;
+          doc.visit((n) => {
+            if (n.type === "property" && n !== node.parent && n.keyNode.value === parentKey && n.valueNode && n.valueNode.type === "object") {
+              collectCompletionsForSimilarObject(n.valueNode);
+            }
+            return true;
+          });
+        } else if (node.parent.type === "array") {
+          node.parent.items.forEach((n) => {
+            if (n.type === "object" && n !== node) {
+              collectCompletionsForSimilarObject(n);
+            }
+          });
+        }
+      } else if (node.type === "object") {
+        collector.add({
+          kind: CompletionItemKind.Property,
+          label: "$schema",
+          insertText: this.getInsertTextForProperty("$schema", void 0, true, ""),
+          insertTextFormat: InsertTextFormat.Snippet,
+          documentation: "",
+          filterText: this.getFilterTextForValue("$schema")
+        });
+      }
+    }
+    getSchemaLessValueCompletions(doc, node, offset, document, collector) {
+      let offsetForSeparator = offset;
+      if (node && (node.type === "string" || node.type === "number" || node.type === "boolean" || node.type === "null")) {
+        offsetForSeparator = node.offset + node.length;
+        node = node.parent;
+      }
+      if (!node) {
+        collector.add({
+          kind: this.getSuggestionKind("object"),
+          label: "Empty object",
+          insertText: this.getInsertTextForValue({}, ""),
+          insertTextFormat: InsertTextFormat.Snippet,
+          documentation: ""
+        });
+        collector.add({
+          kind: this.getSuggestionKind("array"),
+          label: "Empty array",
+          insertText: this.getInsertTextForValue([], ""),
+          insertTextFormat: InsertTextFormat.Snippet,
+          documentation: ""
+        });
+        return;
+      }
+      const separatorAfter = this.evaluateSeparatorAfter(document, offsetForSeparator);
+      const collectSuggestionsForValues = (value) => {
+        if (value.parent && !contains2(value.parent, offset, true)) {
+          collector.add({
+            kind: this.getSuggestionKind(value.type),
+            label: this.getLabelTextForMatchingNode(value, document),
+            insertText: this.getInsertTextForMatchingNode(value, document, separatorAfter),
+            insertTextFormat: InsertTextFormat.Snippet,
+            documentation: ""
+          });
+        }
+        if (value.type === "boolean") {
+          this.addBooleanValueCompletion(!value.value, separatorAfter, collector);
+        }
+      };
+      if (node.type === "property") {
+        if (offset > (node.colonOffset || 0)) {
+          const valueNode = node.valueNode;
+          if (valueNode && (offset > valueNode.offset + valueNode.length || valueNode.type === "object" || valueNode.type === "array")) {
+            return;
+          }
+          const parentKey = node.keyNode.value;
+          doc.visit((n) => {
+            if (n.type === "property" && n.keyNode.value === parentKey && n.valueNode) {
+              collectSuggestionsForValues(n.valueNode);
+            }
+            return true;
+          });
+          if (parentKey === "$schema" && node.parent && !node.parent.parent) {
+            this.addDollarSchemaCompletions(separatorAfter, collector);
+          }
+        }
+      }
+      if (node.type === "array") {
+        if (node.parent && node.parent.type === "property") {
+          const parentKey = node.parent.keyNode.value;
+          doc.visit((n) => {
+            if (n.type === "property" && n.keyNode.value === parentKey && n.valueNode && n.valueNode.type === "array") {
+              n.valueNode.items.forEach(collectSuggestionsForValues);
+            }
+            return true;
+          });
+        } else {
+          node.items.forEach(collectSuggestionsForValues);
+        }
+      }
+    }
+    getValueCompletions(schema, doc, node, offset, document, collector, types) {
+      let offsetForSeparator = offset;
+      let parentKey = void 0;
+      let valueNode = void 0;
+      if (node && (node.type === "string" || node.type === "number" || node.type === "boolean" || node.type === "null")) {
+        offsetForSeparator = node.offset + node.length;
+        valueNode = node;
+        node = node.parent;
+      }
+      if (!node) {
+        this.addSchemaValueCompletions(schema.schema, "", collector, types);
+        return;
+      }
+      if (node.type === "property" && offset > (node.colonOffset || 0)) {
+        const valueNode2 = node.valueNode;
+        if (valueNode2 && offset > valueNode2.offset + valueNode2.length) {
+          return;
+        }
+        parentKey = node.keyNode.value;
+        node = node.parent;
+      }
+      if (node && (parentKey !== void 0 || node.type === "array")) {
+        const separatorAfter = this.evaluateSeparatorAfter(document, offsetForSeparator);
+        const matchingSchemas = doc.getMatchingSchemas(schema.schema, node.offset, valueNode);
+        for (const s of matchingSchemas) {
+          if (s.node === node && !s.inverted && s.schema) {
+            if (node.type === "array" && s.schema.items) {
+              let c = collector;
+              if (s.schema.uniqueItems) {
+                const existingValues = /* @__PURE__ */ new Set();
+                node.children.forEach((n) => {
+                  if (n.type !== "array" && n.type !== "object") {
+                    existingValues.add(this.getLabelForValue(getNodeValue3(n)));
+                  }
+                });
+                c = {
+                  ...collector,
+                  add(suggestion) {
+                    if (!existingValues.has(suggestion.label)) {
+                      collector.add(suggestion);
+                    }
+                  }
+                };
+              }
+              if (Array.isArray(s.schema.items)) {
+                const index = this.findItemAtOffset(node, document, offset);
+                if (index < s.schema.items.length) {
+                  this.addSchemaValueCompletions(s.schema.items[index], separatorAfter, c, types);
+                }
+              } else {
+                this.addSchemaValueCompletions(s.schema.items, separatorAfter, c, types);
+              }
+            }
+            if (parentKey !== void 0) {
+              let propertyMatched = false;
+              if (s.schema.properties) {
+                const propertySchema = s.schema.properties[parentKey];
+                if (propertySchema) {
+                  propertyMatched = true;
+                  this.addSchemaValueCompletions(propertySchema, separatorAfter, collector, types);
+                }
+              }
+              if (s.schema.patternProperties && !propertyMatched) {
+                for (const pattern of Object.keys(s.schema.patternProperties)) {
+                  const regex = extendedRegExp(pattern);
+                  if (regex?.test(parentKey)) {
+                    propertyMatched = true;
+                    const propertySchema = s.schema.patternProperties[pattern];
+                    this.addSchemaValueCompletions(propertySchema, separatorAfter, collector, types);
+                  }
+                }
+              }
+              if (s.schema.additionalProperties && !propertyMatched) {
+                const propertySchema = s.schema.additionalProperties;
+                this.addSchemaValueCompletions(propertySchema, separatorAfter, collector, types);
+              }
+            }
+          }
+        }
+        if (parentKey === "$schema" && !node.parent) {
+          this.addDollarSchemaCompletions(separatorAfter, collector);
+        }
+        if (types["boolean"]) {
+          this.addBooleanValueCompletion(true, separatorAfter, collector);
+          this.addBooleanValueCompletion(false, separatorAfter, collector);
+        }
+        if (types["null"]) {
+          this.addNullValueCompletion(separatorAfter, collector);
+        }
+      }
+    }
+    getContributedValueCompletions(doc, node, offset, document, collector, collectionPromises) {
+      if (!node) {
+        this.contributions.forEach((contribution) => {
+          const collectPromise = contribution.collectDefaultCompletions(document.uri, collector);
+          if (collectPromise) {
+            collectionPromises.push(collectPromise);
+          }
+        });
+      } else {
+        if (node.type === "string" || node.type === "number" || node.type === "boolean" || node.type === "null") {
+          node = node.parent;
+        }
+        if (node && node.type === "property" && offset > (node.colonOffset || 0)) {
+          const parentKey = node.keyNode.value;
+          const valueNode = node.valueNode;
+          if ((!valueNode || offset <= valueNode.offset + valueNode.length) && node.parent) {
+            const location = getNodePath3(node.parent);
+            this.contributions.forEach((contribution) => {
+              const collectPromise = contribution.collectValueCompletions(document.uri, location, parentKey, collector);
+              if (collectPromise) {
+                collectionPromises.push(collectPromise);
+              }
+            });
+          }
+        }
+      }
+    }
+    addSchemaValueCompletions(schema, separatorAfter, collector, types) {
+      if (typeof schema === "object") {
+        this.addEnumValueCompletions(schema, separatorAfter, collector);
+        this.addDefaultValueCompletions(schema, separatorAfter, collector);
+        this.collectTypes(schema, types);
+        if (Array.isArray(schema.allOf)) {
+          schema.allOf.forEach((s) => this.addSchemaValueCompletions(s, separatorAfter, collector, types));
+        }
+        if (Array.isArray(schema.anyOf)) {
+          schema.anyOf.forEach((s) => this.addSchemaValueCompletions(s, separatorAfter, collector, types));
+        }
+        if (Array.isArray(schema.oneOf)) {
+          schema.oneOf.forEach((s) => this.addSchemaValueCompletions(s, separatorAfter, collector, types));
+        }
+      }
+    }
+    addDefaultValueCompletions(schema, separatorAfter, collector, arrayDepth = 0) {
+      let hasProposals = false;
+      if (isDefined(schema.default)) {
+        let type = schema.type;
+        let value = schema.default;
+        for (let i = arrayDepth; i > 0; i--) {
+          value = [value];
+          type = "array";
+        }
+        const completionItem = {
+          kind: this.getSuggestionKind(type),
+          label: this.getLabelForValue(value),
+          insertText: this.getInsertTextForValue(value, separatorAfter),
+          insertTextFormat: InsertTextFormat.Snippet
+        };
+        if (this.doesSupportsLabelDetails()) {
+          completionItem.labelDetails = { description: t("Default value") };
+        } else {
+          completionItem.detail = t("Default value");
+        }
+        collector.add(completionItem);
+        hasProposals = true;
+      }
+      if (Array.isArray(schema.examples)) {
+        schema.examples.forEach((example) => {
+          let type = schema.type;
+          let value = example;
+          for (let i = arrayDepth; i > 0; i--) {
+            value = [value];
+            type = "array";
+          }
+          collector.add({
+            kind: this.getSuggestionKind(type),
+            label: this.getLabelForValue(value),
+            insertText: this.getInsertTextForValue(value, separatorAfter),
+            insertTextFormat: InsertTextFormat.Snippet
+          });
+          hasProposals = true;
+        });
+      }
+      if (Array.isArray(schema.defaultSnippets)) {
+        schema.defaultSnippets.forEach((s) => {
+          let type = schema.type;
+          let value = s.body;
+          let label = s.label;
+          let insertText;
+          let filterText;
+          if (isDefined(value)) {
+            let type2 = schema.type;
+            for (let i = arrayDepth; i > 0; i--) {
+              value = [value];
+              type2 = "array";
+            }
+            insertText = this.getInsertTextForSnippetValue(value, separatorAfter);
+            filterText = this.getFilterTextForSnippetValue(value);
+            label = label || this.getLabelForSnippetValue(value);
+          } else if (typeof s.bodyText === "string") {
+            let prefix = "", suffix = "", indent = "";
+            for (let i = arrayDepth; i > 0; i--) {
+              prefix = prefix + indent + "[\n";
+              suffix = suffix + "\n" + indent + "]";
+              indent += "	";
+              type = "array";
+            }
+            insertText = prefix + indent + s.bodyText.split("\n").join("\n" + indent) + suffix + separatorAfter;
+            label = label || insertText, filterText = insertText.replace(/[\n]/g, "");
+          } else {
+            return;
+          }
+          collector.add({
+            kind: this.getSuggestionKind(type),
+            label,
+            documentation: this.fromMarkup(s.markdownDescription) || s.description,
+            insertText,
+            insertTextFormat: InsertTextFormat.Snippet,
+            filterText
+          });
+          hasProposals = true;
+        });
+      }
+      if (!hasProposals && typeof schema.items === "object" && !Array.isArray(schema.items) && arrayDepth < 5) {
+        this.addDefaultValueCompletions(schema.items, separatorAfter, collector, arrayDepth + 1);
+      }
+    }
+    addEnumValueCompletions(schema, separatorAfter, collector) {
+      if (isDefined(schema.const)) {
+        collector.add({
+          kind: this.getSuggestionKind(schema.type),
+          label: this.getLabelForValue(schema.const),
+          insertText: this.getInsertTextForValue(schema.const, separatorAfter),
+          insertTextFormat: InsertTextFormat.Snippet,
+          documentation: this.fromMarkup(schema.markdownDescription) || schema.description
+        });
+      }
+      if (Array.isArray(schema.enum)) {
+        for (let i = 0, length = schema.enum.length; i < length; i++) {
+          const enm = schema.enum[i];
+          let documentation = this.fromMarkup(schema.markdownDescription) || schema.description;
+          if (schema.markdownEnumDescriptions && i < schema.markdownEnumDescriptions.length && this.doesSupportMarkdown()) {
+            documentation = this.fromMarkup(schema.markdownEnumDescriptions[i]);
+          } else if (schema.enumDescriptions && i < schema.enumDescriptions.length) {
+            documentation = schema.enumDescriptions[i];
+          }
+          collector.add({
+            kind: this.getSuggestionKind(schema.type),
+            label: this.getLabelForValue(enm),
+            insertText: this.getInsertTextForValue(enm, separatorAfter),
+            insertTextFormat: InsertTextFormat.Snippet,
+            documentation
+          });
+        }
+      }
+    }
+    collectTypes(schema, types) {
+      if (Array.isArray(schema.enum) || isDefined(schema.const)) {
+        return;
+      }
+      const type = schema.type;
+      if (Array.isArray(type)) {
+        type.forEach((t2) => types[t2] = true);
+      } else if (type) {
+        types[type] = true;
+      }
+    }
+    addFillerValueCompletions(types, separatorAfter, collector) {
+      if (types["object"]) {
+        collector.add({
+          kind: this.getSuggestionKind("object"),
+          label: "{}",
+          insertText: this.getInsertTextForGuessedValue({}, separatorAfter),
+          insertTextFormat: InsertTextFormat.Snippet,
+          detail: t("New object"),
+          documentation: ""
+        });
+      }
+      if (types["array"]) {
+        collector.add({
+          kind: this.getSuggestionKind("array"),
+          label: "[]",
+          insertText: this.getInsertTextForGuessedValue([], separatorAfter),
+          insertTextFormat: InsertTextFormat.Snippet,
+          detail: t("New array"),
+          documentation: ""
+        });
+      }
+    }
+    addBooleanValueCompletion(value, separatorAfter, collector) {
+      collector.add({
+        kind: this.getSuggestionKind("boolean"),
+        label: value ? "true" : "false",
+        insertText: this.getInsertTextForValue(value, separatorAfter),
+        insertTextFormat: InsertTextFormat.Snippet,
+        documentation: ""
+      });
+    }
+    addNullValueCompletion(separatorAfter, collector) {
+      collector.add({
+        kind: this.getSuggestionKind("null"),
+        label: "null",
+        insertText: "null" + separatorAfter,
+        insertTextFormat: InsertTextFormat.Snippet,
+        documentation: ""
+      });
+    }
+    addDollarSchemaCompletions(separatorAfter, collector) {
+      const schemaIds = this.schemaService.getRegisteredSchemaIds((schema) => schema === "http" || schema === "https");
+      schemaIds.forEach((schemaId) => {
+        if (schemaId.startsWith("http://json-schema.org/draft-")) {
+          schemaId = schemaId + "#";
+        }
+        collector.add({
+          kind: CompletionItemKind.Module,
+          label: this.getLabelForValue(schemaId),
+          filterText: this.getFilterTextForValue(schemaId),
+          insertText: this.getInsertTextForValue(schemaId, separatorAfter),
+          insertTextFormat: InsertTextFormat.Snippet,
+          documentation: ""
+        });
+      });
+    }
+    getLabelForValue(value) {
+      return JSON.stringify(value);
+    }
+    getValueFromLabel(value) {
+      return JSON.parse(value);
+    }
+    getFilterTextForValue(value) {
+      return JSON.stringify(value);
+    }
+    getFilterTextForSnippetValue(value) {
+      return JSON.stringify(value).replace(/\$\{\d+:([^}]+)\}|\$\d+/g, "$1");
+    }
+    getLabelForSnippetValue(value) {
+      const label = JSON.stringify(value);
+      return label.replace(/\$\{\d+:([^}]+)\}|\$\d+/g, "$1");
+    }
+    getInsertTextForPlainText(text) {
+      return text.replace(/[\\\$\}]/g, "\\$&");
+    }
+    getInsertTextForValue(value, separatorAfter) {
+      const text = JSON.stringify(value, null, "	");
+      if (text === "{}") {
+        return "{$1}" + separatorAfter;
+      } else if (text === "[]") {
+        return "[$1]" + separatorAfter;
+      }
+      return this.getInsertTextForPlainText(text + separatorAfter);
+    }
+    getInsertTextForSnippetValue(value, separatorAfter) {
+      const replacer = (value2) => {
+        if (typeof value2 === "string") {
+          if (value2[0] === "^") {
+            return value2.substr(1);
+          }
+        }
+        return JSON.stringify(value2);
+      };
+      return stringifyObject(value, "", replacer) + separatorAfter;
+    }
+    getInsertTextForGuessedValue(value, separatorAfter) {
+      switch (typeof value) {
+        case "object":
+          if (value === null) {
+            return "${1:null}" + separatorAfter;
+          }
+          return this.getInsertTextForValue(value, separatorAfter);
+        case "string":
+          let snippetValue = JSON.stringify(value);
+          snippetValue = snippetValue.substr(1, snippetValue.length - 2);
+          snippetValue = this.getInsertTextForPlainText(snippetValue);
+          return '"${1:' + snippetValue + '}"' + separatorAfter;
+        case "number":
+        case "boolean":
+          return "${1:" + JSON.stringify(value) + "}" + separatorAfter;
+      }
+      return this.getInsertTextForValue(value, separatorAfter);
+    }
+    getSuggestionKind(type) {
+      if (Array.isArray(type)) {
+        const array = type;
+        type = array.length > 0 ? array[0] : void 0;
+      }
+      if (!type) {
+        return CompletionItemKind.Value;
+      }
+      switch (type) {
+        case "string":
+          return CompletionItemKind.Value;
+        case "object":
+          return CompletionItemKind.Module;
+        case "property":
+          return CompletionItemKind.Property;
+        default:
+          return CompletionItemKind.Value;
+      }
+    }
+    getLabelTextForMatchingNode(node, document) {
+      switch (node.type) {
+        case "array":
+          return "[]";
+        case "object":
+          return "{}";
+        default:
+          const content = document.getText().substr(node.offset, node.length);
+          return content;
+      }
+    }
+    getInsertTextForMatchingNode(node, document, separatorAfter) {
+      switch (node.type) {
+        case "array":
+          return this.getInsertTextForValue([], separatorAfter);
+        case "object":
+          return this.getInsertTextForValue({}, separatorAfter);
+        default:
+          const content = document.getText().substr(node.offset, node.length) + separatorAfter;
+          return this.getInsertTextForPlainText(content);
+      }
+    }
+    getInsertTextForProperty(key, propertySchema, addValue, separatorAfter) {
+      const propertyText = this.getInsertTextForValue(key, "");
+      if (!addValue) {
+        return propertyText;
+      }
+      const resultText = propertyText + ": ";
+      let value;
+      let nValueProposals = 0;
+      if (propertySchema) {
+        if (Array.isArray(propertySchema.defaultSnippets)) {
+          if (propertySchema.defaultSnippets.length === 1) {
+            const body = propertySchema.defaultSnippets[0].body;
+            if (isDefined(body)) {
+              value = this.getInsertTextForSnippetValue(body, "");
+            }
+          }
+          nValueProposals += propertySchema.defaultSnippets.length;
+        }
+        if (propertySchema.enum) {
+          if (!value && propertySchema.enum.length === 1) {
+            value = this.getInsertTextForGuessedValue(propertySchema.enum[0], "");
+          }
+          nValueProposals += propertySchema.enum.length;
+        }
+        if (isDefined(propertySchema.const)) {
+          if (!value) {
+            value = this.getInsertTextForGuessedValue(propertySchema.const, "");
+          }
+          nValueProposals++;
+        }
+        if (isDefined(propertySchema.default)) {
+          if (!value) {
+            value = this.getInsertTextForGuessedValue(propertySchema.default, "");
+          }
+          nValueProposals++;
+        }
+        if (Array.isArray(propertySchema.examples) && propertySchema.examples.length) {
+          if (!value) {
+            value = this.getInsertTextForGuessedValue(propertySchema.examples[0], "");
+          }
+          nValueProposals += propertySchema.examples.length;
+        }
+        if (nValueProposals === 0) {
+          let type = Array.isArray(propertySchema.type) ? propertySchema.type[0] : propertySchema.type;
+          if (!type) {
+            if (propertySchema.properties) {
+              type = "object";
+            } else if (propertySchema.items) {
+              type = "array";
+            }
+          }
+          switch (type) {
+            case "boolean":
+              value = "$1";
+              break;
+            case "string":
+              value = '"$1"';
+              break;
+            case "object":
+              value = "{$1}";
+              break;
+            case "array":
+              value = "[$1]";
+              break;
+            case "number":
+            case "integer":
+              value = "${1:0}";
+              break;
+            case "null":
+              value = "${1:null}";
+              break;
+            default:
+              return propertyText;
+          }
+        }
+      }
+      if (!value || nValueProposals > 1) {
+        value = "$1";
+      }
+      return resultText + value + separatorAfter;
+    }
+    getCurrentWord(document, offset) {
+      let i = offset - 1;
+      const text = document.getText();
+      while (i >= 0 && ' 	\n\r\v":{[,]}'.indexOf(text.charAt(i)) === -1) {
+        i--;
+      }
+      return text.substring(i + 1, offset);
+    }
+    evaluateSeparatorAfter(document, offset) {
+      const scanner = createScanner2(document.getText(), true);
+      scanner.setPosition(offset);
+      const token = scanner.scan();
+      switch (token) {
+        case 5:
+        case 2:
+        case 4:
+        case 17:
+          return "";
+        default:
+          return ",";
+      }
+    }
+    findItemAtOffset(node, document, offset) {
+      const scanner = createScanner2(document.getText(), true);
+      const children = node.items;
+      for (let i = children.length - 1; i >= 0; i--) {
+        const child = children[i];
+        if (offset > child.offset + child.length) {
+          scanner.setPosition(child.offset + child.length);
+          const token = scanner.scan();
+          if (token === 5 && offset >= scanner.getTokenOffset() + scanner.getTokenLength()) {
+            return i + 1;
+          }
+          return i;
+        } else if (offset >= child.offset) {
+          return i;
+        }
+      }
+      return 0;
+    }
+    isInComment(document, start, offset) {
+      const scanner = createScanner2(document.getText(), false);
+      scanner.setPosition(start);
+      let token = scanner.scan();
+      while (token !== 17 && scanner.getTokenOffset() + scanner.getTokenLength() < offset) {
+        token = scanner.scan();
+      }
+      return (token === 12 || token === 13) && scanner.getTokenOffset() <= offset;
+    }
+    fromMarkup(markupString) {
+      if (markupString && this.doesSupportMarkdown()) {
+        return {
+          kind: MarkupKind.Markdown,
+          value: markupString
+        };
+      }
+      return void 0;
+    }
+    doesSupportMarkdown() {
+      if (!isDefined(this.supportsMarkdown)) {
+        const documentationFormat = this.clientCapabilities.textDocument?.completion?.completionItem?.documentationFormat;
+        this.supportsMarkdown = Array.isArray(documentationFormat) && documentationFormat.indexOf(MarkupKind.Markdown) !== -1;
+      }
+      return this.supportsMarkdown;
+    }
+    doesSupportsCommitCharacters() {
+      if (!isDefined(this.supportsCommitCharacters)) {
+        this.labelDetailsSupport = this.clientCapabilities.textDocument?.completion?.completionItem?.commitCharactersSupport;
+      }
+      return this.supportsCommitCharacters;
+    }
+    doesSupportsLabelDetails() {
+      if (!isDefined(this.labelDetailsSupport)) {
+        this.labelDetailsSupport = this.clientCapabilities.textDocument?.completion?.completionItem?.labelDetailsSupport;
+      }
+      return this.labelDetailsSupport;
+    }
+  };
+
+  // node_modules/vscode-json-languageservice/lib/esm/services/jsonHover.js
+  var JSONHover = class {
+    constructor(schemaService, contributions = [], promiseConstructor) {
+      this.schemaService = schemaService;
+      this.contributions = contributions;
+      this.promise = promiseConstructor || Promise;
+    }
+    doHover(document, position, doc) {
+      const offset = document.offsetAt(position);
+      let node = doc.getNodeFromOffset(offset);
+      if (!node || (node.type === "object" || node.type === "array") && offset > node.offset + 1 && offset < node.offset + node.length - 1) {
+        return this.promise.resolve(null);
+      }
+      const hoverRangeNode = node;
+      if (node.type === "string") {
+        const parent = node.parent;
+        if (parent && parent.type === "property" && parent.keyNode === node) {
+          node = parent.valueNode;
+          if (!node) {
+            return this.promise.resolve(null);
+          }
+        }
+      }
+      const hoverRange = Range.create(document.positionAt(hoverRangeNode.offset), document.positionAt(hoverRangeNode.offset + hoverRangeNode.length));
+      const createHover = (contents) => {
+        const result = {
+          contents,
+          range: hoverRange
+        };
+        return result;
+      };
+      const location = getNodePath3(node);
+      for (let i = this.contributions.length - 1; i >= 0; i--) {
+        const contribution = this.contributions[i];
+        const promise = contribution.getInfoContribution(document.uri, location);
+        if (promise) {
+          return promise.then((htmlContent) => createHover(htmlContent));
+        }
+      }
+      return this.schemaService.getSchemaForResource(document.uri, doc).then((schema) => {
+        if (schema && node) {
+          const matchingSchemas = doc.getMatchingSchemas(schema.schema, node.offset);
+          let title = void 0;
+          let markdownDescription = void 0;
+          let markdownEnumValueDescription = void 0, enumValue = void 0;
+          matchingSchemas.every((s) => {
+            if (s.node === node && !s.inverted && s.schema) {
+              title = title || s.schema.title;
+              markdownDescription = markdownDescription || s.schema.markdownDescription || toMarkdown(s.schema.description);
+              if (s.schema.enum) {
+                const idx = s.schema.enum.indexOf(getNodeValue3(node));
+                if (s.schema.markdownEnumDescriptions) {
+                  markdownEnumValueDescription = s.schema.markdownEnumDescriptions[idx];
+                } else if (s.schema.enumDescriptions) {
+                  markdownEnumValueDescription = toMarkdown(s.schema.enumDescriptions[idx]);
+                }
+                if (markdownEnumValueDescription) {
+                  enumValue = s.schema.enum[idx];
+                  if (typeof enumValue !== "string") {
+                    enumValue = JSON.stringify(enumValue);
+                  }
+                }
+              }
+            }
+            return true;
+          });
+          let result = "";
+          if (title) {
+            result = toMarkdown(title);
+          }
+          if (markdownDescription) {
+            if (result.length > 0) {
+              result += "\n\n";
+            }
+            result += markdownDescription;
+          }
+          if (markdownEnumValueDescription) {
+            if (result.length > 0) {
+              result += "\n\n";
+            }
+            result += `\`${toMarkdownCodeBlock(enumValue)}\`: ${markdownEnumValueDescription}`;
+          }
+          return createHover([result]);
+        }
+        return null;
+      });
+    }
+  };
+  function toMarkdown(plain) {
+    if (plain) {
+      const res = plain.replace(/([^\n\r])(\r?\n)([^\n\r])/gm, "$1\n\n$3");
+      return res.replace(/[\\`*_{}[\]()#+\-.!]/g, "\\$&");
+    }
+    return void 0;
+  }
+  function toMarkdownCodeBlock(content) {
+    if (content.indexOf("`") !== -1) {
+      return "`` " + content + " ``";
+    }
+    return content;
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/services/jsonValidation.js
+  var JSONValidation = class {
+    constructor(jsonSchemaService, promiseConstructor) {
+      this.jsonSchemaService = jsonSchemaService;
+      this.promise = promiseConstructor;
+      this.validationEnabled = true;
+    }
+    configure(raw) {
+      if (raw) {
+        this.validationEnabled = raw.validate !== false;
+        this.commentSeverity = raw.allowComments ? void 0 : DiagnosticSeverity.Error;
+      }
+    }
+    doValidation(textDocument, jsonDocument, documentSettings, schema) {
+      if (!this.validationEnabled) {
+        return this.promise.resolve([]);
+      }
+      const diagnostics = [];
+      const added = {};
+      const addProblem = (problem) => {
+        const signature = problem.range.start.line + " " + problem.range.start.character + " " + problem.message;
+        if (!added[signature]) {
+          added[signature] = true;
+          diagnostics.push(problem);
+        }
+      };
+      const getDiagnostics = (schema2) => {
+        let trailingCommaSeverity = documentSettings?.trailingCommas ? toDiagnosticSeverity(documentSettings.trailingCommas) : DiagnosticSeverity.Error;
+        let commentSeverity = documentSettings?.comments ? toDiagnosticSeverity(documentSettings.comments) : this.commentSeverity;
+        let schemaValidation = documentSettings?.schemaValidation ? toDiagnosticSeverity(documentSettings.schemaValidation) : DiagnosticSeverity.Warning;
+        let schemaRequest = documentSettings?.schemaRequest ? toDiagnosticSeverity(documentSettings.schemaRequest) : DiagnosticSeverity.Warning;
+        if (schema2) {
+          const addSchemaProblem = (errorMessage, errorCode) => {
+            if (jsonDocument.root && schemaRequest) {
+              const astRoot = jsonDocument.root;
+              const property = astRoot.type === "object" ? astRoot.properties[0] : void 0;
+              if (property && property.keyNode.value === "$schema") {
+                const node = property.valueNode || property;
+                const range = Range.create(textDocument.positionAt(node.offset), textDocument.positionAt(node.offset + node.length));
+                addProblem(Diagnostic.create(range, errorMessage, schemaRequest, errorCode));
+              } else {
+                const range = Range.create(textDocument.positionAt(astRoot.offset), textDocument.positionAt(astRoot.offset + 1));
+                addProblem(Diagnostic.create(range, errorMessage, schemaRequest, errorCode));
+              }
+            }
+          };
+          if (schema2.errors.length) {
+            addSchemaProblem(schema2.errors[0], ErrorCode.SchemaResolveError);
+          } else if (schemaValidation) {
+            for (const warning of schema2.warnings) {
+              addSchemaProblem(warning, ErrorCode.SchemaUnsupportedFeature);
+            }
+            const semanticErrors = jsonDocument.validate(textDocument, schema2.schema, schemaValidation, documentSettings?.schemaDraft);
+            if (semanticErrors) {
+              semanticErrors.forEach(addProblem);
+            }
+          }
+          if (schemaAllowsComments(schema2.schema)) {
+            commentSeverity = void 0;
+          }
+          if (schemaAllowsTrailingCommas(schema2.schema)) {
+            trailingCommaSeverity = void 0;
+          }
+        }
+        for (const p of jsonDocument.syntaxErrors) {
+          if (p.code === ErrorCode.TrailingComma) {
+            if (typeof trailingCommaSeverity !== "number") {
+              continue;
+            }
+            p.severity = trailingCommaSeverity;
+          }
+          addProblem(p);
+        }
+        if (typeof commentSeverity === "number") {
+          const message = t("Comments are not permitted in JSON.");
+          jsonDocument.comments.forEach((c) => {
+            addProblem(Diagnostic.create(c, message, commentSeverity, ErrorCode.CommentNotPermitted));
+          });
+        }
+        return diagnostics;
+      };
+      if (schema) {
+        const uri = schema.id || "schemaservice://untitled/" + idCounter++;
+        const handle = this.jsonSchemaService.registerExternalSchema({ uri, schema });
+        return handle.getResolvedSchema().then((resolvedSchema) => {
+          return getDiagnostics(resolvedSchema);
+        });
+      }
+      return this.jsonSchemaService.getSchemaForResource(textDocument.uri, jsonDocument).then((schema2) => {
+        return getDiagnostics(schema2);
+      });
+    }
+    getLanguageStatus(textDocument, jsonDocument) {
+      return { schemas: this.jsonSchemaService.getSchemaURIsForResource(textDocument.uri, jsonDocument) };
+    }
+  };
+  var idCounter = 0;
+  function schemaAllowsComments(schemaRef) {
+    if (schemaRef && typeof schemaRef === "object") {
+      if (isBoolean(schemaRef.allowComments)) {
+        return schemaRef.allowComments;
+      }
+      if (schemaRef.allOf) {
+        for (const schema of schemaRef.allOf) {
+          const allow = schemaAllowsComments(schema);
+          if (isBoolean(allow)) {
+            return allow;
+          }
+        }
+      }
+    }
+    return void 0;
+  }
+  function schemaAllowsTrailingCommas(schemaRef) {
+    if (schemaRef && typeof schemaRef === "object") {
+      if (isBoolean(schemaRef.allowTrailingCommas)) {
+        return schemaRef.allowTrailingCommas;
+      }
+      const deprSchemaRef = schemaRef;
+      if (isBoolean(deprSchemaRef["allowsTrailingCommas"])) {
+        return deprSchemaRef["allowsTrailingCommas"];
+      }
+      if (schemaRef.allOf) {
+        for (const schema of schemaRef.allOf) {
+          const allow = schemaAllowsTrailingCommas(schema);
+          if (isBoolean(allow)) {
+            return allow;
+          }
+        }
+      }
+    }
+    return void 0;
+  }
+  function toDiagnosticSeverity(severityLevel) {
+    switch (severityLevel) {
+      case "error":
+        return DiagnosticSeverity.Error;
+      case "warning":
+        return DiagnosticSeverity.Warning;
+      case "ignore":
+        return void 0;
+    }
+    return void 0;
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/utils/colors.js
+  var Digit0 = 48;
+  var Digit9 = 57;
+  var A = 65;
+  var a = 97;
+  var f = 102;
+  function hexDigit(charCode) {
+    if (charCode < Digit0) {
+      return 0;
+    }
+    if (charCode <= Digit9) {
+      return charCode - Digit0;
+    }
+    if (charCode < a) {
+      charCode += a - A;
+    }
+    if (charCode >= a && charCode <= f) {
+      return charCode - a + 10;
+    }
+    return 0;
+  }
+  function colorFromHex(text) {
+    if (text[0] !== "#") {
+      return void 0;
+    }
+    switch (text.length) {
+      case 4:
+        return {
+          red: hexDigit(text.charCodeAt(1)) * 17 / 255,
+          green: hexDigit(text.charCodeAt(2)) * 17 / 255,
+          blue: hexDigit(text.charCodeAt(3)) * 17 / 255,
+          alpha: 1
+        };
+      case 5:
+        return {
+          red: hexDigit(text.charCodeAt(1)) * 17 / 255,
+          green: hexDigit(text.charCodeAt(2)) * 17 / 255,
+          blue: hexDigit(text.charCodeAt(3)) * 17 / 255,
+          alpha: hexDigit(text.charCodeAt(4)) * 17 / 255
+        };
+      case 7:
+        return {
+          red: (hexDigit(text.charCodeAt(1)) * 16 + hexDigit(text.charCodeAt(2))) / 255,
+          green: (hexDigit(text.charCodeAt(3)) * 16 + hexDigit(text.charCodeAt(4))) / 255,
+          blue: (hexDigit(text.charCodeAt(5)) * 16 + hexDigit(text.charCodeAt(6))) / 255,
+          alpha: 1
+        };
+      case 9:
+        return {
+          red: (hexDigit(text.charCodeAt(1)) * 16 + hexDigit(text.charCodeAt(2))) / 255,
+          green: (hexDigit(text.charCodeAt(3)) * 16 + hexDigit(text.charCodeAt(4))) / 255,
+          blue: (hexDigit(text.charCodeAt(5)) * 16 + hexDigit(text.charCodeAt(6))) / 255,
+          alpha: (hexDigit(text.charCodeAt(7)) * 16 + hexDigit(text.charCodeAt(8))) / 255
+        };
+    }
+    return void 0;
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/services/jsonDocumentSymbols.js
+  var JSONDocumentSymbols = class {
+    constructor(schemaService) {
+      this.schemaService = schemaService;
+    }
+    findDocumentSymbols(document, doc, context = { resultLimit: Number.MAX_VALUE }) {
+      const root = doc.root;
+      if (!root) {
+        return [];
+      }
+      let limit = context.resultLimit || Number.MAX_VALUE;
+      const resourceString = document.uri;
+      if (resourceString === "vscode://defaultsettings/keybindings.json" || endsWith(resourceString.toLowerCase(), "/user/keybindings.json")) {
+        if (root.type === "array") {
+          const result2 = [];
+          for (const item of root.items) {
+            if (item.type === "object") {
+              for (const property of item.properties) {
+                if (property.keyNode.value === "key" && property.valueNode) {
+                  const location = Location.create(document.uri, getRange(document, item));
+                  result2.push({ name: getName(property.valueNode), kind: SymbolKind.Function, location });
+                  limit--;
+                  if (limit <= 0) {
+                    if (context && context.onResultLimitExceeded) {
+                      context.onResultLimitExceeded(resourceString);
+                    }
+                    return result2;
+                  }
+                }
+              }
+            }
+          }
+          return result2;
+        }
+      }
+      const toVisit = [
+        { node: root, containerName: "" }
+      ];
+      let nextToVisit = 0;
+      let limitExceeded = false;
+      const result = [];
+      const collectOutlineEntries = (node, containerName) => {
+        if (node.type === "array") {
+          node.items.forEach((node2) => {
+            if (node2) {
+              toVisit.push({ node: node2, containerName });
+            }
+          });
+        } else if (node.type === "object") {
+          node.properties.forEach((property) => {
+            const valueNode = property.valueNode;
+            if (valueNode) {
+              if (limit > 0) {
+                limit--;
+                const location = Location.create(document.uri, getRange(document, property));
+                const childContainerName = containerName ? containerName + "." + property.keyNode.value : property.keyNode.value;
+                result.push({ name: this.getKeyLabel(property), kind: this.getSymbolKind(valueNode.type), location, containerName });
+                toVisit.push({ node: valueNode, containerName: childContainerName });
+              } else {
+                limitExceeded = true;
+              }
+            }
+          });
+        }
+      };
+      while (nextToVisit < toVisit.length) {
+        const next = toVisit[nextToVisit++];
+        collectOutlineEntries(next.node, next.containerName);
+      }
+      if (limitExceeded && context && context.onResultLimitExceeded) {
+        context.onResultLimitExceeded(resourceString);
+      }
+      return result;
+    }
+    findDocumentSymbols2(document, doc, context = { resultLimit: Number.MAX_VALUE }) {
+      const root = doc.root;
+      if (!root) {
+        return [];
+      }
+      let limit = context.resultLimit || Number.MAX_VALUE;
+      const resourceString = document.uri;
+      if (resourceString === "vscode://defaultsettings/keybindings.json" || endsWith(resourceString.toLowerCase(), "/user/keybindings.json")) {
+        if (root.type === "array") {
+          const result2 = [];
+          for (const item of root.items) {
+            if (item.type === "object") {
+              for (const property of item.properties) {
+                if (property.keyNode.value === "key" && property.valueNode) {
+                  const range = getRange(document, item);
+                  const selectionRange = getRange(document, property.keyNode);
+                  result2.push({ name: getName(property.valueNode), kind: SymbolKind.Function, range, selectionRange });
+                  limit--;
+                  if (limit <= 0) {
+                    if (context && context.onResultLimitExceeded) {
+                      context.onResultLimitExceeded(resourceString);
+                    }
+                    return result2;
+                  }
+                }
+              }
+            }
+          }
+          return result2;
+        }
+      }
+      const result = [];
+      const toVisit = [
+        { node: root, result }
+      ];
+      let nextToVisit = 0;
+      let limitExceeded = false;
+      const collectOutlineEntries = (node, result2) => {
+        if (node.type === "array") {
+          node.items.forEach((node2, index) => {
+            if (node2) {
+              if (limit > 0) {
+                limit--;
+                const range = getRange(document, node2);
+                const selectionRange = range;
+                const name = String(index);
+                const symbol = { name, kind: this.getSymbolKind(node2.type), range, selectionRange, children: [] };
+                result2.push(symbol);
+                toVisit.push({ result: symbol.children, node: node2 });
+              } else {
+                limitExceeded = true;
+              }
+            }
+          });
+        } else if (node.type === "object") {
+          node.properties.forEach((property) => {
+            const valueNode = property.valueNode;
+            if (valueNode) {
+              if (limit > 0) {
+                limit--;
+                const range = getRange(document, property);
+                const selectionRange = getRange(document, property.keyNode);
+                const children = [];
+                const symbol = { name: this.getKeyLabel(property), kind: this.getSymbolKind(valueNode.type), range, selectionRange, children, detail: this.getDetail(valueNode) };
+                result2.push(symbol);
+                toVisit.push({ result: children, node: valueNode });
+              } else {
+                limitExceeded = true;
+              }
+            }
+          });
+        }
+      };
+      while (nextToVisit < toVisit.length) {
+        const next = toVisit[nextToVisit++];
+        collectOutlineEntries(next.node, next.result);
+      }
+      if (limitExceeded && context && context.onResultLimitExceeded) {
+        context.onResultLimitExceeded(resourceString);
+      }
+      return result;
+    }
+    getSymbolKind(nodeType) {
+      switch (nodeType) {
+        case "object":
+          return SymbolKind.Module;
+        case "string":
+          return SymbolKind.String;
+        case "number":
+          return SymbolKind.Number;
+        case "array":
+          return SymbolKind.Array;
+        case "boolean":
+          return SymbolKind.Boolean;
+        default:
+          return SymbolKind.Variable;
+      }
+    }
+    getKeyLabel(property) {
+      let name = property.keyNode.value;
+      if (name) {
+        name = name.replace(/[\n]/g, "\u21B5");
+      }
+      if (name && name.trim()) {
+        return name;
+      }
+      return `"${name}"`;
+    }
+    getDetail(node) {
+      if (!node) {
+        return void 0;
+      }
+      if (node.type === "boolean" || node.type === "number" || node.type === "null" || node.type === "string") {
+        return String(node.value);
+      } else {
+        if (node.type === "array") {
+          return node.children.length ? void 0 : "[]";
+        } else if (node.type === "object") {
+          return node.children.length ? void 0 : "{}";
+        }
+      }
+      return void 0;
+    }
+    findDocumentColors(document, doc, context) {
+      return this.schemaService.getSchemaForResource(document.uri, doc).then((schema) => {
+        const result = [];
+        if (schema) {
+          let limit = context && typeof context.resultLimit === "number" ? context.resultLimit : Number.MAX_VALUE;
+          const matchingSchemas = doc.getMatchingSchemas(schema.schema);
+          const visitedNode = {};
+          for (const s of matchingSchemas) {
+            if (!s.inverted && s.schema && (s.schema.format === "color" || s.schema.format === "color-hex") && s.node && s.node.type === "string") {
+              const nodeId = String(s.node.offset);
+              if (!visitedNode[nodeId]) {
+                const color = colorFromHex(getNodeValue3(s.node));
+                if (color) {
+                  const range = getRange(document, s.node);
+                  result.push({ color, range });
+                }
+                visitedNode[nodeId] = true;
+                limit--;
+                if (limit <= 0) {
+                  if (context && context.onResultLimitExceeded) {
+                    context.onResultLimitExceeded(document.uri);
+                  }
+                  return result;
+                }
+              }
+            }
+          }
+        }
+        return result;
+      });
+    }
+    getColorPresentations(document, doc, color, range) {
+      const result = [];
+      const red256 = Math.round(color.red * 255), green256 = Math.round(color.green * 255), blue256 = Math.round(color.blue * 255);
+      function toTwoDigitHex(n) {
+        const r = n.toString(16);
+        return r.length !== 2 ? "0" + r : r;
+      }
+      let label;
+      if (color.alpha === 1) {
+        label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}`;
+      } else {
+        label = `#${toTwoDigitHex(red256)}${toTwoDigitHex(green256)}${toTwoDigitHex(blue256)}${toTwoDigitHex(Math.round(color.alpha * 255))}`;
+      }
+      result.push({ label, textEdit: TextEdit.replace(range, JSON.stringify(label)) });
+      return result;
+    }
+  };
+  function getRange(document, node) {
+    return Range.create(document.positionAt(node.offset), document.positionAt(node.offset + node.length));
+  }
+  function getName(node) {
+    return getNodeValue3(node) || t("<empty>");
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/services/configuration.js
+  var schemaContributions = {
+    schemaAssociations: [],
+    schemas: {
+      // bundle the schema-schema to include (localized) descriptions
+      "http://json-schema.org/draft-04/schema#": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "definitions": {
+          "schemaArray": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#"
+            }
+          },
+          "positiveInteger": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "positiveIntegerDefault0": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/positiveInteger"
+              },
+              {
+                "default": 0
+              }
+            ]
+          },
+          "simpleTypes": {
+            "type": "string",
+            "enum": [
+              "array",
+              "boolean",
+              "integer",
+              "null",
+              "number",
+              "object",
+              "string"
+            ]
+          },
+          "stringArray": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri"
+          },
+          "$schema": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "default": {},
+          "multipleOf": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "maximum": {
+            "type": "number"
+          },
+          "exclusiveMaximum": {
+            "type": "boolean",
+            "default": false
+          },
+          "minimum": {
+            "type": "number"
+          },
+          "exclusiveMinimum": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxLength": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/positiveInteger"
+              }
+            ]
+          },
+          "minLength": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/positiveIntegerDefault0"
+              }
+            ]
+          },
+          "pattern": {
+            "type": "string",
+            "format": "regex"
+          },
+          "additionalItems": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "$ref": "#"
+              }
+            ],
+            "default": {}
+          },
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#"
+              },
+              {
+                "$ref": "#/definitions/schemaArray"
+              }
+            ],
+            "default": {}
+          },
+          "maxItems": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/positiveInteger"
+              }
+            ]
+          },
+          "minItems": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/positiveIntegerDefault0"
+              }
+            ]
+          },
+          "uniqueItems": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxProperties": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/positiveInteger"
+              }
+            ]
+          },
+          "minProperties": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/positiveIntegerDefault0"
+              }
+            ]
+          },
+          "required": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/stringArray"
+              }
+            ]
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "$ref": "#"
+              }
+            ],
+            "default": {}
+          },
+          "definitions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#"
+            },
+            "default": {}
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#"
+            },
+            "default": {}
+          },
+          "patternProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#"
+            },
+            "default": {}
+          },
+          "dependencies": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "$ref": "#"
+                },
+                {
+                  "$ref": "#/definitions/stringArray"
+                }
+              ]
+            }
+          },
+          "enum": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/simpleTypes"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/simpleTypes"
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            ]
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "date-time",
+                  "uri",
+                  "email",
+                  "hostname",
+                  "ipv4",
+                  "ipv6",
+                  "regex"
+                ]
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "allOf": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/schemaArray"
+              }
+            ]
+          },
+          "anyOf": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/schemaArray"
+              }
+            ]
+          },
+          "oneOf": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/schemaArray"
+              }
+            ]
+          },
+          "not": {
+            "allOf": [
+              {
+                "$ref": "#"
+              }
+            ]
+          }
+        },
+        "dependencies": {
+          "exclusiveMaximum": [
+            "maximum"
+          ],
+          "exclusiveMinimum": [
+            "minimum"
+          ]
+        },
+        "default": {}
+      },
+      "http://json-schema.org/draft-07/schema#": {
+        "definitions": {
+          "schemaArray": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#" }
+          },
+          "nonNegativeInteger": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "nonNegativeIntegerDefault0": {
+            "allOf": [
+              { "$ref": "#/definitions/nonNegativeInteger" },
+              { "default": 0 }
+            ]
+          },
+          "simpleTypes": {
+            "enum": [
+              "array",
+              "boolean",
+              "integer",
+              "null",
+              "number",
+              "object",
+              "string"
+            ]
+          },
+          "stringArray": {
+            "type": "array",
+            "items": { "type": "string" },
+            "uniqueItems": true,
+            "default": []
+          }
+        },
+        "type": ["object", "boolean"],
+        "properties": {
+          "$id": {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          "$schema": {
+            "type": "string",
+            "format": "uri"
+          },
+          "$ref": {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          "$comment": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "default": true,
+          "readOnly": {
+            "type": "boolean",
+            "default": false
+          },
+          "examples": {
+            "type": "array",
+            "items": true
+          },
+          "multipleOf": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "maximum": {
+            "type": "number"
+          },
+          "exclusiveMaximum": {
+            "type": "number"
+          },
+          "minimum": {
+            "type": "number"
+          },
+          "exclusiveMinimum": {
+            "type": "number"
+          },
+          "maxLength": { "$ref": "#/definitions/nonNegativeInteger" },
+          "minLength": { "$ref": "#/definitions/nonNegativeIntegerDefault0" },
+          "pattern": {
+            "type": "string",
+            "format": "regex"
+          },
+          "additionalItems": { "$ref": "#" },
+          "items": {
+            "anyOf": [
+              { "$ref": "#" },
+              { "$ref": "#/definitions/schemaArray" }
+            ],
+            "default": true
+          },
+          "maxItems": { "$ref": "#/definitions/nonNegativeInteger" },
+          "minItems": { "$ref": "#/definitions/nonNegativeIntegerDefault0" },
+          "uniqueItems": {
+            "type": "boolean",
+            "default": false
+          },
+          "contains": { "$ref": "#" },
+          "maxProperties": { "$ref": "#/definitions/nonNegativeInteger" },
+          "minProperties": { "$ref": "#/definitions/nonNegativeIntegerDefault0" },
+          "required": { "$ref": "#/definitions/stringArray" },
+          "additionalProperties": { "$ref": "#" },
+          "definitions": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#" },
+            "default": {}
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#" },
+            "default": {}
+          },
+          "patternProperties": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#" },
+            "propertyNames": { "format": "regex" },
+            "default": {}
+          },
+          "dependencies": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                { "$ref": "#" },
+                { "$ref": "#/definitions/stringArray" }
+              ]
+            }
+          },
+          "propertyNames": { "$ref": "#" },
+          "const": true,
+          "enum": {
+            "type": "array",
+            "items": true,
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "type": {
+            "anyOf": [
+              { "$ref": "#/definitions/simpleTypes" },
+              {
+                "type": "array",
+                "items": { "$ref": "#/definitions/simpleTypes" },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            ]
+          },
+          "format": { "type": "string" },
+          "contentMediaType": { "type": "string" },
+          "contentEncoding": { "type": "string" },
+          "if": { "$ref": "#" },
+          "then": { "$ref": "#" },
+          "else": { "$ref": "#" },
+          "allOf": { "$ref": "#/definitions/schemaArray" },
+          "anyOf": { "$ref": "#/definitions/schemaArray" },
+          "oneOf": { "$ref": "#/definitions/schemaArray" },
+          "not": { "$ref": "#" }
+        },
+        "default": true
+      }
+    }
+  };
+  var descriptions = {
+    id: t("A unique identifier for the schema."),
+    $schema: t("The schema to verify this document against."),
+    title: t("A descriptive title of the element."),
+    description: t("A long description of the element. Used in hover menus and suggestions."),
+    default: t("A default value. Used by suggestions."),
+    multipleOf: t("A number that should cleanly divide the current value (i.e. have no remainder)."),
+    maximum: t("The maximum numerical value, inclusive by default."),
+    exclusiveMaximum: t("Makes the maximum property exclusive."),
+    minimum: t("The minimum numerical value, inclusive by default."),
+    exclusiveMinimum: t("Makes the minimum property exclusive."),
+    maxLength: t("The maximum length of a string."),
+    minLength: t("The minimum length of a string."),
+    pattern: t("A regular expression to match the string against. It is not implicitly anchored."),
+    additionalItems: t("For arrays, only when items is set as an array. If it is a schema, then this schema validates items after the ones specified by the items array. If it is false, then additional items will cause validation to fail."),
+    items: t("For arrays. Can either be a schema to validate every element against or an array of schemas to validate each item against in order (the first schema will validate the first element, the second schema will validate the second element, and so on."),
+    maxItems: t("The maximum number of items that can be inside an array. Inclusive."),
+    minItems: t("The minimum number of items that can be inside an array. Inclusive."),
+    uniqueItems: t("If all of the items in the array must be unique. Defaults to false."),
+    maxProperties: t("The maximum number of properties an object can have. Inclusive."),
+    minProperties: t("The minimum number of properties an object can have. Inclusive."),
+    required: t("An array of strings that lists the names of all properties required on this object."),
+    additionalProperties: t("Either a schema or a boolean. If a schema, then used to validate all properties not matched by 'properties' or 'patternProperties'. If false, then any properties not matched by either will cause this schema to fail."),
+    definitions: t("Not used for validation. Place subschemas here that you wish to reference inline with $ref."),
+    properties: t("A map of property names to schemas for each property."),
+    patternProperties: t("A map of regular expressions on property names to schemas for matching properties."),
+    dependencies: t("A map of property names to either an array of property names or a schema. An array of property names means the property named in the key depends on the properties in the array being present in the object in order to be valid. If the value is a schema, then the schema is only applied to the object if the property in the key exists on the object."),
+    enum: t("The set of literal values that are valid."),
+    type: t("Either a string of one of the basic schema types (number, integer, null, array, object, boolean, string) or an array of strings specifying a subset of those types."),
+    format: t("Describes the format expected for the value."),
+    allOf: t("An array of schemas, all of which must match."),
+    anyOf: t("An array of schemas, where at least one must match."),
+    oneOf: t("An array of schemas, exactly one of which must match."),
+    not: t("A schema which must not match."),
+    $id: t("A unique identifier for the schema."),
+    $ref: t("Reference a definition hosted on any location."),
+    $comment: t("Comments from schema authors to readers or maintainers of the schema."),
+    readOnly: t("Indicates that the value of the instance is managed exclusively by the owning authority."),
+    examples: t("Sample JSON values associated with a particular schema, for the purpose of illustrating usage."),
+    contains: t('An array instance is valid against "contains" if at least one of its elements is valid against the given schema.'),
+    propertyNames: t("If the instance is an object, this keyword validates if every property name in the instance validates against the provided schema."),
+    const: t("An instance validates successfully against this keyword if its value is equal to the value of the keyword."),
+    contentMediaType: t("Describes the media type of a string property."),
+    contentEncoding: t("Describes the content encoding of a string property."),
+    if: t('The validation outcome of the "if" subschema controls which of the "then" or "else" keywords are evaluated.'),
+    then: t('The "if" subschema is used for validation when the "if" subschema succeeds.'),
+    else: t('The "else" subschema is used for validation when the "if" subschema fails.')
+  };
+  for (const schemaName in schemaContributions.schemas) {
+    const schema = schemaContributions.schemas[schemaName];
+    for (const property in schema.properties) {
+      let propertyObject = schema.properties[property];
+      if (typeof propertyObject === "boolean") {
+        propertyObject = schema.properties[property] = {};
+      }
+      const description = descriptions[property];
+      if (description) {
+        propertyObject["description"] = description;
+      }
+    }
+  }
+
+  // node_modules/vscode-uri/lib/esm/index.mjs
+  var LIB;
+  (() => {
+    "use strict";
+    var t2 = { 470: (t3) => {
+      function e2(t4) {
+        if ("string" != typeof t4)
+          throw new TypeError("Path must be a string. Received " + JSON.stringify(t4));
+      }
+      function r2(t4, e3) {
+        for (var r3, n3 = "", i = 0, o = -1, s = 0, h = 0; h <= t4.length; ++h) {
+          if (h < t4.length)
+            r3 = t4.charCodeAt(h);
+          else {
+            if (47 === r3)
+              break;
+            r3 = 47;
+          }
+          if (47 === r3) {
+            if (o === h - 1 || 1 === s)
+              ;
+            else if (o !== h - 1 && 2 === s) {
+              if (n3.length < 2 || 2 !== i || 46 !== n3.charCodeAt(n3.length - 1) || 46 !== n3.charCodeAt(n3.length - 2)) {
+                if (n3.length > 2) {
+                  var a2 = n3.lastIndexOf("/");
+                  if (a2 !== n3.length - 1) {
+                    -1 === a2 ? (n3 = "", i = 0) : i = (n3 = n3.slice(0, a2)).length - 1 - n3.lastIndexOf("/"), o = h, s = 0;
+                    continue;
+                  }
+                } else if (2 === n3.length || 1 === n3.length) {
+                  n3 = "", i = 0, o = h, s = 0;
+                  continue;
+                }
+              }
+              e3 && (n3.length > 0 ? n3 += "/.." : n3 = "..", i = 2);
+            } else
+              n3.length > 0 ? n3 += "/" + t4.slice(o + 1, h) : n3 = t4.slice(o + 1, h), i = h - o - 1;
+            o = h, s = 0;
+          } else
+            46 === r3 && -1 !== s ? ++s : s = -1;
+        }
+        return n3;
+      }
+      var n2 = { resolve: function() {
+        for (var t4, n3 = "", i = false, o = arguments.length - 1; o >= -1 && !i; o--) {
+          var s;
+          o >= 0 ? s = arguments[o] : (void 0 === t4 && (t4 = process.cwd()), s = t4), e2(s), 0 !== s.length && (n3 = s + "/" + n3, i = 47 === s.charCodeAt(0));
+        }
+        return n3 = r2(n3, !i), i ? n3.length > 0 ? "/" + n3 : "/" : n3.length > 0 ? n3 : ".";
+      }, normalize: function(t4) {
+        if (e2(t4), 0 === t4.length)
+          return ".";
+        var n3 = 47 === t4.charCodeAt(0), i = 47 === t4.charCodeAt(t4.length - 1);
+        return 0 !== (t4 = r2(t4, !n3)).length || n3 || (t4 = "."), t4.length > 0 && i && (t4 += "/"), n3 ? "/" + t4 : t4;
+      }, isAbsolute: function(t4) {
+        return e2(t4), t4.length > 0 && 47 === t4.charCodeAt(0);
+      }, join: function() {
+        if (0 === arguments.length)
+          return ".";
+        for (var t4, r3 = 0; r3 < arguments.length; ++r3) {
+          var i = arguments[r3];
+          e2(i), i.length > 0 && (void 0 === t4 ? t4 = i : t4 += "/" + i);
+        }
+        return void 0 === t4 ? "." : n2.normalize(t4);
+      }, relative: function(t4, r3) {
+        if (e2(t4), e2(r3), t4 === r3)
+          return "";
+        if ((t4 = n2.resolve(t4)) === (r3 = n2.resolve(r3)))
+          return "";
+        for (var i = 1; i < t4.length && 47 === t4.charCodeAt(i); ++i)
+          ;
+        for (var o = t4.length, s = o - i, h = 1; h < r3.length && 47 === r3.charCodeAt(h); ++h)
+          ;
+        for (var a2 = r3.length - h, c = s < a2 ? s : a2, f2 = -1, u = 0; u <= c; ++u) {
+          if (u === c) {
+            if (a2 > c) {
+              if (47 === r3.charCodeAt(h + u))
+                return r3.slice(h + u + 1);
+              if (0 === u)
+                return r3.slice(h + u);
+            } else
+              s > c && (47 === t4.charCodeAt(i + u) ? f2 = u : 0 === u && (f2 = 0));
+            break;
+          }
+          var l = t4.charCodeAt(i + u);
+          if (l !== r3.charCodeAt(h + u))
+            break;
+          47 === l && (f2 = u);
+        }
+        var g = "";
+        for (u = i + f2 + 1; u <= o; ++u)
+          u !== o && 47 !== t4.charCodeAt(u) || (0 === g.length ? g += ".." : g += "/..");
+        return g.length > 0 ? g + r3.slice(h + f2) : (h += f2, 47 === r3.charCodeAt(h) && ++h, r3.slice(h));
+      }, _makeLong: function(t4) {
+        return t4;
+      }, dirname: function(t4) {
+        if (e2(t4), 0 === t4.length)
+          return ".";
+        for (var r3 = t4.charCodeAt(0), n3 = 47 === r3, i = -1, o = true, s = t4.length - 1; s >= 1; --s)
+          if (47 === (r3 = t4.charCodeAt(s))) {
+            if (!o) {
+              i = s;
+              break;
+            }
+          } else
+            o = false;
+        return -1 === i ? n3 ? "/" : "." : n3 && 1 === i ? "//" : t4.slice(0, i);
+      }, basename: function(t4, r3) {
+        if (void 0 !== r3 && "string" != typeof r3)
+          throw new TypeError('"ext" argument must be a string');
+        e2(t4);
+        var n3, i = 0, o = -1, s = true;
+        if (void 0 !== r3 && r3.length > 0 && r3.length <= t4.length) {
+          if (r3.length === t4.length && r3 === t4)
+            return "";
+          var h = r3.length - 1, a2 = -1;
+          for (n3 = t4.length - 1; n3 >= 0; --n3) {
+            var c = t4.charCodeAt(n3);
+            if (47 === c) {
+              if (!s) {
+                i = n3 + 1;
+                break;
+              }
+            } else
+              -1 === a2 && (s = false, a2 = n3 + 1), h >= 0 && (c === r3.charCodeAt(h) ? -1 == --h && (o = n3) : (h = -1, o = a2));
+          }
+          return i === o ? o = a2 : -1 === o && (o = t4.length), t4.slice(i, o);
+        }
+        for (n3 = t4.length - 1; n3 >= 0; --n3)
+          if (47 === t4.charCodeAt(n3)) {
+            if (!s) {
+              i = n3 + 1;
+              break;
+            }
+          } else
+            -1 === o && (s = false, o = n3 + 1);
+        return -1 === o ? "" : t4.slice(i, o);
+      }, extname: function(t4) {
+        e2(t4);
+        for (var r3 = -1, n3 = 0, i = -1, o = true, s = 0, h = t4.length - 1; h >= 0; --h) {
+          var a2 = t4.charCodeAt(h);
+          if (47 !== a2)
+            -1 === i && (o = false, i = h + 1), 46 === a2 ? -1 === r3 ? r3 = h : 1 !== s && (s = 1) : -1 !== r3 && (s = -1);
+          else if (!o) {
+            n3 = h + 1;
+            break;
+          }
+        }
+        return -1 === r3 || -1 === i || 0 === s || 1 === s && r3 === i - 1 && r3 === n3 + 1 ? "" : t4.slice(r3, i);
+      }, format: function(t4) {
+        if (null === t4 || "object" != typeof t4)
+          throw new TypeError('The "pathObject" argument must be of type Object. Received type ' + typeof t4);
+        return function(t5, e3) {
+          var r3 = e3.dir || e3.root, n3 = e3.base || (e3.name || "") + (e3.ext || "");
+          return r3 ? r3 === e3.root ? r3 + n3 : r3 + "/" + n3 : n3;
+        }(0, t4);
+      }, parse: function(t4) {
+        e2(t4);
+        var r3 = { root: "", dir: "", base: "", ext: "", name: "" };
+        if (0 === t4.length)
+          return r3;
+        var n3, i = t4.charCodeAt(0), o = 47 === i;
+        o ? (r3.root = "/", n3 = 1) : n3 = 0;
+        for (var s = -1, h = 0, a2 = -1, c = true, f2 = t4.length - 1, u = 0; f2 >= n3; --f2)
+          if (47 !== (i = t4.charCodeAt(f2)))
+            -1 === a2 && (c = false, a2 = f2 + 1), 46 === i ? -1 === s ? s = f2 : 1 !== u && (u = 1) : -1 !== s && (u = -1);
+          else if (!c) {
+            h = f2 + 1;
+            break;
+          }
+        return -1 === s || -1 === a2 || 0 === u || 1 === u && s === a2 - 1 && s === h + 1 ? -1 !== a2 && (r3.base = r3.name = 0 === h && o ? t4.slice(1, a2) : t4.slice(h, a2)) : (0 === h && o ? (r3.name = t4.slice(1, s), r3.base = t4.slice(1, a2)) : (r3.name = t4.slice(h, s), r3.base = t4.slice(h, a2)), r3.ext = t4.slice(s, a2)), h > 0 ? r3.dir = t4.slice(0, h - 1) : o && (r3.dir = "/"), r3;
+      }, sep: "/", delimiter: ":", win32: null, posix: null };
+      n2.posix = n2, t3.exports = n2;
+    } }, e = {};
+    function r(n2) {
+      var i = e[n2];
+      if (void 0 !== i)
+        return i.exports;
+      var o = e[n2] = { exports: {} };
+      return t2[n2](o, o.exports, r), o.exports;
+    }
+    r.d = (t3, e2) => {
+      for (var n2 in e2)
+        r.o(e2, n2) && !r.o(t3, n2) && Object.defineProperty(t3, n2, { enumerable: true, get: e2[n2] });
+    }, r.o = (t3, e2) => Object.prototype.hasOwnProperty.call(t3, e2), r.r = (t3) => {
+      "undefined" != typeof Symbol && Symbol.toStringTag && Object.defineProperty(t3, Symbol.toStringTag, { value: "Module" }), Object.defineProperty(t3, "__esModule", { value: true });
+    };
+    var n = {};
+    (() => {
+      let t3;
+      if (r.r(n), r.d(n, { URI: () => f2, Utils: () => P }), "object" == typeof process)
+        t3 = "win32" === process.platform;
+      else if ("object" == typeof navigator) {
+        let e3 = navigator.userAgent;
+        t3 = e3.indexOf("Windows") >= 0;
+      }
+      const e2 = /^\w[\w\d+.-]*$/, i = /^\//, o = /^\/\//;
+      function s(t4, r2) {
+        if (!t4.scheme && r2)
+          throw new Error(`[UriError]: Scheme is missing: {scheme: "", authority: "${t4.authority}", path: "${t4.path}", query: "${t4.query}", fragment: "${t4.fragment}"}`);
+        if (t4.scheme && !e2.test(t4.scheme))
+          throw new Error("[UriError]: Scheme contains illegal characters.");
+        if (t4.path) {
+          if (t4.authority) {
+            if (!i.test(t4.path))
+              throw new Error('[UriError]: If a URI contains an authority component, then the path component must either be empty or begin with a slash ("/") character');
+          } else if (o.test(t4.path))
+            throw new Error('[UriError]: If a URI does not contain an authority component, then the path cannot begin with two slash characters ("//")');
+        }
+      }
+      const h = "", a2 = "/", c = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
+      class f2 {
+        static isUri(t4) {
+          return t4 instanceof f2 || !!t4 && "string" == typeof t4.authority && "string" == typeof t4.fragment && "string" == typeof t4.path && "string" == typeof t4.query && "string" == typeof t4.scheme && "string" == typeof t4.fsPath && "function" == typeof t4.with && "function" == typeof t4.toString;
+        }
+        scheme;
+        authority;
+        path;
+        query;
+        fragment;
+        constructor(t4, e3, r2, n2, i2, o2 = false) {
+          "object" == typeof t4 ? (this.scheme = t4.scheme || h, this.authority = t4.authority || h, this.path = t4.path || h, this.query = t4.query || h, this.fragment = t4.fragment || h) : (this.scheme = /* @__PURE__ */ function(t5, e4) {
+            return t5 || e4 ? t5 : "file";
+          }(t4, o2), this.authority = e3 || h, this.path = function(t5, e4) {
+            switch (t5) {
+              case "https":
+              case "http":
+              case "file":
+                e4 ? e4[0] !== a2 && (e4 = a2 + e4) : e4 = a2;
+            }
+            return e4;
+          }(this.scheme, r2 || h), this.query = n2 || h, this.fragment = i2 || h, s(this, o2));
+        }
+        get fsPath() {
+          return m(this, false);
+        }
+        with(t4) {
+          if (!t4)
+            return this;
+          let { scheme: e3, authority: r2, path: n2, query: i2, fragment: o2 } = t4;
+          return void 0 === e3 ? e3 = this.scheme : null === e3 && (e3 = h), void 0 === r2 ? r2 = this.authority : null === r2 && (r2 = h), void 0 === n2 ? n2 = this.path : null === n2 && (n2 = h), void 0 === i2 ? i2 = this.query : null === i2 && (i2 = h), void 0 === o2 ? o2 = this.fragment : null === o2 && (o2 = h), e3 === this.scheme && r2 === this.authority && n2 === this.path && i2 === this.query && o2 === this.fragment ? this : new l(e3, r2, n2, i2, o2);
+        }
+        static parse(t4, e3 = false) {
+          const r2 = c.exec(t4);
+          return r2 ? new l(r2[2] || h, C(r2[4] || h), C(r2[5] || h), C(r2[7] || h), C(r2[9] || h), e3) : new l(h, h, h, h, h);
+        }
+        static file(e3) {
+          let r2 = h;
+          if (t3 && (e3 = e3.replace(/\\/g, a2)), e3[0] === a2 && e3[1] === a2) {
+            const t4 = e3.indexOf(a2, 2);
+            -1 === t4 ? (r2 = e3.substring(2), e3 = a2) : (r2 = e3.substring(2, t4), e3 = e3.substring(t4) || a2);
+          }
+          return new l("file", r2, e3, h, h);
+        }
+        static from(t4) {
+          const e3 = new l(t4.scheme, t4.authority, t4.path, t4.query, t4.fragment);
+          return s(e3, true), e3;
+        }
+        toString(t4 = false) {
+          return y(this, t4);
+        }
+        toJSON() {
+          return this;
+        }
+        static revive(t4) {
+          if (t4) {
+            if (t4 instanceof f2)
+              return t4;
+            {
+              const e3 = new l(t4);
+              return e3._formatted = t4.external, e3._fsPath = t4._sep === u ? t4.fsPath : null, e3;
+            }
+          }
+          return t4;
+        }
+      }
+      const u = t3 ? 1 : void 0;
+      class l extends f2 {
+        _formatted = null;
+        _fsPath = null;
+        get fsPath() {
+          return this._fsPath || (this._fsPath = m(this, false)), this._fsPath;
+        }
+        toString(t4 = false) {
+          return t4 ? y(this, true) : (this._formatted || (this._formatted = y(this, false)), this._formatted);
+        }
+        toJSON() {
+          const t4 = { $mid: 1 };
+          return this._fsPath && (t4.fsPath = this._fsPath, t4._sep = u), this._formatted && (t4.external = this._formatted), this.path && (t4.path = this.path), this.scheme && (t4.scheme = this.scheme), this.authority && (t4.authority = this.authority), this.query && (t4.query = this.query), this.fragment && (t4.fragment = this.fragment), t4;
+        }
+      }
+      const g = { 58: "%3A", 47: "%2F", 63: "%3F", 35: "%23", 91: "%5B", 93: "%5D", 64: "%40", 33: "%21", 36: "%24", 38: "%26", 39: "%27", 40: "%28", 41: "%29", 42: "%2A", 43: "%2B", 44: "%2C", 59: "%3B", 61: "%3D", 32: "%20" };
+      function d(t4, e3, r2) {
+        let n2, i2 = -1;
+        for (let o2 = 0; o2 < t4.length; o2++) {
+          const s2 = t4.charCodeAt(o2);
+          if (s2 >= 97 && s2 <= 122 || s2 >= 65 && s2 <= 90 || s2 >= 48 && s2 <= 57 || 45 === s2 || 46 === s2 || 95 === s2 || 126 === s2 || e3 && 47 === s2 || r2 && 91 === s2 || r2 && 93 === s2 || r2 && 58 === s2)
+            -1 !== i2 && (n2 += encodeURIComponent(t4.substring(i2, o2)), i2 = -1), void 0 !== n2 && (n2 += t4.charAt(o2));
+          else {
+            void 0 === n2 && (n2 = t4.substr(0, o2));
+            const e4 = g[s2];
+            void 0 !== e4 ? (-1 !== i2 && (n2 += encodeURIComponent(t4.substring(i2, o2)), i2 = -1), n2 += e4) : -1 === i2 && (i2 = o2);
+          }
+        }
+        return -1 !== i2 && (n2 += encodeURIComponent(t4.substring(i2))), void 0 !== n2 ? n2 : t4;
+      }
+      function p(t4) {
+        let e3;
+        for (let r2 = 0; r2 < t4.length; r2++) {
+          const n2 = t4.charCodeAt(r2);
+          35 === n2 || 63 === n2 ? (void 0 === e3 && (e3 = t4.substr(0, r2)), e3 += g[n2]) : void 0 !== e3 && (e3 += t4[r2]);
+        }
+        return void 0 !== e3 ? e3 : t4;
+      }
+      function m(e3, r2) {
+        let n2;
+        return n2 = e3.authority && e3.path.length > 1 && "file" === e3.scheme ? `//${e3.authority}${e3.path}` : 47 === e3.path.charCodeAt(0) && (e3.path.charCodeAt(1) >= 65 && e3.path.charCodeAt(1) <= 90 || e3.path.charCodeAt(1) >= 97 && e3.path.charCodeAt(1) <= 122) && 58 === e3.path.charCodeAt(2) ? r2 ? e3.path.substr(1) : e3.path[1].toLowerCase() + e3.path.substr(2) : e3.path, t3 && (n2 = n2.replace(/\//g, "\\")), n2;
+      }
+      function y(t4, e3) {
+        const r2 = e3 ? p : d;
+        let n2 = "", { scheme: i2, authority: o2, path: s2, query: h2, fragment: c2 } = t4;
+        if (i2 && (n2 += i2, n2 += ":"), (o2 || "file" === i2) && (n2 += a2, n2 += a2), o2) {
+          let t5 = o2.indexOf("@");
+          if (-1 !== t5) {
+            const e4 = o2.substr(0, t5);
+            o2 = o2.substr(t5 + 1), t5 = e4.lastIndexOf(":"), -1 === t5 ? n2 += r2(e4, false, false) : (n2 += r2(e4.substr(0, t5), false, false), n2 += ":", n2 += r2(e4.substr(t5 + 1), false, true)), n2 += "@";
+          }
+          o2 = o2.toLowerCase(), t5 = o2.lastIndexOf(":"), -1 === t5 ? n2 += r2(o2, false, true) : (n2 += r2(o2.substr(0, t5), false, true), n2 += o2.substr(t5));
+        }
+        if (s2) {
+          if (s2.length >= 3 && 47 === s2.charCodeAt(0) && 58 === s2.charCodeAt(2)) {
+            const t5 = s2.charCodeAt(1);
+            t5 >= 65 && t5 <= 90 && (s2 = `/${String.fromCharCode(t5 + 32)}:${s2.substr(3)}`);
+          } else if (s2.length >= 2 && 58 === s2.charCodeAt(1)) {
+            const t5 = s2.charCodeAt(0);
+            t5 >= 65 && t5 <= 90 && (s2 = `${String.fromCharCode(t5 + 32)}:${s2.substr(2)}`);
+          }
+          n2 += r2(s2, true, false);
+        }
+        return h2 && (n2 += "?", n2 += r2(h2, false, false)), c2 && (n2 += "#", n2 += e3 ? c2 : d(c2, false, false)), n2;
+      }
+      function v(t4) {
+        try {
+          return decodeURIComponent(t4);
+        } catch {
+          return t4.length > 3 ? t4.substr(0, 3) + v(t4.substr(3)) : t4;
+        }
+      }
+      const b = /(%[0-9A-Za-z][0-9A-Za-z])+/g;
+      function C(t4) {
+        return t4.match(b) ? t4.replace(b, (t5) => v(t5)) : t4;
+      }
+      var A2 = r(470);
+      const w = A2.posix || A2, x = "/";
+      var P;
+      !function(t4) {
+        t4.joinPath = function(t5, ...e3) {
+          return t5.with({ path: w.join(t5.path, ...e3) });
+        }, t4.resolvePath = function(t5, ...e3) {
+          let r2 = t5.path, n2 = false;
+          r2[0] !== x && (r2 = x + r2, n2 = true);
+          let i2 = w.resolve(r2, ...e3);
+          return n2 && i2[0] === x && !t5.authority && (i2 = i2.substring(1)), t5.with({ path: i2 });
+        }, t4.dirname = function(t5) {
+          if (0 === t5.path.length || t5.path === x)
+            return t5;
+          let e3 = w.dirname(t5.path);
+          return 1 === e3.length && 46 === e3.charCodeAt(0) && (e3 = ""), t5.with({ path: e3 });
+        }, t4.basename = function(t5) {
+          return w.basename(t5.path);
+        }, t4.extname = function(t5) {
+          return w.extname(t5.path);
+        };
+      }(P || (P = {}));
+    })(), LIB = n;
+  })();
+  var { URI: URI2, Utils } = LIB;
+
+  // node_modules/vscode-json-languageservice/lib/esm/utils/glob.js
+  function createRegex(glob, opts) {
+    if (typeof glob !== "string") {
+      throw new TypeError("Expected a string");
+    }
+    const str = String(glob);
+    let reStr = "";
+    const extended = opts ? !!opts.extended : false;
+    const globstar = opts ? !!opts.globstar : false;
+    let inGroup = false;
+    const flags = opts && typeof opts.flags === "string" ? opts.flags : "";
+    let c;
+    for (let i = 0, len = str.length; i < len; i++) {
+      c = str[i];
+      switch (c) {
+        case "/":
+        case "$":
+        case "^":
+        case "+":
+        case ".":
+        case "(":
+        case ")":
+        case "=":
+        case "!":
+        case "|":
+          reStr += "\\" + c;
+          break;
+        case "?":
+          if (extended) {
+            reStr += ".";
+            break;
+          }
+        case "[":
+        case "]":
+          if (extended) {
+            reStr += c;
+            break;
+          }
+        case "{":
+          if (extended) {
+            inGroup = true;
+            reStr += "(";
+            break;
+          }
+        case "}":
+          if (extended) {
+            inGroup = false;
+            reStr += ")";
+            break;
+          }
+        case ",":
+          if (inGroup) {
+            reStr += "|";
+            break;
+          }
+          reStr += "\\" + c;
+          break;
+        case "*":
+          const prevChar = str[i - 1];
+          let starCount = 1;
+          while (str[i + 1] === "*") {
+            starCount++;
+            i++;
+          }
+          const nextChar = str[i + 1];
+          if (!globstar) {
+            reStr += ".*";
+          } else {
+            const isGlobstar = starCount > 1 && (prevChar === "/" || prevChar === void 0 || prevChar === "{" || prevChar === ",") && (nextChar === "/" || nextChar === void 0 || nextChar === "," || nextChar === "}");
+            if (isGlobstar) {
+              if (nextChar === "/") {
+                i++;
+              } else if (prevChar === "/" && reStr.endsWith("\\/")) {
+                reStr = reStr.substr(0, reStr.length - 2);
+              }
+              reStr += "((?:[^/]*(?:/|$))*)";
+            } else {
+              reStr += "([^/]*)";
+            }
+          }
+          break;
+        default:
+          reStr += c;
+      }
+    }
+    if (!flags || !~flags.indexOf("g")) {
+      reStr = "^" + reStr + "$";
+    }
+    return new RegExp(reStr, flags);
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/services/jsonSchemaService.js
+  var BANG = "!";
+  var PATH_SEP = "/";
+  var FilePatternAssociation = class {
+    constructor(pattern, folderUri, uris) {
+      this.folderUri = folderUri;
+      this.uris = uris;
+      this.globWrappers = [];
+      try {
+        for (let patternString of pattern) {
+          const include = patternString[0] !== BANG;
+          if (!include) {
+            patternString = patternString.substring(1);
+          }
+          if (patternString.length > 0) {
+            if (patternString[0] === PATH_SEP) {
+              patternString = patternString.substring(1);
+            }
+            this.globWrappers.push({
+              regexp: createRegex("**/" + patternString, { extended: true, globstar: true }),
+              include
+            });
+          }
+        }
+        ;
+        if (folderUri) {
+          folderUri = normalizeResourceForMatching(folderUri);
+          if (!folderUri.endsWith("/")) {
+            folderUri = folderUri + "/";
+          }
+          this.folderUri = folderUri;
+        }
+      } catch (e) {
+        this.globWrappers.length = 0;
+        this.uris = [];
+      }
+    }
+    matchesPattern(fileName) {
+      if (this.folderUri && !fileName.startsWith(this.folderUri)) {
+        return false;
+      }
+      let match = false;
+      for (const { regexp, include } of this.globWrappers) {
+        if (regexp.test(fileName)) {
+          match = include;
+        }
+      }
+      return match;
+    }
+    getURIs() {
+      return this.uris;
+    }
+  };
+  var SchemaHandle = class {
+    constructor(service, uri, unresolvedSchemaContent) {
+      this.service = service;
+      this.uri = uri;
+      this.dependencies = /* @__PURE__ */ new Set();
+      this.anchors = void 0;
+      if (unresolvedSchemaContent) {
+        this.unresolvedSchema = this.service.promise.resolve(new UnresolvedSchema(unresolvedSchemaContent));
+      }
+    }
+    getUnresolvedSchema() {
+      if (!this.unresolvedSchema) {
+        this.unresolvedSchema = this.service.loadSchema(this.uri);
+      }
+      return this.unresolvedSchema;
+    }
+    getResolvedSchema() {
+      if (!this.resolvedSchema) {
+        this.resolvedSchema = this.getUnresolvedSchema().then((unresolved) => {
+          return this.service.resolveSchemaContent(unresolved, this);
+        });
+      }
+      return this.resolvedSchema;
+    }
+    clearSchema() {
+      const hasChanges = !!this.unresolvedSchema;
+      this.resolvedSchema = void 0;
+      this.unresolvedSchema = void 0;
+      this.dependencies.clear();
+      this.anchors = void 0;
+      return hasChanges;
+    }
+  };
+  var UnresolvedSchema = class {
+    constructor(schema, errors = []) {
+      this.schema = schema;
+      this.errors = errors;
+    }
+  };
+  var ResolvedSchema = class {
+    constructor(schema, errors = [], warnings = [], schemaDraft) {
+      this.schema = schema;
+      this.errors = errors;
+      this.warnings = warnings;
+      this.schemaDraft = schemaDraft;
+    }
+    getSection(path) {
+      const schemaRef = this.getSectionRecursive(path, this.schema);
+      if (schemaRef) {
+        return asSchema(schemaRef);
+      }
+      return void 0;
+    }
+    getSectionRecursive(path, schema) {
+      if (!schema || typeof schema === "boolean" || path.length === 0) {
+        return schema;
+      }
+      const next = path.shift();
+      if (schema.properties && typeof schema.properties[next]) {
+        return this.getSectionRecursive(path, schema.properties[next]);
+      } else if (schema.patternProperties) {
+        for (const pattern of Object.keys(schema.patternProperties)) {
+          const regex = extendedRegExp(pattern);
+          if (regex?.test(next)) {
+            return this.getSectionRecursive(path, schema.patternProperties[pattern]);
+          }
+        }
+      } else if (typeof schema.additionalProperties === "object") {
+        return this.getSectionRecursive(path, schema.additionalProperties);
+      } else if (next.match("[0-9]+")) {
+        if (Array.isArray(schema.items)) {
+          const index = parseInt(next, 10);
+          if (!isNaN(index) && schema.items[index]) {
+            return this.getSectionRecursive(path, schema.items[index]);
+          }
+        } else if (schema.items) {
+          return this.getSectionRecursive(path, schema.items);
+        }
+      }
+      return void 0;
+    }
+  };
+  var JSONSchemaService = class {
+    constructor(requestService, contextService, promiseConstructor) {
+      this.contextService = contextService;
+      this.requestService = requestService;
+      this.promiseConstructor = promiseConstructor || Promise;
+      this.callOnDispose = [];
+      this.contributionSchemas = {};
+      this.contributionAssociations = [];
+      this.schemasById = {};
+      this.filePatternAssociations = [];
+      this.registeredSchemasIds = {};
+    }
+    getRegisteredSchemaIds(filter) {
+      return Object.keys(this.registeredSchemasIds).filter((id) => {
+        const scheme = URI2.parse(id).scheme;
+        return scheme !== "schemaservice" && (!filter || filter(scheme));
+      });
+    }
+    get promise() {
+      return this.promiseConstructor;
+    }
+    dispose() {
+      while (this.callOnDispose.length > 0) {
+        this.callOnDispose.pop()();
+      }
+    }
+    onResourceChange(uri) {
+      this.cachedSchemaForResource = void 0;
+      let hasChanges = false;
+      uri = normalizeId(uri);
+      const toWalk = [uri];
+      const all = Object.keys(this.schemasById).map((key) => this.schemasById[key]);
+      while (toWalk.length) {
+        const curr = toWalk.pop();
+        for (let i = 0; i < all.length; i++) {
+          const handle = all[i];
+          if (handle && (handle.uri === curr || handle.dependencies.has(curr))) {
+            if (handle.uri !== curr) {
+              toWalk.push(handle.uri);
+            }
+            if (handle.clearSchema()) {
+              hasChanges = true;
+            }
+            all[i] = void 0;
+          }
+        }
+      }
+      return hasChanges;
+    }
+    setSchemaContributions(schemaContributions2) {
+      if (schemaContributions2.schemas) {
+        const schemas = schemaContributions2.schemas;
+        for (const id in schemas) {
+          const normalizedId = normalizeId(id);
+          this.contributionSchemas[normalizedId] = this.addSchemaHandle(normalizedId, schemas[id]);
+        }
+      }
+      if (Array.isArray(schemaContributions2.schemaAssociations)) {
+        const schemaAssociations = schemaContributions2.schemaAssociations;
+        for (let schemaAssociation of schemaAssociations) {
+          const uris = schemaAssociation.uris.map(normalizeId);
+          const association = this.addFilePatternAssociation(schemaAssociation.pattern, schemaAssociation.folderUri, uris);
+          this.contributionAssociations.push(association);
+        }
+      }
+    }
+    addSchemaHandle(id, unresolvedSchemaContent) {
+      const schemaHandle = new SchemaHandle(this, id, unresolvedSchemaContent);
+      this.schemasById[id] = schemaHandle;
+      return schemaHandle;
+    }
+    getOrAddSchemaHandle(id, unresolvedSchemaContent) {
+      return this.schemasById[id] || this.addSchemaHandle(id, unresolvedSchemaContent);
+    }
+    addFilePatternAssociation(pattern, folderUri, uris) {
+      const fpa = new FilePatternAssociation(pattern, folderUri, uris);
+      this.filePatternAssociations.push(fpa);
+      return fpa;
+    }
+    registerExternalSchema(config) {
+      const id = normalizeId(config.uri);
+      this.registeredSchemasIds[id] = true;
+      this.cachedSchemaForResource = void 0;
+      if (config.fileMatch && config.fileMatch.length) {
+        this.addFilePatternAssociation(config.fileMatch, config.folderUri, [id]);
+      }
+      return config.schema ? this.addSchemaHandle(id, config.schema) : this.getOrAddSchemaHandle(id);
+    }
+    clearExternalSchemas() {
+      this.schemasById = {};
+      this.filePatternAssociations = [];
+      this.registeredSchemasIds = {};
+      this.cachedSchemaForResource = void 0;
+      for (const id in this.contributionSchemas) {
+        this.schemasById[id] = this.contributionSchemas[id];
+        this.registeredSchemasIds[id] = true;
+      }
+      for (const contributionAssociation of this.contributionAssociations) {
+        this.filePatternAssociations.push(contributionAssociation);
+      }
+    }
+    getResolvedSchema(schemaId) {
+      const id = normalizeId(schemaId);
+      const schemaHandle = this.schemasById[id];
+      if (schemaHandle) {
+        return schemaHandle.getResolvedSchema();
+      }
+      return this.promise.resolve(void 0);
+    }
+    loadSchema(url) {
+      if (!this.requestService) {
+        const errorMessage = t("Unable to load schema from '{0}'. No schema request service available", toDisplayString(url));
+        return this.promise.resolve(new UnresolvedSchema({}, [errorMessage]));
+      }
+      if (url.startsWith("http://json-schema.org/")) {
+        url = "https" + url.substring(4);
+      }
+      return this.requestService(url).then((content) => {
+        if (!content) {
+          const errorMessage = t("Unable to load schema from '{0}': No content.", toDisplayString(url));
+          return new UnresolvedSchema({}, [errorMessage]);
+        }
+        const errors = [];
+        if (content.charCodeAt(0) === 65279) {
+          errors.push(t("Problem reading content from '{0}': UTF-8 with BOM detected, only UTF 8 is allowed.", toDisplayString(url)));
+          content = content.trimStart();
+        }
+        let schemaContent = {};
+        const jsonErrors = [];
+        schemaContent = parse2(content, jsonErrors);
+        if (jsonErrors.length) {
+          errors.push(t("Unable to parse content from '{0}': Parse error at offset {1}.", toDisplayString(url), jsonErrors[0].offset));
+        }
+        return new UnresolvedSchema(schemaContent, errors);
+      }, (error) => {
+        let errorMessage = error.toString();
+        const errorSplit = error.toString().split("Error: ");
+        if (errorSplit.length > 1) {
+          errorMessage = errorSplit[1];
+        }
+        if (endsWith(errorMessage, ".")) {
+          errorMessage = errorMessage.substr(0, errorMessage.length - 1);
+        }
+        return new UnresolvedSchema({}, [t("Unable to load schema from '{0}': {1}.", toDisplayString(url), errorMessage)]);
+      });
+    }
+    resolveSchemaContent(schemaToResolve, handle) {
+      const resolveErrors = schemaToResolve.errors.slice(0);
+      const schema = schemaToResolve.schema;
+      let schemaDraft = schema.$schema ? normalizeId(schema.$schema) : void 0;
+      if (schemaDraft === "http://json-schema.org/draft-03/schema") {
+        return this.promise.resolve(new ResolvedSchema({}, [t("Draft-03 schemas are not supported.")], [], schemaDraft));
+      }
+      let usesUnsupportedFeatures = /* @__PURE__ */ new Set();
+      const contextService = this.contextService;
+      const findSectionByJSONPointer = (schema2, path) => {
+        path = decodeURIComponent(path);
+        let current = schema2;
+        if (path[0] === "/") {
+          path = path.substring(1);
+        }
+        path.split("/").some((part) => {
+          part = part.replace(/~1/g, "/").replace(/~0/g, "~");
+          current = current[part];
+          return !current;
+        });
+        return current;
+      };
+      const findSchemaById = (schema2, handle2, id) => {
+        if (!handle2.anchors) {
+          handle2.anchors = collectAnchors(schema2);
+        }
+        return handle2.anchors.get(id);
+      };
+      const merge = (target, section) => {
+        for (const key in section) {
+          if (section.hasOwnProperty(key) && key !== "id" && key !== "$id") {
+            target[key] = section[key];
+          }
+        }
+      };
+      const mergeRef = (target, sourceRoot, sourceHandle, refSegment) => {
+        let section;
+        if (refSegment === void 0 || refSegment.length === 0) {
+          section = sourceRoot;
+        } else if (refSegment.charAt(0) === "/") {
+          section = findSectionByJSONPointer(sourceRoot, refSegment);
+        } else {
+          section = findSchemaById(sourceRoot, sourceHandle, refSegment);
+        }
+        if (section) {
+          merge(target, section);
+        } else {
+          resolveErrors.push(t("$ref '{0}' in '{1}' can not be resolved.", refSegment || "", sourceHandle.uri));
+        }
+      };
+      const resolveExternalLink = (node, uri, refSegment, parentHandle) => {
+        if (contextService && !/^[A-Za-z][A-Za-z0-9+\-.+]*:\/\/.*/.test(uri)) {
+          uri = contextService.resolveRelativePath(uri, parentHandle.uri);
+        }
+        uri = normalizeId(uri);
+        const referencedHandle = this.getOrAddSchemaHandle(uri);
+        return referencedHandle.getUnresolvedSchema().then((unresolvedSchema) => {
+          parentHandle.dependencies.add(uri);
+          if (unresolvedSchema.errors.length) {
+            const loc = refSegment ? uri + "#" + refSegment : uri;
+            resolveErrors.push(t("Problems loading reference '{0}': {1}", loc, unresolvedSchema.errors[0]));
+          }
+          mergeRef(node, unresolvedSchema.schema, referencedHandle, refSegment);
+          return resolveRefs(node, unresolvedSchema.schema, referencedHandle);
+        });
+      };
+      const resolveRefs = (node, parentSchema, parentHandle) => {
+        const openPromises = [];
+        this.traverseNodes(node, (next) => {
+          const seenRefs = /* @__PURE__ */ new Set();
+          while (next.$ref) {
+            const ref = next.$ref;
+            const segments = ref.split("#", 2);
+            delete next.$ref;
+            if (segments[0].length > 0) {
+              openPromises.push(resolveExternalLink(next, segments[0], segments[1], parentHandle));
+              return;
+            } else {
+              if (!seenRefs.has(ref)) {
+                const id = segments[1];
+                mergeRef(next, parentSchema, parentHandle, id);
+                seenRefs.add(ref);
+              }
+            }
+          }
+          if (next.$recursiveRef) {
+            usesUnsupportedFeatures.add("$recursiveRef");
+          }
+          if (next.$dynamicRef) {
+            usesUnsupportedFeatures.add("$dynamicRef");
+          }
+        });
+        return this.promise.all(openPromises);
+      };
+      const collectAnchors = (root) => {
+        const result = /* @__PURE__ */ new Map();
+        this.traverseNodes(root, (next) => {
+          const id = next.$id || next.id;
+          const anchor = isString(id) && id.charAt(0) === "#" ? id.substring(1) : next.$anchor;
+          if (anchor) {
+            if (result.has(anchor)) {
+              resolveErrors.push(t("Duplicate anchor declaration: '{0}'", anchor));
+            } else {
+              result.set(anchor, next);
+            }
+          }
+          if (next.$recursiveAnchor) {
+            usesUnsupportedFeatures.add("$recursiveAnchor");
+          }
+          if (next.$dynamicAnchor) {
+            usesUnsupportedFeatures.add("$dynamicAnchor");
+          }
+        });
+        return result;
+      };
+      return resolveRefs(schema, schema, handle).then((_) => {
+        let resolveWarnings = [];
+        if (usesUnsupportedFeatures.size) {
+          resolveWarnings.push(t("The schema uses meta-schema features ({0}) that are not yet supported by the validator.", Array.from(usesUnsupportedFeatures.keys()).join(", ")));
+        }
+        return new ResolvedSchema(schema, resolveErrors, resolveWarnings, schemaDraft);
+      });
+    }
+    traverseNodes(root, handle) {
+      if (!root || typeof root !== "object") {
+        return Promise.resolve(null);
+      }
+      const seen = /* @__PURE__ */ new Set();
+      const collectEntries = (...entries) => {
+        for (const entry of entries) {
+          if (isObject(entry)) {
+            toWalk.push(entry);
+          }
+        }
+      };
+      const collectMapEntries = (...maps) => {
+        for (const map of maps) {
+          if (isObject(map)) {
+            for (const k in map) {
+              const key = k;
+              const entry = map[key];
+              if (isObject(entry)) {
+                toWalk.push(entry);
+              }
+            }
+          }
+        }
+      };
+      const collectArrayEntries = (...arrays) => {
+        for (const array of arrays) {
+          if (Array.isArray(array)) {
+            for (const entry of array) {
+              if (isObject(entry)) {
+                toWalk.push(entry);
+              }
+            }
+          }
+        }
+      };
+      const collectEntryOrArrayEntries = (items) => {
+        if (Array.isArray(items)) {
+          for (const entry of items) {
+            if (isObject(entry)) {
+              toWalk.push(entry);
+            }
+          }
+        } else if (isObject(items)) {
+          toWalk.push(items);
+        }
+      };
+      const toWalk = [root];
+      let next = toWalk.pop();
+      while (next) {
+        if (!seen.has(next)) {
+          seen.add(next);
+          handle(next);
+          collectEntries(next.additionalItems, next.additionalProperties, next.not, next.contains, next.propertyNames, next.if, next.then, next.else, next.unevaluatedItems, next.unevaluatedProperties);
+          collectMapEntries(next.definitions, next.$defs, next.properties, next.patternProperties, next.dependencies, next.dependentSchemas);
+          collectArrayEntries(next.anyOf, next.allOf, next.oneOf, next.prefixItems);
+          collectEntryOrArrayEntries(next.items);
+        }
+        next = toWalk.pop();
+      }
+    }
+    getSchemaFromProperty(resource, document) {
+      if (document.root?.type === "object") {
+        for (const p of document.root.properties) {
+          if (p.keyNode.value === "$schema" && p.valueNode?.type === "string") {
+            let schemaId = p.valueNode.value;
+            if (this.contextService && !/^\w[\w\d+.-]*:/.test(schemaId)) {
+              schemaId = this.contextService.resolveRelativePath(schemaId, resource);
+            }
+            return schemaId;
+          }
+        }
+      }
+      return void 0;
+    }
+    getAssociatedSchemas(resource) {
+      const seen = /* @__PURE__ */ Object.create(null);
+      const schemas = [];
+      const normalizedResource = normalizeResourceForMatching(resource);
+      for (const entry of this.filePatternAssociations) {
+        if (entry.matchesPattern(normalizedResource)) {
+          for (const schemaId of entry.getURIs()) {
+            if (!seen[schemaId]) {
+              schemas.push(schemaId);
+              seen[schemaId] = true;
+            }
+          }
+        }
+      }
+      return schemas;
+    }
+    getSchemaURIsForResource(resource, document) {
+      let schemeId = document && this.getSchemaFromProperty(resource, document);
+      if (schemeId) {
+        return [schemeId];
+      }
+      return this.getAssociatedSchemas(resource);
+    }
+    getSchemaForResource(resource, document) {
+      if (document) {
+        let schemeId = this.getSchemaFromProperty(resource, document);
+        if (schemeId) {
+          const id = normalizeId(schemeId);
+          return this.getOrAddSchemaHandle(id).getResolvedSchema();
+        }
+      }
+      if (this.cachedSchemaForResource && this.cachedSchemaForResource.resource === resource) {
+        return this.cachedSchemaForResource.resolvedSchema;
+      }
+      const schemas = this.getAssociatedSchemas(resource);
+      const resolvedSchema = schemas.length > 0 ? this.createCombinedSchema(resource, schemas).getResolvedSchema() : this.promise.resolve(void 0);
+      this.cachedSchemaForResource = { resource, resolvedSchema };
+      return resolvedSchema;
+    }
+    createCombinedSchema(resource, schemaIds) {
+      if (schemaIds.length === 1) {
+        return this.getOrAddSchemaHandle(schemaIds[0]);
+      } else {
+        const combinedSchemaId = "schemaservice://combinedSchema/" + encodeURIComponent(resource);
+        const combinedSchema = {
+          allOf: schemaIds.map((schemaId) => ({ $ref: schemaId }))
+        };
+        return this.addSchemaHandle(combinedSchemaId, combinedSchema);
+      }
+    }
+    getMatchingSchemas(document, jsonDocument, schema) {
+      if (schema) {
+        const id = schema.id || "schemaservice://untitled/matchingSchemas/" + idCounter2++;
+        const handle = this.addSchemaHandle(id, schema);
+        return handle.getResolvedSchema().then((resolvedSchema) => {
+          return jsonDocument.getMatchingSchemas(resolvedSchema.schema).filter((s) => !s.inverted);
+        });
+      }
+      return this.getSchemaForResource(document.uri, jsonDocument).then((schema2) => {
+        if (schema2) {
+          return jsonDocument.getMatchingSchemas(schema2.schema).filter((s) => !s.inverted);
+        }
+        return [];
+      });
+    }
+  };
+  var idCounter2 = 0;
+  function normalizeId(id) {
+    try {
+      return URI2.parse(id).toString(true);
+    } catch (e) {
+      return id;
+    }
+  }
+  function normalizeResourceForMatching(resource) {
+    try {
+      return URI2.parse(resource).with({ fragment: null, query: null }).toString(true);
+    } catch (e) {
+      return resource;
+    }
+  }
+  function toDisplayString(url) {
+    try {
+      const uri = URI2.parse(url);
+      if (uri.scheme === "file") {
+        return uri.fsPath;
+      }
+    } catch (e) {
+    }
+    return url;
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/services/jsonFolding.js
+  function getFoldingRanges(document, context) {
+    const ranges = [];
+    const nestingLevels = [];
+    const stack = [];
+    let prevStart = -1;
+    const scanner = createScanner2(document.getText(), false);
+    let token = scanner.scan();
+    function addRange(range) {
+      ranges.push(range);
+      nestingLevels.push(stack.length);
+    }
+    while (token !== 17) {
+      switch (token) {
+        case 1:
+        case 3: {
+          const startLine = document.positionAt(scanner.getTokenOffset()).line;
+          const range = { startLine, endLine: startLine, kind: token === 1 ? "object" : "array" };
+          stack.push(range);
+          break;
+        }
+        case 2:
+        case 4: {
+          const kind = token === 2 ? "object" : "array";
+          if (stack.length > 0 && stack[stack.length - 1].kind === kind) {
+            const range = stack.pop();
+            const line = document.positionAt(scanner.getTokenOffset()).line;
+            if (range && line > range.startLine + 1 && prevStart !== range.startLine) {
+              range.endLine = line - 1;
+              addRange(range);
+              prevStart = range.startLine;
+            }
+          }
+          break;
+        }
+        case 13: {
+          const startLine = document.positionAt(scanner.getTokenOffset()).line;
+          const endLine = document.positionAt(scanner.getTokenOffset() + scanner.getTokenLength()).line;
+          if (scanner.getTokenError() === 1 && startLine + 1 < document.lineCount) {
+            scanner.setPosition(document.offsetAt(Position.create(startLine + 1, 0)));
+          } else {
+            if (startLine < endLine) {
+              addRange({ startLine, endLine, kind: FoldingRangeKind.Comment });
+              prevStart = startLine;
+            }
+          }
+          break;
+        }
+        case 12: {
+          const text = document.getText().substr(scanner.getTokenOffset(), scanner.getTokenLength());
+          const m = text.match(/^\/\/\s*#(region\b)|(endregion\b)/);
+          if (m) {
+            const line = document.positionAt(scanner.getTokenOffset()).line;
+            if (m[1]) {
+              const range = { startLine: line, endLine: line, kind: FoldingRangeKind.Region };
+              stack.push(range);
+            } else {
+              let i = stack.length - 1;
+              while (i >= 0 && stack[i].kind !== FoldingRangeKind.Region) {
+                i--;
+              }
+              if (i >= 0) {
+                const range = stack[i];
+                stack.length = i;
+                if (line > range.startLine && prevStart !== range.startLine) {
+                  range.endLine = line;
+                  addRange(range);
+                  prevStart = range.startLine;
+                }
+              }
+            }
+          }
+          break;
+        }
+      }
+      token = scanner.scan();
+    }
+    const rangeLimit = context && context.rangeLimit;
+    if (typeof rangeLimit !== "number" || ranges.length <= rangeLimit) {
+      return ranges;
+    }
+    if (context && context.onRangeLimitExceeded) {
+      context.onRangeLimitExceeded(document.uri);
+    }
+    const counts = [];
+    for (let level of nestingLevels) {
+      if (level < 30) {
+        counts[level] = (counts[level] || 0) + 1;
+      }
+    }
+    let entries = 0;
+    let maxLevel = 0;
+    for (let i = 0; i < counts.length; i++) {
+      const n = counts[i];
+      if (n) {
+        if (n + entries > rangeLimit) {
+          maxLevel = i;
+          break;
+        }
+        entries += n;
+      }
+    }
+    const result = [];
+    for (let i = 0; i < ranges.length; i++) {
+      const level = nestingLevels[i];
+      if (typeof level === "number") {
+        if (level < maxLevel || level === maxLevel && entries++ < rangeLimit) {
+          result.push(ranges[i]);
+        }
+      }
+    }
+    return result;
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/services/jsonSelectionRanges.js
+  function getSelectionRanges(document, positions, doc) {
+    function getSelectionRange(position) {
+      let offset = document.offsetAt(position);
+      let node = doc.getNodeFromOffset(offset, true);
+      const result = [];
+      while (node) {
+        switch (node.type) {
+          case "string":
+          case "object":
+          case "array":
+            const cStart = node.offset + 1, cEnd = node.offset + node.length - 1;
+            if (cStart < cEnd && offset >= cStart && offset <= cEnd) {
+              result.push(newRange(cStart, cEnd));
+            }
+            result.push(newRange(node.offset, node.offset + node.length));
+            break;
+          case "number":
+          case "boolean":
+          case "null":
+          case "property":
+            result.push(newRange(node.offset, node.offset + node.length));
+            break;
+        }
+        if (node.type === "property" || node.parent && node.parent.type === "array") {
+          const afterCommaOffset = getOffsetAfterNextToken(
+            node.offset + node.length,
+            5
+            /* SyntaxKind.CommaToken */
+          );
+          if (afterCommaOffset !== -1) {
+            result.push(newRange(node.offset, afterCommaOffset));
+          }
+        }
+        node = node.parent;
+      }
+      let current = void 0;
+      for (let index = result.length - 1; index >= 0; index--) {
+        current = SelectionRange.create(result[index], current);
+      }
+      if (!current) {
+        current = SelectionRange.create(Range.create(position, position));
+      }
+      return current;
+    }
+    function newRange(start, end) {
+      return Range.create(document.positionAt(start), document.positionAt(end));
+    }
+    const scanner = createScanner2(document.getText(), true);
+    function getOffsetAfterNextToken(offset, expectedToken) {
+      scanner.setPosition(offset);
+      let token = scanner.scan();
+      if (token === expectedToken) {
+        return scanner.getTokenOffset() + scanner.getTokenLength();
+      }
+      return -1;
+    }
+    return positions.map(getSelectionRange);
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/utils/format.js
+  function format4(documentToFormat, formattingOptions, formattingRange) {
+    let range = void 0;
+    if (formattingRange) {
+      const offset = documentToFormat.offsetAt(formattingRange.start);
+      const length = documentToFormat.offsetAt(formattingRange.end) - offset;
+      range = { offset, length };
+    }
+    const options = {
+      tabSize: formattingOptions ? formattingOptions.tabSize : 4,
+      insertSpaces: formattingOptions?.insertSpaces === true,
+      insertFinalNewline: formattingOptions?.insertFinalNewline === true,
+      eol: "\n",
+      keepLines: formattingOptions?.keepLines === true
+    };
+    return format2(documentToFormat.getText(), range, options).map((edit) => {
+      return TextEdit.replace(Range.create(documentToFormat.positionAt(edit.offset), documentToFormat.positionAt(edit.offset + edit.length)), edit.content);
+    });
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/utils/propertyTree.js
+  var Container;
+  (function(Container2) {
+    Container2[Container2["Object"] = 0] = "Object";
+    Container2[Container2["Array"] = 1] = "Array";
+  })(Container || (Container = {}));
+  var PropertyTree = class {
+    constructor(propertyName, beginningLineNumber) {
+      this.propertyName = propertyName ?? "";
+      this.beginningLineNumber = beginningLineNumber;
+      this.childrenProperties = [];
+      this.lastProperty = false;
+      this.noKeyName = false;
+    }
+    addChildProperty(childProperty) {
+      childProperty.parent = this;
+      if (this.childrenProperties.length > 0) {
+        let insertionIndex = 0;
+        if (childProperty.noKeyName) {
+          insertionIndex = this.childrenProperties.length;
+        } else {
+          insertionIndex = binarySearchOnPropertyArray(this.childrenProperties, childProperty, compareProperties);
+        }
+        if (insertionIndex < 0) {
+          insertionIndex = insertionIndex * -1 - 1;
+        }
+        this.childrenProperties.splice(insertionIndex, 0, childProperty);
+      } else {
+        this.childrenProperties.push(childProperty);
+      }
+      return childProperty;
+    }
+  };
+  function compareProperties(propertyTree1, propertyTree2) {
+    const propertyName1 = propertyTree1.propertyName.toLowerCase();
+    const propertyName2 = propertyTree2.propertyName.toLowerCase();
+    if (propertyName1 < propertyName2) {
+      return -1;
+    } else if (propertyName1 > propertyName2) {
+      return 1;
+    }
+    return 0;
+  }
+  function binarySearchOnPropertyArray(propertyTreeArray, propertyTree, compare_fn) {
+    const propertyName = propertyTree.propertyName.toLowerCase();
+    const firstPropertyInArrayName = propertyTreeArray[0].propertyName.toLowerCase();
+    const lastPropertyInArrayName = propertyTreeArray[propertyTreeArray.length - 1].propertyName.toLowerCase();
+    if (propertyName < firstPropertyInArrayName) {
+      return 0;
+    }
+    if (propertyName > lastPropertyInArrayName) {
+      return propertyTreeArray.length;
+    }
+    let m = 0;
+    let n = propertyTreeArray.length - 1;
+    while (m <= n) {
+      let k = n + m >> 1;
+      let cmp = compare_fn(propertyTree, propertyTreeArray[k]);
+      if (cmp > 0) {
+        m = k + 1;
+      } else if (cmp < 0) {
+        n = k - 1;
+      } else {
+        return k;
+      }
+    }
+    return -m - 1;
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/utils/sort.js
+  function sort(documentToSort, formattingOptions) {
+    const options = {
+      ...formattingOptions,
+      keepLines: false
+      // keepLines must be false so that the properties are on separate lines for the sorting
+    };
+    const formattedJsonString = TextDocument2.applyEdits(documentToSort, format4(documentToSort, options, void 0));
+    const formattedJsonDocument = TextDocument2.create("test://test.json", "json", 0, formattedJsonString);
+    const jsonPropertyTree = findJsoncPropertyTree(formattedJsonDocument);
+    const sortedJsonDocument = sortJsoncDocument(formattedJsonDocument, jsonPropertyTree);
+    const edits = format4(sortedJsonDocument, options, void 0);
+    const sortedAndFormattedJsonDocument = TextDocument2.applyEdits(sortedJsonDocument, edits);
+    return [TextEdit.replace(Range.create(Position.create(0, 0), documentToSort.positionAt(documentToSort.getText().length)), sortedAndFormattedJsonDocument)];
+  }
+  function findJsoncPropertyTree(formattedDocument) {
+    const formattedString = formattedDocument.getText();
+    const scanner = createScanner2(formattedString, false);
+    let rootTree = new PropertyTree();
+    let currentTree = rootTree;
+    let currentProperty = rootTree;
+    let lastProperty = rootTree;
+    let token = void 0;
+    let lastTokenLine = 0;
+    let numberOfCharactersOnPreviousLines = 0;
+    let lastNonTriviaNonCommentToken = void 0;
+    let secondToLastNonTriviaNonCommentToken = void 0;
+    let lineOfLastNonTriviaNonCommentToken = -1;
+    let endIndexOfLastNonTriviaNonCommentToken = -1;
+    let beginningLineNumber = 0;
+    let endLineNumber = 0;
+    let currentContainerStack = [];
+    let updateLastPropertyEndLineNumber = false;
+    let updateBeginningLineNumber = false;
+    while ((token = scanner.scan()) !== 17) {
+      if (updateLastPropertyEndLineNumber === true && token !== 14 && token !== 15 && token !== 12 && token !== 13 && currentProperty.endLineNumber === void 0) {
+        let endLineNumber2 = scanner.getTokenStartLine();
+        if (secondToLastNonTriviaNonCommentToken === 2 || secondToLastNonTriviaNonCommentToken === 4) {
+          lastProperty.endLineNumber = endLineNumber2 - 1;
+        } else {
+          currentProperty.endLineNumber = endLineNumber2 - 1;
+        }
+        beginningLineNumber = endLineNumber2;
+        updateLastPropertyEndLineNumber = false;
+      }
+      if (updateBeginningLineNumber === true && token !== 14 && token !== 15 && token !== 12 && token !== 13) {
+        beginningLineNumber = scanner.getTokenStartLine();
+        updateBeginningLineNumber = false;
+      }
+      if (scanner.getTokenStartLine() !== lastTokenLine) {
+        for (let i = lastTokenLine; i < scanner.getTokenStartLine(); i++) {
+          const lengthOfLine = formattedDocument.getText(Range.create(Position.create(i, 0), Position.create(i + 1, 0))).length;
+          numberOfCharactersOnPreviousLines = numberOfCharactersOnPreviousLines + lengthOfLine;
+        }
+        lastTokenLine = scanner.getTokenStartLine();
+      }
+      switch (token) {
+        case 10: {
+          if (lastNonTriviaNonCommentToken === void 0 || lastNonTriviaNonCommentToken === 1 || lastNonTriviaNonCommentToken === 5 && currentContainerStack[currentContainerStack.length - 1] === Container.Object) {
+            const childProperty = new PropertyTree(scanner.getTokenValue(), beginningLineNumber);
+            lastProperty = currentProperty;
+            currentProperty = currentTree.addChildProperty(childProperty);
+          }
+          break;
+        }
+        case 3: {
+          if (rootTree.beginningLineNumber === void 0) {
+            rootTree.beginningLineNumber = scanner.getTokenStartLine();
+          }
+          if (currentContainerStack[currentContainerStack.length - 1] === Container.Object) {
+            currentTree = currentProperty;
+          } else if (currentContainerStack[currentContainerStack.length - 1] === Container.Array) {
+            const childProperty = new PropertyTree(scanner.getTokenValue(), beginningLineNumber);
+            childProperty.noKeyName = true;
+            lastProperty = currentProperty;
+            currentProperty = currentTree.addChildProperty(childProperty);
+            currentTree = currentProperty;
+          }
+          currentContainerStack.push(Container.Array);
+          currentProperty.type = Container.Array;
+          beginningLineNumber = scanner.getTokenStartLine();
+          beginningLineNumber++;
+          break;
+        }
+        case 1: {
+          if (rootTree.beginningLineNumber === void 0) {
+            rootTree.beginningLineNumber = scanner.getTokenStartLine();
+          } else if (currentContainerStack[currentContainerStack.length - 1] === Container.Array) {
+            const childProperty = new PropertyTree(scanner.getTokenValue(), beginningLineNumber);
+            childProperty.noKeyName = true;
+            lastProperty = currentProperty;
+            currentProperty = currentTree.addChildProperty(childProperty);
+          }
+          currentProperty.type = Container.Object;
+          currentContainerStack.push(Container.Object);
+          currentTree = currentProperty;
+          beginningLineNumber = scanner.getTokenStartLine();
+          beginningLineNumber++;
+          break;
+        }
+        case 4: {
+          endLineNumber = scanner.getTokenStartLine();
+          currentContainerStack.pop();
+          if (currentProperty.endLineNumber === void 0 && (lastNonTriviaNonCommentToken === 2 || lastNonTriviaNonCommentToken === 4)) {
+            currentProperty.endLineNumber = endLineNumber - 1;
+            currentProperty.lastProperty = true;
+            currentProperty.lineWhereToAddComma = lineOfLastNonTriviaNonCommentToken;
+            currentProperty.indexWhereToAddComa = endIndexOfLastNonTriviaNonCommentToken;
+            lastProperty = currentProperty;
+            currentProperty = currentProperty ? currentProperty.parent : void 0;
+            currentTree = currentProperty;
+          }
+          rootTree.endLineNumber = endLineNumber;
+          beginningLineNumber = endLineNumber + 1;
+          break;
+        }
+        case 2: {
+          endLineNumber = scanner.getTokenStartLine();
+          currentContainerStack.pop();
+          if (lastNonTriviaNonCommentToken !== 1) {
+            if (currentProperty.endLineNumber === void 0) {
+              currentProperty.endLineNumber = endLineNumber - 1;
+              currentProperty.lastProperty = true;
+              currentProperty.lineWhereToAddComma = lineOfLastNonTriviaNonCommentToken;
+              currentProperty.indexWhereToAddComa = endIndexOfLastNonTriviaNonCommentToken;
+            }
+            lastProperty = currentProperty;
+            currentProperty = currentProperty ? currentProperty.parent : void 0;
+            currentTree = currentProperty;
+          }
+          rootTree.endLineNumber = scanner.getTokenStartLine();
+          beginningLineNumber = endLineNumber + 1;
+          break;
+        }
+        case 5: {
+          endLineNumber = scanner.getTokenStartLine();
+          if (currentProperty.endLineNumber === void 0 && (currentContainerStack[currentContainerStack.length - 1] === Container.Object || currentContainerStack[currentContainerStack.length - 1] === Container.Array && (lastNonTriviaNonCommentToken === 2 || lastNonTriviaNonCommentToken === 4))) {
+            currentProperty.endLineNumber = endLineNumber;
+            currentProperty.commaIndex = scanner.getTokenOffset() - numberOfCharactersOnPreviousLines;
+            currentProperty.commaLine = endLineNumber;
+          }
+          if (lastNonTriviaNonCommentToken === 2 || lastNonTriviaNonCommentToken === 4) {
+            lastProperty = currentProperty;
+            currentProperty = currentProperty ? currentProperty.parent : void 0;
+            currentTree = currentProperty;
+          }
+          beginningLineNumber = endLineNumber + 1;
+          break;
+        }
+        case 13: {
+          if (lastNonTriviaNonCommentToken === 5 && lineOfLastNonTriviaNonCommentToken === scanner.getTokenStartLine() && (currentContainerStack[currentContainerStack.length - 1] === Container.Array && (secondToLastNonTriviaNonCommentToken === 2 || secondToLastNonTriviaNonCommentToken === 4) || currentContainerStack[currentContainerStack.length - 1] === Container.Object)) {
+            if (currentContainerStack[currentContainerStack.length - 1] === Container.Array && (secondToLastNonTriviaNonCommentToken === 2 || secondToLastNonTriviaNonCommentToken === 4) || currentContainerStack[currentContainerStack.length - 1] === Container.Object) {
+              currentProperty.endLineNumber = void 0;
+              updateLastPropertyEndLineNumber = true;
+            }
+          }
+          if ((lastNonTriviaNonCommentToken === 1 || lastNonTriviaNonCommentToken === 3) && lineOfLastNonTriviaNonCommentToken === scanner.getTokenStartLine()) {
+            updateBeginningLineNumber = true;
+          }
+          break;
+        }
+      }
+      if (token !== 14 && token !== 13 && token !== 12 && token !== 15) {
+        secondToLastNonTriviaNonCommentToken = lastNonTriviaNonCommentToken;
+        lastNonTriviaNonCommentToken = token;
+        lineOfLastNonTriviaNonCommentToken = scanner.getTokenStartLine();
+        endIndexOfLastNonTriviaNonCommentToken = scanner.getTokenOffset() + scanner.getTokenLength() - numberOfCharactersOnPreviousLines;
+      }
+    }
+    return rootTree;
+  }
+  function sortJsoncDocument(jsonDocument, propertyTree) {
+    if (propertyTree.childrenProperties.length === 0) {
+      return jsonDocument;
+    }
+    const sortedJsonDocument = TextDocument2.create("test://test.json", "json", 0, jsonDocument.getText());
+    const queueToSort = [];
+    updateSortingQueue(queueToSort, propertyTree, propertyTree.beginningLineNumber);
+    while (queueToSort.length > 0) {
+      const dataToSort = queueToSort.shift();
+      const propertyTreeArray = dataToSort.propertyTreeArray;
+      let beginningLineNumber = dataToSort.beginningLineNumber;
+      for (let i = 0; i < propertyTreeArray.length; i++) {
+        const propertyTree2 = propertyTreeArray[i];
+        const range = Range.create(Position.create(propertyTree2.beginningLineNumber, 0), Position.create(propertyTree2.endLineNumber + 1, 0));
+        const jsonContentToReplace = jsonDocument.getText(range);
+        const jsonDocumentToReplace = TextDocument2.create("test://test.json", "json", 0, jsonContentToReplace);
+        if (propertyTree2.lastProperty === true && i !== propertyTreeArray.length - 1) {
+          const lineWhereToAddComma = propertyTree2.lineWhereToAddComma - propertyTree2.beginningLineNumber;
+          const indexWhereToAddComma = propertyTree2.indexWhereToAddComa;
+          const edit2 = {
+            range: Range.create(Position.create(lineWhereToAddComma, indexWhereToAddComma), Position.create(lineWhereToAddComma, indexWhereToAddComma)),
+            text: ","
+          };
+          TextDocument2.update(jsonDocumentToReplace, [edit2], 1);
+        } else if (propertyTree2.lastProperty === false && i === propertyTreeArray.length - 1) {
+          const commaIndex = propertyTree2.commaIndex;
+          const commaLine = propertyTree2.commaLine;
+          const lineWhereToRemoveComma = commaLine - propertyTree2.beginningLineNumber;
+          const edit2 = {
+            range: Range.create(Position.create(lineWhereToRemoveComma, commaIndex), Position.create(lineWhereToRemoveComma, commaIndex + 1)),
+            text: ""
+          };
+          TextDocument2.update(jsonDocumentToReplace, [edit2], 1);
+        }
+        const length = propertyTree2.endLineNumber - propertyTree2.beginningLineNumber + 1;
+        const edit = {
+          range: Range.create(Position.create(beginningLineNumber, 0), Position.create(beginningLineNumber + length, 0)),
+          text: jsonDocumentToReplace.getText()
+        };
+        TextDocument2.update(sortedJsonDocument, [edit], 1);
+        updateSortingQueue(queueToSort, propertyTree2, beginningLineNumber);
+        beginningLineNumber = beginningLineNumber + length;
+      }
+    }
+    return sortedJsonDocument;
+  }
+  function updateSortingQueue(queue, propertyTree, beginningLineNumber) {
+    if (propertyTree.childrenProperties.length === 0) {
+      return;
+    }
+    if (propertyTree.type === Container.Object) {
+      let minimumBeginningLineNumber = Infinity;
+      for (const childProperty of propertyTree.childrenProperties) {
+        if (childProperty.beginningLineNumber < minimumBeginningLineNumber) {
+          minimumBeginningLineNumber = childProperty.beginningLineNumber;
+        }
+      }
+      const diff = minimumBeginningLineNumber - propertyTree.beginningLineNumber;
+      beginningLineNumber = beginningLineNumber + diff;
+      queue.push(new SortingRange(beginningLineNumber, propertyTree.childrenProperties));
+    } else if (propertyTree.type === Container.Array) {
+      updateSortingQueueForArrayProperties(queue, propertyTree, beginningLineNumber);
+    }
+  }
+  function updateSortingQueueForArrayProperties(queue, propertyTree, beginningLineNumber) {
+    for (const subObject of propertyTree.childrenProperties) {
+      if (subObject.type === Container.Object) {
+        let minimumBeginningLineNumber = Infinity;
+        for (const childProperty of subObject.childrenProperties) {
+          if (childProperty.beginningLineNumber < minimumBeginningLineNumber) {
+            minimumBeginningLineNumber = childProperty.beginningLineNumber;
+          }
+        }
+        const diff = minimumBeginningLineNumber - subObject.beginningLineNumber;
+        queue.push(new SortingRange(beginningLineNumber + subObject.beginningLineNumber - propertyTree.beginningLineNumber + diff, subObject.childrenProperties));
+      }
+      if (subObject.type === Container.Array) {
+        updateSortingQueueForArrayProperties(queue, subObject, beginningLineNumber + subObject.beginningLineNumber - propertyTree.beginningLineNumber);
+      }
+    }
+  }
+  var SortingRange = class {
+    constructor(beginningLineNumber, propertyTreeArray) {
+      this.beginningLineNumber = beginningLineNumber;
+      this.propertyTreeArray = propertyTreeArray;
+    }
+  };
+
+  // node_modules/vscode-json-languageservice/lib/esm/services/jsonLinks.js
+  function findLinks(document, doc) {
+    const links = [];
+    doc.visit((node) => {
+      if (node.type === "property" && node.keyNode.value === "$ref" && node.valueNode?.type === "string") {
+        const path = node.valueNode.value;
+        const targetNode = findTargetNode(doc, path);
+        if (targetNode) {
+          const targetPos = document.positionAt(targetNode.offset);
+          links.push({
+            target: `${document.uri}#${targetPos.line + 1},${targetPos.character + 1}`,
+            range: createRange(document, node.valueNode)
+          });
+        }
+      }
+      return true;
+    });
+    return Promise.resolve(links);
+  }
+  function createRange(document, node) {
+    return Range.create(document.positionAt(node.offset + 1), document.positionAt(node.offset + node.length - 1));
+  }
+  function findTargetNode(doc, path) {
+    const tokens = parseJSONPointer(path);
+    if (!tokens) {
+      return null;
+    }
+    return findNode(tokens, doc.root);
+  }
+  function findNode(pointer, node) {
+    if (!node) {
+      return null;
+    }
+    if (pointer.length === 0) {
+      return node;
+    }
+    const token = pointer.shift();
+    if (node && node.type === "object") {
+      const propertyNode = node.properties.find((propertyNode2) => propertyNode2.keyNode.value === token);
+      if (!propertyNode) {
+        return null;
+      }
+      return findNode(pointer, propertyNode.valueNode);
+    } else if (node && node.type === "array") {
+      if (token.match(/^(0|[1-9][0-9]*)$/)) {
+        const index = Number.parseInt(token);
+        const arrayItem = node.items[index];
+        if (!arrayItem) {
+          return null;
+        }
+        return findNode(pointer, arrayItem);
+      }
+    }
+    return null;
+  }
+  function parseJSONPointer(path) {
+    if (path === "#") {
+      return [];
+    }
+    if (path[0] !== "#" || path[1] !== "/") {
+      return null;
+    }
+    return path.substring(2).split(/\//).map(unescape);
+  }
+  function unescape(str) {
+    return str.replace(/~1/g, "/").replace(/~0/g, "~");
+  }
+
+  // node_modules/vscode-json-languageservice/lib/esm/jsonLanguageService.js
+  function getLanguageService(params) {
+    const promise = params.promiseConstructor || Promise;
+    const jsonSchemaService = new JSONSchemaService(params.schemaRequestService, params.workspaceContext, promise);
+    jsonSchemaService.setSchemaContributions(schemaContributions);
+    const jsonCompletion = new JSONCompletion(jsonSchemaService, params.contributions, promise, params.clientCapabilities);
+    const jsonHover = new JSONHover(jsonSchemaService, params.contributions, promise);
+    const jsonDocumentSymbols = new JSONDocumentSymbols(jsonSchemaService);
+    const jsonValidation = new JSONValidation(jsonSchemaService, promise);
+    return {
+      configure: (settings) => {
+        jsonSchemaService.clearExternalSchemas();
+        settings.schemas?.forEach(jsonSchemaService.registerExternalSchema.bind(jsonSchemaService));
+        jsonValidation.configure(settings);
+      },
+      resetSchema: (uri) => jsonSchemaService.onResourceChange(uri),
+      doValidation: jsonValidation.doValidation.bind(jsonValidation),
+      getLanguageStatus: jsonValidation.getLanguageStatus.bind(jsonValidation),
+      parseJSONDocument: (document) => parse3(document, { collectComments: true }),
+      newJSONDocument: (root, diagnostics) => newJSONDocument(root, diagnostics),
+      getMatchingSchemas: jsonSchemaService.getMatchingSchemas.bind(jsonSchemaService),
+      doResolve: jsonCompletion.doResolve.bind(jsonCompletion),
+      doComplete: jsonCompletion.doComplete.bind(jsonCompletion),
+      findDocumentSymbols: jsonDocumentSymbols.findDocumentSymbols.bind(jsonDocumentSymbols),
+      findDocumentSymbols2: jsonDocumentSymbols.findDocumentSymbols2.bind(jsonDocumentSymbols),
+      findDocumentColors: jsonDocumentSymbols.findDocumentColors.bind(jsonDocumentSymbols),
+      getColorPresentations: jsonDocumentSymbols.getColorPresentations.bind(jsonDocumentSymbols),
+      doHover: jsonHover.doHover.bind(jsonHover),
+      getFoldingRanges,
+      getSelectionRanges,
+      findDefinition: () => Promise.resolve([]),
+      findLinks,
+      format: (document, range, options) => format4(document, options, range),
+      sort: (document, options) => sort(document, options)
+    };
+  }
+
+  // src/language/json/jsonWorker.ts
+  var defaultSchemaRequestService;
+  if (typeof fetch !== "undefined") {
+    defaultSchemaRequestService = function(url) {
+      return fetch(url).then((response) => response.text());
+    };
+  }
+  var JSONWorker = class {
+    constructor(ctx, createData) {
+      this._ctx = ctx;
+      this._languageSettings = createData.languageSettings;
+      this._languageId = createData.languageId;
+      this._languageService = getLanguageService({
+        workspaceContext: {
+          resolveRelativePath: (relativePath, resource) => {
+            const base = resource.substr(0, resource.lastIndexOf("/") + 1);
+            return resolvePath(base, relativePath);
+          }
+        },
+        schemaRequestService: createData.enableSchemaRequest ? defaultSchemaRequestService : void 0,
+        clientCapabilities: ClientCapabilities.LATEST
+      });
+      this._languageService.configure(this._languageSettings);
+    }
+    async doValidation(uri) {
+      let document = this._getTextDocument(uri);
+      if (document) {
+        let jsonDocument = this._languageService.parseJSONDocument(document);
+        return this._languageService.doValidation(document, jsonDocument, this._languageSettings);
+      }
+      return Promise.resolve([]);
+    }
+    async doComplete(uri, position) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return null;
+      }
+      let jsonDocument = this._languageService.parseJSONDocument(document);
+      return this._languageService.doComplete(document, position, jsonDocument);
+    }
+    async doResolve(item) {
+      return this._languageService.doResolve(item);
+    }
+    async doHover(uri, position) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return null;
+      }
+      let jsonDocument = this._languageService.parseJSONDocument(document);
+      return this._languageService.doHover(document, position, jsonDocument);
+    }
+    async format(uri, range, options) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return [];
+      }
+      let textEdits = this._languageService.format(document, range, options);
+      return Promise.resolve(textEdits);
+    }
+    async resetSchema(uri) {
+      return Promise.resolve(this._languageService.resetSchema(uri));
+    }
+    async findDocumentSymbols(uri) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return [];
+      }
+      let jsonDocument = this._languageService.parseJSONDocument(document);
+      let symbols = this._languageService.findDocumentSymbols2(document, jsonDocument);
+      return Promise.resolve(symbols);
+    }
+    async findDocumentColors(uri) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return [];
+      }
+      let jsonDocument = this._languageService.parseJSONDocument(document);
+      let colorSymbols = this._languageService.findDocumentColors(document, jsonDocument);
+      return Promise.resolve(colorSymbols);
+    }
+    async getColorPresentations(uri, color, range) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return [];
+      }
+      let jsonDocument = this._languageService.parseJSONDocument(document);
+      let colorPresentations = this._languageService.getColorPresentations(
+        document,
+        jsonDocument,
+        color,
+        range
+      );
+      return Promise.resolve(colorPresentations);
+    }
+    async getFoldingRanges(uri, context) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return [];
+      }
+      let ranges = this._languageService.getFoldingRanges(document, context);
+      return Promise.resolve(ranges);
+    }
+    async getSelectionRanges(uri, positions) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return [];
+      }
+      let jsonDocument = this._languageService.parseJSONDocument(document);
+      let ranges = this._languageService.getSelectionRanges(document, positions, jsonDocument);
+      return Promise.resolve(ranges);
+    }
+    async parseJSONDocument(uri) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return null;
+      }
+      let jsonDocument = this._languageService.parseJSONDocument(document);
+      return Promise.resolve(jsonDocument);
+    }
+    async getMatchingSchemas(uri) {
+      let document = this._getTextDocument(uri);
+      if (!document) {
+        return [];
+      }
+      let jsonDocument = this._languageService.parseJSONDocument(document);
+      return Promise.resolve(this._languageService.getMatchingSchemas(document, jsonDocument));
+    }
+    _getTextDocument(uri) {
+      let models = this._ctx.getMirrorModels();
+      for (let model of models) {
+        if (model.uri.toString() === uri) {
+          return TextDocument2.create(
+            uri,
+            this._languageId,
+            model.version,
+            model.getValue()
+          );
+        }
+      }
+      return null;
+    }
+  };
+  var Slash = "/".charCodeAt(0);
+  var Dot = ".".charCodeAt(0);
+  function isAbsolutePath(path) {
+    return path.charCodeAt(0) === Slash;
+  }
+  function resolvePath(uriString, path) {
+    if (isAbsolutePath(path)) {
+      const uri = URI2.parse(uriString);
+      const parts = path.split("/");
+      return uri.with({ path: normalizePath(parts) }).toString();
+    }
+    return joinPath(uriString, path);
+  }
+  function normalizePath(parts) {
+    const newParts = [];
+    for (const part of parts) {
+      if (part.length === 0 || part.length === 1 && part.charCodeAt(0) === Dot) {
+      } else if (part.length === 2 && part.charCodeAt(0) === Dot && part.charCodeAt(1) === Dot) {
+        newParts.pop();
+      } else {
+        newParts.push(part);
+      }
+    }
+    if (parts.length > 1 && parts[parts.length - 1].length === 0) {
+      newParts.push("");
+    }
+    let res = newParts.join("/");
+    if (parts[0].length === 0) {
+      res = "/" + res;
+    }
+    return res;
+  }
+  function joinPath(uriString, ...paths) {
+    const uri = URI2.parse(uriString);
+    const parts = uri.path.split("/");
+    for (let path of paths) {
+      parts.push(...path.split("/"));
+    }
+    return uri.with({ path: normalizePath(parts) }).toString();
+  }
+  function create(ctx, createData) {
+    return new JSONWorker(ctx, createData);
+  }
+  return __toCommonJS(jsonWorker_exports);
+})();
 return moduleExports;
 });

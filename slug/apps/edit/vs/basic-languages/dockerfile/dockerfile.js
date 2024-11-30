@@ -1,10 +1,164 @@
-"use strict";/*!-----------------------------------------------------------------------------
+/*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * Version: 0.34.1(547870b6881302c5b4ff32173c16d06009e3588f)
+ * Version: 0.52.0(f6dc0eb8fce67e57f6036f4769d92c1666cdf546)
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/
-define("vs/basic-languages/dockerfile/dockerfile", ["require","require"],(require)=>{
-var moduleExports=(()=>{var a=Object.defineProperty;var l=Object.getOwnPropertyDescriptor;var r=Object.getOwnPropertyNames;var i=Object.prototype.hasOwnProperty;var p=(o,e)=>{for(var s in e)a(o,s,{get:e[s],enumerable:!0})},g=(o,e,s,t)=>{if(e&&typeof e=="object"||typeof e=="function")for(let n of r(e))!i.call(o,n)&&n!==s&&a(o,n,{get:()=>e[n],enumerable:!(t=l(e,n))||t.enumerable});return o};var c=o=>g(a({},"__esModule",{value:!0}),o);var k={};p(k,{conf:()=>u,language:()=>d});var u={brackets:[["{","}"],["[","]"],["(",")"]],autoClosingPairs:[{open:"{",close:"}"},{open:"[",close:"]"},{open:"(",close:")"},{open:'"',close:'"'},{open:"'",close:"'"}],surroundingPairs:[{open:"{",close:"}"},{open:"[",close:"]"},{open:"(",close:")"},{open:'"',close:'"'},{open:"'",close:"'"}]},d={defaultToken:"",tokenPostfix:".dockerfile",variable:/\${?[\w]+}?/,tokenizer:{root:[{include:"@whitespace"},{include:"@comment"},[/(ONBUILD)(\s+)/,["keyword",""]],[/(ENV)(\s+)([\w]+)/,["keyword","",{token:"variable",next:"@arguments"}]],[/(FROM|MAINTAINER|RUN|EXPOSE|ENV|ADD|ARG|VOLUME|LABEL|USER|WORKDIR|COPY|CMD|STOPSIGNAL|SHELL|HEALTHCHECK|ENTRYPOINT)/,{token:"keyword",next:"@arguments"}]],arguments:[{include:"@whitespace"},{include:"@strings"},[/(@variable)/,{cases:{"@eos":{token:"variable",next:"@popall"},"@default":"variable"}}],[/\\/,{cases:{"@eos":"","@default":""}}],[/./,{cases:{"@eos":{token:"",next:"@popall"},"@default":""}}]],whitespace:[[/\s+/,{cases:{"@eos":{token:"",next:"@popall"},"@default":""}}]],comment:[[/(^#.*$)/,"comment","@popall"]],strings:[[/\\'$/,"","@popall"],[/\\'/,""],[/'$/,"string","@popall"],[/'/,"string","@stringBody"],[/"$/,"string","@popall"],[/"/,"string","@dblStringBody"]],stringBody:[[/[^\\\$']/,{cases:{"@eos":{token:"string",next:"@popall"},"@default":"string"}}],[/\\./,"string.escape"],[/'$/,"string","@popall"],[/'/,"string","@pop"],[/(@variable)/,"variable"],[/\\$/,"string"],[/$/,"string","@popall"]],dblStringBody:[[/[^\\\$"]/,{cases:{"@eos":{token:"string",next:"@popall"},"@default":"string"}}],[/\\./,"string.escape"],[/"$/,"string","@popall"],[/"/,"string","@pop"],[/(@variable)/,"variable"],[/\\$/,"string"],[/$/,"string","@popall"]]}};return c(k);})();
+define("vs/basic-languages/dockerfile/dockerfile", ["require"],(require)=>{
+"use strict";
+var moduleExports = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // src/basic-languages/dockerfile/dockerfile.ts
+  var dockerfile_exports = {};
+  __export(dockerfile_exports, {
+    conf: () => conf,
+    language: () => language
+  });
+  var conf = {
+    brackets: [
+      ["{", "}"],
+      ["[", "]"],
+      ["(", ")"]
+    ],
+    autoClosingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: '"', close: '"' },
+      { open: "'", close: "'" }
+    ],
+    surroundingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: '"', close: '"' },
+      { open: "'", close: "'" }
+    ]
+  };
+  var language = {
+    defaultToken: "",
+    tokenPostfix: ".dockerfile",
+    variable: /\${?[\w]+}?/,
+    tokenizer: {
+      root: [
+        { include: "@whitespace" },
+        { include: "@comment" },
+        [/(ONBUILD)(\s+)/, ["keyword", ""]],
+        [/(ENV)(\s+)([\w]+)/, ["keyword", "", { token: "variable", next: "@arguments" }]],
+        [
+          /(FROM|MAINTAINER|RUN|EXPOSE|ENV|ADD|ARG|VOLUME|LABEL|USER|WORKDIR|COPY|CMD|STOPSIGNAL|SHELL|HEALTHCHECK|ENTRYPOINT)/,
+          { token: "keyword", next: "@arguments" }
+        ]
+      ],
+      arguments: [
+        { include: "@whitespace" },
+        { include: "@strings" },
+        [
+          /(@variable)/,
+          {
+            cases: {
+              "@eos": { token: "variable", next: "@popall" },
+              "@default": "variable"
+            }
+          }
+        ],
+        [
+          /\\/,
+          {
+            cases: {
+              "@eos": "",
+              "@default": ""
+            }
+          }
+        ],
+        [
+          /./,
+          {
+            cases: {
+              "@eos": { token: "", next: "@popall" },
+              "@default": ""
+            }
+          }
+        ]
+      ],
+      // Deal with white space, including comments
+      whitespace: [
+        [
+          /\s+/,
+          {
+            cases: {
+              "@eos": { token: "", next: "@popall" },
+              "@default": ""
+            }
+          }
+        ]
+      ],
+      comment: [[/(^#.*$)/, "comment", "@popall"]],
+      // Recognize strings, including those broken across lines with \ (but not without)
+      strings: [
+        [/\\'$/, "", "@popall"],
+        // \' leaves @arguments at eol
+        [/\\'/, ""],
+        // \' is not a string
+        [/'$/, "string", "@popall"],
+        [/'/, "string", "@stringBody"],
+        [/"$/, "string", "@popall"],
+        [/"/, "string", "@dblStringBody"]
+      ],
+      stringBody: [
+        [
+          /[^\\\$']/,
+          {
+            cases: {
+              "@eos": { token: "string", next: "@popall" },
+              "@default": "string"
+            }
+          }
+        ],
+        [/\\./, "string.escape"],
+        [/'$/, "string", "@popall"],
+        [/'/, "string", "@pop"],
+        [/(@variable)/, "variable"],
+        [/\\$/, "string"],
+        [/$/, "string", "@popall"]
+      ],
+      dblStringBody: [
+        [
+          /[^\\\$"]/,
+          {
+            cases: {
+              "@eos": { token: "string", next: "@popall" },
+              "@default": "string"
+            }
+          }
+        ],
+        [/\\./, "string.escape"],
+        [/"$/, "string", "@popall"],
+        [/"/, "string", "@pop"],
+        [/(@variable)/, "variable"],
+        [/\\$/, "string"],
+        [/$/, "string", "@popall"]
+      ]
+    }
+  };
+  return __toCommonJS(dockerfile_exports);
+})();
 return moduleExports;
 });

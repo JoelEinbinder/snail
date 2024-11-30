@@ -1,10 +1,252 @@
-"use strict";/*!-----------------------------------------------------------------------------
+/*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * Version: 0.34.1(547870b6881302c5b4ff32173c16d06009e3588f)
+ * Version: 0.52.0(f6dc0eb8fce67e57f6036f4769d92c1666cdf546)
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/
-define("vs/basic-languages/go/go", ["require","require"],(require)=>{
-var moduleExports=(()=>{var s=Object.defineProperty;var i=Object.getOwnPropertyDescriptor;var a=Object.getOwnPropertyNames;var c=Object.prototype.hasOwnProperty;var m=(n,e)=>{for(var t in e)s(n,t,{get:e[t],enumerable:!0})},l=(n,e,t,r)=>{if(e&&typeof e=="object"||typeof e=="function")for(let o of a(e))!c.call(n,o)&&o!==t&&s(n,o,{get:()=>e[o],enumerable:!(r=i(e,o))||r.enumerable});return n};var g=n=>l(s({},"__esModule",{value:!0}),n);var d={};m(d,{conf:()=>p,language:()=>u});var p={comments:{lineComment:"//",blockComment:["/*","*/"]},brackets:[["{","}"],["[","]"],["(",")"]],autoClosingPairs:[{open:"{",close:"}"},{open:"[",close:"]"},{open:"(",close:")"},{open:"`",close:"`",notIn:["string"]},{open:'"',close:'"',notIn:["string"]},{open:"'",close:"'",notIn:["string","comment"]}],surroundingPairs:[{open:"{",close:"}"},{open:"[",close:"]"},{open:"(",close:")"},{open:"`",close:"`"},{open:'"',close:'"'},{open:"'",close:"'"}]},u={defaultToken:"",tokenPostfix:".go",keywords:["break","case","chan","const","continue","default","defer","else","fallthrough","for","func","go","goto","if","import","interface","map","package","range","return","select","struct","switch","type","var","bool","true","false","uint8","uint16","uint32","uint64","int8","int16","int32","int64","float32","float64","complex64","complex128","byte","rune","uint","int","uintptr","string","nil"],operators:["+","-","*","/","%","&","|","^","<<",">>","&^","+=","-=","*=","/=","%=","&=","|=","^=","<<=",">>=","&^=","&&","||","<-","++","--","==","<",">","=","!","!=","<=",">=",":=","...","(",")","","]","{","}",",",";",".",":"],symbols:/[=><!~?:&|+\-*\/\^%]+/,escapes:/\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,tokenizer:{root:[[/[a-zA-Z_]\w*/,{cases:{"@keywords":{token:"keyword.$0"},"@default":"identifier"}}],{include:"@whitespace"},[/\[\[.*\]\]/,"annotation"],[/^\s*#\w+/,"keyword"],[/[{}()\[\]]/,"@brackets"],[/[<>](?!@symbols)/,"@brackets"],[/@symbols/,{cases:{"@operators":"delimiter","@default":""}}],[/\d*\d+[eE]([\-+]?\d+)?/,"number.float"],[/\d*\.\d+([eE][\-+]?\d+)?/,"number.float"],[/0[xX][0-9a-fA-F']*[0-9a-fA-F]/,"number.hex"],[/0[0-7']*[0-7]/,"number.octal"],[/0[bB][0-1']*[0-1]/,"number.binary"],[/\d[\d']*/,"number"],[/\d/,"number"],[/[;,.]/,"delimiter"],[/"([^"\\]|\\.)*$/,"string.invalid"],[/"/,"string","@string"],[/`/,"string","@rawstring"],[/'[^\\']'/,"string"],[/(')(@escapes)(')/,["string","string.escape","string"]],[/'/,"string.invalid"]],whitespace:[[/[ \t\r\n]+/,""],[/\/\*\*(?!\/)/,"comment.doc","@doccomment"],[/\/\*/,"comment","@comment"],[/\/\/.*$/,"comment"]],comment:[[/[^\/*]+/,"comment"],[/\*\//,"comment","@pop"],[/[\/*]/,"comment"]],doccomment:[[/[^\/*]+/,"comment.doc"],[/\/\*/,"comment.doc.invalid"],[/\*\//,"comment.doc","@pop"],[/[\/*]/,"comment.doc"]],string:[[/[^\\"]+/,"string"],[/@escapes/,"string.escape"],[/\\./,"string.escape.invalid"],[/"/,"string","@pop"]],rawstring:[[/[^\`]/,"string"],[/`/,"string","@pop"]]}};return g(d);})();
+define("vs/basic-languages/go/go", ["require"],(require)=>{
+"use strict";
+var moduleExports = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // src/basic-languages/go/go.ts
+  var go_exports = {};
+  __export(go_exports, {
+    conf: () => conf,
+    language: () => language
+  });
+  var conf = {
+    comments: {
+      lineComment: "//",
+      blockComment: ["/*", "*/"]
+    },
+    brackets: [
+      ["{", "}"],
+      ["[", "]"],
+      ["(", ")"]
+    ],
+    autoClosingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: "`", close: "`", notIn: ["string"] },
+      { open: '"', close: '"', notIn: ["string"] },
+      { open: "'", close: "'", notIn: ["string", "comment"] }
+    ],
+    surroundingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: "`", close: "`" },
+      { open: '"', close: '"' },
+      { open: "'", close: "'" }
+    ]
+  };
+  var language = {
+    defaultToken: "",
+    tokenPostfix: ".go",
+    keywords: [
+      "break",
+      "case",
+      "chan",
+      "const",
+      "continue",
+      "default",
+      "defer",
+      "else",
+      "fallthrough",
+      "for",
+      "func",
+      "go",
+      "goto",
+      "if",
+      "import",
+      "interface",
+      "map",
+      "package",
+      "range",
+      "return",
+      "select",
+      "struct",
+      "switch",
+      "type",
+      "var",
+      "bool",
+      "true",
+      "false",
+      "uint8",
+      "uint16",
+      "uint32",
+      "uint64",
+      "int8",
+      "int16",
+      "int32",
+      "int64",
+      "float32",
+      "float64",
+      "complex64",
+      "complex128",
+      "byte",
+      "rune",
+      "uint",
+      "int",
+      "uintptr",
+      "string",
+      "nil"
+    ],
+    operators: [
+      "+",
+      "-",
+      "*",
+      "/",
+      "%",
+      "&",
+      "|",
+      "^",
+      "<<",
+      ">>",
+      "&^",
+      "+=",
+      "-=",
+      "*=",
+      "/=",
+      "%=",
+      "&=",
+      "|=",
+      "^=",
+      "<<=",
+      ">>=",
+      "&^=",
+      "&&",
+      "||",
+      "<-",
+      "++",
+      "--",
+      "==",
+      "<",
+      ">",
+      "=",
+      "!",
+      "!=",
+      "<=",
+      ">=",
+      ":=",
+      "...",
+      "(",
+      ")",
+      "",
+      "]",
+      "{",
+      "}",
+      ",",
+      ";",
+      ".",
+      ":"
+    ],
+    // we include these common regular expressions
+    symbols: /[=><!~?:&|+\-*\/\^%]+/,
+    escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+    // The main tokenizer for our languages
+    tokenizer: {
+      root: [
+        // identifiers and keywords
+        [
+          /[a-zA-Z_]\w*/,
+          {
+            cases: {
+              "@keywords": { token: "keyword.$0" },
+              "@default": "identifier"
+            }
+          }
+        ],
+        // whitespace
+        { include: "@whitespace" },
+        // [[ attributes ]].
+        [/\[\[.*\]\]/, "annotation"],
+        // Preprocessor directive
+        [/^\s*#\w+/, "keyword"],
+        // delimiters and operators
+        [/[{}()\[\]]/, "@brackets"],
+        [/[<>](?!@symbols)/, "@brackets"],
+        [
+          /@symbols/,
+          {
+            cases: {
+              "@operators": "delimiter",
+              "@default": ""
+            }
+          }
+        ],
+        // numbers
+        [/\d*\d+[eE]([\-+]?\d+)?/, "number.float"],
+        [/\d*\.\d+([eE][\-+]?\d+)?/, "number.float"],
+        [/0[xX][0-9a-fA-F']*[0-9a-fA-F]/, "number.hex"],
+        [/0[0-7']*[0-7]/, "number.octal"],
+        [/0[bB][0-1']*[0-1]/, "number.binary"],
+        [/\d[\d']*/, "number"],
+        [/\d/, "number"],
+        // delimiter: after number because of .\d floats
+        [/[;,.]/, "delimiter"],
+        // strings
+        [/"([^"\\]|\\.)*$/, "string.invalid"],
+        // non-teminated string
+        [/"/, "string", "@string"],
+        [/`/, "string", "@rawstring"],
+        // characters
+        [/'[^\\']'/, "string"],
+        [/(')(@escapes)(')/, ["string", "string.escape", "string"]],
+        [/'/, "string.invalid"]
+      ],
+      whitespace: [
+        [/[ \t\r\n]+/, ""],
+        [/\/\*\*(?!\/)/, "comment.doc", "@doccomment"],
+        [/\/\*/, "comment", "@comment"],
+        [/\/\/.*$/, "comment"]
+      ],
+      comment: [
+        [/[^\/*]+/, "comment"],
+        // [/\/\*/, 'comment', '@push' ],    // nested comment not allowed :-(
+        // [/\/\*/,    'comment.invalid' ],    // this breaks block comments in the shape of /* //*/
+        [/\*\//, "comment", "@pop"],
+        [/[\/*]/, "comment"]
+      ],
+      //Identical copy of comment above, except for the addition of .doc
+      doccomment: [
+        [/[^\/*]+/, "comment.doc"],
+        // [/\/\*/, 'comment.doc', '@push' ],    // nested comment not allowed :-(
+        [/\/\*/, "comment.doc.invalid"],
+        [/\*\//, "comment.doc", "@pop"],
+        [/[\/*]/, "comment.doc"]
+      ],
+      string: [
+        [/[^\\"]+/, "string"],
+        [/@escapes/, "string.escape"],
+        [/\\./, "string.escape.invalid"],
+        [/"/, "string", "@pop"]
+      ],
+      rawstring: [
+        [/[^\`]/, "string"],
+        [/`/, "string", "@pop"]
+      ]
+    }
+  };
+  return __toCommonJS(go_exports);
+})();
 return moduleExports;
 });

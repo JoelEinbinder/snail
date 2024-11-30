@@ -1,10 +1,105 @@
-"use strict";/*!-----------------------------------------------------------------------------
+/*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * Version: 0.34.1(547870b6881302c5b4ff32173c16d06009e3588f)
+ * Version: 0.52.0(f6dc0eb8fce67e57f6036f4769d92c1666cdf546)
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/
-define("vs/basic-languages/ini/ini", ["require","require"],(require)=>{
-var moduleExports=(()=>{var t=Object.defineProperty;var i=Object.getOwnPropertyDescriptor;var r=Object.getOwnPropertyNames;var g=Object.prototype.hasOwnProperty;var c=(n,e)=>{for(var s in e)t(n,s,{get:e[s],enumerable:!0})},l=(n,e,s,a)=>{if(e&&typeof e=="object"||typeof e=="function")for(let o of r(e))!g.call(n,o)&&o!==s&&t(n,o,{get:()=>e[o],enumerable:!(a=i(e,o))||a.enumerable});return n};var p=n=>l(t({},"__esModule",{value:!0}),n);var f={};c(f,{conf:()=>u,language:()=>m});var u={comments:{lineComment:"#"},brackets:[["{","}"],["[","]"],["(",")"]],autoClosingPairs:[{open:"{",close:"}"},{open:"[",close:"]"},{open:"(",close:")"},{open:'"',close:'"'},{open:"'",close:"'"}],surroundingPairs:[{open:"{",close:"}"},{open:"[",close:"]"},{open:"(",close:")"},{open:'"',close:'"'},{open:"'",close:"'"}]},m={defaultToken:"",tokenPostfix:".ini",escapes:/\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,tokenizer:{root:[[/^\[[^\]]*\]/,"metatag"],[/(^\w+)(\s*)(\=)/,["key","","delimiter"]],{include:"@whitespace"},[/\d+/,"number"],[/"([^"\\]|\\.)*$/,"string.invalid"],[/'([^'\\]|\\.)*$/,"string.invalid"],[/"/,"string",'@string."'],[/'/,"string","@string.'"]],whitespace:[[/[ \t\r\n]+/,""],[/^\s*[#;].*$/,"comment"]],string:[[/[^\\"']+/,"string"],[/@escapes/,"string.escape"],[/\\./,"string.escape.invalid"],[/["']/,{cases:{"$#==$S2":{token:"string",next:"@pop"},"@default":"string"}}]]}};return p(f);})();
+define("vs/basic-languages/ini/ini", ["require"],(require)=>{
+"use strict";
+var moduleExports = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // src/basic-languages/ini/ini.ts
+  var ini_exports = {};
+  __export(ini_exports, {
+    conf: () => conf,
+    language: () => language
+  });
+  var conf = {
+    comments: {
+      lineComment: "#"
+    },
+    brackets: [
+      ["{", "}"],
+      ["[", "]"],
+      ["(", ")"]
+    ],
+    autoClosingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: '"', close: '"' },
+      { open: "'", close: "'" }
+    ],
+    surroundingPairs: [
+      { open: "{", close: "}" },
+      { open: "[", close: "]" },
+      { open: "(", close: ")" },
+      { open: '"', close: '"' },
+      { open: "'", close: "'" }
+    ]
+  };
+  var language = {
+    defaultToken: "",
+    tokenPostfix: ".ini",
+    // we include these common regular expressions
+    escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+    // The main tokenizer for our languages
+    tokenizer: {
+      root: [
+        // sections
+        [/^\[[^\]]*\]/, "metatag"],
+        // keys
+        [/(^\w+)(\s*)(\=)/, ["key", "", "delimiter"]],
+        // whitespace
+        { include: "@whitespace" },
+        // numbers
+        [/\d+/, "number"],
+        // strings: recover on non-terminated strings
+        [/"([^"\\]|\\.)*$/, "string.invalid"],
+        // non-teminated string
+        [/'([^'\\]|\\.)*$/, "string.invalid"],
+        // non-teminated string
+        [/"/, "string", '@string."'],
+        [/'/, "string", "@string.'"]
+      ],
+      whitespace: [
+        [/[ \t\r\n]+/, ""],
+        [/^\s*[#;].*$/, "comment"]
+      ],
+      string: [
+        [/[^\\"']+/, "string"],
+        [/@escapes/, "string.escape"],
+        [/\\./, "string.escape.invalid"],
+        [
+          /["']/,
+          {
+            cases: {
+              "$#==$S2": { token: "string", next: "@pop" },
+              "@default": "string"
+            }
+          }
+        ]
+      ]
+    }
+  };
+  return __toCommonJS(ini_exports);
+})();
 return moduleExports;
 });

@@ -1,13 +1,2094 @@
-"use strict";/*!-----------------------------------------------------------------------------
+/*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * Version: 0.34.1(547870b6881302c5b4ff32173c16d06009e3588f)
+ * Version: 0.52.0(f6dc0eb8fce67e57f6036f4769d92c1666cdf546)
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/
-define("vs/language/css/cssMode", ["require","require"],(require)=>{
-var moduleExports=(()=>{var en=Object.create;var Y=Object.defineProperty;var nn=Object.getOwnPropertyDescriptor;var tn=Object.getOwnPropertyNames;var rn=Object.getPrototypeOf,on=Object.prototype.hasOwnProperty;var sn=(n=>typeof require!="undefined"?require:typeof Proxy!="undefined"?new Proxy(n,{get:(t,i)=>(typeof require!="undefined"?require:t)[i]}):n)(function(n){if(typeof require!="undefined")return require.apply(this,arguments);throw new Error('Dynamic require of "'+n+'" is not supported')});var an=(n,t)=>()=>(t||n((t={exports:{}}).exports,t),t.exports),un=(n,t)=>{for(var i in t)Y(n,i,{get:t[i],enumerable:!0})},J=(n,t,i,r)=>{if(t&&typeof t=="object"||typeof t=="function")for(let e of tn(t))!on.call(n,e)&&e!==i&&Y(n,e,{get:()=>t[e],enumerable:!(r=nn(t,e))||r.enumerable});return n},pe=(n,t,i)=>(J(n,t,"default"),i&&J(i,t,"default")),he=(n,t,i)=>(i=n!=null?en(rn(n)):{},J(t||!n||!n.__esModule?Y(i,"default",{value:n,enumerable:!0}):i,n)),dn=n=>J(Y({},"__esModule",{value:!0}),n);var ve=an((Pn,me)=>{var cn=he(sn("vs/editor/editor.api"));me.exports=cn});var En={};un(En,{CompletionAdapter:()=>H,DefinitionAdapter:()=>O,DiagnosticsAdapter:()=>K,DocumentColorAdapter:()=>$,DocumentFormattingEditProvider:()=>X,DocumentHighlightAdapter:()=>j,DocumentLinkAdapter:()=>le,DocumentRangeFormattingEditProvider:()=>B,DocumentSymbolAdapter:()=>z,FoldingRangeAdapter:()=>q,HoverAdapter:()=>U,ReferenceAdapter:()=>N,RenameAdapter:()=>V,SelectionRangeAdapter:()=>Q,WorkerManager:()=>E,fromPosition:()=>_,fromRange:()=>ge,setupMode:()=>wn,toRange:()=>T,toTextEdit:()=>W});var d={};pe(d,he(ve()));var ln=2*60*1e3,E=class{_defaults;_idleCheckInterval;_lastUsedTime;_configChangeListener;_worker;_client;constructor(t){this._defaults=t,this._worker=null,this._client=null,this._idleCheckInterval=window.setInterval(()=>this._checkIfIdle(),30*1e3),this._lastUsedTime=0,this._configChangeListener=this._defaults.onDidChange(()=>this._stopWorker())}_stopWorker(){this._worker&&(this._worker.dispose(),this._worker=null),this._client=null}dispose(){clearInterval(this._idleCheckInterval),this._configChangeListener.dispose(),this._stopWorker()}_checkIfIdle(){if(!this._worker)return;Date.now()-this._lastUsedTime>ln&&this._stopWorker()}_getClient(){return this._lastUsedTime=Date.now(),this._client||(this._worker=d.editor.createWebWorker({moduleId:"vs/language/css/cssWorker",label:this._defaults.languageId,createData:{options:this._defaults.options,languageId:this._defaults.languageId}}),this._client=this._worker.getProxy()),this._client}getLanguageServiceWorker(...t){let i;return this._getClient().then(r=>{i=r}).then(r=>{if(this._worker)return this._worker.withSyncedResources(t)}).then(r=>i)}};var ye;(function(n){n.MIN_VALUE=-2147483648,n.MAX_VALUE=2147483647})(ye||(ye={}));var ee;(function(n){n.MIN_VALUE=0,n.MAX_VALUE=2147483647})(ee||(ee={}));var x;(function(n){function t(r,e){return r===Number.MAX_VALUE&&(r=ee.MAX_VALUE),e===Number.MAX_VALUE&&(e=ee.MAX_VALUE),{line:r,character:e}}n.create=t;function i(r){var e=r;return a.objectLiteral(e)&&a.uinteger(e.line)&&a.uinteger(e.character)}n.is=i})(x||(x={}));var v;(function(n){function t(r,e,o,s){if(a.uinteger(r)&&a.uinteger(e)&&a.uinteger(o)&&a.uinteger(s))return{start:x.create(r,e),end:x.create(o,s)};if(x.is(r)&&x.is(e))return{start:r,end:e};throw new Error("Range#create called with invalid arguments["+r+", "+e+", "+o+", "+s+"]")}n.create=t;function i(r){var e=r;return a.objectLiteral(e)&&x.is(e.start)&&x.is(e.end)}n.is=i})(v||(v={}));var se;(function(n){function t(r,e){return{uri:r,range:e}}n.create=t;function i(r){var e=r;return a.defined(e)&&v.is(e.range)&&(a.string(e.uri)||a.undefined(e.uri))}n.is=i})(se||(se={}));var Te;(function(n){function t(r,e,o,s){return{targetUri:r,targetRange:e,targetSelectionRange:o,originSelectionRange:s}}n.create=t;function i(r){var e=r;return a.defined(e)&&v.is(e.targetRange)&&a.string(e.targetUri)&&(v.is(e.targetSelectionRange)||a.undefined(e.targetSelectionRange))&&(v.is(e.originSelectionRange)||a.undefined(e.originSelectionRange))}n.is=i})(Te||(Te={}));var ae;(function(n){function t(r,e,o,s){return{red:r,green:e,blue:o,alpha:s}}n.create=t;function i(r){var e=r;return a.numberRange(e.red,0,1)&&a.numberRange(e.green,0,1)&&a.numberRange(e.blue,0,1)&&a.numberRange(e.alpha,0,1)}n.is=i})(ae||(ae={}));var xe;(function(n){function t(r,e){return{range:r,color:e}}n.create=t;function i(r){var e=r;return v.is(e.range)&&ae.is(e.color)}n.is=i})(xe||(xe={}));var ke;(function(n){function t(r,e,o){return{label:r,textEdit:e,additionalTextEdits:o}}n.create=t;function i(r){var e=r;return a.string(e.label)&&(a.undefined(e.textEdit)||C.is(e))&&(a.undefined(e.additionalTextEdits)||a.typedArray(e.additionalTextEdits,C.is))}n.is=i})(ke||(ke={}));var P;(function(n){n.Comment="comment",n.Imports="imports",n.Region="region"})(P||(P={}));var Ie;(function(n){function t(r,e,o,s,u){var l={startLine:r,endLine:e};return a.defined(o)&&(l.startCharacter=o),a.defined(s)&&(l.endCharacter=s),a.defined(u)&&(l.kind=u),l}n.create=t;function i(r){var e=r;return a.uinteger(e.startLine)&&a.uinteger(e.startLine)&&(a.undefined(e.startCharacter)||a.uinteger(e.startCharacter))&&(a.undefined(e.endCharacter)||a.uinteger(e.endCharacter))&&(a.undefined(e.kind)||a.string(e.kind))}n.is=i})(Ie||(Ie={}));var ue;(function(n){function t(r,e){return{location:r,message:e}}n.create=t;function i(r){var e=r;return a.defined(e)&&se.is(e.location)&&a.string(e.message)}n.is=i})(ue||(ue={}));var b;(function(n){n.Error=1,n.Warning=2,n.Information=3,n.Hint=4})(b||(b={}));var Ce;(function(n){n.Unnecessary=1,n.Deprecated=2})(Ce||(Ce={}));var _e;(function(n){function t(i){var r=i;return r!=null&&a.string(r.href)}n.is=t})(_e||(_e={}));var ne;(function(n){function t(r,e,o,s,u,l){var f={range:r,message:e};return a.defined(o)&&(f.severity=o),a.defined(s)&&(f.code=s),a.defined(u)&&(f.source=u),a.defined(l)&&(f.relatedInformation=l),f}n.create=t;function i(r){var e,o=r;return a.defined(o)&&v.is(o.range)&&a.string(o.message)&&(a.number(o.severity)||a.undefined(o.severity))&&(a.integer(o.code)||a.string(o.code)||a.undefined(o.code))&&(a.undefined(o.codeDescription)||a.string((e=o.codeDescription)===null||e===void 0?void 0:e.href))&&(a.string(o.source)||a.undefined(o.source))&&(a.undefined(o.relatedInformation)||a.typedArray(o.relatedInformation,ue.is))}n.is=i})(ne||(ne={}));var D;(function(n){function t(r,e){for(var o=[],s=2;s<arguments.length;s++)o[s-2]=arguments[s];var u={title:r,command:e};return a.defined(o)&&o.length>0&&(u.arguments=o),u}n.create=t;function i(r){var e=r;return a.defined(e)&&a.string(e.title)&&a.string(e.command)}n.is=i})(D||(D={}));var C;(function(n){function t(o,s){return{range:o,newText:s}}n.replace=t;function i(o,s){return{range:{start:o,end:o},newText:s}}n.insert=i;function r(o){return{range:o,newText:""}}n.del=r;function e(o){var s=o;return a.objectLiteral(s)&&a.string(s.newText)&&v.is(s.range)}n.is=e})(C||(C={}));var R;(function(n){function t(r,e,o){var s={label:r};return e!==void 0&&(s.needsConfirmation=e),o!==void 0&&(s.description=o),s}n.create=t;function i(r){var e=r;return e!==void 0&&a.objectLiteral(e)&&a.string(e.label)&&(a.boolean(e.needsConfirmation)||e.needsConfirmation===void 0)&&(a.string(e.description)||e.description===void 0)}n.is=i})(R||(R={}));var y;(function(n){function t(i){var r=i;return typeof r=="string"}n.is=t})(y||(y={}));var I;(function(n){function t(o,s,u){return{range:o,newText:s,annotationId:u}}n.replace=t;function i(o,s,u){return{range:{start:o,end:o},newText:s,annotationId:u}}n.insert=i;function r(o,s){return{range:o,newText:"",annotationId:s}}n.del=r;function e(o){var s=o;return C.is(s)&&(R.is(s.annotationId)||y.is(s.annotationId))}n.is=e})(I||(I={}));var te;(function(n){function t(r,e){return{textDocument:r,edits:e}}n.create=t;function i(r){var e=r;return a.defined(e)&&re.is(e.textDocument)&&Array.isArray(e.edits)}n.is=i})(te||(te={}));var L;(function(n){function t(r,e,o){var s={kind:"create",uri:r};return e!==void 0&&(e.overwrite!==void 0||e.ignoreIfExists!==void 0)&&(s.options=e),o!==void 0&&(s.annotationId=o),s}n.create=t;function i(r){var e=r;return e&&e.kind==="create"&&a.string(e.uri)&&(e.options===void 0||(e.options.overwrite===void 0||a.boolean(e.options.overwrite))&&(e.options.ignoreIfExists===void 0||a.boolean(e.options.ignoreIfExists)))&&(e.annotationId===void 0||y.is(e.annotationId))}n.is=i})(L||(L={}));var F;(function(n){function t(r,e,o,s){var u={kind:"rename",oldUri:r,newUri:e};return o!==void 0&&(o.overwrite!==void 0||o.ignoreIfExists!==void 0)&&(u.options=o),s!==void 0&&(u.annotationId=s),u}n.create=t;function i(r){var e=r;return e&&e.kind==="rename"&&a.string(e.oldUri)&&a.string(e.newUri)&&(e.options===void 0||(e.options.overwrite===void 0||a.boolean(e.options.overwrite))&&(e.options.ignoreIfExists===void 0||a.boolean(e.options.ignoreIfExists)))&&(e.annotationId===void 0||y.is(e.annotationId))}n.is=i})(F||(F={}));var M;(function(n){function t(r,e,o){var s={kind:"delete",uri:r};return e!==void 0&&(e.recursive!==void 0||e.ignoreIfNotExists!==void 0)&&(s.options=e),o!==void 0&&(s.annotationId=o),s}n.create=t;function i(r){var e=r;return e&&e.kind==="delete"&&a.string(e.uri)&&(e.options===void 0||(e.options.recursive===void 0||a.boolean(e.options.recursive))&&(e.options.ignoreIfNotExists===void 0||a.boolean(e.options.ignoreIfNotExists)))&&(e.annotationId===void 0||y.is(e.annotationId))}n.is=i})(M||(M={}));var de;(function(n){function t(i){var r=i;return r&&(r.changes!==void 0||r.documentChanges!==void 0)&&(r.documentChanges===void 0||r.documentChanges.every(function(e){return a.string(e.kind)?L.is(e)||F.is(e)||M.is(e):te.is(e)}))}n.is=t})(de||(de={}));var Z=function(){function n(t,i){this.edits=t,this.changeAnnotations=i}return n.prototype.insert=function(t,i,r){var e,o;if(r===void 0?e=C.insert(t,i):y.is(r)?(o=r,e=I.insert(t,i,r)):(this.assertChangeAnnotations(this.changeAnnotations),o=this.changeAnnotations.manage(r),e=I.insert(t,i,o)),this.edits.push(e),o!==void 0)return o},n.prototype.replace=function(t,i,r){var e,o;if(r===void 0?e=C.replace(t,i):y.is(r)?(o=r,e=I.replace(t,i,r)):(this.assertChangeAnnotations(this.changeAnnotations),o=this.changeAnnotations.manage(r),e=I.replace(t,i,o)),this.edits.push(e),o!==void 0)return o},n.prototype.delete=function(t,i){var r,e;if(i===void 0?r=C.del(t):y.is(i)?(e=i,r=I.del(t,i)):(this.assertChangeAnnotations(this.changeAnnotations),e=this.changeAnnotations.manage(i),r=I.del(t,e)),this.edits.push(r),e!==void 0)return e},n.prototype.add=function(t){this.edits.push(t)},n.prototype.all=function(){return this.edits},n.prototype.clear=function(){this.edits.splice(0,this.edits.length)},n.prototype.assertChangeAnnotations=function(t){if(t===void 0)throw new Error("Text edit change is not configured to manage change annotations.")},n}(),be=function(){function n(t){this._annotations=t===void 0?Object.create(null):t,this._counter=0,this._size=0}return n.prototype.all=function(){return this._annotations},Object.defineProperty(n.prototype,"size",{get:function(){return this._size},enumerable:!1,configurable:!0}),n.prototype.manage=function(t,i){var r;if(y.is(t)?r=t:(r=this.nextId(),i=t),this._annotations[r]!==void 0)throw new Error("Id "+r+" is already in use.");if(i===void 0)throw new Error("No annotation provided for id "+r);return this._annotations[r]=i,this._size++,r},n.prototype.nextId=function(){return this._counter++,this._counter.toString()},n}(),Mn=function(){function n(t){var i=this;this._textEditChanges=Object.create(null),t!==void 0?(this._workspaceEdit=t,t.documentChanges?(this._changeAnnotations=new be(t.changeAnnotations),t.changeAnnotations=this._changeAnnotations.all(),t.documentChanges.forEach(function(r){if(te.is(r)){var e=new Z(r.edits,i._changeAnnotations);i._textEditChanges[r.textDocument.uri]=e}})):t.changes&&Object.keys(t.changes).forEach(function(r){var e=new Z(t.changes[r]);i._textEditChanges[r]=e})):this._workspaceEdit={}}return Object.defineProperty(n.prototype,"edit",{get:function(){return this.initDocumentChanges(),this._changeAnnotations!==void 0&&(this._changeAnnotations.size===0?this._workspaceEdit.changeAnnotations=void 0:this._workspaceEdit.changeAnnotations=this._changeAnnotations.all()),this._workspaceEdit},enumerable:!1,configurable:!0}),n.prototype.getTextEditChange=function(t){if(re.is(t)){if(this.initDocumentChanges(),this._workspaceEdit.documentChanges===void 0)throw new Error("Workspace edit is not configured for document changes.");var i={uri:t.uri,version:t.version},r=this._textEditChanges[i.uri];if(!r){var e=[],o={textDocument:i,edits:e};this._workspaceEdit.documentChanges.push(o),r=new Z(e,this._changeAnnotations),this._textEditChanges[i.uri]=r}return r}else{if(this.initChanges(),this._workspaceEdit.changes===void 0)throw new Error("Workspace edit is not configured for normal text edit changes.");var r=this._textEditChanges[t];if(!r){var e=[];this._workspaceEdit.changes[t]=e,r=new Z(e),this._textEditChanges[t]=r}return r}},n.prototype.initDocumentChanges=function(){this._workspaceEdit.documentChanges===void 0&&this._workspaceEdit.changes===void 0&&(this._changeAnnotations=new be,this._workspaceEdit.documentChanges=[],this._workspaceEdit.changeAnnotations=this._changeAnnotations.all())},n.prototype.initChanges=function(){this._workspaceEdit.documentChanges===void 0&&this._workspaceEdit.changes===void 0&&(this._workspaceEdit.changes=Object.create(null))},n.prototype.createFile=function(t,i,r){if(this.initDocumentChanges(),this._workspaceEdit.documentChanges===void 0)throw new Error("Workspace edit is not configured for document changes.");var e;R.is(i)||y.is(i)?e=i:r=i;var o,s;if(e===void 0?o=L.create(t,r):(s=y.is(e)?e:this._changeAnnotations.manage(e),o=L.create(t,r,s)),this._workspaceEdit.documentChanges.push(o),s!==void 0)return s},n.prototype.renameFile=function(t,i,r,e){if(this.initDocumentChanges(),this._workspaceEdit.documentChanges===void 0)throw new Error("Workspace edit is not configured for document changes.");var o;R.is(r)||y.is(r)?o=r:e=r;var s,u;if(o===void 0?s=F.create(t,i,e):(u=y.is(o)?o:this._changeAnnotations.manage(o),s=F.create(t,i,e,u)),this._workspaceEdit.documentChanges.push(s),u!==void 0)return u},n.prototype.deleteFile=function(t,i,r){if(this.initDocumentChanges(),this._workspaceEdit.documentChanges===void 0)throw new Error("Workspace edit is not configured for document changes.");var e;R.is(i)||y.is(i)?e=i:r=i;var o,s;if(e===void 0?o=M.create(t,r):(s=y.is(e)?e:this._changeAnnotations.manage(e),o=M.create(t,r,s)),this._workspaceEdit.documentChanges.push(o),s!==void 0)return s},n}();var we;(function(n){function t(r){return{uri:r}}n.create=t;function i(r){var e=r;return a.defined(e)&&a.string(e.uri)}n.is=i})(we||(we={}));var Ee;(function(n){function t(r,e){return{uri:r,version:e}}n.create=t;function i(r){var e=r;return a.defined(e)&&a.string(e.uri)&&a.integer(e.version)}n.is=i})(Ee||(Ee={}));var re;(function(n){function t(r,e){return{uri:r,version:e}}n.create=t;function i(r){var e=r;return a.defined(e)&&a.string(e.uri)&&(e.version===null||a.integer(e.version))}n.is=i})(re||(re={}));var Re;(function(n){function t(r,e,o,s){return{uri:r,languageId:e,version:o,text:s}}n.create=t;function i(r){var e=r;return a.defined(e)&&a.string(e.uri)&&a.string(e.languageId)&&a.integer(e.version)&&a.string(e.text)}n.is=i})(Re||(Re={}));var A;(function(n){n.PlainText="plaintext",n.Markdown="markdown"})(A||(A={}));(function(n){function t(i){var r=i;return r===n.PlainText||r===n.Markdown}n.is=t})(A||(A={}));var ce;(function(n){function t(i){var r=i;return a.objectLiteral(i)&&A.is(r.kind)&&a.string(r.value)}n.is=t})(ce||(ce={}));var p;(function(n){n.Text=1,n.Method=2,n.Function=3,n.Constructor=4,n.Field=5,n.Variable=6,n.Class=7,n.Interface=8,n.Module=9,n.Property=10,n.Unit=11,n.Value=12,n.Enum=13,n.Keyword=14,n.Snippet=15,n.Color=16,n.File=17,n.Reference=18,n.Folder=19,n.EnumMember=20,n.Constant=21,n.Struct=22,n.Event=23,n.Operator=24,n.TypeParameter=25})(p||(p={}));var ie;(function(n){n.PlainText=1,n.Snippet=2})(ie||(ie={}));var Pe;(function(n){n.Deprecated=1})(Pe||(Pe={}));var Se;(function(n){function t(r,e,o){return{newText:r,insert:e,replace:o}}n.create=t;function i(r){var e=r;return e&&a.string(e.newText)&&v.is(e.insert)&&v.is(e.replace)}n.is=i})(Se||(Se={}));var We;(function(n){n.asIs=1,n.adjustIndentation=2})(We||(We={}));var De;(function(n){function t(i){return{label:i}}n.create=t})(De||(De={}));var Le;(function(n){function t(i,r){return{items:i||[],isIncomplete:!!r}}n.create=t})(Le||(Le={}));var oe;(function(n){function t(r){return r.replace(/[\\`*_{}[\]()#+\-.!]/g,"\\$&")}n.fromPlainText=t;function i(r){var e=r;return a.string(e)||a.objectLiteral(e)&&a.string(e.language)&&a.string(e.value)}n.is=i})(oe||(oe={}));var Fe;(function(n){function t(i){var r=i;return!!r&&a.objectLiteral(r)&&(ce.is(r.contents)||oe.is(r.contents)||a.typedArray(r.contents,oe.is))&&(i.range===void 0||v.is(i.range))}n.is=t})(Fe||(Fe={}));var Me;(function(n){function t(i,r){return r?{label:i,documentation:r}:{label:i}}n.create=t})(Me||(Me={}));var Ae;(function(n){function t(i,r){for(var e=[],o=2;o<arguments.length;o++)e[o-2]=arguments[o];var s={label:i};return a.defined(r)&&(s.documentation=r),a.defined(e)?s.parameters=e:s.parameters=[],s}n.create=t})(Ae||(Ae={}));var S;(function(n){n.Text=1,n.Read=2,n.Write=3})(S||(S={}));var Ke;(function(n){function t(i,r){var e={range:i};return a.number(r)&&(e.kind=r),e}n.create=t})(Ke||(Ke={}));var h;(function(n){n.File=1,n.Module=2,n.Namespace=3,n.Package=4,n.Class=5,n.Method=6,n.Property=7,n.Field=8,n.Constructor=9,n.Enum=10,n.Interface=11,n.Function=12,n.Variable=13,n.Constant=14,n.String=15,n.Number=16,n.Boolean=17,n.Array=18,n.Object=19,n.Key=20,n.Null=21,n.EnumMember=22,n.Struct=23,n.Event=24,n.Operator=25,n.TypeParameter=26})(h||(h={}));var He;(function(n){n.Deprecated=1})(He||(He={}));var Ue;(function(n){function t(i,r,e,o,s){var u={name:i,kind:r,location:{uri:o,range:e}};return s&&(u.containerName=s),u}n.create=t})(Ue||(Ue={}));var je;(function(n){function t(r,e,o,s,u,l){var f={name:r,detail:e,kind:o,range:s,selectionRange:u};return l!==void 0&&(f.children=l),f}n.create=t;function i(r){var e=r;return e&&a.string(e.name)&&a.number(e.kind)&&v.is(e.range)&&v.is(e.selectionRange)&&(e.detail===void 0||a.string(e.detail))&&(e.deprecated===void 0||a.boolean(e.deprecated))&&(e.children===void 0||Array.isArray(e.children))&&(e.tags===void 0||Array.isArray(e.tags))}n.is=i})(je||(je={}));var Oe;(function(n){n.Empty="",n.QuickFix="quickfix",n.Refactor="refactor",n.RefactorExtract="refactor.extract",n.RefactorInline="refactor.inline",n.RefactorRewrite="refactor.rewrite",n.Source="source",n.SourceOrganizeImports="source.organizeImports",n.SourceFixAll="source.fixAll"})(Oe||(Oe={}));var Ne;(function(n){function t(r,e){var o={diagnostics:r};return e!=null&&(o.only=e),o}n.create=t;function i(r){var e=r;return a.defined(e)&&a.typedArray(e.diagnostics,ne.is)&&(e.only===void 0||a.typedArray(e.only,a.string))}n.is=i})(Ne||(Ne={}));var Ve;(function(n){function t(r,e,o){var s={title:r},u=!0;return typeof e=="string"?(u=!1,s.kind=e):D.is(e)?s.command=e:s.edit=e,u&&o!==void 0&&(s.kind=o),s}n.create=t;function i(r){var e=r;return e&&a.string(e.title)&&(e.diagnostics===void 0||a.typedArray(e.diagnostics,ne.is))&&(e.kind===void 0||a.string(e.kind))&&(e.edit!==void 0||e.command!==void 0)&&(e.command===void 0||D.is(e.command))&&(e.isPreferred===void 0||a.boolean(e.isPreferred))&&(e.edit===void 0||de.is(e.edit))}n.is=i})(Ve||(Ve={}));var ze;(function(n){function t(r,e){var o={range:r};return a.defined(e)&&(o.data=e),o}n.create=t;function i(r){var e=r;return a.defined(e)&&v.is(e.range)&&(a.undefined(e.command)||D.is(e.command))}n.is=i})(ze||(ze={}));var Xe;(function(n){function t(r,e){return{tabSize:r,insertSpaces:e}}n.create=t;function i(r){var e=r;return a.defined(e)&&a.uinteger(e.tabSize)&&a.boolean(e.insertSpaces)}n.is=i})(Xe||(Xe={}));var Be;(function(n){function t(r,e,o){return{range:r,target:e,data:o}}n.create=t;function i(r){var e=r;return a.defined(e)&&v.is(e.range)&&(a.undefined(e.target)||a.string(e.target))}n.is=i})(Be||(Be={}));var $e;(function(n){function t(r,e){return{range:r,parent:e}}n.create=t;function i(r){var e=r;return e!==void 0&&v.is(e.range)&&(e.parent===void 0||n.is(e.parent))}n.is=i})($e||($e={}));var qe;(function(n){function t(o,s,u,l){return new gn(o,s,u,l)}n.create=t;function i(o){var s=o;return!!(a.defined(s)&&a.string(s.uri)&&(a.undefined(s.languageId)||a.string(s.languageId))&&a.uinteger(s.lineCount)&&a.func(s.getText)&&a.func(s.positionAt)&&a.func(s.offsetAt))}n.is=i;function r(o,s){for(var u=o.getText(),l=e(s,function(w,G){var fe=w.range.start.line-G.range.start.line;return fe===0?w.range.start.character-G.range.start.character:fe}),f=u.length,g=l.length-1;g>=0;g--){var m=l[g],k=o.offsetAt(m.range.start),c=o.offsetAt(m.range.end);if(c<=f)u=u.substring(0,k)+m.newText+u.substring(c,u.length);else throw new Error("Overlapping edit");f=k}return u}n.applyEdits=r;function e(o,s){if(o.length<=1)return o;var u=o.length/2|0,l=o.slice(0,u),f=o.slice(u);e(l,s),e(f,s);for(var g=0,m=0,k=0;g<l.length&&m<f.length;){var c=s(l[g],f[m]);c<=0?o[k++]=l[g++]:o[k++]=f[m++]}for(;g<l.length;)o[k++]=l[g++];for(;m<f.length;)o[k++]=f[m++];return o}})(qe||(qe={}));var gn=function(){function n(t,i,r,e){this._uri=t,this._languageId=i,this._version=r,this._content=e,this._lineOffsets=void 0}return Object.defineProperty(n.prototype,"uri",{get:function(){return this._uri},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"languageId",{get:function(){return this._languageId},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"version",{get:function(){return this._version},enumerable:!1,configurable:!0}),n.prototype.getText=function(t){if(t){var i=this.offsetAt(t.start),r=this.offsetAt(t.end);return this._content.substring(i,r)}return this._content},n.prototype.update=function(t,i){this._content=t.text,this._version=i,this._lineOffsets=void 0},n.prototype.getLineOffsets=function(){if(this._lineOffsets===void 0){for(var t=[],i=this._content,r=!0,e=0;e<i.length;e++){r&&(t.push(e),r=!1);var o=i.charAt(e);r=o==="\r"||o===`
-`,o==="\r"&&e+1<i.length&&i.charAt(e+1)===`
-`&&e++}r&&i.length>0&&t.push(i.length),this._lineOffsets=t}return this._lineOffsets},n.prototype.positionAt=function(t){t=Math.max(Math.min(t,this._content.length),0);var i=this.getLineOffsets(),r=0,e=i.length;if(e===0)return x.create(0,t);for(;r<e;){var o=Math.floor((r+e)/2);i[o]>t?e=o:r=o+1}var s=r-1;return x.create(s,t-i[s])},n.prototype.offsetAt=function(t){var i=this.getLineOffsets();if(t.line>=i.length)return this._content.length;if(t.line<0)return 0;var r=i[t.line],e=t.line+1<i.length?i[t.line+1]:this._content.length;return Math.max(Math.min(r+t.character,e),r)},Object.defineProperty(n.prototype,"lineCount",{get:function(){return this.getLineOffsets().length},enumerable:!1,configurable:!0}),n}(),a;(function(n){var t=Object.prototype.toString;function i(c){return typeof c<"u"}n.defined=i;function r(c){return typeof c>"u"}n.undefined=r;function e(c){return c===!0||c===!1}n.boolean=e;function o(c){return t.call(c)==="[object String]"}n.string=o;function s(c){return t.call(c)==="[object Number]"}n.number=s;function u(c,w,G){return t.call(c)==="[object Number]"&&w<=c&&c<=G}n.numberRange=u;function l(c){return t.call(c)==="[object Number]"&&-2147483648<=c&&c<=2147483647}n.integer=l;function f(c){return t.call(c)==="[object Number]"&&0<=c&&c<=2147483647}n.uinteger=f;function g(c){return t.call(c)==="[object Function]"}n.func=g;function m(c){return c!==null&&typeof c=="object"}n.objectLiteral=m;function k(c,w){return Array.isArray(c)&&c.every(w)}n.typedArray=k})(a||(a={}));var K=class{constructor(t,i,r){this._languageId=t;this._worker=i;let e=s=>{let u=s.getLanguageId();if(u!==this._languageId)return;let l;this._listener[s.uri.toString()]=s.onDidChangeContent(()=>{window.clearTimeout(l),l=window.setTimeout(()=>this._doValidate(s.uri,u),500)}),this._doValidate(s.uri,u)},o=s=>{d.editor.setModelMarkers(s,this._languageId,[]);let u=s.uri.toString(),l=this._listener[u];l&&(l.dispose(),delete this._listener[u])};this._disposables.push(d.editor.onDidCreateModel(e)),this._disposables.push(d.editor.onWillDisposeModel(o)),this._disposables.push(d.editor.onDidChangeModelLanguage(s=>{o(s.model),e(s.model)})),this._disposables.push(r(s=>{d.editor.getModels().forEach(u=>{u.getLanguageId()===this._languageId&&(o(u),e(u))})})),this._disposables.push({dispose:()=>{d.editor.getModels().forEach(o);for(let s in this._listener)this._listener[s].dispose()}}),d.editor.getModels().forEach(e)}_disposables=[];_listener=Object.create(null);dispose(){this._disposables.forEach(t=>t&&t.dispose()),this._disposables.length=0}_doValidate(t,i){this._worker(t).then(r=>r.doValidation(t.toString())).then(r=>{let e=r.map(s=>hn(t,s)),o=d.editor.getModel(t);o&&o.getLanguageId()===i&&d.editor.setModelMarkers(o,i,e)}).then(void 0,r=>{console.error(r)})}};function pn(n){switch(n){case b.Error:return d.MarkerSeverity.Error;case b.Warning:return d.MarkerSeverity.Warning;case b.Information:return d.MarkerSeverity.Info;case b.Hint:return d.MarkerSeverity.Hint;default:return d.MarkerSeverity.Info}}function hn(n,t){let i=typeof t.code=="number"?String(t.code):t.code;return{severity:pn(t.severity),startLineNumber:t.range.start.line+1,startColumn:t.range.start.character+1,endLineNumber:t.range.end.line+1,endColumn:t.range.end.character+1,message:t.message,code:i,source:t.source}}var H=class{constructor(t,i){this._worker=t;this._triggerCharacters=i}get triggerCharacters(){return this._triggerCharacters}provideCompletionItems(t,i,r,e){let o=t.uri;return this._worker(o).then(s=>s.doComplete(o.toString(),_(i))).then(s=>{if(!s)return;let u=t.getWordUntilPosition(i),l=new d.Range(i.lineNumber,u.startColumn,i.lineNumber,u.endColumn),f=s.items.map(g=>{let m={label:g.label,insertText:g.insertText||g.label,sortText:g.sortText,filterText:g.filterText,documentation:g.documentation,detail:g.detail,command:yn(g.command),range:l,kind:vn(g.kind)};return g.textEdit&&(mn(g.textEdit)?m.range={insert:T(g.textEdit.insert),replace:T(g.textEdit.replace)}:m.range=T(g.textEdit.range),m.insertText=g.textEdit.newText),g.additionalTextEdits&&(m.additionalTextEdits=g.additionalTextEdits.map(W)),g.insertTextFormat===ie.Snippet&&(m.insertTextRules=d.languages.CompletionItemInsertTextRule.InsertAsSnippet),m});return{isIncomplete:s.isIncomplete,suggestions:f}})}};function _(n){if(!!n)return{character:n.column-1,line:n.lineNumber-1}}function ge(n){if(!!n)return{start:{line:n.startLineNumber-1,character:n.startColumn-1},end:{line:n.endLineNumber-1,character:n.endColumn-1}}}function T(n){if(!!n)return new d.Range(n.start.line+1,n.start.character+1,n.end.line+1,n.end.character+1)}function mn(n){return typeof n.insert<"u"&&typeof n.replace<"u"}function vn(n){let t=d.languages.CompletionItemKind;switch(n){case p.Text:return t.Text;case p.Method:return t.Method;case p.Function:return t.Function;case p.Constructor:return t.Constructor;case p.Field:return t.Field;case p.Variable:return t.Variable;case p.Class:return t.Class;case p.Interface:return t.Interface;case p.Module:return t.Module;case p.Property:return t.Property;case p.Unit:return t.Unit;case p.Value:return t.Value;case p.Enum:return t.Enum;case p.Keyword:return t.Keyword;case p.Snippet:return t.Snippet;case p.Color:return t.Color;case p.File:return t.File;case p.Reference:return t.Reference}return t.Property}function W(n){if(!!n)return{range:T(n.range),text:n.newText}}function yn(n){return n&&n.command==="editor.action.triggerSuggest"?{id:n.command,title:n.title,arguments:n.arguments}:void 0}var U=class{constructor(t){this._worker=t}provideHover(t,i,r){let e=t.uri;return this._worker(e).then(o=>o.doHover(e.toString(),_(i))).then(o=>{if(!!o)return{range:T(o.range),contents:xn(o.contents)}})}};function Tn(n){return n&&typeof n=="object"&&typeof n.kind=="string"}function Qe(n){return typeof n=="string"?{value:n}:Tn(n)?n.kind==="plaintext"?{value:n.value.replace(/[\\`*_{}[\]()#+\-.!]/g,"\\$&")}:{value:n.value}:{value:"```"+n.language+`
-`+n.value+"\n```\n"}}function xn(n){if(!!n)return Array.isArray(n)?n.map(Qe):[Qe(n)]}var j=class{constructor(t){this._worker=t}provideDocumentHighlights(t,i,r){let e=t.uri;return this._worker(e).then(o=>o.findDocumentHighlights(e.toString(),_(i))).then(o=>{if(!!o)return o.map(s=>({range:T(s.range),kind:kn(s.kind)}))})}};function kn(n){switch(n){case S.Read:return d.languages.DocumentHighlightKind.Read;case S.Write:return d.languages.DocumentHighlightKind.Write;case S.Text:return d.languages.DocumentHighlightKind.Text}return d.languages.DocumentHighlightKind.Text}var O=class{constructor(t){this._worker=t}provideDefinition(t,i,r){let e=t.uri;return this._worker(e).then(o=>o.findDefinition(e.toString(),_(i))).then(o=>{if(!!o)return[Ge(o)]})}};function Ge(n){return{uri:d.Uri.parse(n.uri),range:T(n.range)}}var N=class{constructor(t){this._worker=t}provideReferences(t,i,r,e){let o=t.uri;return this._worker(o).then(s=>s.findReferences(o.toString(),_(i))).then(s=>{if(!!s)return s.map(Ge)})}},V=class{constructor(t){this._worker=t}provideRenameEdits(t,i,r,e){let o=t.uri;return this._worker(o).then(s=>s.doRename(o.toString(),_(i),r)).then(s=>In(s))}};function In(n){if(!n||!n.changes)return;let t=[];for(let i in n.changes){let r=d.Uri.parse(i);for(let e of n.changes[i])t.push({resource:r,versionId:void 0,textEdit:{range:T(e.range),text:e.newText}})}return{edits:t}}var z=class{constructor(t){this._worker=t}provideDocumentSymbols(t,i){let r=t.uri;return this._worker(r).then(e=>e.findDocumentSymbols(r.toString())).then(e=>{if(!!e)return e.map(o=>({name:o.name,detail:"",containerName:o.containerName,kind:Cn(o.kind),range:T(o.location.range),selectionRange:T(o.location.range),tags:[]}))})}};function Cn(n){let t=d.languages.SymbolKind;switch(n){case h.File:return t.Array;case h.Module:return t.Module;case h.Namespace:return t.Namespace;case h.Package:return t.Package;case h.Class:return t.Class;case h.Method:return t.Method;case h.Property:return t.Property;case h.Field:return t.Field;case h.Constructor:return t.Constructor;case h.Enum:return t.Enum;case h.Interface:return t.Interface;case h.Function:return t.Function;case h.Variable:return t.Variable;case h.Constant:return t.Constant;case h.String:return t.String;case h.Number:return t.Number;case h.Boolean:return t.Boolean;case h.Array:return t.Array}return t.Function}var le=class{constructor(t){this._worker=t}provideLinks(t,i){let r=t.uri;return this._worker(r).then(e=>e.findDocumentLinks(r.toString())).then(e=>{if(!!e)return{links:e.map(o=>({range:T(o.range),url:o.target}))}})}},X=class{constructor(t){this._worker=t}provideDocumentFormattingEdits(t,i,r){let e=t.uri;return this._worker(e).then(o=>o.format(e.toString(),null,Je(i)).then(s=>{if(!(!s||s.length===0))return s.map(W)}))}},B=class{constructor(t){this._worker=t}provideDocumentRangeFormattingEdits(t,i,r,e){let o=t.uri;return this._worker(o).then(s=>s.format(o.toString(),ge(i),Je(r)).then(u=>{if(!(!u||u.length===0))return u.map(W)}))}};function Je(n){return{tabSize:n.tabSize,insertSpaces:n.insertSpaces}}var $=class{constructor(t){this._worker=t}provideDocumentColors(t,i){let r=t.uri;return this._worker(r).then(e=>e.findDocumentColors(r.toString())).then(e=>{if(!!e)return e.map(o=>({color:o.color,range:T(o.range)}))})}provideColorPresentations(t,i,r){let e=t.uri;return this._worker(e).then(o=>o.getColorPresentations(e.toString(),i.color,ge(i.range))).then(o=>{if(!!o)return o.map(s=>{let u={label:s.label};return s.textEdit&&(u.textEdit=W(s.textEdit)),s.additionalTextEdits&&(u.additionalTextEdits=s.additionalTextEdits.map(W)),u})})}},q=class{constructor(t){this._worker=t}provideFoldingRanges(t,i,r){let e=t.uri;return this._worker(e).then(o=>o.getFoldingRanges(e.toString(),i)).then(o=>{if(!!o)return o.map(s=>{let u={start:s.startLine+1,end:s.endLine+1};return typeof s.kind<"u"&&(u.kind=_n(s.kind)),u})})}};function _n(n){switch(n){case P.Comment:return d.languages.FoldingRangeKind.Comment;case P.Imports:return d.languages.FoldingRangeKind.Imports;case P.Region:return d.languages.FoldingRangeKind.Region}}var Q=class{constructor(t){this._worker=t}provideSelectionRanges(t,i,r){let e=t.uri;return this._worker(e).then(o=>o.getSelectionRanges(e.toString(),i.map(_))).then(o=>{if(!!o)return o.map(s=>{let u=[];for(;s;)u.push({range:T(s.range)}),s=s.parent;return u})})}};function wn(n){let t=[],i=[],r=new E(n);t.push(r);let e=(...s)=>r.getLanguageServiceWorker(...s);function o(){let{languageId:s,modeConfiguration:u}=n;Ze(i),u.completionItems&&i.push(d.languages.registerCompletionItemProvider(s,new H(e,["/","-",":"]))),u.hovers&&i.push(d.languages.registerHoverProvider(s,new U(e))),u.documentHighlights&&i.push(d.languages.registerDocumentHighlightProvider(s,new j(e))),u.definitions&&i.push(d.languages.registerDefinitionProvider(s,new O(e))),u.references&&i.push(d.languages.registerReferenceProvider(s,new N(e))),u.documentSymbols&&i.push(d.languages.registerDocumentSymbolProvider(s,new z(e))),u.rename&&i.push(d.languages.registerRenameProvider(s,new V(e))),u.colors&&i.push(d.languages.registerColorProvider(s,new $(e))),u.foldingRanges&&i.push(d.languages.registerFoldingRangeProvider(s,new q(e))),u.diagnostics&&i.push(new K(s,e,n.onDidChange)),u.selectionRanges&&i.push(d.languages.registerSelectionRangeProvider(s,new Q(e))),u.documentFormattingEdits&&i.push(d.languages.registerDocumentFormattingEditProvider(s,new X(e))),u.documentRangeFormattingEdits&&i.push(d.languages.registerDocumentRangeFormattingEditProvider(s,new B(e)))}return o(),t.push(Ye(i)),Ye(t)}function Ye(n){return{dispose:()=>Ze(n)}}function Ze(n){for(;n.length;)n.pop().dispose()}return dn(En);})();
+define("vs/language/css/cssMode", ["require"],(require)=>{
+"use strict";
+var moduleExports = (() => {
+  var __create = Object.create;
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getProtoOf = Object.getPrototypeOf;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+    get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+  }) : x)(function(x) {
+    if (typeof require !== "undefined")
+      return require.apply(this, arguments);
+    throw Error('Dynamic require of "' + x + '" is not supported');
+  });
+  var __commonJS = (cb, mod) => function __require2() {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  };
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
+  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+    // If the importer is in node compatibility mode or this is not an ESM
+    // file that has been converted to a CommonJS file using a Babel-
+    // compatible transform (i.e. "__esModule" has not been set), then set
+    // "default" to the CommonJS "module.exports" for node compatibility.
+    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+    mod
+  ));
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // src/fillers/monaco-editor-core-amd.ts
+  var require_monaco_editor_core_amd = __commonJS({
+    "src/fillers/monaco-editor-core-amd.ts"(exports, module) {
+      var api = __toESM(__require("vs/editor/editor.api"));
+      module.exports = api;
+    }
+  });
+
+  // src/language/css/cssMode.ts
+  var cssMode_exports = {};
+  __export(cssMode_exports, {
+    CompletionAdapter: () => CompletionAdapter,
+    DefinitionAdapter: () => DefinitionAdapter,
+    DiagnosticsAdapter: () => DiagnosticsAdapter,
+    DocumentColorAdapter: () => DocumentColorAdapter,
+    DocumentFormattingEditProvider: () => DocumentFormattingEditProvider,
+    DocumentHighlightAdapter: () => DocumentHighlightAdapter,
+    DocumentLinkAdapter: () => DocumentLinkAdapter,
+    DocumentRangeFormattingEditProvider: () => DocumentRangeFormattingEditProvider,
+    DocumentSymbolAdapter: () => DocumentSymbolAdapter,
+    FoldingRangeAdapter: () => FoldingRangeAdapter,
+    HoverAdapter: () => HoverAdapter,
+    ReferenceAdapter: () => ReferenceAdapter,
+    RenameAdapter: () => RenameAdapter,
+    SelectionRangeAdapter: () => SelectionRangeAdapter,
+    WorkerManager: () => WorkerManager,
+    fromPosition: () => fromPosition,
+    fromRange: () => fromRange,
+    setupMode: () => setupMode,
+    toRange: () => toRange,
+    toTextEdit: () => toTextEdit
+  });
+
+  // src/fillers/monaco-editor-core.ts
+  var monaco_editor_core_exports = {};
+  __reExport(monaco_editor_core_exports, __toESM(require_monaco_editor_core_amd()));
+
+  // src/language/css/workerManager.ts
+  var STOP_WHEN_IDLE_FOR = 2 * 60 * 1e3;
+  var WorkerManager = class {
+    constructor(defaults) {
+      this._defaults = defaults;
+      this._worker = null;
+      this._client = null;
+      this._idleCheckInterval = window.setInterval(() => this._checkIfIdle(), 30 * 1e3);
+      this._lastUsedTime = 0;
+      this._configChangeListener = this._defaults.onDidChange(() => this._stopWorker());
+    }
+    _stopWorker() {
+      if (this._worker) {
+        this._worker.dispose();
+        this._worker = null;
+      }
+      this._client = null;
+    }
+    dispose() {
+      clearInterval(this._idleCheckInterval);
+      this._configChangeListener.dispose();
+      this._stopWorker();
+    }
+    _checkIfIdle() {
+      if (!this._worker) {
+        return;
+      }
+      let timePassedSinceLastUsed = Date.now() - this._lastUsedTime;
+      if (timePassedSinceLastUsed > STOP_WHEN_IDLE_FOR) {
+        this._stopWorker();
+      }
+    }
+    _getClient() {
+      this._lastUsedTime = Date.now();
+      if (!this._client) {
+        this._worker = monaco_editor_core_exports.editor.createWebWorker({
+          // module that exports the create() method and returns a `CSSWorker` instance
+          moduleId: "vs/language/css/cssWorker",
+          label: this._defaults.languageId,
+          // passed in to the create() method
+          createData: {
+            options: this._defaults.options,
+            languageId: this._defaults.languageId
+          }
+        });
+        this._client = this._worker.getProxy();
+      }
+      return this._client;
+    }
+    getLanguageServiceWorker(...resources) {
+      let _client;
+      return this._getClient().then((client) => {
+        _client = client;
+      }).then((_) => {
+        if (this._worker) {
+          return this._worker.withSyncedResources(resources);
+        }
+      }).then((_) => _client);
+    }
+  };
+
+  // node_modules/vscode-languageserver-types/lib/esm/main.js
+  var DocumentUri;
+  (function(DocumentUri2) {
+    function is(value) {
+      return typeof value === "string";
+    }
+    DocumentUri2.is = is;
+  })(DocumentUri || (DocumentUri = {}));
+  var URI;
+  (function(URI2) {
+    function is(value) {
+      return typeof value === "string";
+    }
+    URI2.is = is;
+  })(URI || (URI = {}));
+  var integer;
+  (function(integer2) {
+    integer2.MIN_VALUE = -2147483648;
+    integer2.MAX_VALUE = 2147483647;
+    function is(value) {
+      return typeof value === "number" && integer2.MIN_VALUE <= value && value <= integer2.MAX_VALUE;
+    }
+    integer2.is = is;
+  })(integer || (integer = {}));
+  var uinteger;
+  (function(uinteger2) {
+    uinteger2.MIN_VALUE = 0;
+    uinteger2.MAX_VALUE = 2147483647;
+    function is(value) {
+      return typeof value === "number" && uinteger2.MIN_VALUE <= value && value <= uinteger2.MAX_VALUE;
+    }
+    uinteger2.is = is;
+  })(uinteger || (uinteger = {}));
+  var Position;
+  (function(Position3) {
+    function create(line, character) {
+      if (line === Number.MAX_VALUE) {
+        line = uinteger.MAX_VALUE;
+      }
+      if (character === Number.MAX_VALUE) {
+        character = uinteger.MAX_VALUE;
+      }
+      return { line, character };
+    }
+    Position3.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Is.uinteger(candidate.line) && Is.uinteger(candidate.character);
+    }
+    Position3.is = is;
+  })(Position || (Position = {}));
+  var Range;
+  (function(Range3) {
+    function create(one, two, three, four) {
+      if (Is.uinteger(one) && Is.uinteger(two) && Is.uinteger(three) && Is.uinteger(four)) {
+        return { start: Position.create(one, two), end: Position.create(three, four) };
+      } else if (Position.is(one) && Position.is(two)) {
+        return { start: one, end: two };
+      } else {
+        throw new Error(`Range#create called with invalid arguments[${one}, ${two}, ${three}, ${four}]`);
+      }
+    }
+    Range3.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Position.is(candidate.start) && Position.is(candidate.end);
+    }
+    Range3.is = is;
+  })(Range || (Range = {}));
+  var Location;
+  (function(Location2) {
+    function create(uri, range) {
+      return { uri, range };
+    }
+    Location2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Range.is(candidate.range) && (Is.string(candidate.uri) || Is.undefined(candidate.uri));
+    }
+    Location2.is = is;
+  })(Location || (Location = {}));
+  var LocationLink;
+  (function(LocationLink2) {
+    function create(targetUri, targetRange, targetSelectionRange, originSelectionRange) {
+      return { targetUri, targetRange, targetSelectionRange, originSelectionRange };
+    }
+    LocationLink2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Range.is(candidate.targetRange) && Is.string(candidate.targetUri) && Range.is(candidate.targetSelectionRange) && (Range.is(candidate.originSelectionRange) || Is.undefined(candidate.originSelectionRange));
+    }
+    LocationLink2.is = is;
+  })(LocationLink || (LocationLink = {}));
+  var Color;
+  (function(Color2) {
+    function create(red, green, blue, alpha) {
+      return {
+        red,
+        green,
+        blue,
+        alpha
+      };
+    }
+    Color2.create = create;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.numberRange(candidate.red, 0, 1) && Is.numberRange(candidate.green, 0, 1) && Is.numberRange(candidate.blue, 0, 1) && Is.numberRange(candidate.alpha, 0, 1);
+    }
+    Color2.is = is;
+  })(Color || (Color = {}));
+  var ColorInformation;
+  (function(ColorInformation2) {
+    function create(range, color) {
+      return {
+        range,
+        color
+      };
+    }
+    ColorInformation2.create = create;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Range.is(candidate.range) && Color.is(candidate.color);
+    }
+    ColorInformation2.is = is;
+  })(ColorInformation || (ColorInformation = {}));
+  var ColorPresentation;
+  (function(ColorPresentation2) {
+    function create(label, textEdit, additionalTextEdits) {
+      return {
+        label,
+        textEdit,
+        additionalTextEdits
+      };
+    }
+    ColorPresentation2.create = create;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.string(candidate.label) && (Is.undefined(candidate.textEdit) || TextEdit.is(candidate)) && (Is.undefined(candidate.additionalTextEdits) || Is.typedArray(candidate.additionalTextEdits, TextEdit.is));
+    }
+    ColorPresentation2.is = is;
+  })(ColorPresentation || (ColorPresentation = {}));
+  var FoldingRangeKind;
+  (function(FoldingRangeKind2) {
+    FoldingRangeKind2.Comment = "comment";
+    FoldingRangeKind2.Imports = "imports";
+    FoldingRangeKind2.Region = "region";
+  })(FoldingRangeKind || (FoldingRangeKind = {}));
+  var FoldingRange;
+  (function(FoldingRange2) {
+    function create(startLine, endLine, startCharacter, endCharacter, kind, collapsedText) {
+      const result = {
+        startLine,
+        endLine
+      };
+      if (Is.defined(startCharacter)) {
+        result.startCharacter = startCharacter;
+      }
+      if (Is.defined(endCharacter)) {
+        result.endCharacter = endCharacter;
+      }
+      if (Is.defined(kind)) {
+        result.kind = kind;
+      }
+      if (Is.defined(collapsedText)) {
+        result.collapsedText = collapsedText;
+      }
+      return result;
+    }
+    FoldingRange2.create = create;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.uinteger(candidate.startLine) && Is.uinteger(candidate.startLine) && (Is.undefined(candidate.startCharacter) || Is.uinteger(candidate.startCharacter)) && (Is.undefined(candidate.endCharacter) || Is.uinteger(candidate.endCharacter)) && (Is.undefined(candidate.kind) || Is.string(candidate.kind));
+    }
+    FoldingRange2.is = is;
+  })(FoldingRange || (FoldingRange = {}));
+  var DiagnosticRelatedInformation;
+  (function(DiagnosticRelatedInformation2) {
+    function create(location, message) {
+      return {
+        location,
+        message
+      };
+    }
+    DiagnosticRelatedInformation2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Location.is(candidate.location) && Is.string(candidate.message);
+    }
+    DiagnosticRelatedInformation2.is = is;
+  })(DiagnosticRelatedInformation || (DiagnosticRelatedInformation = {}));
+  var DiagnosticSeverity;
+  (function(DiagnosticSeverity2) {
+    DiagnosticSeverity2.Error = 1;
+    DiagnosticSeverity2.Warning = 2;
+    DiagnosticSeverity2.Information = 3;
+    DiagnosticSeverity2.Hint = 4;
+  })(DiagnosticSeverity || (DiagnosticSeverity = {}));
+  var DiagnosticTag;
+  (function(DiagnosticTag2) {
+    DiagnosticTag2.Unnecessary = 1;
+    DiagnosticTag2.Deprecated = 2;
+  })(DiagnosticTag || (DiagnosticTag = {}));
+  var CodeDescription;
+  (function(CodeDescription2) {
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.string(candidate.href);
+    }
+    CodeDescription2.is = is;
+  })(CodeDescription || (CodeDescription = {}));
+  var Diagnostic;
+  (function(Diagnostic2) {
+    function create(range, message, severity, code, source, relatedInformation) {
+      let result = { range, message };
+      if (Is.defined(severity)) {
+        result.severity = severity;
+      }
+      if (Is.defined(code)) {
+        result.code = code;
+      }
+      if (Is.defined(source)) {
+        result.source = source;
+      }
+      if (Is.defined(relatedInformation)) {
+        result.relatedInformation = relatedInformation;
+      }
+      return result;
+    }
+    Diagnostic2.create = create;
+    function is(value) {
+      var _a;
+      let candidate = value;
+      return Is.defined(candidate) && Range.is(candidate.range) && Is.string(candidate.message) && (Is.number(candidate.severity) || Is.undefined(candidate.severity)) && (Is.integer(candidate.code) || Is.string(candidate.code) || Is.undefined(candidate.code)) && (Is.undefined(candidate.codeDescription) || Is.string((_a = candidate.codeDescription) === null || _a === void 0 ? void 0 : _a.href)) && (Is.string(candidate.source) || Is.undefined(candidate.source)) && (Is.undefined(candidate.relatedInformation) || Is.typedArray(candidate.relatedInformation, DiagnosticRelatedInformation.is));
+    }
+    Diagnostic2.is = is;
+  })(Diagnostic || (Diagnostic = {}));
+  var Command;
+  (function(Command2) {
+    function create(title, command, ...args) {
+      let result = { title, command };
+      if (Is.defined(args) && args.length > 0) {
+        result.arguments = args;
+      }
+      return result;
+    }
+    Command2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.title) && Is.string(candidate.command);
+    }
+    Command2.is = is;
+  })(Command || (Command = {}));
+  var TextEdit;
+  (function(TextEdit2) {
+    function replace(range, newText) {
+      return { range, newText };
+    }
+    TextEdit2.replace = replace;
+    function insert(position, newText) {
+      return { range: { start: position, end: position }, newText };
+    }
+    TextEdit2.insert = insert;
+    function del(range) {
+      return { range, newText: "" };
+    }
+    TextEdit2.del = del;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.string(candidate.newText) && Range.is(candidate.range);
+    }
+    TextEdit2.is = is;
+  })(TextEdit || (TextEdit = {}));
+  var ChangeAnnotation;
+  (function(ChangeAnnotation2) {
+    function create(label, needsConfirmation, description) {
+      const result = { label };
+      if (needsConfirmation !== void 0) {
+        result.needsConfirmation = needsConfirmation;
+      }
+      if (description !== void 0) {
+        result.description = description;
+      }
+      return result;
+    }
+    ChangeAnnotation2.create = create;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Is.string(candidate.label) && (Is.boolean(candidate.needsConfirmation) || candidate.needsConfirmation === void 0) && (Is.string(candidate.description) || candidate.description === void 0);
+    }
+    ChangeAnnotation2.is = is;
+  })(ChangeAnnotation || (ChangeAnnotation = {}));
+  var ChangeAnnotationIdentifier;
+  (function(ChangeAnnotationIdentifier2) {
+    function is(value) {
+      const candidate = value;
+      return Is.string(candidate);
+    }
+    ChangeAnnotationIdentifier2.is = is;
+  })(ChangeAnnotationIdentifier || (ChangeAnnotationIdentifier = {}));
+  var AnnotatedTextEdit;
+  (function(AnnotatedTextEdit2) {
+    function replace(range, newText, annotation) {
+      return { range, newText, annotationId: annotation };
+    }
+    AnnotatedTextEdit2.replace = replace;
+    function insert(position, newText, annotation) {
+      return { range: { start: position, end: position }, newText, annotationId: annotation };
+    }
+    AnnotatedTextEdit2.insert = insert;
+    function del(range, annotation) {
+      return { range, newText: "", annotationId: annotation };
+    }
+    AnnotatedTextEdit2.del = del;
+    function is(value) {
+      const candidate = value;
+      return TextEdit.is(candidate) && (ChangeAnnotation.is(candidate.annotationId) || ChangeAnnotationIdentifier.is(candidate.annotationId));
+    }
+    AnnotatedTextEdit2.is = is;
+  })(AnnotatedTextEdit || (AnnotatedTextEdit = {}));
+  var TextDocumentEdit;
+  (function(TextDocumentEdit2) {
+    function create(textDocument, edits) {
+      return { textDocument, edits };
+    }
+    TextDocumentEdit2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && OptionalVersionedTextDocumentIdentifier.is(candidate.textDocument) && Array.isArray(candidate.edits);
+    }
+    TextDocumentEdit2.is = is;
+  })(TextDocumentEdit || (TextDocumentEdit = {}));
+  var CreateFile;
+  (function(CreateFile2) {
+    function create(uri, options, annotation) {
+      let result = {
+        kind: "create",
+        uri
+      };
+      if (options !== void 0 && (options.overwrite !== void 0 || options.ignoreIfExists !== void 0)) {
+        result.options = options;
+      }
+      if (annotation !== void 0) {
+        result.annotationId = annotation;
+      }
+      return result;
+    }
+    CreateFile2.create = create;
+    function is(value) {
+      let candidate = value;
+      return candidate && candidate.kind === "create" && Is.string(candidate.uri) && (candidate.options === void 0 || (candidate.options.overwrite === void 0 || Is.boolean(candidate.options.overwrite)) && (candidate.options.ignoreIfExists === void 0 || Is.boolean(candidate.options.ignoreIfExists))) && (candidate.annotationId === void 0 || ChangeAnnotationIdentifier.is(candidate.annotationId));
+    }
+    CreateFile2.is = is;
+  })(CreateFile || (CreateFile = {}));
+  var RenameFile;
+  (function(RenameFile2) {
+    function create(oldUri, newUri, options, annotation) {
+      let result = {
+        kind: "rename",
+        oldUri,
+        newUri
+      };
+      if (options !== void 0 && (options.overwrite !== void 0 || options.ignoreIfExists !== void 0)) {
+        result.options = options;
+      }
+      if (annotation !== void 0) {
+        result.annotationId = annotation;
+      }
+      return result;
+    }
+    RenameFile2.create = create;
+    function is(value) {
+      let candidate = value;
+      return candidate && candidate.kind === "rename" && Is.string(candidate.oldUri) && Is.string(candidate.newUri) && (candidate.options === void 0 || (candidate.options.overwrite === void 0 || Is.boolean(candidate.options.overwrite)) && (candidate.options.ignoreIfExists === void 0 || Is.boolean(candidate.options.ignoreIfExists))) && (candidate.annotationId === void 0 || ChangeAnnotationIdentifier.is(candidate.annotationId));
+    }
+    RenameFile2.is = is;
+  })(RenameFile || (RenameFile = {}));
+  var DeleteFile;
+  (function(DeleteFile2) {
+    function create(uri, options, annotation) {
+      let result = {
+        kind: "delete",
+        uri
+      };
+      if (options !== void 0 && (options.recursive !== void 0 || options.ignoreIfNotExists !== void 0)) {
+        result.options = options;
+      }
+      if (annotation !== void 0) {
+        result.annotationId = annotation;
+      }
+      return result;
+    }
+    DeleteFile2.create = create;
+    function is(value) {
+      let candidate = value;
+      return candidate && candidate.kind === "delete" && Is.string(candidate.uri) && (candidate.options === void 0 || (candidate.options.recursive === void 0 || Is.boolean(candidate.options.recursive)) && (candidate.options.ignoreIfNotExists === void 0 || Is.boolean(candidate.options.ignoreIfNotExists))) && (candidate.annotationId === void 0 || ChangeAnnotationIdentifier.is(candidate.annotationId));
+    }
+    DeleteFile2.is = is;
+  })(DeleteFile || (DeleteFile = {}));
+  var WorkspaceEdit;
+  (function(WorkspaceEdit2) {
+    function is(value) {
+      let candidate = value;
+      return candidate && (candidate.changes !== void 0 || candidate.documentChanges !== void 0) && (candidate.documentChanges === void 0 || candidate.documentChanges.every((change) => {
+        if (Is.string(change.kind)) {
+          return CreateFile.is(change) || RenameFile.is(change) || DeleteFile.is(change);
+        } else {
+          return TextDocumentEdit.is(change);
+        }
+      }));
+    }
+    WorkspaceEdit2.is = is;
+  })(WorkspaceEdit || (WorkspaceEdit = {}));
+  var TextDocumentIdentifier;
+  (function(TextDocumentIdentifier2) {
+    function create(uri) {
+      return { uri };
+    }
+    TextDocumentIdentifier2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri);
+    }
+    TextDocumentIdentifier2.is = is;
+  })(TextDocumentIdentifier || (TextDocumentIdentifier = {}));
+  var VersionedTextDocumentIdentifier;
+  (function(VersionedTextDocumentIdentifier2) {
+    function create(uri, version) {
+      return { uri, version };
+    }
+    VersionedTextDocumentIdentifier2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri) && Is.integer(candidate.version);
+    }
+    VersionedTextDocumentIdentifier2.is = is;
+  })(VersionedTextDocumentIdentifier || (VersionedTextDocumentIdentifier = {}));
+  var OptionalVersionedTextDocumentIdentifier;
+  (function(OptionalVersionedTextDocumentIdentifier2) {
+    function create(uri, version) {
+      return { uri, version };
+    }
+    OptionalVersionedTextDocumentIdentifier2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri) && (candidate.version === null || Is.integer(candidate.version));
+    }
+    OptionalVersionedTextDocumentIdentifier2.is = is;
+  })(OptionalVersionedTextDocumentIdentifier || (OptionalVersionedTextDocumentIdentifier = {}));
+  var TextDocumentItem;
+  (function(TextDocumentItem2) {
+    function create(uri, languageId, version, text) {
+      return { uri, languageId, version, text };
+    }
+    TextDocumentItem2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri) && Is.string(candidate.languageId) && Is.integer(candidate.version) && Is.string(candidate.text);
+    }
+    TextDocumentItem2.is = is;
+  })(TextDocumentItem || (TextDocumentItem = {}));
+  var MarkupKind;
+  (function(MarkupKind2) {
+    MarkupKind2.PlainText = "plaintext";
+    MarkupKind2.Markdown = "markdown";
+    function is(value) {
+      const candidate = value;
+      return candidate === MarkupKind2.PlainText || candidate === MarkupKind2.Markdown;
+    }
+    MarkupKind2.is = is;
+  })(MarkupKind || (MarkupKind = {}));
+  var MarkupContent;
+  (function(MarkupContent2) {
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(value) && MarkupKind.is(candidate.kind) && Is.string(candidate.value);
+    }
+    MarkupContent2.is = is;
+  })(MarkupContent || (MarkupContent = {}));
+  var CompletionItemKind;
+  (function(CompletionItemKind2) {
+    CompletionItemKind2.Text = 1;
+    CompletionItemKind2.Method = 2;
+    CompletionItemKind2.Function = 3;
+    CompletionItemKind2.Constructor = 4;
+    CompletionItemKind2.Field = 5;
+    CompletionItemKind2.Variable = 6;
+    CompletionItemKind2.Class = 7;
+    CompletionItemKind2.Interface = 8;
+    CompletionItemKind2.Module = 9;
+    CompletionItemKind2.Property = 10;
+    CompletionItemKind2.Unit = 11;
+    CompletionItemKind2.Value = 12;
+    CompletionItemKind2.Enum = 13;
+    CompletionItemKind2.Keyword = 14;
+    CompletionItemKind2.Snippet = 15;
+    CompletionItemKind2.Color = 16;
+    CompletionItemKind2.File = 17;
+    CompletionItemKind2.Reference = 18;
+    CompletionItemKind2.Folder = 19;
+    CompletionItemKind2.EnumMember = 20;
+    CompletionItemKind2.Constant = 21;
+    CompletionItemKind2.Struct = 22;
+    CompletionItemKind2.Event = 23;
+    CompletionItemKind2.Operator = 24;
+    CompletionItemKind2.TypeParameter = 25;
+  })(CompletionItemKind || (CompletionItemKind = {}));
+  var InsertTextFormat;
+  (function(InsertTextFormat2) {
+    InsertTextFormat2.PlainText = 1;
+    InsertTextFormat2.Snippet = 2;
+  })(InsertTextFormat || (InsertTextFormat = {}));
+  var CompletionItemTag;
+  (function(CompletionItemTag2) {
+    CompletionItemTag2.Deprecated = 1;
+  })(CompletionItemTag || (CompletionItemTag = {}));
+  var InsertReplaceEdit;
+  (function(InsertReplaceEdit2) {
+    function create(newText, insert, replace) {
+      return { newText, insert, replace };
+    }
+    InsertReplaceEdit2.create = create;
+    function is(value) {
+      const candidate = value;
+      return candidate && Is.string(candidate.newText) && Range.is(candidate.insert) && Range.is(candidate.replace);
+    }
+    InsertReplaceEdit2.is = is;
+  })(InsertReplaceEdit || (InsertReplaceEdit = {}));
+  var InsertTextMode;
+  (function(InsertTextMode2) {
+    InsertTextMode2.asIs = 1;
+    InsertTextMode2.adjustIndentation = 2;
+  })(InsertTextMode || (InsertTextMode = {}));
+  var CompletionItemLabelDetails;
+  (function(CompletionItemLabelDetails2) {
+    function is(value) {
+      const candidate = value;
+      return candidate && (Is.string(candidate.detail) || candidate.detail === void 0) && (Is.string(candidate.description) || candidate.description === void 0);
+    }
+    CompletionItemLabelDetails2.is = is;
+  })(CompletionItemLabelDetails || (CompletionItemLabelDetails = {}));
+  var CompletionItem;
+  (function(CompletionItem2) {
+    function create(label) {
+      return { label };
+    }
+    CompletionItem2.create = create;
+  })(CompletionItem || (CompletionItem = {}));
+  var CompletionList;
+  (function(CompletionList2) {
+    function create(items, isIncomplete) {
+      return { items: items ? items : [], isIncomplete: !!isIncomplete };
+    }
+    CompletionList2.create = create;
+  })(CompletionList || (CompletionList = {}));
+  var MarkedString;
+  (function(MarkedString2) {
+    function fromPlainText(plainText) {
+      return plainText.replace(/[\\`*_{}[\]()#+\-.!]/g, "\\$&");
+    }
+    MarkedString2.fromPlainText = fromPlainText;
+    function is(value) {
+      const candidate = value;
+      return Is.string(candidate) || Is.objectLiteral(candidate) && Is.string(candidate.language) && Is.string(candidate.value);
+    }
+    MarkedString2.is = is;
+  })(MarkedString || (MarkedString = {}));
+  var Hover;
+  (function(Hover2) {
+    function is(value) {
+      let candidate = value;
+      return !!candidate && Is.objectLiteral(candidate) && (MarkupContent.is(candidate.contents) || MarkedString.is(candidate.contents) || Is.typedArray(candidate.contents, MarkedString.is)) && (value.range === void 0 || Range.is(value.range));
+    }
+    Hover2.is = is;
+  })(Hover || (Hover = {}));
+  var ParameterInformation;
+  (function(ParameterInformation2) {
+    function create(label, documentation) {
+      return documentation ? { label, documentation } : { label };
+    }
+    ParameterInformation2.create = create;
+  })(ParameterInformation || (ParameterInformation = {}));
+  var SignatureInformation;
+  (function(SignatureInformation2) {
+    function create(label, documentation, ...parameters) {
+      let result = { label };
+      if (Is.defined(documentation)) {
+        result.documentation = documentation;
+      }
+      if (Is.defined(parameters)) {
+        result.parameters = parameters;
+      } else {
+        result.parameters = [];
+      }
+      return result;
+    }
+    SignatureInformation2.create = create;
+  })(SignatureInformation || (SignatureInformation = {}));
+  var DocumentHighlightKind;
+  (function(DocumentHighlightKind2) {
+    DocumentHighlightKind2.Text = 1;
+    DocumentHighlightKind2.Read = 2;
+    DocumentHighlightKind2.Write = 3;
+  })(DocumentHighlightKind || (DocumentHighlightKind = {}));
+  var DocumentHighlight;
+  (function(DocumentHighlight2) {
+    function create(range, kind) {
+      let result = { range };
+      if (Is.number(kind)) {
+        result.kind = kind;
+      }
+      return result;
+    }
+    DocumentHighlight2.create = create;
+  })(DocumentHighlight || (DocumentHighlight = {}));
+  var SymbolKind;
+  (function(SymbolKind2) {
+    SymbolKind2.File = 1;
+    SymbolKind2.Module = 2;
+    SymbolKind2.Namespace = 3;
+    SymbolKind2.Package = 4;
+    SymbolKind2.Class = 5;
+    SymbolKind2.Method = 6;
+    SymbolKind2.Property = 7;
+    SymbolKind2.Field = 8;
+    SymbolKind2.Constructor = 9;
+    SymbolKind2.Enum = 10;
+    SymbolKind2.Interface = 11;
+    SymbolKind2.Function = 12;
+    SymbolKind2.Variable = 13;
+    SymbolKind2.Constant = 14;
+    SymbolKind2.String = 15;
+    SymbolKind2.Number = 16;
+    SymbolKind2.Boolean = 17;
+    SymbolKind2.Array = 18;
+    SymbolKind2.Object = 19;
+    SymbolKind2.Key = 20;
+    SymbolKind2.Null = 21;
+    SymbolKind2.EnumMember = 22;
+    SymbolKind2.Struct = 23;
+    SymbolKind2.Event = 24;
+    SymbolKind2.Operator = 25;
+    SymbolKind2.TypeParameter = 26;
+  })(SymbolKind || (SymbolKind = {}));
+  var SymbolTag;
+  (function(SymbolTag2) {
+    SymbolTag2.Deprecated = 1;
+  })(SymbolTag || (SymbolTag = {}));
+  var SymbolInformation;
+  (function(SymbolInformation2) {
+    function create(name, kind, range, uri, containerName) {
+      let result = {
+        name,
+        kind,
+        location: { uri, range }
+      };
+      if (containerName) {
+        result.containerName = containerName;
+      }
+      return result;
+    }
+    SymbolInformation2.create = create;
+  })(SymbolInformation || (SymbolInformation = {}));
+  var WorkspaceSymbol;
+  (function(WorkspaceSymbol2) {
+    function create(name, kind, uri, range) {
+      return range !== void 0 ? { name, kind, location: { uri, range } } : { name, kind, location: { uri } };
+    }
+    WorkspaceSymbol2.create = create;
+  })(WorkspaceSymbol || (WorkspaceSymbol = {}));
+  var DocumentSymbol;
+  (function(DocumentSymbol2) {
+    function create(name, detail, kind, range, selectionRange, children) {
+      let result = {
+        name,
+        detail,
+        kind,
+        range,
+        selectionRange
+      };
+      if (children !== void 0) {
+        result.children = children;
+      }
+      return result;
+    }
+    DocumentSymbol2.create = create;
+    function is(value) {
+      let candidate = value;
+      return candidate && Is.string(candidate.name) && Is.number(candidate.kind) && Range.is(candidate.range) && Range.is(candidate.selectionRange) && (candidate.detail === void 0 || Is.string(candidate.detail)) && (candidate.deprecated === void 0 || Is.boolean(candidate.deprecated)) && (candidate.children === void 0 || Array.isArray(candidate.children)) && (candidate.tags === void 0 || Array.isArray(candidate.tags));
+    }
+    DocumentSymbol2.is = is;
+  })(DocumentSymbol || (DocumentSymbol = {}));
+  var CodeActionKind;
+  (function(CodeActionKind2) {
+    CodeActionKind2.Empty = "";
+    CodeActionKind2.QuickFix = "quickfix";
+    CodeActionKind2.Refactor = "refactor";
+    CodeActionKind2.RefactorExtract = "refactor.extract";
+    CodeActionKind2.RefactorInline = "refactor.inline";
+    CodeActionKind2.RefactorRewrite = "refactor.rewrite";
+    CodeActionKind2.Source = "source";
+    CodeActionKind2.SourceOrganizeImports = "source.organizeImports";
+    CodeActionKind2.SourceFixAll = "source.fixAll";
+  })(CodeActionKind || (CodeActionKind = {}));
+  var CodeActionTriggerKind;
+  (function(CodeActionTriggerKind2) {
+    CodeActionTriggerKind2.Invoked = 1;
+    CodeActionTriggerKind2.Automatic = 2;
+  })(CodeActionTriggerKind || (CodeActionTriggerKind = {}));
+  var CodeActionContext;
+  (function(CodeActionContext2) {
+    function create(diagnostics, only, triggerKind) {
+      let result = { diagnostics };
+      if (only !== void 0 && only !== null) {
+        result.only = only;
+      }
+      if (triggerKind !== void 0 && triggerKind !== null) {
+        result.triggerKind = triggerKind;
+      }
+      return result;
+    }
+    CodeActionContext2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.typedArray(candidate.diagnostics, Diagnostic.is) && (candidate.only === void 0 || Is.typedArray(candidate.only, Is.string)) && (candidate.triggerKind === void 0 || candidate.triggerKind === CodeActionTriggerKind.Invoked || candidate.triggerKind === CodeActionTriggerKind.Automatic);
+    }
+    CodeActionContext2.is = is;
+  })(CodeActionContext || (CodeActionContext = {}));
+  var CodeAction;
+  (function(CodeAction2) {
+    function create(title, kindOrCommandOrEdit, kind) {
+      let result = { title };
+      let checkKind = true;
+      if (typeof kindOrCommandOrEdit === "string") {
+        checkKind = false;
+        result.kind = kindOrCommandOrEdit;
+      } else if (Command.is(kindOrCommandOrEdit)) {
+        result.command = kindOrCommandOrEdit;
+      } else {
+        result.edit = kindOrCommandOrEdit;
+      }
+      if (checkKind && kind !== void 0) {
+        result.kind = kind;
+      }
+      return result;
+    }
+    CodeAction2.create = create;
+    function is(value) {
+      let candidate = value;
+      return candidate && Is.string(candidate.title) && (candidate.diagnostics === void 0 || Is.typedArray(candidate.diagnostics, Diagnostic.is)) && (candidate.kind === void 0 || Is.string(candidate.kind)) && (candidate.edit !== void 0 || candidate.command !== void 0) && (candidate.command === void 0 || Command.is(candidate.command)) && (candidate.isPreferred === void 0 || Is.boolean(candidate.isPreferred)) && (candidate.edit === void 0 || WorkspaceEdit.is(candidate.edit));
+    }
+    CodeAction2.is = is;
+  })(CodeAction || (CodeAction = {}));
+  var CodeLens;
+  (function(CodeLens2) {
+    function create(range, data) {
+      let result = { range };
+      if (Is.defined(data)) {
+        result.data = data;
+      }
+      return result;
+    }
+    CodeLens2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Range.is(candidate.range) && (Is.undefined(candidate.command) || Command.is(candidate.command));
+    }
+    CodeLens2.is = is;
+  })(CodeLens || (CodeLens = {}));
+  var FormattingOptions;
+  (function(FormattingOptions2) {
+    function create(tabSize, insertSpaces) {
+      return { tabSize, insertSpaces };
+    }
+    FormattingOptions2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.uinteger(candidate.tabSize) && Is.boolean(candidate.insertSpaces);
+    }
+    FormattingOptions2.is = is;
+  })(FormattingOptions || (FormattingOptions = {}));
+  var DocumentLink;
+  (function(DocumentLink2) {
+    function create(range, target, data) {
+      return { range, target, data };
+    }
+    DocumentLink2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Range.is(candidate.range) && (Is.undefined(candidate.target) || Is.string(candidate.target));
+    }
+    DocumentLink2.is = is;
+  })(DocumentLink || (DocumentLink = {}));
+  var SelectionRange;
+  (function(SelectionRange2) {
+    function create(range, parent) {
+      return { range, parent };
+    }
+    SelectionRange2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.objectLiteral(candidate) && Range.is(candidate.range) && (candidate.parent === void 0 || SelectionRange2.is(candidate.parent));
+    }
+    SelectionRange2.is = is;
+  })(SelectionRange || (SelectionRange = {}));
+  var SemanticTokenTypes;
+  (function(SemanticTokenTypes2) {
+    SemanticTokenTypes2["namespace"] = "namespace";
+    SemanticTokenTypes2["type"] = "type";
+    SemanticTokenTypes2["class"] = "class";
+    SemanticTokenTypes2["enum"] = "enum";
+    SemanticTokenTypes2["interface"] = "interface";
+    SemanticTokenTypes2["struct"] = "struct";
+    SemanticTokenTypes2["typeParameter"] = "typeParameter";
+    SemanticTokenTypes2["parameter"] = "parameter";
+    SemanticTokenTypes2["variable"] = "variable";
+    SemanticTokenTypes2["property"] = "property";
+    SemanticTokenTypes2["enumMember"] = "enumMember";
+    SemanticTokenTypes2["event"] = "event";
+    SemanticTokenTypes2["function"] = "function";
+    SemanticTokenTypes2["method"] = "method";
+    SemanticTokenTypes2["macro"] = "macro";
+    SemanticTokenTypes2["keyword"] = "keyword";
+    SemanticTokenTypes2["modifier"] = "modifier";
+    SemanticTokenTypes2["comment"] = "comment";
+    SemanticTokenTypes2["string"] = "string";
+    SemanticTokenTypes2["number"] = "number";
+    SemanticTokenTypes2["regexp"] = "regexp";
+    SemanticTokenTypes2["operator"] = "operator";
+    SemanticTokenTypes2["decorator"] = "decorator";
+  })(SemanticTokenTypes || (SemanticTokenTypes = {}));
+  var SemanticTokenModifiers;
+  (function(SemanticTokenModifiers2) {
+    SemanticTokenModifiers2["declaration"] = "declaration";
+    SemanticTokenModifiers2["definition"] = "definition";
+    SemanticTokenModifiers2["readonly"] = "readonly";
+    SemanticTokenModifiers2["static"] = "static";
+    SemanticTokenModifiers2["deprecated"] = "deprecated";
+    SemanticTokenModifiers2["abstract"] = "abstract";
+    SemanticTokenModifiers2["async"] = "async";
+    SemanticTokenModifiers2["modification"] = "modification";
+    SemanticTokenModifiers2["documentation"] = "documentation";
+    SemanticTokenModifiers2["defaultLibrary"] = "defaultLibrary";
+  })(SemanticTokenModifiers || (SemanticTokenModifiers = {}));
+  var SemanticTokens;
+  (function(SemanticTokens2) {
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && (candidate.resultId === void 0 || typeof candidate.resultId === "string") && Array.isArray(candidate.data) && (candidate.data.length === 0 || typeof candidate.data[0] === "number");
+    }
+    SemanticTokens2.is = is;
+  })(SemanticTokens || (SemanticTokens = {}));
+  var InlineValueText;
+  (function(InlineValueText2) {
+    function create(range, text) {
+      return { range, text };
+    }
+    InlineValueText2.create = create;
+    function is(value) {
+      const candidate = value;
+      return candidate !== void 0 && candidate !== null && Range.is(candidate.range) && Is.string(candidate.text);
+    }
+    InlineValueText2.is = is;
+  })(InlineValueText || (InlineValueText = {}));
+  var InlineValueVariableLookup;
+  (function(InlineValueVariableLookup2) {
+    function create(range, variableName, caseSensitiveLookup) {
+      return { range, variableName, caseSensitiveLookup };
+    }
+    InlineValueVariableLookup2.create = create;
+    function is(value) {
+      const candidate = value;
+      return candidate !== void 0 && candidate !== null && Range.is(candidate.range) && Is.boolean(candidate.caseSensitiveLookup) && (Is.string(candidate.variableName) || candidate.variableName === void 0);
+    }
+    InlineValueVariableLookup2.is = is;
+  })(InlineValueVariableLookup || (InlineValueVariableLookup = {}));
+  var InlineValueEvaluatableExpression;
+  (function(InlineValueEvaluatableExpression2) {
+    function create(range, expression) {
+      return { range, expression };
+    }
+    InlineValueEvaluatableExpression2.create = create;
+    function is(value) {
+      const candidate = value;
+      return candidate !== void 0 && candidate !== null && Range.is(candidate.range) && (Is.string(candidate.expression) || candidate.expression === void 0);
+    }
+    InlineValueEvaluatableExpression2.is = is;
+  })(InlineValueEvaluatableExpression || (InlineValueEvaluatableExpression = {}));
+  var InlineValueContext;
+  (function(InlineValueContext2) {
+    function create(frameId, stoppedLocation) {
+      return { frameId, stoppedLocation };
+    }
+    InlineValueContext2.create = create;
+    function is(value) {
+      const candidate = value;
+      return Is.defined(candidate) && Range.is(value.stoppedLocation);
+    }
+    InlineValueContext2.is = is;
+  })(InlineValueContext || (InlineValueContext = {}));
+  var InlayHintKind;
+  (function(InlayHintKind2) {
+    InlayHintKind2.Type = 1;
+    InlayHintKind2.Parameter = 2;
+    function is(value) {
+      return value === 1 || value === 2;
+    }
+    InlayHintKind2.is = is;
+  })(InlayHintKind || (InlayHintKind = {}));
+  var InlayHintLabelPart;
+  (function(InlayHintLabelPart2) {
+    function create(value) {
+      return { value };
+    }
+    InlayHintLabelPart2.create = create;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && (candidate.tooltip === void 0 || Is.string(candidate.tooltip) || MarkupContent.is(candidate.tooltip)) && (candidate.location === void 0 || Location.is(candidate.location)) && (candidate.command === void 0 || Command.is(candidate.command));
+    }
+    InlayHintLabelPart2.is = is;
+  })(InlayHintLabelPart || (InlayHintLabelPart = {}));
+  var InlayHint;
+  (function(InlayHint2) {
+    function create(position, label, kind) {
+      const result = { position, label };
+      if (kind !== void 0) {
+        result.kind = kind;
+      }
+      return result;
+    }
+    InlayHint2.create = create;
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && Position.is(candidate.position) && (Is.string(candidate.label) || Is.typedArray(candidate.label, InlayHintLabelPart.is)) && (candidate.kind === void 0 || InlayHintKind.is(candidate.kind)) && candidate.textEdits === void 0 || Is.typedArray(candidate.textEdits, TextEdit.is) && (candidate.tooltip === void 0 || Is.string(candidate.tooltip) || MarkupContent.is(candidate.tooltip)) && (candidate.paddingLeft === void 0 || Is.boolean(candidate.paddingLeft)) && (candidate.paddingRight === void 0 || Is.boolean(candidate.paddingRight));
+    }
+    InlayHint2.is = is;
+  })(InlayHint || (InlayHint = {}));
+  var StringValue;
+  (function(StringValue2) {
+    function createSnippet(value) {
+      return { kind: "snippet", value };
+    }
+    StringValue2.createSnippet = createSnippet;
+  })(StringValue || (StringValue = {}));
+  var InlineCompletionItem;
+  (function(InlineCompletionItem2) {
+    function create(insertText, filterText, range, command) {
+      return { insertText, filterText, range, command };
+    }
+    InlineCompletionItem2.create = create;
+  })(InlineCompletionItem || (InlineCompletionItem = {}));
+  var InlineCompletionList;
+  (function(InlineCompletionList2) {
+    function create(items) {
+      return { items };
+    }
+    InlineCompletionList2.create = create;
+  })(InlineCompletionList || (InlineCompletionList = {}));
+  var InlineCompletionTriggerKind;
+  (function(InlineCompletionTriggerKind2) {
+    InlineCompletionTriggerKind2.Invoked = 0;
+    InlineCompletionTriggerKind2.Automatic = 1;
+  })(InlineCompletionTriggerKind || (InlineCompletionTriggerKind = {}));
+  var SelectedCompletionInfo;
+  (function(SelectedCompletionInfo2) {
+    function create(range, text) {
+      return { range, text };
+    }
+    SelectedCompletionInfo2.create = create;
+  })(SelectedCompletionInfo || (SelectedCompletionInfo = {}));
+  var InlineCompletionContext;
+  (function(InlineCompletionContext2) {
+    function create(triggerKind, selectedCompletionInfo) {
+      return { triggerKind, selectedCompletionInfo };
+    }
+    InlineCompletionContext2.create = create;
+  })(InlineCompletionContext || (InlineCompletionContext = {}));
+  var WorkspaceFolder;
+  (function(WorkspaceFolder2) {
+    function is(value) {
+      const candidate = value;
+      return Is.objectLiteral(candidate) && URI.is(candidate.uri) && Is.string(candidate.name);
+    }
+    WorkspaceFolder2.is = is;
+  })(WorkspaceFolder || (WorkspaceFolder = {}));
+  var TextDocument;
+  (function(TextDocument2) {
+    function create(uri, languageId, version, content) {
+      return new FullTextDocument(uri, languageId, version, content);
+    }
+    TextDocument2.create = create;
+    function is(value) {
+      let candidate = value;
+      return Is.defined(candidate) && Is.string(candidate.uri) && (Is.undefined(candidate.languageId) || Is.string(candidate.languageId)) && Is.uinteger(candidate.lineCount) && Is.func(candidate.getText) && Is.func(candidate.positionAt) && Is.func(candidate.offsetAt) ? true : false;
+    }
+    TextDocument2.is = is;
+    function applyEdits(document, edits) {
+      let text = document.getText();
+      let sortedEdits = mergeSort(edits, (a, b) => {
+        let diff = a.range.start.line - b.range.start.line;
+        if (diff === 0) {
+          return a.range.start.character - b.range.start.character;
+        }
+        return diff;
+      });
+      let lastModifiedOffset = text.length;
+      for (let i = sortedEdits.length - 1; i >= 0; i--) {
+        let e = sortedEdits[i];
+        let startOffset = document.offsetAt(e.range.start);
+        let endOffset = document.offsetAt(e.range.end);
+        if (endOffset <= lastModifiedOffset) {
+          text = text.substring(0, startOffset) + e.newText + text.substring(endOffset, text.length);
+        } else {
+          throw new Error("Overlapping edit");
+        }
+        lastModifiedOffset = startOffset;
+      }
+      return text;
+    }
+    TextDocument2.applyEdits = applyEdits;
+    function mergeSort(data, compare) {
+      if (data.length <= 1) {
+        return data;
+      }
+      const p = data.length / 2 | 0;
+      const left = data.slice(0, p);
+      const right = data.slice(p);
+      mergeSort(left, compare);
+      mergeSort(right, compare);
+      let leftIdx = 0;
+      let rightIdx = 0;
+      let i = 0;
+      while (leftIdx < left.length && rightIdx < right.length) {
+        let ret = compare(left[leftIdx], right[rightIdx]);
+        if (ret <= 0) {
+          data[i++] = left[leftIdx++];
+        } else {
+          data[i++] = right[rightIdx++];
+        }
+      }
+      while (leftIdx < left.length) {
+        data[i++] = left[leftIdx++];
+      }
+      while (rightIdx < right.length) {
+        data[i++] = right[rightIdx++];
+      }
+      return data;
+    }
+  })(TextDocument || (TextDocument = {}));
+  var FullTextDocument = class {
+    constructor(uri, languageId, version, content) {
+      this._uri = uri;
+      this._languageId = languageId;
+      this._version = version;
+      this._content = content;
+      this._lineOffsets = void 0;
+    }
+    get uri() {
+      return this._uri;
+    }
+    get languageId() {
+      return this._languageId;
+    }
+    get version() {
+      return this._version;
+    }
+    getText(range) {
+      if (range) {
+        let start = this.offsetAt(range.start);
+        let end = this.offsetAt(range.end);
+        return this._content.substring(start, end);
+      }
+      return this._content;
+    }
+    update(event, version) {
+      this._content = event.text;
+      this._version = version;
+      this._lineOffsets = void 0;
+    }
+    getLineOffsets() {
+      if (this._lineOffsets === void 0) {
+        let lineOffsets = [];
+        let text = this._content;
+        let isLineStart = true;
+        for (let i = 0; i < text.length; i++) {
+          if (isLineStart) {
+            lineOffsets.push(i);
+            isLineStart = false;
+          }
+          let ch = text.charAt(i);
+          isLineStart = ch === "\r" || ch === "\n";
+          if (ch === "\r" && i + 1 < text.length && text.charAt(i + 1) === "\n") {
+            i++;
+          }
+        }
+        if (isLineStart && text.length > 0) {
+          lineOffsets.push(text.length);
+        }
+        this._lineOffsets = lineOffsets;
+      }
+      return this._lineOffsets;
+    }
+    positionAt(offset) {
+      offset = Math.max(Math.min(offset, this._content.length), 0);
+      let lineOffsets = this.getLineOffsets();
+      let low = 0, high = lineOffsets.length;
+      if (high === 0) {
+        return Position.create(0, offset);
+      }
+      while (low < high) {
+        let mid = Math.floor((low + high) / 2);
+        if (lineOffsets[mid] > offset) {
+          high = mid;
+        } else {
+          low = mid + 1;
+        }
+      }
+      let line = low - 1;
+      return Position.create(line, offset - lineOffsets[line]);
+    }
+    offsetAt(position) {
+      let lineOffsets = this.getLineOffsets();
+      if (position.line >= lineOffsets.length) {
+        return this._content.length;
+      } else if (position.line < 0) {
+        return 0;
+      }
+      let lineOffset = lineOffsets[position.line];
+      let nextLineOffset = position.line + 1 < lineOffsets.length ? lineOffsets[position.line + 1] : this._content.length;
+      return Math.max(Math.min(lineOffset + position.character, nextLineOffset), lineOffset);
+    }
+    get lineCount() {
+      return this.getLineOffsets().length;
+    }
+  };
+  var Is;
+  (function(Is2) {
+    const toString = Object.prototype.toString;
+    function defined(value) {
+      return typeof value !== "undefined";
+    }
+    Is2.defined = defined;
+    function undefined2(value) {
+      return typeof value === "undefined";
+    }
+    Is2.undefined = undefined2;
+    function boolean(value) {
+      return value === true || value === false;
+    }
+    Is2.boolean = boolean;
+    function string(value) {
+      return toString.call(value) === "[object String]";
+    }
+    Is2.string = string;
+    function number(value) {
+      return toString.call(value) === "[object Number]";
+    }
+    Is2.number = number;
+    function numberRange(value, min, max) {
+      return toString.call(value) === "[object Number]" && min <= value && value <= max;
+    }
+    Is2.numberRange = numberRange;
+    function integer2(value) {
+      return toString.call(value) === "[object Number]" && -2147483648 <= value && value <= 2147483647;
+    }
+    Is2.integer = integer2;
+    function uinteger2(value) {
+      return toString.call(value) === "[object Number]" && 0 <= value && value <= 2147483647;
+    }
+    Is2.uinteger = uinteger2;
+    function func(value) {
+      return toString.call(value) === "[object Function]";
+    }
+    Is2.func = func;
+    function objectLiteral(value) {
+      return value !== null && typeof value === "object";
+    }
+    Is2.objectLiteral = objectLiteral;
+    function typedArray(value, check) {
+      return Array.isArray(value) && value.every(check);
+    }
+    Is2.typedArray = typedArray;
+  })(Is || (Is = {}));
+
+  // src/language/common/lspLanguageFeatures.ts
+  var DiagnosticsAdapter = class {
+    constructor(_languageId, _worker, configChangeEvent) {
+      this._languageId = _languageId;
+      this._worker = _worker;
+      this._disposables = [];
+      this._listener = /* @__PURE__ */ Object.create(null);
+      const onModelAdd = (model) => {
+        let modeId = model.getLanguageId();
+        if (modeId !== this._languageId) {
+          return;
+        }
+        let handle;
+        this._listener[model.uri.toString()] = model.onDidChangeContent(() => {
+          window.clearTimeout(handle);
+          handle = window.setTimeout(() => this._doValidate(model.uri, modeId), 500);
+        });
+        this._doValidate(model.uri, modeId);
+      };
+      const onModelRemoved = (model) => {
+        monaco_editor_core_exports.editor.setModelMarkers(model, this._languageId, []);
+        let uriStr = model.uri.toString();
+        let listener = this._listener[uriStr];
+        if (listener) {
+          listener.dispose();
+          delete this._listener[uriStr];
+        }
+      };
+      this._disposables.push(monaco_editor_core_exports.editor.onDidCreateModel(onModelAdd));
+      this._disposables.push(monaco_editor_core_exports.editor.onWillDisposeModel(onModelRemoved));
+      this._disposables.push(
+        monaco_editor_core_exports.editor.onDidChangeModelLanguage((event) => {
+          onModelRemoved(event.model);
+          onModelAdd(event.model);
+        })
+      );
+      this._disposables.push(
+        configChangeEvent((_) => {
+          monaco_editor_core_exports.editor.getModels().forEach((model) => {
+            if (model.getLanguageId() === this._languageId) {
+              onModelRemoved(model);
+              onModelAdd(model);
+            }
+          });
+        })
+      );
+      this._disposables.push({
+        dispose: () => {
+          monaco_editor_core_exports.editor.getModels().forEach(onModelRemoved);
+          for (let key in this._listener) {
+            this._listener[key].dispose();
+          }
+        }
+      });
+      monaco_editor_core_exports.editor.getModels().forEach(onModelAdd);
+    }
+    dispose() {
+      this._disposables.forEach((d) => d && d.dispose());
+      this._disposables.length = 0;
+    }
+    _doValidate(resource, languageId) {
+      this._worker(resource).then((worker) => {
+        return worker.doValidation(resource.toString());
+      }).then((diagnostics) => {
+        const markers = diagnostics.map((d) => toDiagnostics(resource, d));
+        let model = monaco_editor_core_exports.editor.getModel(resource);
+        if (model && model.getLanguageId() === languageId) {
+          monaco_editor_core_exports.editor.setModelMarkers(model, languageId, markers);
+        }
+      }).then(void 0, (err) => {
+        console.error(err);
+      });
+    }
+  };
+  function toSeverity(lsSeverity) {
+    switch (lsSeverity) {
+      case DiagnosticSeverity.Error:
+        return monaco_editor_core_exports.MarkerSeverity.Error;
+      case DiagnosticSeverity.Warning:
+        return monaco_editor_core_exports.MarkerSeverity.Warning;
+      case DiagnosticSeverity.Information:
+        return monaco_editor_core_exports.MarkerSeverity.Info;
+      case DiagnosticSeverity.Hint:
+        return monaco_editor_core_exports.MarkerSeverity.Hint;
+      default:
+        return monaco_editor_core_exports.MarkerSeverity.Info;
+    }
+  }
+  function toDiagnostics(resource, diag) {
+    let code = typeof diag.code === "number" ? String(diag.code) : diag.code;
+    return {
+      severity: toSeverity(diag.severity),
+      startLineNumber: diag.range.start.line + 1,
+      startColumn: diag.range.start.character + 1,
+      endLineNumber: diag.range.end.line + 1,
+      endColumn: diag.range.end.character + 1,
+      message: diag.message,
+      code,
+      source: diag.source
+    };
+  }
+  var CompletionAdapter = class {
+    constructor(_worker, _triggerCharacters) {
+      this._worker = _worker;
+      this._triggerCharacters = _triggerCharacters;
+    }
+    get triggerCharacters() {
+      return this._triggerCharacters;
+    }
+    provideCompletionItems(model, position, context, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => {
+        return worker.doComplete(resource.toString(), fromPosition(position));
+      }).then((info) => {
+        if (!info) {
+          return;
+        }
+        const wordInfo = model.getWordUntilPosition(position);
+        const wordRange = new monaco_editor_core_exports.Range(
+          position.lineNumber,
+          wordInfo.startColumn,
+          position.lineNumber,
+          wordInfo.endColumn
+        );
+        const items = info.items.map((entry) => {
+          const item = {
+            label: entry.label,
+            insertText: entry.insertText || entry.label,
+            sortText: entry.sortText,
+            filterText: entry.filterText,
+            documentation: entry.documentation,
+            detail: entry.detail,
+            command: toCommand(entry.command),
+            range: wordRange,
+            kind: toCompletionItemKind(entry.kind)
+          };
+          if (entry.textEdit) {
+            if (isInsertReplaceEdit(entry.textEdit)) {
+              item.range = {
+                insert: toRange(entry.textEdit.insert),
+                replace: toRange(entry.textEdit.replace)
+              };
+            } else {
+              item.range = toRange(entry.textEdit.range);
+            }
+            item.insertText = entry.textEdit.newText;
+          }
+          if (entry.additionalTextEdits) {
+            item.additionalTextEdits = entry.additionalTextEdits.map(toTextEdit);
+          }
+          if (entry.insertTextFormat === InsertTextFormat.Snippet) {
+            item.insertTextRules = monaco_editor_core_exports.languages.CompletionItemInsertTextRule.InsertAsSnippet;
+          }
+          return item;
+        });
+        return {
+          isIncomplete: info.isIncomplete,
+          suggestions: items
+        };
+      });
+    }
+  };
+  function fromPosition(position) {
+    if (!position) {
+      return void 0;
+    }
+    return { character: position.column - 1, line: position.lineNumber - 1 };
+  }
+  function fromRange(range) {
+    if (!range) {
+      return void 0;
+    }
+    return {
+      start: {
+        line: range.startLineNumber - 1,
+        character: range.startColumn - 1
+      },
+      end: { line: range.endLineNumber - 1, character: range.endColumn - 1 }
+    };
+  }
+  function toRange(range) {
+    if (!range) {
+      return void 0;
+    }
+    return new monaco_editor_core_exports.Range(
+      range.start.line + 1,
+      range.start.character + 1,
+      range.end.line + 1,
+      range.end.character + 1
+    );
+  }
+  function isInsertReplaceEdit(edit) {
+    return typeof edit.insert !== "undefined" && typeof edit.replace !== "undefined";
+  }
+  function toCompletionItemKind(kind) {
+    const mItemKind = monaco_editor_core_exports.languages.CompletionItemKind;
+    switch (kind) {
+      case CompletionItemKind.Text:
+        return mItemKind.Text;
+      case CompletionItemKind.Method:
+        return mItemKind.Method;
+      case CompletionItemKind.Function:
+        return mItemKind.Function;
+      case CompletionItemKind.Constructor:
+        return mItemKind.Constructor;
+      case CompletionItemKind.Field:
+        return mItemKind.Field;
+      case CompletionItemKind.Variable:
+        return mItemKind.Variable;
+      case CompletionItemKind.Class:
+        return mItemKind.Class;
+      case CompletionItemKind.Interface:
+        return mItemKind.Interface;
+      case CompletionItemKind.Module:
+        return mItemKind.Module;
+      case CompletionItemKind.Property:
+        return mItemKind.Property;
+      case CompletionItemKind.Unit:
+        return mItemKind.Unit;
+      case CompletionItemKind.Value:
+        return mItemKind.Value;
+      case CompletionItemKind.Enum:
+        return mItemKind.Enum;
+      case CompletionItemKind.Keyword:
+        return mItemKind.Keyword;
+      case CompletionItemKind.Snippet:
+        return mItemKind.Snippet;
+      case CompletionItemKind.Color:
+        return mItemKind.Color;
+      case CompletionItemKind.File:
+        return mItemKind.File;
+      case CompletionItemKind.Reference:
+        return mItemKind.Reference;
+    }
+    return mItemKind.Property;
+  }
+  function toTextEdit(textEdit) {
+    if (!textEdit) {
+      return void 0;
+    }
+    return {
+      range: toRange(textEdit.range),
+      text: textEdit.newText
+    };
+  }
+  function toCommand(c) {
+    return c && c.command === "editor.action.triggerSuggest" ? { id: c.command, title: c.title, arguments: c.arguments } : void 0;
+  }
+  var HoverAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideHover(model, position, token) {
+      let resource = model.uri;
+      return this._worker(resource).then((worker) => {
+        return worker.doHover(resource.toString(), fromPosition(position));
+      }).then((info) => {
+        if (!info) {
+          return;
+        }
+        return {
+          range: toRange(info.range),
+          contents: toMarkedStringArray(info.contents)
+        };
+      });
+    }
+  };
+  function isMarkupContent(thing) {
+    return thing && typeof thing === "object" && typeof thing.kind === "string";
+  }
+  function toMarkdownString(entry) {
+    if (typeof entry === "string") {
+      return {
+        value: entry
+      };
+    }
+    if (isMarkupContent(entry)) {
+      if (entry.kind === "plaintext") {
+        return {
+          value: entry.value.replace(/[\\`*_{}[\]()#+\-.!]/g, "\\$&")
+        };
+      }
+      return {
+        value: entry.value
+      };
+    }
+    return { value: "```" + entry.language + "\n" + entry.value + "\n```\n" };
+  }
+  function toMarkedStringArray(contents) {
+    if (!contents) {
+      return void 0;
+    }
+    if (Array.isArray(contents)) {
+      return contents.map(toMarkdownString);
+    }
+    return [toMarkdownString(contents)];
+  }
+  var DocumentHighlightAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideDocumentHighlights(model, position, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => worker.findDocumentHighlights(resource.toString(), fromPosition(position))).then((entries) => {
+        if (!entries) {
+          return;
+        }
+        return entries.map((entry) => {
+          return {
+            range: toRange(entry.range),
+            kind: toDocumentHighlightKind(entry.kind)
+          };
+        });
+      });
+    }
+  };
+  function toDocumentHighlightKind(kind) {
+    switch (kind) {
+      case DocumentHighlightKind.Read:
+        return monaco_editor_core_exports.languages.DocumentHighlightKind.Read;
+      case DocumentHighlightKind.Write:
+        return monaco_editor_core_exports.languages.DocumentHighlightKind.Write;
+      case DocumentHighlightKind.Text:
+        return monaco_editor_core_exports.languages.DocumentHighlightKind.Text;
+    }
+    return monaco_editor_core_exports.languages.DocumentHighlightKind.Text;
+  }
+  var DefinitionAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideDefinition(model, position, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => {
+        return worker.findDefinition(resource.toString(), fromPosition(position));
+      }).then((definition) => {
+        if (!definition) {
+          return;
+        }
+        return [toLocation(definition)];
+      });
+    }
+  };
+  function toLocation(location) {
+    return {
+      uri: monaco_editor_core_exports.Uri.parse(location.uri),
+      range: toRange(location.range)
+    };
+  }
+  var ReferenceAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideReferences(model, position, context, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => {
+        return worker.findReferences(resource.toString(), fromPosition(position));
+      }).then((entries) => {
+        if (!entries) {
+          return;
+        }
+        return entries.map(toLocation);
+      });
+    }
+  };
+  var RenameAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideRenameEdits(model, position, newName, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => {
+        return worker.doRename(resource.toString(), fromPosition(position), newName);
+      }).then((edit) => {
+        return toWorkspaceEdit(edit);
+      });
+    }
+  };
+  function toWorkspaceEdit(edit) {
+    if (!edit || !edit.changes) {
+      return void 0;
+    }
+    let resourceEdits = [];
+    for (let uri in edit.changes) {
+      const _uri = monaco_editor_core_exports.Uri.parse(uri);
+      for (let e of edit.changes[uri]) {
+        resourceEdits.push({
+          resource: _uri,
+          versionId: void 0,
+          textEdit: {
+            range: toRange(e.range),
+            text: e.newText
+          }
+        });
+      }
+    }
+    return {
+      edits: resourceEdits
+    };
+  }
+  var DocumentSymbolAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideDocumentSymbols(model, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => worker.findDocumentSymbols(resource.toString())).then((items) => {
+        if (!items) {
+          return;
+        }
+        return items.map((item) => {
+          if (isDocumentSymbol(item)) {
+            return toDocumentSymbol(item);
+          }
+          return {
+            name: item.name,
+            detail: "",
+            containerName: item.containerName,
+            kind: toSymbolKind(item.kind),
+            range: toRange(item.location.range),
+            selectionRange: toRange(item.location.range),
+            tags: []
+          };
+        });
+      });
+    }
+  };
+  function isDocumentSymbol(symbol) {
+    return "children" in symbol;
+  }
+  function toDocumentSymbol(symbol) {
+    return {
+      name: symbol.name,
+      detail: symbol.detail ?? "",
+      kind: toSymbolKind(symbol.kind),
+      range: toRange(symbol.range),
+      selectionRange: toRange(symbol.selectionRange),
+      tags: symbol.tags ?? [],
+      children: (symbol.children ?? []).map((item) => toDocumentSymbol(item))
+    };
+  }
+  function toSymbolKind(kind) {
+    let mKind = monaco_editor_core_exports.languages.SymbolKind;
+    switch (kind) {
+      case SymbolKind.File:
+        return mKind.File;
+      case SymbolKind.Module:
+        return mKind.Module;
+      case SymbolKind.Namespace:
+        return mKind.Namespace;
+      case SymbolKind.Package:
+        return mKind.Package;
+      case SymbolKind.Class:
+        return mKind.Class;
+      case SymbolKind.Method:
+        return mKind.Method;
+      case SymbolKind.Property:
+        return mKind.Property;
+      case SymbolKind.Field:
+        return mKind.Field;
+      case SymbolKind.Constructor:
+        return mKind.Constructor;
+      case SymbolKind.Enum:
+        return mKind.Enum;
+      case SymbolKind.Interface:
+        return mKind.Interface;
+      case SymbolKind.Function:
+        return mKind.Function;
+      case SymbolKind.Variable:
+        return mKind.Variable;
+      case SymbolKind.Constant:
+        return mKind.Constant;
+      case SymbolKind.String:
+        return mKind.String;
+      case SymbolKind.Number:
+        return mKind.Number;
+      case SymbolKind.Boolean:
+        return mKind.Boolean;
+      case SymbolKind.Array:
+        return mKind.Array;
+    }
+    return mKind.Function;
+  }
+  var DocumentLinkAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideLinks(model, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => worker.findDocumentLinks(resource.toString())).then((items) => {
+        if (!items) {
+          return;
+        }
+        return {
+          links: items.map((item) => ({
+            range: toRange(item.range),
+            url: item.target
+          }))
+        };
+      });
+    }
+  };
+  var DocumentFormattingEditProvider = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideDocumentFormattingEdits(model, options, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => {
+        return worker.format(resource.toString(), null, fromFormattingOptions(options)).then((edits) => {
+          if (!edits || edits.length === 0) {
+            return;
+          }
+          return edits.map(toTextEdit);
+        });
+      });
+    }
+  };
+  var DocumentRangeFormattingEditProvider = class {
+    constructor(_worker) {
+      this._worker = _worker;
+      this.canFormatMultipleRanges = false;
+    }
+    provideDocumentRangeFormattingEdits(model, range, options, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => {
+        return worker.format(resource.toString(), fromRange(range), fromFormattingOptions(options)).then((edits) => {
+          if (!edits || edits.length === 0) {
+            return;
+          }
+          return edits.map(toTextEdit);
+        });
+      });
+    }
+  };
+  function fromFormattingOptions(options) {
+    return {
+      tabSize: options.tabSize,
+      insertSpaces: options.insertSpaces
+    };
+  }
+  var DocumentColorAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideDocumentColors(model, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => worker.findDocumentColors(resource.toString())).then((infos) => {
+        if (!infos) {
+          return;
+        }
+        return infos.map((item) => ({
+          color: item.color,
+          range: toRange(item.range)
+        }));
+      });
+    }
+    provideColorPresentations(model, info, token) {
+      const resource = model.uri;
+      return this._worker(resource).then(
+        (worker) => worker.getColorPresentations(resource.toString(), info.color, fromRange(info.range))
+      ).then((presentations) => {
+        if (!presentations) {
+          return;
+        }
+        return presentations.map((presentation) => {
+          let item = {
+            label: presentation.label
+          };
+          if (presentation.textEdit) {
+            item.textEdit = toTextEdit(presentation.textEdit);
+          }
+          if (presentation.additionalTextEdits) {
+            item.additionalTextEdits = presentation.additionalTextEdits.map(toTextEdit);
+          }
+          return item;
+        });
+      });
+    }
+  };
+  var FoldingRangeAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideFoldingRanges(model, context, token) {
+      const resource = model.uri;
+      return this._worker(resource).then((worker) => worker.getFoldingRanges(resource.toString(), context)).then((ranges) => {
+        if (!ranges) {
+          return;
+        }
+        return ranges.map((range) => {
+          const result = {
+            start: range.startLine + 1,
+            end: range.endLine + 1
+          };
+          if (typeof range.kind !== "undefined") {
+            result.kind = toFoldingRangeKind(range.kind);
+          }
+          return result;
+        });
+      });
+    }
+  };
+  function toFoldingRangeKind(kind) {
+    switch (kind) {
+      case FoldingRangeKind.Comment:
+        return monaco_editor_core_exports.languages.FoldingRangeKind.Comment;
+      case FoldingRangeKind.Imports:
+        return monaco_editor_core_exports.languages.FoldingRangeKind.Imports;
+      case FoldingRangeKind.Region:
+        return monaco_editor_core_exports.languages.FoldingRangeKind.Region;
+    }
+    return void 0;
+  }
+  var SelectionRangeAdapter = class {
+    constructor(_worker) {
+      this._worker = _worker;
+    }
+    provideSelectionRanges(model, positions, token) {
+      const resource = model.uri;
+      return this._worker(resource).then(
+        (worker) => worker.getSelectionRanges(
+          resource.toString(),
+          positions.map(fromPosition)
+        )
+      ).then((selectionRanges) => {
+        if (!selectionRanges) {
+          return;
+        }
+        return selectionRanges.map((selectionRange) => {
+          const result = [];
+          while (selectionRange) {
+            result.push({ range: toRange(selectionRange.range) });
+            selectionRange = selectionRange.parent;
+          }
+          return result;
+        });
+      });
+    }
+  };
+
+  // src/language/css/cssMode.ts
+  function setupMode(defaults) {
+    const disposables = [];
+    const providers = [];
+    const client = new WorkerManager(defaults);
+    disposables.push(client);
+    const worker = (...uris) => {
+      return client.getLanguageServiceWorker(...uris);
+    };
+    function registerProviders() {
+      const { languageId, modeConfiguration } = defaults;
+      disposeAll(providers);
+      if (modeConfiguration.completionItems) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerCompletionItemProvider(
+            languageId,
+            new CompletionAdapter(worker, ["/", "-", ":"])
+          )
+        );
+      }
+      if (modeConfiguration.hovers) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerHoverProvider(languageId, new HoverAdapter(worker))
+        );
+      }
+      if (modeConfiguration.documentHighlights) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerDocumentHighlightProvider(
+            languageId,
+            new DocumentHighlightAdapter(worker)
+          )
+        );
+      }
+      if (modeConfiguration.definitions) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerDefinitionProvider(
+            languageId,
+            new DefinitionAdapter(worker)
+          )
+        );
+      }
+      if (modeConfiguration.references) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerReferenceProvider(
+            languageId,
+            new ReferenceAdapter(worker)
+          )
+        );
+      }
+      if (modeConfiguration.documentSymbols) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerDocumentSymbolProvider(
+            languageId,
+            new DocumentSymbolAdapter(worker)
+          )
+        );
+      }
+      if (modeConfiguration.rename) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerRenameProvider(languageId, new RenameAdapter(worker))
+        );
+      }
+      if (modeConfiguration.colors) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerColorProvider(
+            languageId,
+            new DocumentColorAdapter(worker)
+          )
+        );
+      }
+      if (modeConfiguration.foldingRanges) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerFoldingRangeProvider(
+            languageId,
+            new FoldingRangeAdapter(worker)
+          )
+        );
+      }
+      if (modeConfiguration.diagnostics) {
+        providers.push(
+          new DiagnosticsAdapter(languageId, worker, defaults.onDidChange)
+        );
+      }
+      if (modeConfiguration.selectionRanges) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerSelectionRangeProvider(
+            languageId,
+            new SelectionRangeAdapter(worker)
+          )
+        );
+      }
+      if (modeConfiguration.documentFormattingEdits) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerDocumentFormattingEditProvider(
+            languageId,
+            new DocumentFormattingEditProvider(worker)
+          )
+        );
+      }
+      if (modeConfiguration.documentRangeFormattingEdits) {
+        providers.push(
+          monaco_editor_core_exports.languages.registerDocumentRangeFormattingEditProvider(
+            languageId,
+            new DocumentRangeFormattingEditProvider(worker)
+          )
+        );
+      }
+    }
+    registerProviders();
+    disposables.push(asDisposable(providers));
+    return asDisposable(disposables);
+  }
+  function asDisposable(disposables) {
+    return { dispose: () => disposeAll(disposables) };
+  }
+  function disposeAll(disposables) {
+    while (disposables.length) {
+      disposables.pop().dispose();
+    }
+  }
+  return __toCommonJS(cssMode_exports);
+})();
 return moduleExports;
 });

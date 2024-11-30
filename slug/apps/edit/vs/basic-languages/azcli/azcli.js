@@ -1,10 +1,102 @@
-"use strict";/*!-----------------------------------------------------------------------------
+/*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * Version: 0.34.1(547870b6881302c5b4ff32173c16d06009e3588f)
+ * Version: 0.52.0(f6dc0eb8fce67e57f6036f4769d92c1666cdf546)
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/
-define("vs/basic-languages/azcli/azcli", ["require","require"],(require)=>{
-var moduleExports=(()=>{var s=Object.defineProperty;var i=Object.getOwnPropertyDescriptor;var r=Object.getOwnPropertyNames;var l=Object.prototype.hasOwnProperty;var c=(t,e)=>{for(var o in e)s(t,o,{get:e[o],enumerable:!0})},k=(t,e,o,a)=>{if(e&&typeof e=="object"||typeof e=="function")for(let n of r(e))!l.call(t,n)&&n!==o&&s(t,n,{get:()=>e[n],enumerable:!(a=i(e,n))||a.enumerable});return t};var p=t=>k(s({},"__esModule",{value:!0}),t);var d={};c(d,{conf:()=>f,language:()=>g});var f={comments:{lineComment:"#"}},g={defaultToken:"keyword",ignoreCase:!0,tokenPostfix:".azcli",str:/[^#\s]/,tokenizer:{root:[{include:"@comment"},[/\s-+@str*\s*/,{cases:{"@eos":{token:"key.identifier",next:"@popall"},"@default":{token:"key.identifier",next:"@type"}}}],[/^-+@str*\s*/,{cases:{"@eos":{token:"key.identifier",next:"@popall"},"@default":{token:"key.identifier",next:"@type"}}}]],type:[{include:"@comment"},[/-+@str*\s*/,{cases:{"@eos":{token:"key.identifier",next:"@popall"},"@default":"key.identifier"}}],[/@str+\s*/,{cases:{"@eos":{token:"string",next:"@popall"},"@default":"string"}}]],comment:[[/#.*$/,{cases:{"@eos":{token:"comment",next:"@popall"}}}]]}};return p(d);})();
+define("vs/basic-languages/azcli/azcli", ["require"],(require)=>{
+"use strict";
+var moduleExports = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // src/basic-languages/azcli/azcli.ts
+  var azcli_exports = {};
+  __export(azcli_exports, {
+    conf: () => conf,
+    language: () => language
+  });
+  var conf = {
+    comments: {
+      lineComment: "#"
+    }
+  };
+  var language = {
+    defaultToken: "keyword",
+    ignoreCase: true,
+    tokenPostfix: ".azcli",
+    str: /[^#\s]/,
+    tokenizer: {
+      root: [
+        { include: "@comment" },
+        [
+          /\s-+@str*\s*/,
+          {
+            cases: {
+              "@eos": { token: "key.identifier", next: "@popall" },
+              "@default": { token: "key.identifier", next: "@type" }
+            }
+          }
+        ],
+        [
+          /^-+@str*\s*/,
+          {
+            cases: {
+              "@eos": { token: "key.identifier", next: "@popall" },
+              "@default": { token: "key.identifier", next: "@type" }
+            }
+          }
+        ]
+      ],
+      type: [
+        { include: "@comment" },
+        [
+          /-+@str*\s*/,
+          {
+            cases: {
+              "@eos": { token: "key.identifier", next: "@popall" },
+              "@default": "key.identifier"
+            }
+          }
+        ],
+        [
+          /@str+\s*/,
+          {
+            cases: {
+              "@eos": { token: "string", next: "@popall" },
+              "@default": "string"
+            }
+          }
+        ]
+      ],
+      comment: [
+        [
+          /#.*$/,
+          {
+            cases: {
+              "@eos": { token: "comment", next: "@popall" }
+            }
+          }
+        ]
+      ]
+    }
+  };
+  return __toCommonJS(azcli_exports);
+})();
 return moduleExports;
 });
