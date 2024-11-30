@@ -47,4 +47,5 @@ export interface ShellHost {
   reportTime(params: {name: string}): void;
 
   streamFromLLM(params: {model: string, system: string, messages: LLMMessage[], apiKey: string}): AsyncIterable<string>;
+  fillWithLLM(params: {model: string, prompt: string, suffix: string, apiKey: string}): AsyncIterable<string>;
 }

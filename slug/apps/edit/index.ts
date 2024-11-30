@@ -220,6 +220,58 @@ const rpc = RPC(transport, {
         enabled: false, 
       },
     });
+
+    monaco.languages.registerInlineCompletionsProvider(language, {
+      provideInlineCompletions: async (model, position, {selectedSuggestionInfo, triggerKind}, token) => {
+        if (selectedSuggestionInfo)
+          return null;
+        const line = model.getValueInRange({
+          startLineNumber: position.lineNumber, startColumn: 1,
+          endLineNumber: position.lineNumber, endColumn: position.column,
+        });
+        const contentStartColumn = position.column - (line.length - line.trimEnd().length);
+        const startRange = {
+          startLineNumber: 1, startColumn: 1,
+          endLineNumber: position.lineNumber, endColumn: contentStartColumn,
+        };
+        const afterRange = {
+          startLineNumber: position.lineNumber, startColumn: position.column,
+          endLineNumber: Infinity, endColumn: Infinity,
+        };
+        const before = model.getValueInRange(startRange);
+        const after = model.getValueInRange(afterRange);
+
+        const controller = new AbortController();
+        const dispose = token.onCancellationRequested((...args) => {
+          controller.abort();
+          dispose.dispose();
+        });
+        if (triggerKind === monaco.languages.InlineCompletionTriggerKind.Automatic) {
+          await new Promise(resolve => setTimeout(resolve, 250));
+          if (controller.signal.aborted)
+            return null;
+        }
+        let text = '';
+        for await (const chunk of snail.fillWithLLM({
+          before, after,
+          useTerminalContext: true,
+          signal: controller.signal,
+          language,
+        })) {
+          text += chunk;
+        }
+        if (controller.signal.aborted || !text)
+          return null;
+        return {items: [ { insertText: text, range: {
+          startLineNumber: startRange.endLineNumber, startColumn: startRange.endColumn,
+          endLineNumber: afterRange.startLineNumber, endColumn: afterRange.startColumn,
+        } } ], enableForwardStability: true, suppressSuggestions: false};
+      },
+      freeInlineCompletions: () => {
+        // No-op
+      },
+    });
+
     lastSavedVersion = editor.getModel()!.getAlternativeVersionId();
     editor.addAction({
       id: 'edit.save',

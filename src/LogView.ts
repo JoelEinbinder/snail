@@ -78,6 +78,35 @@ export class LogView implements Block, ShellDelegate, Findable {
     }
     this.hide();
   }
+  async * fillWithLLM(params: { before: string; after: string; useTerminalContext?: boolean; language: string; signal?: AbortSignal }): AsyncIterable<string> {
+    const model = 'codestral-latest';
+    const apiKey = await this._shell.cachedEvaluation('echo $SNAIL_CODESTRAL_KEY');
+    if (!apiKey)
+      return;
+    let prompt = '';
+    if (params.useTerminalContext) {
+      let terminalText = '';
+      const messages = await logToMessages(this._logForLLM.filter(x => x !== this._activeItem), params.signal);
+      for (const message of messages) {
+        if (message.role === 'user')
+          terminalText += message.content + '\n';
+        else if (message.role === 'assistant')
+          terminalText += '> `' + message.content + '`\n';
+      }
+      if (terminalText.length) {
+        prompt += terminalText;
+        prompt += '```' + params.language + '\n';
+      }
+    }
+    prompt += params.before;
+    const iterable = await sendStreamingCommandToHost('fillWithLLM', {
+      prompt,
+      suffix: params.after,
+      apiKey,
+      model,
+    });
+    yield * iterable;
+  }
 
   cancelLLMRequest(): void {
     this._element.classList.toggle('ai-loading', false);
@@ -617,22 +646,7 @@ async function llmCompletions(shell: Shell, log: Iterable<LogItem|LLMMessage>, s
     return null;
   if (signal.aborted)
     return null;
-  const messages: LLMMessage[] = [];
-  let total = 0;
-  for (const item of [...log].reverse()) {
-    const message = ('role' in item && 'content' in item) ? item : await item.serializeForLLM?.();
-    if (signal.aborted)
-      return null;
-    if (!message || !message.content)
-      continue;
-    if (message.content.length > 1000)
-      message.content = message.content.slice(0, 500) + '<content truncated>' + message.content.slice(-500);
-    total += message.content.length;
-    messages.push(message);
-    if (total >= 10_000)
-      break;
-  }
-  messages.reverse();
+  const messages = await logToMessages(log, signal);
   const system = `Your messages are being typed directly into a terminal shell.
 The user will respond with the result from your command.
 Always respond in the form of a bash command.
@@ -644,7 +658,7 @@ Refrain from explaining simple commands.
 For example, if you don't know what to do, respond with ls.
 Use uname -a to check whether the system is MacOS or Linux.`;
 
-  
+
   return sendStreamingCommandToHost('streamFromLLM', {
     system,
     messages,
@@ -652,6 +666,26 @@ Use uname -a to check whether the system is MacOS or Linux.`;
     apiKey,
   });
 };
+
+async function logToMessages(log: Iterable<LogItem|LLMMessage>, signal?: AbortSignal) {
+  const messages: LLMMessage[] = [];
+  let total = 0;
+  for (const item of [...log].reverse()) {
+    const message = ('role' in item && 'content' in item) ? item : await item.serializeForLLM?.();
+    if (signal?.aborted)
+      return null;
+    if (!message || !message.content)
+      continue;
+    if (message.content.length > 1000)
+      message.content = message.content.slice(0, 500) + '<content truncated>' + message.content.slice(-500);
+    total += message.content.length;
+    messages.push(message);
+    if (total >= 10_000)
+      break;
+  }
+  messages.reverse();
+  return messages;
+}
 
 async function * mockCompletions(): AsyncIterable<string> {
   yield '# fake ai suggestion';

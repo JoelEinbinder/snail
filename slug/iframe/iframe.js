@@ -109,6 +109,12 @@ function onMessage(data) {
       } else {
         window.location.reload();
       }
+    } else if (method === 'fillWithLLM-chunk') {
+      const {id, chunk} = params;
+      llmRequests.get(id).chunk(chunk);
+    } else if (method === 'fillWithLLM-end') {
+      const {id} = params;
+      llmRequests.get(id).end();
     }
   } else {
     const {id, result} = data;
@@ -359,6 +365,39 @@ function setAdoptionHandler(handler) {
   adoptionHandler = handler;
 }
 
+let llmRequestId = 0;
+let llmRequests = new Map();
+async function * fillWithLLM({before, after, useTerminalContext, signal, language}) {
+  const id = ++lastMessageId;
+  let ended = false;
+  let buffer = [];
+  /** @type {() => void} */
+  let resolve = () => void 0;
+  llmRequests.set(id, {
+    chunk: chunk => {
+      buffer.push(chunk);
+      resolve();
+    },
+    end: () => {
+      ended = true;
+      resolve();
+    },
+  })
+  sendMessageToParent({method: 'fillWithLLM', params: {before, after, useTerminalContext, id, language}});
+  signal?.addEventListener('abort', () => {
+    sendMessageToParent({method: 'abortLLM', params: {id}});
+  });
+  while (true) {
+    while (buffer.length)
+      yield buffer.shift();
+    if (ended)
+      break;
+    await /** @type {Promise<void>} */(new Promise(x => resolve = x));
+  } 
+
+  llmRequests.delete(id);
+}
+
 window.snail = {
   waitForMessage,
   setHeight,
@@ -378,5 +417,6 @@ window.snail = {
   close,
   setFindHandler,
   setAdoptionHandler,
+  fillWithLLM,
 }
 sendMessageToParent('ready')

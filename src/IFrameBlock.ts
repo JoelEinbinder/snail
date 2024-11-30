@@ -30,6 +30,7 @@ export type IFrameBlockDelegate = {
   urlForIframe(filePath: string): Promise<string>;
   browserView: boolean;
   tryToRunCommand(command: string): void;
+  fillWithLLM(params: { before: string, after: string, useTerminalContext: boolean, language: string }): AsyncIterable<string>;
 }
 
 export interface WebContentView {
@@ -306,6 +307,22 @@ export class IFrameBlock implements LogItem {
           const { matches } = data.params;
           this._findParams?.report(matches);
           break;
+        }
+        case 'fillWithLLM': {
+          const { before, after, useTerminalContext, language, id }= data.params;
+          (async () => {
+            for await (const chunk of delegate.fillWithLLM({ before, after, useTerminalContext, language })) {
+              this._webContentView.postMessage({
+                method: 'fillWithLLM-chunk',
+                params: { chunk, id },
+              });
+            }
+            this._webContentView.postMessage({
+              method: 'fillWithLLM-end',
+              params: { id },
+            });
+          })();
+
         }
       }
     };

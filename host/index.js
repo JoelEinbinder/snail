@@ -20,6 +20,8 @@ const proxies = new Map();
 const webServers = new WebServers(false);
 /** @type {import('openai').OpenAI} */
 let openai;
+/** @type {import('@mistralai/mistralai').Mistral} */
+let mistral;
 /** @type {import('@anthropic-ai/sdk').Anthropic} */
 let anthropic;
 /** @typedef {import('./ShellHost').ShellHost} ShellHost */
@@ -238,6 +240,34 @@ const handler = {
           yield chunk.delta.text;
         else
           yield '';
+      }
+    }
+  },
+  fillWithLLM({ apiKey, model, prompt, suffix }) {
+    if (!mistral || mistral.apiKey !== apiKey) {
+      const { Mistral } = require('@mistralai/mistralai');
+      mistral = new Mistral({ apiKey, serverURL: 'https://codestral.mistral.ai' });
+    }
+    const stop = ['\n\n', '\r\n\r\n', '```'];
+    // mistral is bad at hadning suffixes. So only do one line if there is a suffix.
+    if (suffix.trim().length) {
+      stop.push('\n');
+    }
+    return mistralStreamToString(mistral.fim.stream({
+      model,
+      prompt,
+      suffix,
+      maxTokens: 128,
+      stop,
+    }));
+
+    /**
+     * @param {ReturnType<import('@mistralai/mistralai').Mistral['fim']['stream']>} stream
+     */
+    async function * mistralStreamToString(stream) {
+      for await (const chunk of await stream) {
+        console.log(chunk.data.choices);
+        yield chunk.data.choices[0]?.delta.content || '';
       }
     }
   },

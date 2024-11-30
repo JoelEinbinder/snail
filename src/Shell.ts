@@ -55,6 +55,7 @@ export interface ShellDelegate {
   removeRetainer(params: {item: LogItem|'forced', parent: LogItem}): void;
   cancelLLMRequest(): void;
   triggerLLMInvestigation(): void;
+  fillWithLLM(params: {before: string, after: string, useTerminalContext?: boolean}): AsyncIterable<string>;
 }
 
 interface ConnectionCore {
@@ -295,6 +296,7 @@ export class Shell {
                         return;
                       this.runCommand(command, 'shjs');
                     },
+                    fillWithLLM: params => this._delegate.fillWithLLM(params),
                   });
                   activeIframeBlock = iframeBlock;
                   addItem(iframeBlock, /* focus */ true);

@@ -40,4 +40,10 @@ export function tryToRunCommand(command: string): Promise<void>;
 export function close(): void;
 export function setFindHandler(findHandler: (params: FindParams|null) => void): void;
 export function setAdoptionHandler(adoptionHandler: () => void|Promise<void>): void;
-
+export function fillWithLLM(params: {
+  before: string,
+  after: string,
+  useTerminalContext?: boolean,
+  signal?: AbortSignal,
+  language: string,
+}): AsyncIterable<string>;

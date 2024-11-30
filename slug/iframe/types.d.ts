@@ -17,4 +17,11 @@ declare var snail: {
   close(): void;
   setFindHandler(findHandler: (params: import('../../src/Find').FindParams|null) => void): void;
   setAdoptionHandler(adoptionHandler: () => void|Promise<void>): void;
+  fillWithLLM(params: {
+    before: string,
+    after: string,
+    useTerminalContext?: boolean,
+    signal?: AbortSignal,
+    language: string,
+  }): AsyncIterable<string>;
 };
