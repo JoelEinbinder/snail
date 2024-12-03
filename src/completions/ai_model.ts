@@ -3,7 +3,7 @@ import { registerCompleter } from "../shellCompleter";
 const models = [
   ['claude-3-5-sonnet-latest', 'Claude 3.5 Sonnet, Most intelligent model'],
   ['claude-3-opus-20240229', 'Claude 3 Opus, Powerful model for highly complex tasks'],
-  ['claude-3-haiku-20240307', 'Claude 3 Haiku, Fastest and most compact model for near-instant responsiveness'],
+  ['claude-3-5-haiku-latest', 'Claude 3.5 Haiku, Fastest and most compact model for near-instant responsiveness'],
 
   ['gpt-4o', 'Our most advanced, multimodal flagship model that\'s cheaper and faster than GPT-4 Turbo'],
   ['gpt-4-turbo', 'GPT-4 Turbo with Vision model. Vision requests can now use JSON mode and function calling.'],

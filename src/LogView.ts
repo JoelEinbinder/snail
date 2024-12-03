@@ -618,12 +618,12 @@ async function llmCompletions(shell: Shell, log: Iterable<LogItem|LLMMessage>, s
     const message = ('role' in item && 'content' in item) ? item : await item.serializeForLLM?.();
     if (signal.aborted)
       return null;
-    if (message) {
-      if (message.content.length > 1000)
-        message.content = message.content.slice(0, 500) + '<content truncated>' + message.content.slice(-500);
-      total += message.content.length;
-      messages.push(message);
-    }
+    if (!message || !message.content)
+      continue;
+    if (message.content.length > 1000)
+      message.content = message.content.slice(0, 500) + '<content truncated>' + message.content.slice(-500);
+    total += message.content.length;
+    messages.push(message);
     if (total >= 10_000)
       break;
   }
