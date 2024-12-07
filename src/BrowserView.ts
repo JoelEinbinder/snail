@@ -7,27 +7,79 @@ const browserViewMessageHandler = new Map<string, (data: any) => void>();
 host.onEvent('browserView-message', ({uuid, message}) => {
   browserViewMessageHandler.get(uuid)?.(message);
 });
+
+let cachedBrowserView: {url: string, uuid:string}|null = null;
+function getOrCreateBrowserView(url: string|undefined) {
+  if (cachedBrowserView) {
+    const {uuid, url: cachedURL} = cachedBrowserView;
+    if (!browserViewsHidden)
+      host.notify({ method: 'showBrowserView', params: { uuid } });
+    cachedBrowserView = null;
+    if (cachedURL && cachedURL === url) {
+      host.notify({
+        method: 'postBrowserViewMessage',
+        params: {uuid, message: {
+          method: 'adopted',
+        }},
+      });
+    } else if (url) {
+      host.notify({
+        method: 'setBrowserViewURL',
+        params: {uuid, url},
+      });
+    } else {
+      
+    }
+    return uuid;
+  }
+  const uuid = randomUUID();
+  host.notify({ method: 'createBrowserView', params: uuid });
+  if (browserViewsHidden)
+    host.notify({ method: 'hideBrowserView', params: { uuid: uuid } });
+  if (url) {
+    host.notify({
+      method: 'setBrowserViewURL',
+      params: {uuid, url},
+    });
+  }
+  return uuid;
+}
+
+function destroyBrowserView(uuid: string) {
+  host.notify({
+    method: 'destroyBrowserView',
+    params: {uuid},
+  });
+}
+
+function returnBrowserView({uuid, url}: {uuid: string, url: string}) {
+  if (cachedBrowserView)
+    destroyBrowserView(cachedBrowserView.uuid);
+  cachedBrowserView = {uuid, url};
+  host.notify({ method: 'hideBrowserView', params: { uuid } });
+}
+
 export class BrowserView implements WebContentView {
   private _dummyElement = document.createElement('div');
   private _resizeObserver: ResizeObserver;
   private _closed = false;
-  // @ts-ignore
-  private _uuid: string = randomUUID();
-  constructor(handler: (data: any) => void) {
+  private _uuid: string;
+  private _url = 'about:blank';
+  constructor(url: string|undefined, handler: (data: any) => void) {
     this._dummyElement.classList.add('browser-view-dummy');
     this._dummyElement.tabIndex = 0;
-    host.notify({ method: 'createBrowserView', params: this._uuid });
-    if (browserViewsHidden)
-      host.notify({ method: 'hideBrowserView', params: { uuid: this._uuid } });
+    if (url)
+      this._url = url;
+    this._uuid = getOrCreateBrowserView(url);
     this._resizeObserver = new ResizeObserver(() => this._updateRect());
     this._resizeObserver.observe(this._dummyElement);
     browserViewMessageHandler.set(this._uuid, handler);
-    this._dummyElement.addEventListener('focus', () => [
+    this._dummyElement.addEventListener('focus', () => {
       host.notify({
         method: 'focusBrowserView',
         params: {uuid: this._uuid},
-      })  
-    ]);
+      });
+    });
   }
 
   focus(): void {
@@ -43,10 +95,7 @@ export class BrowserView implements WebContentView {
     this._closed = true;
     this._resizeObserver.disconnect();
     browserViewMessageHandler.delete(this._uuid);
-    host.notify({
-      method: 'destroyBrowserView',
-      params: {uuid: this._uuid},
-    });
+    returnBrowserView({uuid: this._uuid, url: this._url});
   }
 
   get element(): HTMLElement {
@@ -81,6 +130,7 @@ export class BrowserView implements WebContentView {
   }
 
   setURL(url: string): void {
+    this._url = url;
     host.notify({
       method: 'setBrowserViewURL',
       params: {uuid: this._uuid, url},

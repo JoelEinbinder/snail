@@ -4,23 +4,25 @@ import path from 'path';
 import os from 'os';
 
 test('can edit a new file', async ({ shell, workingDir }) => {
-  await shell.runCommand('edit foo.js');
+  const editor = await shell.runCommand('edit foo.js');
+  if (!editor)
+    throw new Error('Expected edit to create a browser view');
   expect(await shell.serialize()).toEqual({
     title: 'foo.js',
     content: '',
   });
-  await shell.page.keyboard.type('hello world');
+  await editor.keyboard.type('hello world');
   expect(await shell.waitAndSerialize()).toEqual({
     title: 'foo.js*',
     content: 'hello world',
   });
-  await shell.page.keyboard.press(os.platform() === 'darwin' ? 'Meta+KeyS' : 'Control+KeyS');
+  await editor.keyboard.press(os.platform() === 'darwin' ? 'Meta+KeyS' : 'Control+KeyS');
   expect(await shell.waitAndSerialize()).toEqual({
     title: 'foo.js',
     content: 'hello world',
   });
   expect(await fs.promises.readFile(path.join(workingDir, 'foo.js'), 'utf8')).toEqual('hello world');
-  await shell.page.keyboard.press('Control+C');
+  await editor.keyboard.press('Control+C');
   expect(await shell.waitAndSerialize()).toEqual({
     log: [
       '> edit foo.js',
@@ -33,24 +35,26 @@ test('can edit a new file', async ({ shell, workingDir }) => {
 
 test('can edit an existing file', async ({ shell, workingDir }) => {
   await fs.promises.writeFile(path.join(workingDir, 'bar.txt'), 'old content\n', 'utf8');
-  await shell.runCommand('edit bar.txt');
+  const editor = await shell.runCommand('edit bar.txt');
+  if (!editor)
+    throw new Error('Expected edit to create a browser view');
   expect(await shell.serialize()).toEqual({
     title: 'bar.txt',
     content: 'old content\n',
   });
-  await shell.page.keyboard.press('PageDown');
-  await shell.page.keyboard.type('new content\n');
+  await editor.keyboard.press('PageDown');
+  await editor.keyboard.type('new content\n');
   expect(await shell.waitAndSerialize()).toEqual({
     title: 'bar.txt*',
     content: 'old content\nnew content\n',
   });
-  await shell.page.keyboard.press(os.platform() === 'darwin' ? 'Meta+KeyS' : 'Control+KeyS');
+  await editor.keyboard.press(os.platform() === 'darwin' ? 'Meta+KeyS' : 'Control+KeyS');
   expect(await shell.waitAndSerialize()).toEqual({
     title: 'bar.txt',
     content: 'old content\nnew content\n',
   });
   expect(await fs.promises.readFile(path.join(workingDir, 'bar.txt'), 'utf8')).toEqual('old content\nnew content\n');
-  await shell.page.keyboard.press('Control+C');
+  await editor.keyboard.press('Control+C');
   expect(await shell.waitAndSerialize()).toEqual({
     log: [
       '> edit bar.txt',
@@ -70,12 +74,14 @@ test('is set as the default editor', async ({ shell }) => {
 });
 
 test('has a close button', async ({ shell, workingDir }) => {
-  await shell.runCommand('edit foo.txt');
+  const editor = await shell.runCommand('edit foo.txt');
+  if (!editor)
+    throw new Error('Expected edit to create a browser view');
   expect(await shell.serialize()).toEqual({
     title: 'foo.txt',
     content: '',
   });
-  await shell.page.frameLocator('iframe').locator('a.close').click();
+  await editor.locator('a.close').click();
   expect(await shell.waitAndSerialize()).toEqual({
     log: [
       '> edit foo.txt',
@@ -110,4 +116,18 @@ test('can reconnect to edit', async ({ shellFactory }) => {
     content: '',
   });
   await shell2.kill();
+});
+
+
+test('edit should not be slow the second time', async ({ shell }) => {
+  const editor = await shell.runCommand('edit foo.txt');
+  if (!editor)
+    throw new Error('Expected edit to create a browser view');
+  // catch because the page might close here
+  await editor.keyboard.press('Control+C').catch(x => void 0);
+  await shell.waitForAsyncWorkToFinish();
+  const time = Date.now();
+  await shell.runCommand('edit foo.txt');
+  const elapsed = Date.now() - time;
+  expect(elapsed).toBeLessThan(500);
 });

@@ -2,7 +2,7 @@ import { AntiFlicker } from "./AntiFlicker";
 import { font, fontString } from "./font";
 import { host } from "./host";
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
-import type { JSConnection } from "./JSConnection";
+import { JSConnection } from "./JSConnection";
 import type { LogItem, LLMMessage } from "./LogItem";
 import { cdpManager, DebuggingInfo } from './CDPManager';
 import { expectingUserInput, startAsyncWork } from "./async";
@@ -49,12 +49,14 @@ class IFrameView implements WebContentView {
   private _iframe: HTMLIFrameElement = document.createElement('iframe');
   // @ts-ignore
   private _uuid: string = String(Math.random());
-  constructor(handler: (data: any) => void) {
+  constructor(url: string|undefined, handler: (data: any) => void) {
     this._iframe.allowFullscreen = true;
     this._iframe.style.height = '0';
     this._iframe.name = this._uuid;
     this._iframe.allow = 'clipboard-write';
     iframeMessageHandler.set(this._iframe, handler);
+    if (url)
+      this.setURL(url);
   }
 
   focus() {
@@ -96,6 +98,8 @@ class IFrameView implements WebContentView {
     })
   }
 }
+
+const urlForIframeCache = new WeakMap<JSConnection, Map<string, string>>();
 
 export class IFrameBlock implements LogItem {
   private _webContentView: WebContentView;
@@ -305,15 +309,21 @@ export class IFrameBlock implements LogItem {
         }
       }
     };
-    this._webContentView = delegate.browserView ? new BrowserView(handler) : new IFrameView(handler);
-    delegate.urlForIframe(data).then(urlStr => {
-      const url = new URL(urlStr);
-      url.searchParams.set('class', `${host.type()}-host ${themeName()}`);
-      url.searchParams.set('css', `--current-font: ${fontString()}`);
-      if (host.type() === 'web')
-        url.host = document.location.host;
-      this._webContentView.setURL(url.href);
-    });
+    const cachedUrl = urlForIframeCache.get(delegate.connection)?.get(data);
+    this._webContentView = delegate.browserView ? new BrowserView(cachedUrl, handler) : new IFrameView(cachedUrl, handler);
+    if (!cachedUrl) {
+      delegate.urlForIframe(data).then(urlStr => {
+        const url = new URL(urlStr);
+        url.searchParams.set('class', `${host.type()}-host ${themeName()}`);
+        url.searchParams.set('css', `--current-font: ${fontString()}`);
+        if (host.type() === 'web')
+          url.host = document.location.host;
+        this._webContentView.setURL(url.href);
+        if (!urlForIframeCache.has(delegate.connection))
+          urlForIframeCache.set(delegate.connection, new Map());
+        urlForIframeCache.get(delegate.connection).set(data, url.href);
+      });
+    }
     // BrowserView cannot be inline because it is absolutely positioned
     if (delegate.browserView)
       this.setIsFullscreen(true);

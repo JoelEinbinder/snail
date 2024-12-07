@@ -111,7 +111,7 @@ class Header {
   }
 }
 snail.setIsFullscreen(true);
-snail.expectingUserInput('edit');
+let isExpectingInput = false;
 snail.setToJSON(() => {
   if (!editor)
     return 'Loading...';
@@ -239,12 +239,21 @@ const rpc = RPC(transport, {
     setTimeout(() => {
       editor.setScrollTop(0, monaco.editor.ScrollType.Immediate);
     }, 0);
+    if (!isExpectingInput) {
+      snail.expectingUserInput('edit');
+      isExpectingInput = true;
+    }
   },
 });
 window.addEventListener('focus', () => {
   if (document.activeElement !== document.body)
     return;
   editor?.focus();
+});
+snail.setAdoptionHandler(async () => {
+  editor?.dispose();
+  editor = null;
+  isExpectingInput = false;
 });
 while (true)
   transport.onmessage!(await snail.waitForMessage<any>());

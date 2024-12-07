@@ -178,7 +178,7 @@ iframe.fullscreen {
   bottom: 0;
   min-height: 100%;
   z-index: 2000;
-  background-color: rgba(0,0,0,1.0);
+  background-color: var(--color-background);
 }
 
 body:not(.vscode-dark) iframe.fullscreen {

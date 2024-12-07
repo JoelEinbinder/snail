@@ -101,6 +101,14 @@ function onMessage(data) {
       findHandler?.(findParams);
     } else if (method === 'didClose') {
       isClosed = true;
+    } else if (method === 'adopted') {
+      if (adoptionHandler) {
+        Promise.resolve(adoptionHandler()).then(() => {
+          sendMessageToParent('ready');
+        });
+      } else {
+        window.location.reload();
+      }
     }
   } else {
     const {id, result} = data;
@@ -345,6 +353,12 @@ function setFindHandler(_findHandler) {
   findHandler?.(findParams);
 }
 
+/** @type {() => Promise<void>|void} */
+let adoptionHandler;
+function setAdoptionHandler(handler) {
+  adoptionHandler = handler;
+}
+
 window.snail = {
   waitForMessage,
   setHeight,
@@ -363,5 +377,6 @@ window.snail = {
   tryToRunCommand,
   close,
   setFindHandler,
+  setAdoptionHandler,
 }
 sendMessageToParent('ready')

@@ -6,13 +6,18 @@ import os from 'os';
 class Split {
   constructor(public page: Page, protected _block: Locator) {
   }
-  async runCommand(command: string) {
+  async runCommand(command: string): Promise<Page|null> {
+    let browserView: Page|null = null;
+    const listener = (page: Page) => browserView = page;
+    this.page.context().on('page', listener);
     const textarea = this._block.locator('textarea:enabled');
     await textarea.fill(command, {
       force: true,
     });
     await textarea.press('Enter');
     await this.waitForAsyncWorkToFinish();
+    this.page.context().off('page', listener);
+    return browserView;
   }
 
   async runPretypedCommand() {

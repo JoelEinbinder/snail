@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 const path = require('path');
 const fs = require('fs');
-const { display, makeRPC } = require('../../sdk');;
-display(path.join(__dirname, 'index.ts'));
+const { makeRPC } = require('../../sdk');;
+process.stdout.write(`\x1b\x1aL${JSON.stringify({
+  entry:path.join(__dirname, 'index.ts'),
+  browserView: true, 
+})}\x00`);
 const rpc = makeRPC({
   async save({file, content}) {
     await fs.promises.writeFile(file, content);

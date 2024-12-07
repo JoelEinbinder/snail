@@ -38,4 +38,6 @@ export function startAsyncWork(name?: string): () => void;
 export function expectingUserInput(name?: string): () => void;
 export function tryToRunCommand(command: string): Promise<void>;
 export function close(): void;
-export function setFindHandler(findHandler: (params: FindParams|null) => void);
+export function setFindHandler(findHandler: (params: FindParams|null) => void): void;
+export function setAdoptionHandler(adoptionHandler: () => void|Promise<void>): void;
+

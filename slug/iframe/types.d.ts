@@ -15,5 +15,6 @@ declare var snail: {
   expectingUserInput(name?: string): () => void;
   tryToRunCommand(command: string): Promise<void>;
   close(): void;
-  setFindHandler(findHandler: (params: import('../../src/Find').FindParams|null) => void);
+  setFindHandler(findHandler: (params: import('../../src/Find').FindParams|null) => void): void;
+  setAdoptionHandler(adoptionHandler: () => void|Promise<void>): void;
 };

@@ -1,6 +1,6 @@
 reportTime('electron top');
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
-const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem, WebContentsView, protocol, screen } = require('electron');
 const { handler, proxies, preloadJSShell, getTheme } = require('../host');
 const path = require('path');
 const os = require('os');
@@ -353,19 +353,20 @@ const overrides = {
   // BrowserView api
   createBrowserView(uuid, client, sender) {
     const window = BrowserWindow.fromWebContents(sender);
-    const browserView = new BrowserView({
+    const browserView = new WebContentsView({
       webPreferences: {
         preload: __dirname + '/browserView-preload.js',
       },
     });
-    window.addBrowserView(browserView);
+    browserView.setBackgroundColor('#00000000');
+    window.contentView.addChildView(browserView);
     if (!browserViews.has(sender))
       browserViews.set(sender, new Map());
     const views = browserViews.get(sender);
     browserViewContentsToParentContents.set(browserView.webContents, {uuid, parent: sender});
     // TODO are we leaking browserViews when the sender is destroyed?
     const onParentDestroy = () => {
-      window.removeBrowserView(browserView);
+      window.contentView.removeChildView(browserView);
       browserView.webContents.destroy();
     };
     browserView.webContents.on('destroyed', () => {
@@ -394,7 +395,7 @@ const overrides = {
     const views = browserViews.get(sender);
     const window = BrowserWindow.fromWebContents(sender);
     const view = views.get(uuid);
-    window.removeBrowserView(view);
+    window.contentView.removeChildView(view);
     view.webContents.destroy();
   },
   postBrowserViewMessage({uuid, message}, client, sender) {
@@ -404,7 +405,7 @@ const overrides = {
     const window = BrowserWindow.fromWebContents(sender);
     browserViews.get(sender)?.get(uuid)?.setBounds({
       x: Math.floor(rect.x),
-      y: Math.floor(rect.y) + window.getContentBounds().y - window.getBounds().y,
+      y: Math.floor(rect.y),
       width: Math.ceil(rect.width),
       height: Math.ceil(rect.height),
     });
@@ -419,13 +420,13 @@ const overrides = {
     const window = BrowserWindow.fromWebContents(sender);
     const view = browserViews.get(sender)?.get(uuid);
     const focused = view.webContents.isFocused();
-    window.removeBrowserView(browserViews.get(sender)?.get(uuid));
+    window.contentView.removeChildView(browserViews.get(sender)?.get(uuid));
     if (focused)
-      window.focus();
+      sender.focus();
   },
   showBrowserView({uuid}, client, sender) {
     const window = BrowserWindow.fromWebContents(sender);
-    window.addBrowserView(browserViews.get(sender)?.get(uuid));
+    window.contentView.addChildView(browserViews.get(sender)?.get(uuid));
   },
   attachToCDP({browserViewUUID}, client, sender) {
     const webContents = browserViewUUID ? browserViews.get(sender)?.get(browserViewUUID)?.webContents : sender;
