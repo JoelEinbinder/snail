@@ -356,6 +356,7 @@ const overrides = {
     const browserView = new WebContentsView({
       webPreferences: {
         preload: __dirname + '/browserView-preload.js',
+        zoomFactor: sender.zoomFactor,
       },
     });
     browserView.setBackgroundColor('#00000000');
@@ -402,12 +403,11 @@ const overrides = {
     browserViews.get(sender)?.get(uuid)?.webContents.send('postMessage', message);
   },
   setBrowserViewRect({uuid, rect}, client, sender) {
-    const window = BrowserWindow.fromWebContents(sender);
     browserViews.get(sender)?.get(uuid)?.setBounds({
-      x: Math.floor(rect.x),
-      y: Math.floor(rect.y),
-      width: Math.ceil(rect.width),
-      height: Math.ceil(rect.height),
+      x: Math.floor(rect.x * sender.zoomFactor),
+      y: Math.floor(rect.y * sender.zoomFactor),
+      width: Math.ceil(rect.width * sender.zoomFactor),
+      height: Math.ceil(rect.height * sender.zoomFactor),
     });
   },
   setBrowserViewURL({uuid, url}, client, sender) {
@@ -420,13 +420,19 @@ const overrides = {
     const window = BrowserWindow.fromWebContents(sender);
     const view = browserViews.get(sender)?.get(uuid);
     const focused = view.webContents.isFocused();
-    window.contentView.removeChildView(browserViews.get(sender)?.get(uuid));
+    window.contentView.removeChildView(view);
+    if (view)
+      window.webContents.setZoomFactor(view.webContents.zoomFactor);
     if (focused)
       sender.focus();
   },
   showBrowserView({uuid}, client, sender) {
     const window = BrowserWindow.fromWebContents(sender);
-    window.contentView.addChildView(browserViews.get(sender)?.get(uuid));
+    const view = browserViews.get(sender)?.get(uuid);
+    if (!view)
+      return;
+    window.contentView.addChildView(view);
+    view.webContents.setZoomFactor(sender.zoomFactor);
   },
   attachToCDP({browserViewUUID}, client, sender) {
     const webContents = browserViewUUID ? browserViews.get(sender)?.get(browserViewUUID)?.webContents : sender;
