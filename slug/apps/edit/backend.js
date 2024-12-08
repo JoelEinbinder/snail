@@ -6,12 +6,20 @@ process.stdout.write(`\x1b\x1aL${JSON.stringify({
   entry:path.join(__dirname, 'index.ts'),
   browserView: true, 
 })}\x00`);
+
+let firstConnect = true;
 const rpc = makeRPC({
   async save({file, content}) {
     await fs.promises.writeFile(file, content);
   },
   async close() {
     process.exit(0);
+  },
+  async connect() {
+    if (firstConnect)
+      firstConnect = false;
+    else
+      await sendContent();
   }
 });
 const pathArg = process.argv[2];
@@ -21,22 +29,27 @@ if (pathArg) {
   absolutePath = path.resolve(pathArg);
   relativePath = path.relative(process.cwd(), absolutePath);
 }
-let content = '';
-let newFile = true;
-try {
-  if (pathArg) {
-    content = fs.readFileSync(absolutePath, 'utf8');
-    newFile = false;
-  }
-} catch {
+function getCurrentContent() {
+  let content = '';
+  let newFile = true;
+  try {
+    if (pathArg) {
+      content = fs.readFileSync(absolutePath, 'utf8');
+      newFile = false;
+    }
+  } catch {
 
+  }
+  return {content, newFile};
 }
-rpc.notify('setContent', {
-  content: content,
-  absolutePath,
-  relativePath,
-  newFile, 
-});
+function sendContent() {
+  void rpc.send('setContent', {
+    ...getCurrentContent(),
+    absolutePath,
+    relativePath,
+  });
+}
+sendContent();
 // TODO thread stdin in case it had some data in it before we went to web mode
 // send a secret message and wait for it to come back.
 // process.exit(0);

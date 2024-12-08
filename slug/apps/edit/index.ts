@@ -1,7 +1,8 @@
+/// <reference path="./monaco.d.ts" />
 import * as snail from '../../sdk/web';
 import './index.css';
 import { RPC } from '../../sdk/rpc-js';
-declare var monaco;
+
 try {
 window['MonacoEnvironment'] = {
   getWorkerUrl(file, label) {
@@ -115,6 +116,61 @@ class Header {
     this._titleElement.textContent = this.title + (this.modified ? '*' : '');
   }
 }
+
+class Footer {
+  element = document.createElement('div');
+  private _languageElement = document.createElement('div');
+  private _locationElement = document.createElement('div');
+  constructor() {
+    this.element.classList.add('footer');
+    this._languageElement.classList.add('language');
+    this._locationElement.classList.add('location');
+    this.element.append(this._locationElement, this._languageElement);
+    document.body.appendChild(this.element);
+  }
+  setLanguage(language: string) {
+    const l = monaco.languages.getLanguages().find(x => x.id === language);
+    const capitalized = l?.aliases?.[0] || language;
+    this._languageElement.textContent = capitalized;
+  }
+  setLocation(location: string) {
+    this._locationElement.textContent = location;
+  }
+  cursorChanged(editor: monaco.editor.IStandaloneCodeEditor) {
+    const text = (() => {
+      const info = {
+        selections: editor.getSelections() || [],
+        charactersSelected: 0,
+      };
+      const textModel = editor.getModel();
+      if (textModel) {
+        for (const selection of info.selections) {
+          if (typeof info.charactersSelected !== 'number') {
+            info.charactersSelected = 0;
+          }
+  
+          info.charactersSelected += textModel.getCharacterCountInRange(selection);
+        }
+      }
+      
+      if (info.selections.length === 1) {
+        if (info.charactersSelected)
+          return `Ln ${info.selections[0].positionLineNumber}, Col ${info.selections[0].positionColumn} (${info.charactersSelected} selected`;
+        return `Ln ${info.selections[0].positionLineNumber}, Col ${info.selections[0].positionColumn}`;
+      }
+  
+      if (info.charactersSelected)
+        return `${info.selections.length} selections (${info.charactersSelected} characters selected)`;
+  
+      if (info.selections.length > 0)
+        return `${info.selections.length} selections`;
+  
+      return undefined;
+  
+    })();
+    this._locationElement.textContent = text || '';
+  }
+}
 snail.setIsFullscreen(true);
 let isExpectingInput = false;
 snail.setToJSON(() => {
@@ -145,7 +201,7 @@ snail.setActions(() => {
     }).join(' ');
   }
   function monacoActionToSnailAction(action) {
-    const binding = editor._standaloneKeybindingService.lookupKeybinding(action.id);
+    const binding = editor['_standaloneKeybindingService'].lookupKeybinding(action.id);
     return {
       title: `Edit: ${action.label}`,
       id: 'edit.' + action.id,
@@ -153,7 +209,7 @@ snail.setActions(() => {
       callback: () => action.run(),
     }
   }
-  return editor.getActions().map(action => monacoActionToSnailAction(action));
+  return editor.getSupportedActions().map(action => monacoActionToSnailAction(action));
 });
 
 let initialDocumentLoad: (() => void) | null = snail.startAsyncWork('initial document load');
@@ -163,6 +219,8 @@ document.body.append(header.element);
 const editorContainer = document.createElement('div');
 editorContainer.classList.add('editor-container');
 document.body.append(editorContainer);
+const footer = new Footer();
+document.body.append(footer.element);
 document.addEventListener('keydown', event => {
   const text = editor.getSelections()?.map(s => editor.getModel()?.getValueInRange(s)).join('\n');
    if (!text && (event.code === 'KeyX' || event.code === 'KeyC') && event.ctrlKey && !event.shiftKey) {
@@ -200,7 +258,6 @@ const transport: Parameters<typeof RPC>[0] = {
 const rpc = RPC(transport, {
   async setContent(params) {
     if (initialDocumentLoad) {
-      console.log('initial document load done')
       initialDocumentLoad();
       initialDocumentLoad = null;
     }
@@ -215,11 +272,19 @@ const rpc = RPC(transport, {
       language,
       fontSize: parseInt(window.getComputedStyle(document.body).fontSize),
       fontFamily: window.getComputedStyle(document.body).fontFamily,
-      wordBasedSuggestions: false,
+      wordBasedSuggestions: 'off',
       minimap: {
         enabled: false, 
       },
     });
+    editor.onDidChangeCursorPosition(() => {
+      footer.cursorChanged(editor);
+    });
+    editor.onDidChangeCursorSelection(() => {
+      footer.cursorChanged(editor);
+    });
+    footer.setLanguage(language);
+    footer.cursorChanged(editor);
 
     monaco.languages.registerInlineCompletionsProvider(language, {
       provideInlineCompletions: async (model, position, {selectedSuggestionInfo, triggerKind}, token) => {
@@ -309,9 +374,9 @@ window.addEventListener('focus', () => {
 });
 snail.setAdoptionHandler(async () => {
   editor?.dispose();
-  editor = null;
   isExpectingInput = false;
 });
+rpc.notify('connect', {});
 while (true)
   transport.onmessage!(await snail.waitForMessage<any>());
 } catch (e) {
@@ -322,5 +387,5 @@ function getLanguage(filePath: string) {
   const file = filePath.split('/').pop();
   return monaco.languages.getLanguages().find(a => {
     return a.filenames?.includes(file!) || a.extensions?.includes(extension)
-  })?.id;
+  })?.id || 'plaintext';
 }

@@ -302,7 +302,7 @@ body.dark {
   --selection: #525252;
   --cursor: #606060;
   --foreground-2: #d4d4d4;
-  --backround-2: #111111;
+  --background-2: #111111;
 }
 body.light {
   --foreground: #222;
@@ -311,7 +311,7 @@ body.light {
   --cursor: #606060;
 
   --foreground-2: #666;
-  --backround-2: #f4f4f4;
+  --background-2: #f4f4f4;
 }
 
 body {

@@ -2,8 +2,6 @@
   background: var(--black);
   width: 10px;
 }
-::-webkit-scrollbar-track {
-}
 ::-webkit-scrollbar-thumb {
   background: var(--brightBlack);
 }
@@ -18,7 +16,7 @@ body {
   padding: 2px 2px;
   overflow: hidden;
   color: var(--foreground-2);
-  background: var(--backround-2);
+  background: var(--background-1);
   flex: 0 1 auto;
   user-select: none;
   -webkit-user-select: none;
@@ -45,4 +43,24 @@ body {
   position: relative;
   flex: 1;
   overflow: hidden;
+}
+.footer {
+  color: var(--foreground-2);
+  background: var(--background-2);
+  padding: 2px 2px;
+  justify-content: right;
+  display: flex;
+  border-top: 0.5px solid var(--border-color);
+  font-family: system-ui, sans-serif;
+}
+.footer > div {
+  margin: 0 8px;
+}
+body.dark {
+  --background: #111;
+  --background-2: #222;
+  --border-color: #666;
+}
+body.light {
+  --border-color: #AAA;
 }
