@@ -121,17 +121,30 @@ class Footer {
   element = document.createElement('div');
   private _languageElement = document.createElement('div');
   private _locationElement = document.createElement('div');
+  private _progressElement = document.createElement('div');
   constructor() {
     this.element.classList.add('footer');
     this._languageElement.classList.add('language');
     this._locationElement.classList.add('location');
-    this.element.append(this._locationElement, this._languageElement);
+    this._progressElement.classList.add('progress');
+    this.element.append(this._progressElement, this._locationElement, this._languageElement);
     document.body.appendChild(this.element);
+    this.setProgess(null);
   }
   setLanguage(language: string) {
     const l = monaco.languages.getLanguages().find(x => x.id === language);
     const capitalized = l?.aliases?.[0] || language;
     this._languageElement.textContent = capitalized;
+  }
+  setProgess(progress: number|null) {
+    if (progress === null) {
+      this._progressElement.style.display = 'none';
+    } else {
+      this._progressElement.style.display = 'block';
+    }
+    progress = progress || 0;
+    this._progressElement.style.setProperty('--progress', Math.log(progress + 1.1));
+
   }
   setLocation(location: string) {
     this._locationElement.textContent = location;
@@ -213,7 +226,6 @@ snail.setActions(() => {
 });
 
 let initialDocumentLoad: (() => void) | null = snail.startAsyncWork('initial document load');
-document.title = 'foo';
 const header = new Header();
 document.body.append(header.element);
 const editorContainer = document.createElement('div');
@@ -317,6 +329,7 @@ const rpc = RPC(transport, {
             return null;
         }
         let text = '';
+        footer.setProgess(text.length);
         for await (const chunk of snail.fillWithLLM({
           before, after,
           useTerminalContext: true,
@@ -324,7 +337,9 @@ const rpc = RPC(transport, {
           language,
         })) {
           text += chunk;
+          footer.setProgess(text.length);
         }
+        footer.setProgess(null);
         if (controller.signal.aborted || !text)
           return null;
         return {items: [ { insertText: text, range: {

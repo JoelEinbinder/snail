@@ -283,7 +283,7 @@ export class IFrameBlock implements LogItem {
         case 'finishWork': {
           const finishWork = this._finishWorks.get(data.params.id);
           this._finishWorks.delete(data.params.id);
-          finishWork();
+          finishWork?.();
           break;
         }
         case 'expectingUserInput': {
