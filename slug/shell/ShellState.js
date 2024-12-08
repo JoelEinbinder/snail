@@ -79,8 +79,9 @@ class ShellState {
               }
               return;
             }
+            case 80:
             case 81: {
-              // uncached message
+              // thread sdtin and uncached message
               // don't store this, because the client will re-request it on reconnect
               return;
             }
