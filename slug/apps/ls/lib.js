@@ -42,7 +42,7 @@ async function run(args, stdout, stderr) {
   return 0;
 }
 
-async function buildItemInfo(parentDir, filePath, depth) {
+async function buildItemInfo(parentDir, filePath, depth, isGitIgnored) {
   async function readDir(link) {
     const resolved = link ? link : filePath;
     const stat = await fs.promises.lstat(resolved).catch(e => {
@@ -67,6 +67,7 @@ async function buildItemInfo(parentDir, filePath, depth) {
     try {
       groupname = userid.groupname(stat.gid);
     } catch { }
+
     return {
       dir: resolved === parentDir ? path.basename(resolved) : path.relative(parentDir, resolved),
       fullPath: resolved,
@@ -89,17 +90,58 @@ async function buildItemInfo(parentDir, filePath, depth) {
       isCharacterDevice: stat.isCharacterDevice(),
       isFile: stat.isFile(),
       mimeType: mimeTypes.lookup(resolved) || '',
-      children: isDirectory ? await makeChildrenForDirectory() : undefined,
+      isGitIgnored,
+      children: isDirectory ? await makeChildrenForDirectory(isGitIgnored) : undefined,
     }
   }
-  async function makeChildrenForDirectory() {
+  async function makeChildrenForDirectory(isGitIgnored = false) {
     if (depth === 0)
       return undefined;
     const items = await fs.promises.readdir(filePath);
+    const gitFiles = isGitIgnored ? null : await gitFilesForPath(filePath);
     return Promise.all(items.map(item => {
-      return buildItemInfo(filePath, path.join(filePath, item), depth - 1);
+      return buildItemInfo(filePath, path.join(filePath, item), depth - 1, isGitIgnored || gitFiles && !gitFiles.has(item));
     }));
   }
   return readDir();
 }
+
+/**
+ * @param {string} filePath
+ */
+async function gitFilesForPath(filePath) {
+  const env = {
+    ...process.env,
+    GIT_OPTIONAL_LOCKS: '0',
+  };
+  const {stdout, status, stderr} = await spawnPromise('git', ['ls-tree', '--name-only', 'HEAD', filePath + '/'], { env, cwd: filePath });
+  if (status !== 0)
+    return null;
+  return new Set(stdout.toString().split('\n').filter(Boolean));
+
+}
+
+/**
+ * @param {string} command
+ * @param {string[]} args
+ * @param {import('child_process').SpawnSyncOptions} options
+ */
+async function spawnPromise(command, args, options) {
+  const child = require('child_process').spawn(command, args, options);
+  const stdout = [];
+  const stderr = [];
+  child.stdout.on('data', data => stdout.push(data));
+  child.stderr.on('data', data => stderr.push(data));
+  child.on('error', err => {
+      // close event will fire
+      // just absorb the error to prevent node from crashing
+  });
+  const status = await new Promise(resolve => child.on('close', resolve));
+  return {
+      status,
+      stdout: Buffer.concat(stdout),
+      stderr: Buffer.concat(stderr),
+  }
+}
+
 module.exports = {run};

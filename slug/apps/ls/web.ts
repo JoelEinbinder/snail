@@ -306,7 +306,7 @@ function inlineMode() {
     processDir(info, true);
   }
   function processDir(info: Entry, topLevel: boolean) {
-    const {dir, fullPath} = info;
+    const {dir, fullPath, isGitIgnored} = info;
     if (!topLevel && !showHidden && dir.startsWith('.'))
       return;
     const div = document.createElement('div');
@@ -315,6 +315,9 @@ function inlineMode() {
     element.onclick = () => {
       snail.tryToRunCommand(`ls ${JSON.stringify(fullPath)}`);
     };
+
+    if (isGitIgnored)
+      div.classList.add('git-ignored');
   
     imageLoadPromises.push(readyPromise);
     div.append(element, dir);

@@ -33,3 +33,7 @@ div.has-children::after {
 .grid-container:not(:empty):not(:last-child) {
   margin-bottom: 20px;
 }
+
+.git-ignored {
+  opacity: 0.6;
+}
