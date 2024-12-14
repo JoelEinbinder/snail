@@ -56,6 +56,7 @@ export interface ShellDelegate {
   cancelLLMRequest(): void;
   triggerLLMInvestigation(): void;
   fillWithLLM(params: {before: string, after: string, useTerminalContext?: boolean}): AsyncIterable<string>;
+  queryLLM(params: {system: string, messages: {content: string, role: 'user' | 'assistant'}[], useTerminalContext?: boolean}): AsyncIterable<string>;
 }
 
 interface ConnectionCore {
@@ -297,6 +298,7 @@ export class Shell {
                       this.runCommand(command, 'shjs');
                     },
                     fillWithLLM: params => this._delegate.fillWithLLM(params),
+                    queryLLM: params => this._delegate.queryLLM(params),
                   });
                   activeIframeBlock = iframeBlock;
                   addItem(iframeBlock, /* focus */ true);

@@ -24,4 +24,10 @@ declare var snail: {
     signal?: AbortSignal,
     language: string,
   }): AsyncIterable<string>;
+  queryLLM(params: {
+    system: string,
+    messages: { content: string, role: 'user' | 'assistant' }[],
+    useTerminalContext?: boolean,
+    signal?: AbortSignal,
+  }): AsyncIterable<string>;
 };

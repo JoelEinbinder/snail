@@ -109,10 +109,10 @@ function onMessage(data) {
       } else {
         window.location.reload();
       }
-    } else if (method === 'fillWithLLM-chunk') {
+    } else if (method === 'llm-chunk') {
       const {id, chunk} = params;
       llmRequests.get(id).chunk(chunk);
-    } else if (method === 'fillWithLLM-end') {
+    } else if (method === 'llm-end') {
       const {id} = params;
       llmRequests.get(id).end();
     }
@@ -367,7 +367,7 @@ function setAdoptionHandler(handler) {
 
 let llmRequestId = 0;
 let llmRequests = new Map();
-async function * fillWithLLM({before, after, useTerminalContext, signal, language}) {
+async function * doLLMRequest(signal, callback) {
   const id = ++lastMessageId;
   let ended = false;
   let buffer = [];
@@ -382,8 +382,8 @@ async function * fillWithLLM({before, after, useTerminalContext, signal, languag
       ended = true;
       resolve();
     },
-  })
-  sendMessageToParent({method: 'fillWithLLM', params: {before, after, useTerminalContext, id, language}});
+  });
+  callback(id);
   signal?.addEventListener('abort', () => {
     sendMessageToParent({method: 'abortLLM', params: {id}});
   });
@@ -397,6 +397,13 @@ async function * fillWithLLM({before, after, useTerminalContext, signal, languag
 
   llmRequests.delete(id);
 }
+function fillWithLLM({before, after, useTerminalContext, signal, language}) {
+  return doLLMRequest(signal, id => sendMessageToParent({method: 'fillWithLLM', params: {before, after, useTerminalContext, id, language}}));
+}
+function queryLLM({messages, system, useTerminalContext, signal, tool}) {
+  return doLLMRequest(signal, id => sendMessageToParent({method: 'queryLLM', params: {messages, system, useTerminalContext, tool, id}}));
+}
+
 
 window.snail = {
   waitForMessage,
@@ -418,5 +425,6 @@ window.snail = {
   setFindHandler,
   setAdoptionHandler,
   fillWithLLM,
+  queryLLM,
 }
 sendMessageToParent('ready')

@@ -47,3 +47,13 @@ export function fillWithLLM(params: {
   signal?: AbortSignal,
   language: string,
 }): AsyncIterable<string>;
+export function queryLLM(params: {
+  system: string,
+  messages: { content: string, role: 'user' | 'assistant' }[],
+  useTerminalContext?: boolean,
+  signal?: AbortSignal,
+  tool: {
+    tools: any,
+    tool_choice?: string,
+  } 
+}): AsyncIterable<string>;

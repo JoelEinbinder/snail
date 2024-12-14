@@ -80,3 +80,13 @@ body.light {
 body.light .progress {
   background: var(--ansi-13);
 }
+
+
+.llm-suggestion {
+  border-bottom: 1px dashed var(--ansi-13);
+  box-sizing: border-box;
+}
+
+.monaco-editor .squiggly-hint {
+  display: none;
+}

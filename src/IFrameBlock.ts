@@ -31,6 +31,7 @@ export type IFrameBlockDelegate = {
   browserView: boolean;
   tryToRunCommand(command: string): void;
   fillWithLLM(params: { before: string, after: string, useTerminalContext: boolean, language: string }): AsyncIterable<string>;
+  queryLLM(params: { system: string, messages: { content: string, role: 'user' | 'assistant' }[], useTerminalContext: boolean }): AsyncIterable<string>;
 }
 
 export interface WebContentView {
@@ -313,16 +314,31 @@ export class IFrameBlock implements LogItem {
           (async () => {
             for await (const chunk of delegate.fillWithLLM({ before, after, useTerminalContext, language })) {
               this._webContentView.postMessage({
-                method: 'fillWithLLM-chunk',
+                method: 'llm-chunk',
                 params: { chunk, id },
               });
             }
             this._webContentView.postMessage({
-              method: 'fillWithLLM-end',
+              method: 'llm-end',
               params: { id },
             });
           })();
 
+        }
+        case 'queryLLM': {
+          const { system, messages, useTerminalContext, id, tool } = data.params;
+          (async () => {
+            for await (const chunk of delegate.queryLLM({ system, messages, useTerminalContext, tool })) {
+              this._webContentView.postMessage({
+                method: 'llm-chunk',
+                params: { chunk, id },
+              });
+            }
+            this._webContentView.postMessage({
+              method: 'llm-end',
+              params: { id },
+            });
+          })();
         }
       }
     };

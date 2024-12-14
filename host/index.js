@@ -187,16 +187,26 @@ const handler = {
     if (parseInt(process.env.SNAIL_TIME_STARTUP))
       console.log(`Time: ${name}`);
   },
-  streamFromLLM({ apiKey, messages, model, system }) {
+  streamFromLLM({ apiKey, messages, model, system, tools, tool_choice }) {
     if (model.startsWith('gpt')) {
       if (!openai || openai.apiKey !== apiKey) {
         const { OpenAI } = require('openai');
         openai = new OpenAI({ apiKey });
       }
       messages.unshift({ role: 'system', content: system });
+      const params = {
+        model,
+        messages,
+        tools: tools && tools.map(tool => ({ function: tool, type: 'function'})),
+        tool_choice: tool_choice && { function: { name: tool_choice }, type: 'function'},
+        stream: true,
+      };
+      require('fs').appendFileSync('log.txt', JSON.stringify(params) + '\n');
       return openAIStreamToString(openai.chat.completions.create({
         model,
         messages,
+        tools: tools && tools.map(tool => ({ function: tool, type: 'function'})),
+        tool_choice: tool_choice && { function: { name: tool_choice }, type: 'function'},
         stream: true,
       }));
     } else if (model.startsWith('claude')) {
@@ -216,6 +226,14 @@ const handler = {
         model,
         system,
         messages,
+        tools: tools && tools.map(tool => {
+          return {
+            name: tool.name,
+            input_schema: tool.parameters,
+            description: tool.description,
+          };
+        }),
+        tool_choice: tool_choice && { name: tool_choice, type: 'tool' },
         max_tokens: 1024,
         stream: true,
       });
@@ -226,8 +244,33 @@ const handler = {
      * @param {Promise<AsyncIterable<import('openai').OpenAI.ChatCompletionChunk>>} stream
      */
     async function * openAIStreamToString(stream) {
-      for await (const chunk of await stream)
-        yield chunk.choices[0]?.delta.content || '';
+      const built_calls = [];
+      for await (const chunk of await stream) {
+        const delta = chunk.choices[0]?.delta;
+        if (!delta)
+          continue;
+        const finish_reason = chunk.choices[0]?.finish_reason;
+        if (delta.content)
+          yield delta.content;
+        if (delta.tool_calls) {
+          for (const tool_call of delta.tool_calls) {
+            if (!built_calls[tool_call.index])
+              built_calls[tool_call.index] = { name: '', arguments: '' };
+            if (tool_call.function.name)
+              built_calls[tool_call.index].name = tool_call.function.name;
+            if (tool_call.function.arguments)
+              built_calls[tool_call.index].arguments += tool_call.function.arguments;
+          }
+        }
+        if (finish_reason === 'tool_calls') {
+          for (const call of built_calls) {
+            const args = JSON.parse(call.arguments);
+            const name = call.name;
+            yield { name, args };
+          }
+          built_calls.length = 0;
+        }
+      }
     }
     /**
      * @param {AsyncIterable<import('@anthropic-ai/sdk').Anthropic.MessageStreamEvent>} stream

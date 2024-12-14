@@ -2,6 +2,7 @@
 import * as snail from '../../sdk/web';
 import './index.css';
 import { RPC } from '../../sdk/rpc-js';
+import { LLMManager } from './llm';
 
 try {
 window['MonacoEnvironment'] = {
@@ -76,6 +77,18 @@ monaco.languages.registerTokensProviderFactory('shjs', {
     const {createTokenizer} = await import('./shjsTokenizer');
     return createTokenizer();
   }
+});
+// monaco.editor.registerCommand('apply-llm-suggestion', (accessor, ...args) => {
+//   console.log('apply-llm-suggestion', args);
+// });
+monaco.editor.addEditorAction({
+  id: 'apply-llm-suggestion',
+  label: 'Apply LLM Suggestion',
+  contextMenuGroupId: 'inline',
+  contextMenuOrder: 1,
+  run: (editor, ...args) => {
+    console.log('apply-llm-suggestion', args);
+  }
 })
 
 class Header {
@@ -143,7 +156,7 @@ class Footer {
       this._progressElement.style.display = 'block';
     }
     progress = progress || 0;
-    this._progressElement.style.setProperty('--progress', Math.log(progress + 1.1));
+    this._progressElement.style.setProperty('--progress', Math.log(progress + 1.1).toString());
 
   }
   setLocation(location: string) {
@@ -231,6 +244,9 @@ document.body.append(header.element);
 const editorContainer = document.createElement('div');
 editorContainer.classList.add('editor-container');
 document.body.append(editorContainer);
+const diffEditorContainer = document.createElement('div');
+diffEditorContainer.classList.add('editor-container');
+
 const footer = new Footer();
 document.body.append(footer.element);
 document.addEventListener('keydown', event => {
@@ -248,6 +264,14 @@ document.addEventListener('keydown', event => {
   if (event.code === 'KeyC' || event.code === 'KeyX') {
     event.stopImmediatePropagation();
   }
+  if (event.code === 'KeyL' && event.metaKey) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    llmManager.triggerLLM(
+      relativePath,
+      p => footer.setProgess(p),
+    );
+  }
 }, true);
 
 function doClose() {
@@ -260,7 +284,90 @@ function doClose() {
   rpc.notify('close', {});
 }
 let lastSavedVersion;
-let editor: monaco.editor.IStandaloneCodeEditor;
+const editor = monaco.editor.create(editorContainer, {
+  fontSize: parseInt(window.getComputedStyle(document.body).fontSize),
+  fontFamily: window.getComputedStyle(document.body).fontFamily,
+  wordBasedSuggestions: 'off',
+  minimap: {
+    enabled: false,
+  },
+});
+const diffEditor = monaco.editor.createDiffEditor(diffEditorContainer, {
+  enableSplitViewResizing: false,
+  renderSideBySide: false,
+  originalEditable: true,
+  automaticLayout: true,
+});
+editor.onDidChangeCursorPosition(() => {
+  footer.cursorChanged(editor);
+});
+editor.onDidChangeCursorSelection(() => {
+  footer.cursorChanged(editor);
+});
+footer.cursorChanged(editor);
+monaco.languages.registerInlineCompletionsProvider({ scheme: 'inmemory' }, {
+  provideInlineCompletions: async (model, position, {selectedSuggestionInfo, triggerKind}, token) => {
+    if (selectedSuggestionInfo)
+      return null;
+    if (!editor?.getModel()?.getValue()) {
+      const llmSuggestion = llmManager.getSuggestion();
+      if (llmSuggestion) {
+        return {items: [ { insertText: llmSuggestion, range: {
+          startLineNumber: 1, startColumn: 1,
+          endLineNumber: Infinity, endColumn: Infinity,
+        } } ], enableForwardStability: true, suppressSuggestions: false};
+      }
+    }
+    const line = model.getValueInRange({
+      startLineNumber: position.lineNumber, startColumn: 1,
+      endLineNumber: position.lineNumber, endColumn: position.column,
+    });
+    const contentStartColumn = position.column - (line.length - line.trimEnd().length);
+    const startRange = {
+      startLineNumber: 1, startColumn: 1,
+      endLineNumber: position.lineNumber, endColumn: contentStartColumn,
+    };
+    const afterRange = {
+      startLineNumber: position.lineNumber, startColumn: position.column,
+      endLineNumber: Infinity, endColumn: Infinity,
+    };
+    const before = model.getValueInRange(startRange);
+    const after = model.getValueInRange(afterRange);
+
+    const controller = new AbortController();
+    const dispose = token.onCancellationRequested((...args) => {
+      controller.abort();
+      dispose.dispose();
+    });
+    if (triggerKind === monaco.languages.InlineCompletionTriggerKind.Automatic) {
+      await new Promise(resolve => setTimeout(resolve, 250));
+      if (controller.signal.aborted)
+        return null;
+    }
+    let text = '';
+    footer.setProgess(text.length);
+    for await (const chunk of snail.fillWithLLM({
+      before, after,
+      useTerminalContext: true,
+      signal: controller.signal,
+      language: editor.getModel()?.getLanguageId() || 'plaintext',
+    })) {
+      text += chunk;
+      footer.setProgess(text.length);
+    }
+    footer.setProgess(null);
+    if (controller.signal.aborted || !text)
+      return null;
+    return {items: [ { insertText: text, range: {
+      startLineNumber: startRange.endLineNumber, startColumn: startRange.endColumn,
+      endLineNumber: afterRange.startLineNumber, endColumn: afterRange.startColumn,
+    } } ], enableForwardStability: true, suppressSuggestions: false};
+  },
+  freeInlineCompletions: () => {
+    // No-op
+  },
+});
+
 let relativePath: string;
 const transport: Parameters<typeof RPC>[0] = {
   send(message) {
@@ -269,6 +376,7 @@ const transport: Parameters<typeof RPC>[0] = {
 };
 const rpc = RPC(transport, {
   async setContent(params) {
+    console.log('setContent', params);
     if (initialDocumentLoad) {
       initialDocumentLoad();
       initialDocumentLoad = null;
@@ -279,79 +387,10 @@ const rpc = RPC(transport, {
     });
     const language = getLanguage(params.absolutePath);
     relativePath = params.relativePath;
-    editor = monaco.editor.create(editorContainer, {
-      value: params.content,
-      language,
-      fontSize: parseInt(window.getComputedStyle(document.body).fontSize),
-      fontFamily: window.getComputedStyle(document.body).fontFamily,
-      wordBasedSuggestions: 'off',
-      minimap: {
-        enabled: false, 
-      },
-    });
-    editor.onDidChangeCursorPosition(() => {
-      footer.cursorChanged(editor);
-    });
-    editor.onDidChangeCursorSelection(() => {
-      footer.cursorChanged(editor);
-    });
+    editor.setModel(monaco.editor.createModel(params.content, language));
+
     footer.setLanguage(language);
-    footer.cursorChanged(editor);
-
-    monaco.languages.registerInlineCompletionsProvider(language, {
-      provideInlineCompletions: async (model, position, {selectedSuggestionInfo, triggerKind}, token) => {
-        if (selectedSuggestionInfo)
-          return null;
-        const line = model.getValueInRange({
-          startLineNumber: position.lineNumber, startColumn: 1,
-          endLineNumber: position.lineNumber, endColumn: position.column,
-        });
-        const contentStartColumn = position.column - (line.length - line.trimEnd().length);
-        const startRange = {
-          startLineNumber: 1, startColumn: 1,
-          endLineNumber: position.lineNumber, endColumn: contentStartColumn,
-        };
-        const afterRange = {
-          startLineNumber: position.lineNumber, startColumn: position.column,
-          endLineNumber: Infinity, endColumn: Infinity,
-        };
-        const before = model.getValueInRange(startRange);
-        const after = model.getValueInRange(afterRange);
-
-        const controller = new AbortController();
-        const dispose = token.onCancellationRequested((...args) => {
-          controller.abort();
-          dispose.dispose();
-        });
-        if (triggerKind === monaco.languages.InlineCompletionTriggerKind.Automatic) {
-          await new Promise(resolve => setTimeout(resolve, 250));
-          if (controller.signal.aborted)
-            return null;
-        }
-        let text = '';
-        footer.setProgess(text.length);
-        for await (const chunk of snail.fillWithLLM({
-          before, after,
-          useTerminalContext: true,
-          signal: controller.signal,
-          language,
-        })) {
-          text += chunk;
-          footer.setProgess(text.length);
-        }
-        footer.setProgess(null);
-        if (controller.signal.aborted || !text)
-          return null;
-        return {items: [ { insertText: text, range: {
-          startLineNumber: startRange.endLineNumber, startColumn: startRange.endColumn,
-          endLineNumber: afterRange.startLineNumber, endColumn: afterRange.startColumn,
-        } } ], enableForwardStability: true, suppressSuggestions: false};
-      },
-      freeInlineCompletions: () => {
-        // No-op
-      },
-    });
-
+    console.log(editor.getModel()?.uri);
     lastSavedVersion = editor.getModel()!.getAlternativeVersionId();
     editor.addAction({
       id: 'edit.save',
@@ -369,7 +408,12 @@ const rpc = RPC(transport, {
     editor.getModel()!.onDidChangeContent(() => {
       header.setModified(lastSavedVersion !== editor.getModel()!.getAlternativeVersionId());
     });
-    window.onresize = () => editor.layout();
+    window.onresize = () => {
+      if (editorContainer.isConnected)
+        editor.layout();
+      if (diffEditorContainer.isConnected)
+        diffEditor.layout();
+    };
     header.setTitle(params.relativePath || 'New Buffer');
     editor.layout();
     editor.focus();
@@ -380,6 +424,7 @@ const rpc = RPC(transport, {
       snail.expectingUserInput('edit');
       isExpectingInput = true;
     }
+    // triggerLLM();
   },
 });
 window.addEventListener('focus', () => {
@@ -388,10 +433,22 @@ window.addEventListener('focus', () => {
   editor?.focus();
 });
 snail.setAdoptionHandler(async () => {
-  editor?.dispose();
+  editor.getModel()?.dispose();
+  editor.setModel(null);
   isExpectingInput = false;
+  if (diffEditorContainer.isConnected) {
+    diffEditorContainer.replaceWith(editorContainer);
+    editor.layout();
+  }
+  llmManager.dispose();
+  llmManager = new LLMManager(editor);
+  rpc.notify('connect', {});
 });
+
+let llmManager = new LLMManager(editor);
 rpc.notify('connect', {});
+
+
 while (true)
   transport.onmessage!(await snail.waitForMessage<any>());
 } catch (e) {

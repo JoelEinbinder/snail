@@ -108,6 +108,18 @@ export class LogView implements Block, ShellDelegate, Findable {
     yield * iterable;
   }
 
+  async * queryLLM(params: { system: string; messages: { content: string; role: 'user' | 'assistant' }[]; useTerminalContext?: boolean; signal?: AbortSignal }): AsyncIterable<string> {
+    console.log('queryLLM', params);
+    const log = [];
+    if (params.useTerminalContext) {
+      const messages = await logToMessages(this._logForLLM.filter(x => x !== this._activeItem), params.signal);
+      log.push(...messages);
+    }
+    log.push(...params.messages);
+    const iterator = this._isMockAI ? mockToolUse() : await llmCompletions(this._shell, log, params.signal, params.system, params.tool);
+    yield * iterator;
+  }
+
   cancelLLMRequest(): void {
     this._element.classList.toggle('ai-loading', false);
     this._llmAbortController?.abort();
@@ -634,20 +646,7 @@ export class LogView implements Block, ShellDelegate, Findable {
 
 }
 
-
-async function llmCompletions(shell: Shell, log: Iterable<LogItem|LLMMessage>, signal: AbortSignal) {
-  const model = await shell.cachedEvaluation('ai_model');
-  if (signal.aborted)
-    return null;
-  const apiKey = model.startsWith('claude') ?
-    await shell.cachedEvaluation('echo $SNAIL_ANTHROPIC_KEY') :
-    await shell.cachedEvaluation('echo $SNAIL_OPENAI_KEY');
-  if (!apiKey)
-    return null;
-  if (signal.aborted)
-    return null;
-  const messages = await logToMessages(log, signal);
-  const system = `Your messages are being typed directly into a terminal shell.
+const terminalSystemMessage = `Your messages are being typed directly into a terminal shell.
 The user will respond with the result from your command.
 Always respond in the form of a bash command.
 Respond directly with the command to run instead of asking the user to run a given command.
@@ -658,12 +657,27 @@ Refrain from explaining simple commands.
 For example, if you don't know what to do, respond with ls.
 Use uname -a to check whether the system is MacOS or Linux.`;
 
+async function llmCompletions(shell: Shell, log: Iterable<LogItem|LLMMessage>, signal?: AbortSignal, systemMessage?: string, tool?: any) {
+  const model = await shell.cachedEvaluation('ai_model');
+  if (signal?.aborted)
+    return null;
+  const apiKey = model.startsWith('claude') ?
+    await shell.cachedEvaluation('echo $SNAIL_ANTHROPIC_KEY') :
+    await shell.cachedEvaluation('echo $SNAIL_OPENAI_KEY');
+  if (!apiKey)
+    return null;
+  if (signal?.aborted)
+    return null;
+  const messages = await logToMessages(log, signal);
+  const system = systemMessage || terminalSystemMessage;
 
   return sendStreamingCommandToHost('streamFromLLM', {
     system,
     messages,
     model,
     apiKey,
+    tools: tool ? tool.tools : undefined,
+    tool_choice: tool ? tool.choice : undefined,
   });
 };
 
@@ -676,7 +690,7 @@ async function logToMessages(log: Iterable<LogItem|LLMMessage>, signal?: AbortSi
       return null;
     if (!message || !message.content)
       continue;
-    if (message.content.length > 1000)
+    if (message.content.length > 15_000)
       message.content = message.content.slice(0, 500) + '<content truncated>' + message.content.slice(-500);
     total += message.content.length;
     messages.push(message);
@@ -689,4 +703,8 @@ async function logToMessages(log: Iterable<LogItem|LLMMessage>, signal?: AbortSi
 
 async function * mockCompletions(): AsyncIterable<string> {
   yield '# fake ai suggestion';
+}
+
+async function * mockToolUse() {
+  yield { tool: true, content: {abc: 'foo'} };
 }

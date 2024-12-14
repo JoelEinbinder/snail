@@ -47,7 +47,7 @@ function sendContent() {
     ...getCurrentContent(),
     absolutePath,
     relativePath,
-  });
+  }).catch(e => console.error(e));
 }
 sendContent();
 // TODO thread stdin in case it had some data in it before we went to web mode
