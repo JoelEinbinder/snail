@@ -7,14 +7,16 @@ import { FindParams } from "./Find";
 import { themeName, themeEditorColors } from "./theme";
 
 export class CommandBlock implements LogItem {
-  public cachedEvaluationResult = new Map<string, Promise<string>>();
+  cachedEvaluationResult = new Map<string, Promise<string>>();
   willResizeEvent = new JoelEvent<void>(undefined);
   toggleFold = new JoelEvent<boolean>(false);
-  public wasCanceled = false;
+  wasCanceled = false;
+  titleChangedEvent: JoelEvent<string|null>;
   private _editor: Editor;
   private _exitCode = document.createElement('div');
   private _commandPrefix?: CommandPrefix;
   readonly acceptsChildren = true;
+  
   constructor(public command: string,
     private _size: JoelEvent<{rows: number, cols: number}>,
     private _connectionName: string,
@@ -23,6 +25,7 @@ export class CommandBlock implements LogItem {
     private _language: string,
     globalVars?: Set<string>,
     private _sshAddress?: string) {
+    this.titleChangedEvent = new JoelEvent(command);
     this._editor = new Editor('', {
       inline: true,
       lineNumbers: false,

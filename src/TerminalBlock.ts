@@ -14,7 +14,6 @@ export type TerminalBlockDelegate = {
   size: JoelEvent<{cols: number, rows: number}>;
   sendInput: (data: string) => void;
   antiFlicker?: AntiFlicker;
-  setTitle: (title: string) => void;
 }
 
 export class TerminalBlock implements LogItem {
@@ -33,6 +32,7 @@ export class TerminalBlock implements LogItem {
   private _addon = new RendererAddon();
   public empty = true;
   private _closed = false;
+  titleChangedEvent = new JoelEvent<string|null>(null);
   constructor(delegate: TerminalBlockDelegate) {
 
     this.element = document.createElement('div');
@@ -100,7 +100,7 @@ export class TerminalBlock implements LogItem {
       this.fullscreenEvent.dispatch(this._terminal.buffer.active === this._terminal.buffer.alternate);
     }));
     this._listeners.push(this._terminal.onTitleChange(title => {
-      delegate.setTitle(title);
+      this.titleChangedEvent.dispatch(title);
     }));
     this._listeners.push(this._terminal.onClear(() => {
       this.cleared = true;
@@ -246,6 +246,7 @@ export class TerminalBlock implements LogItem {
     this._terminal.blur();
     this._terminal.disable();
     this._willResize();
+    this.titleChangedEvent.dispatch(null);
   }
 
   async serializeForTest(): Promise<any> {

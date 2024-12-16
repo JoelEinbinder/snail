@@ -15,7 +15,7 @@ import { iconPathForPath } from '../slug/icon_service/iconService';
 import { Placeholder } from './Placeholder';
 import { font } from './font';
 import { FakeScrollBar } from './FakeScrollBar';
-import { host, sendStreamingCommandToHost } from './host';
+import { sendStreamingCommandToHost } from './host';
 
 declare var IS_REPL: boolean|undefined;
 export class LogView implements Block, ShellDelegate, Findable {
@@ -41,10 +41,12 @@ export class LogView implements Block, ShellDelegate, Findable {
   private _llmAbortController: AbortController|null = null;
   private _isMockAI = false;
   private _logForLLM: (LogItem|LLMMessage)[] = [];
+  private _onItemTitleChanged = (title: string|null) => void 0;
   blockDelegate?: BlockDelegate;
   constructor(private _shell: Shell, private _container: HTMLElement) {
     this._updatePromptChangePromise();
     this._fullscreenElement.classList.add('fullscreen-element');
+    this._onItemTitleChanged = title => typeof title === 'string' && this._titleThrottle.update(title);
     this._element.addEventListener('keydown', (event: KeyboardEvent) => {
       if (!this._prompt)
         return;
@@ -104,8 +106,15 @@ export class LogView implements Block, ShellDelegate, Findable {
   }
 
   setActiveItem(item: LogItem|null) {
+    this._activeItem?.titleChangedEvent?.off(this._onItemTitleChanged);
     this._activeItem = item;
     item?.focus();
+    if (item?.titleChangedEvent) {
+      const title = item.titleChangedEvent?.current;
+      if (typeof title === 'string')
+        this._titleThrottle.update(title);
+      item.titleChangedEvent.on(this._onItemTitleChanged);
+    }
     this._activeItemListeners.forEach(listener => listener());
   }
 
@@ -394,10 +403,6 @@ export class LogView implements Block, ShellDelegate, Findable {
     await promise;
     this._activeItemListeners.delete(callback);
     abortController.abort();
-  }
-
-  setTitle(title: string): void {
-    this._titleThrottle.update(title);
   }
 
   setSuffix(suffix: string): void {

@@ -48,7 +48,6 @@ export interface ShellDelegate {
   togglePrompt(showPrompt: boolean): void;
   setActiveItem(item: LogItem|null): void;
   setFullscreenItem(item: LogItem|null): void;
-  setTitle(title: string): void;
   setSuffix(suffix: string): void;
   scrollToBottom(): void;
   addRetainer(params: {item: LogItem|'forced', parent: LogItem}): void;
@@ -175,14 +174,13 @@ export class Shell {
     socketListeners.set(socketId, message => core.onmessage?.(message));
     return this._setupConnectionInner(core, args);
   }
-  _createTerminalHandler({connection, sendInput, urlForIframe, addItem, antiFlicker, shouldLockPrompt, setTitle}: {
+  _createTerminalHandler({connection, sendInput, urlForIframe, addItem, antiFlicker, shouldLockPrompt}: {
     connection: JSConnection,
     sendInput: (params: {data: string, id: string|number}) => Promise<void>,
     urlForIframe: (filePath: string) => Promise<string>,
     addItem: (item: LogItem, focus: boolean) => void;
     shouldLockPrompt: boolean,
     antiFlicker: AntiFlicker,
-    setTitle: (title: string) => void,
   }) {
     const terminals = new Map<number|string, {processor: TerminalDataProcessor, cleanup: () => Promise<void>}>();
     let myActiveItem: LogItem = null;
@@ -201,7 +199,6 @@ export class Shell {
         if (myActiveItem === this._activeItem.current)
           this._activeItem.dispatch(null);
         await cleanup();
-        setTitle('');
       },
       startTerminal:({id}: {id: number|string}) => {
         if (terminals.has(id))
@@ -361,7 +358,6 @@ export class Shell {
             sendInput: sendInputToThisTerminal,
             size: this._size,
             antiFlicker,
-            setTitle: title => setTitle(title),
           });
           activeTerminalBlock = terminalBlock;
           const onFullScreen = (value: boolean) => {
@@ -461,7 +457,6 @@ export class Shell {
         if (focus)
           this._activeItem.dispatch(item);
       },
-      setTitle: title => this._delegate.setTitle(title),
     });
     const handler: {[key in keyof Runtime]: (params: Runtime[key]) => void} = {
       ...terminalHandler,
@@ -767,7 +762,6 @@ export class Shell {
     if (!command)
       return;
     this._setActiveCommandBlock(commandBlock);
-    this._delegate.setTitle(command);
     const unlockPrompt = this._lockPrompt('runCommand');
     this._activeItem.dispatch(commandBlock);
     const updateHistory = await this._addToHistory(command, language);
@@ -1032,8 +1026,7 @@ export class Shell {
     editorLine.append(commandPrefix.element);
     
     const prettyName = computePrettyDirName(this, this.cwd);
-    const title =  [this._connectionToName.get(this.connection), prettyName].filter(Boolean).join(' ');
-    this._delegate.setTitle(title);
+    const title = [this._connectionToName.get(this.connection), prettyName].filter(Boolean).join(' ');
     Promise.race([commandPrefix.render(), new Promise(x => setTimeout(x, 100))]).then(() => {
       element.style.removeProperty('opacity');
     });
@@ -1183,7 +1176,6 @@ export class Shell {
             else
               items.push(item);
           },
-          setTitle: title => { },
         });
         const promises: Promise<any>[] = [];
         for (const {method, params} of notifications)
@@ -1240,6 +1232,7 @@ export class Shell {
     });
     autocomplete.suggestionChanged.on(onChange);
     return {
+      titleChangedEvent: new JoelEvent<string>(title),
       render: () => element,
       dispose: () => {
         abortController?.abort();

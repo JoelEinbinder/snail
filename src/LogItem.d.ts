@@ -6,6 +6,7 @@ import type { Action } from './actions';
 export type LLMMessage = { role:'user'|'assistant', content: string };
 export interface LogItem extends Findable {
   willResizeEvent: JoelEvent<void>;
+  titleChangedEvent?: JoelEvent<string|null>;
   toggleFold?: JoelEvent<boolean>;
   removeSelf?: () => void;
   render(): Element;
