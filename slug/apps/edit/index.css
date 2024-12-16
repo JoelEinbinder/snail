@@ -67,7 +67,7 @@ body.light {
 }
 
 .progress {
-  width: calc(50px * var(--progress));
+  width: calc(25px * var(--progress));
   height: 5px;
   border-radius: 2px;
   align-self: center;

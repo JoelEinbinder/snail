@@ -125,8 +125,7 @@ ${editorContent}
 \`\`\`
 
 Do you see any small additions or improvements to make in this file? Please respond with a plan to implement these changes.`;
-      let text = '';
-      setProgress(text.length);
+      let plan = '';
       for await (const chunk of snail.queryLLM({
         messages: [{
           role: 'user',
@@ -164,9 +163,60 @@ Do you see any small additions or improvements to make in this file? Please resp
         Use the edit_file tool to suggest changes to the file.`,
       })) {
         if (typeof chunk === 'string') {
+          plan += chunk;
+        } else {
+        }
+        setProgress(plan.length);
+      }
+      console.log(plan);
+      let text = plan;
+      setProgress(text.length);
+      for await (const chunk of snail.queryLLM({
+        messages: [{
+          role: 'user',
+          content: messageContent,
+        }, {
+          role: 'assistant',
+          content: plan,
+        }, {
+          role: 'user',
+          content: 'Thank you! Now please provide a series of edits to the file.',
+        }],
+        useTerminalContext: true,
+        tool: {
+          tools: [{
+            "name": "edit_file",
+            "description": "Custom editing editing the current code file\n* The `old_str` parameter should match EXACTLY one or more consecutive lines from the original file. Be mindful of whitespaces!\n* If the `old_str` parameter is not unique in the file, the replacement will not be performed. Make sure to include enough context in `old_str` to make it unique\n* The `new_str` parameter should contain the edited lines that should replace the `old_str`",
+            "strict": true,
+            "parameters": {
+              "type": "object",
+              "required": [
+                "new_str",
+                "old_str",
+              ],
+              "properties": {
+                "new_str": {
+                  "type": "string",
+                  "description": "Required parameter containing the new string (if empty, the old_str wil be deleted)."
+                },
+                "old_str": {
+                  "type": "string",
+                  "description": "Required parameter containing the string in the active code file to replace."
+                },
+              },
+              "additionalProperties": false
+            }
+          }]
+        },
+        system: `You are a terminal assistant.
+        You can run commands and the user will respond with their output.
+        Sometimes the user will ask you to edit a text file.
+        Use the edit_file tool to suggest changes to the file.`,
+      })) {
+        if (typeof chunk === 'string') {
           text += chunk;
         } else {
-          if (chunk.name === 'edit_file') {
+          if (chunk?.name === 'edit_file') {
             const { old_str, new_str } = chunk.args;
             if (editorContent.split(old_str).length === 2)
               this._replacers.push(new Replacer(old_str, new_str));
