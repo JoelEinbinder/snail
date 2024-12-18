@@ -7,9 +7,20 @@ const pathService = require('../path_service/');
 /** @type {import('./changes').Changes} */ 
 let changes = null;
 
-/** @type {Object<string, (args: string[], stdout: Writable, stderr: Writable, stdin: Readable, env: NodeJS.ProcessEnv) => Promise<number>|'pass'>} */
+/**
+ * @typedef {Object} ExectuionArgs
+ * @property {string[]} args
+ * @property {Writable} stdout
+ * @property {Writable} stderr
+ * @property {Readable} stdin
+ * @property {NodeJS.ProcessEnv} env
+ * @property {boolean} noSideEffects
+ * @property {AbortSignal} signal
+ */
+
+/** @type {Object<string, (params: ExectuionArgs) => Promise<number>|'pass'>} */
 const builtins = {
-    cd: async (args, stdout, stderr) => {
+    cd: async ({args, stdout, stderr}) => {
         try {
             let [dir = pathService.homedir()] = args;
             if (dir === '-') {
@@ -41,9 +52,9 @@ const builtins = {
         }
         return 0;
     },
-    ai_model: (args, stdout, stderr, stdin, env) => {
+    ai_model: ({args, stdout, stderr, env, ...rest}) => {
         if (args[0])
-            return builtins.export(['SNAIL_LLM_MODEL=' + args[0]], stdout, stderr, stdin, env);
+            return builtins.export({args: ['SNAIL_LLM_MODEL=' + args[0]], stdout, stderr, env, ...rest});
         if (env.SNAIL_LLM_MODEL)
             stdout.write(env.SNAIL_LLM_MODEL)
         else if (env.SNAIL_ANTHROPIC_KEY)
@@ -52,12 +63,12 @@ const builtins = {
             stdout.write('gpt-4o');
         return Promise.resolve(0);
     },
-    ls: (args, stdout, stderr) => {
+    ls: ({args, stdout, stderr}) => {
         if (stdout !== process.stdout || args.some(x => x.startsWith('-') && /[^\-la]/.test(x)))
             return 'pass';
         return require('../apps/ls/lib').run(args, stdout, stderr);
     },
-    export: async (args, stdout, stderr) => {
+    export: async ({args, stdout, stderr}) => {
         for (const arg of args) {
             const index = arg.indexOf('=');
             if (index === -1) {
@@ -75,14 +86,14 @@ const builtins = {
         }
         return 0;
     },
-    declare: (args, stdout, stderr, stdin, env) => {
+    declare: ({args, stderr, ...rest}) => {
         if (args[0] !== '-x') {
             stderr.write('declare is only supported with -x\n');
             return Promise.resolve(1);
         }
-        return builtins.export(args.slice(1), stdout, stderr, stdin, env);
+        return builtins.export({ args: args.slice(1), stderr, ...rest});
     },
-    alias: async (args, stdout, stderr) => {
+    alias: async ({args, stdout, stderr}) => {
         if (!args[0]) {
             stdout.write(JSON.stringify(aliases, undefined, 2) + '\n');
             return 0;
@@ -95,7 +106,7 @@ const builtins = {
         changes.aliases[args[0]] = args.slice(1);
         return 0;
     },
-    nod: async (args, stdout, stderr) => {
+    nod: async ({args, stdout, stderr}) => {
         for (const arg of args) {
             if (arg === '--version') {
                 stdout.write(process.version + '\n');
@@ -110,7 +121,7 @@ const builtins = {
         changes.nod = args;
         return 0;
     },
-    ssh2: (args, stdout, stderr, stdin, env) => {
+    ssh2: ({args, stdout, stderr, stdin, env}) => {
         if (stdout !== process.stdout)
             return 'pass';
         let address = null;
@@ -155,7 +166,7 @@ const builtins = {
         changes.ssh = { sshAddress: address, sshArgs: nonAddressArgs, env };
         return Promise.resolve(0);
     },
-    reconnect: async (args, stdout, stderr) => {
+    reconnect: async ({args, stdout, stderr}) => {
         if (!changes)
             changes = {};
         const socketDir = path.join(pathService.tmpdir(), 'snail-sockets');
@@ -198,7 +209,7 @@ const builtins = {
         }
         return 0;
     },
-    code: (args, stdout, stderr, stdin, env) => {
+    code: ({args, stdout, stderr, stdin, env}) => {
         if (!('SSH_CONNECTION' in env || 'SSH_CLIENT' in env))
             return 'pass';
         if (args.length !== 1 || args[0].startsWith('-'))
@@ -208,19 +219,36 @@ const builtins = {
         changes.code = path.resolve(process.cwd(), args[0]);
         return Promise.resolve(0);
     },
-    exit: async (args, stdout, stderr) => {
+    exit: async ({args, stdout, stderr}) => {
         if (!changes)
             changes = {};
         changes.exit = args.length ? parseInt(args[0]) : 0;
         return 0;
     },
-    source: async(args, stdout, stderr, stdin) => {
+    source: async ({args, stdout, stderr, stdin}) => {
         return runBashAndExtractEnvironment('source', args, stdout, stderr, stdin);
     },
-    'bash-eval': async(args, stdout, stderr, stdin) => {
+    'bash-eval': async ({args, stdout, stderr, stdin}) => {
         return runBashAndExtractEnvironment('eval', args, stdout, stderr, stdin);
     },
-    __git_ref_name: async (args, stdout, stderr, stdin, inEnv) => {
+    browse: async ({args, stdout, signal, noSideEffects, env}) => {
+        const query = args.join(' ');
+        if (noSideEffects) {
+            // throttle if we are in side effect mode
+            await new Promise(x => setTimeout(x, 250));
+            if (signal.aborted)
+                return;
+        }
+        const {link, title} = await joelSearch(env.SNAIL_SEARCH_PREFIX, query, signal);
+
+        if (noSideEffects) {
+            stdout.write(`${title} - ${link}\n`);
+            return 0;
+        }
+        process.stdout.write(`\x1b\x1aB${link}\x00`);
+        return 0;
+    },
+    __git_ref_name: async ({args, stdout, stderr, stdin, env: inEnv}) => {
         const env = {
             ...inEnv,
             GIT_OPTIONAL_LOCKS: '0',
@@ -237,7 +265,7 @@ const builtins = {
         }
         return 0;
     },
-    __is_git_dirty: async (args, stdout, stderr, stdin, inEnv) => {
+    __is_git_dirty: async ({args, stdout, stderr, stdin, env: inEnv}) => {
         const env = {
             ...inEnv,
             GIT_OPTIONAL_LOCKS: '0',
@@ -251,7 +279,7 @@ const builtins = {
             stdout.write("dirty\n");
         return 0;
     },
-    __npx_completions: async (args, stdout, stderr, stdin, env) => {
+    __npx_completions: async ({args, stdout, stderr, stdin, env}) => {
         let dir = process.cwd();
         while (true) {
             const status = await spawnPromise('find', ['-L', '.', '-type', 'f', '-perm', '+111'], {
@@ -272,7 +300,7 @@ const builtins = {
         }
         return 0;
     },
-    __command_completions: async (args, stdout, stderr, stdin, env) => {
+    __command_completions: async ({args, stdout, stderr, stdin, env}) => {
         for (const bashFunction of bashFunctions)
             stdout.write(bashFunction + '\n');
         for (const key of Object.keys(builtins)) {
@@ -294,7 +322,7 @@ const builtins = {
         }));
         return 0;
     },
-    __file_completions: async (args, stdout, stderr) => {
+    __file_completions: async ({args, stdout, stderr}) => {
         const type = args[0];
         const dir = path.resolve(process.cwd(), args[1] || '');
         const names = await fs.promises.readdir(dir).catch(e => []);
@@ -313,7 +341,7 @@ const builtins = {
         }
         return 0;
     },
-    __command_description: async (args, stdout, stderr) => {
+    __command_description: async ({args, stdout, stderr}) => {
         const name = processAlias(args[0], []).executable;
         if (bashFunctions.includes(name)) {
             stdout.write('bash function');
@@ -329,11 +357,11 @@ const builtins = {
             stdout.write(description + '\n');
         return 0;
     },
-    __environment_variables: async (args, stdout, stderr, stdin, env) => {
+    __environment_variables: async ({args, stdout, stderr, stdin, env}) => {
         stdout.write(JSON.stringify(env) + '\n');
         return 0;
     },
-    __find_all_files: async (args, stdout, stderr, stdin, env) => {
+    __find_all_files: async ({args, stdout, stderr, stdin, env}) => {
         const maxFiles = parseInt(args[0] || '1');
         let filesSeen = 0;
         try {
@@ -769,6 +797,7 @@ const safeExecutables = buildSafeExecutables([
     // snail apps
     {name: 'show'},
     {name: 'xkcd'},
+    {name: 'browse'},
 ])
 
 /**
@@ -883,12 +912,14 @@ function execute(expression, noSideEffects, stdout, stderr, stdin) {
                 }
             }
             if (executable in builtins) {
-                const closePromise = builtins[executable](args, stdout, stderr, stdin, env);
+                const controller = new AbortController();
+                const signal = controller.signal;
+                const closePromise = builtins[executable]({args, stdout, stderr, stdin, env, noSideEffects, signal});
                 if (closePromise !== 'pass') {
                     return {
                         closePromise,
                         stdin: createNullWriter(),
-                        kill: () => void 0,
+                        kill: () => void controller.abort(),
                     }
                 }
             } 
@@ -1085,6 +1116,27 @@ async function spawnPromise(command, args, options) {
         stdout: Buffer.concat(stdout),
         stderr: Buffer.concat(stderr),
     }
+}
+
+const searchCache = new Map();
+/**
+ * @param {string} searchPrefix
+ * @param {string} query
+ * @param {AbortSignal} signal
+ */
+async function joelSearch(searchPrefix, query, signal) {
+    if (!searchPrefix || query.startsWith('http://') || query.startsWith('https://') || (query.includes('.') && !query.includes(' ')))
+        return {link: query, title: query};
+    if (searchCache.has(query))
+        return searchCache.get(query);
+    //@ts-ignore
+    const response = await fetch(searchPrefix + encodeURIComponent(query), {
+        signal,
+    });
+    const json = await response.json();
+    if (!signal.aborted)
+        searchCache.set(query, json);
+    return json;
 }
 
 module.exports = {execute, getResult, getAndResetChanges, setAlias, getAliases, setAllAliases, setBashState, setBashFunctions};

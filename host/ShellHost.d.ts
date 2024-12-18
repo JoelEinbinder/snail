@@ -19,6 +19,8 @@ export interface ShellHost {
   contextMenu(params: {menuItems: MenuItem[]}): { id: number };
   requestInspect(params: {uuid?: string}): void;
   refreshBrowserView(params: { uuid: string }): void;
+  backBrowserView(params: { uuid: string }): void;
+  forwardBrowserView(params: { uuid: string }): void;
   setBrowserViewURL(params: { uuid: string, url: string }): void;
   setBrowserViewRect(params: { uuid: string, rect: {x: number, y: number, width: number, height: number} }): void;
   postBrowserViewMessage(params: { uuid: string, message: any }): void;

@@ -29,6 +29,7 @@ import type { Editor } from '../slug/editor/js/editor';
 import type { Action } from './actions';
 import { themeName } from './theme';
 import { IntroBlock } from './IntroBlock';
+import { BrowserShell } from './BrowserShell';
 
 const socketListeners = new Map<number, (message: {method: string, params: any}|{id: number, result: any}) => void>();
 const socketCloseListeners = new Map<number, () => void>();
@@ -218,6 +219,27 @@ export class Shell {
         const processor = new TerminalDataProcessor({
           htmlTerminalMessage: (type, dataStr) => {
             switch(type) {
+              case 66: {
+                // Browser
+                terminalTaskQueue.queue(async () => {
+                  await closeActiveTerminalBlock();
+                  let dataObj: {entry: string};
+                  try {
+                  if (dataStr.startsWith('{'))
+                    dataObj = JSON.parse(dataStr)
+                  else
+                    dataObj = {entry: dataStr};
+                  }
+                  catch { }
+                  if (!dataObj)
+                    dataObj = { entry: 'uh-oh-invalid-parse-entry???!!!' };
+                  const unlock = this._lockPrompt('BrowserShell');
+                  const block = new BrowserShell(String(dataObj.entry), unlock);
+                  addItem(block, /* focus */ true);
+                  block.setIsFullscreen(true);
+                });
+                break;
+              }
               case 67: {
                 // chart data
                 if (!activeChartBlock) {

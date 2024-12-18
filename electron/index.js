@@ -260,7 +260,7 @@ app.on('new-window-for-tab', () => {
   makeWindow();
 });
 
-/** @type {WeakMap<import('electron').WebContents, Map<string, BrowserView>>} */
+/** @type {WeakMap<import('electron').WebContents, Map<string, import('electron').WebContentsView>>} */
 const browserViews = new WeakMap();
 /** @type {WeakMap<import('electron').WebContents, {uuid: string, parent: import('electron').WebContents}>} */
 const browserViewContentsToParentContents = new WeakMap();
@@ -379,11 +379,45 @@ const overrides = {
     client.on('destroyed', onParentDestroy);
     views.set(uuid, browserView);
     browserView.webContents.on('did-frame-navigate', (event, url, httpResponseCode, httpStatusText, isMainFrame, frameProcessId, frameRoutingId) => {
-      if (isMainFrame)
-        sender.send('message', { method: 'browserView-message', params: {uuid, message: {
-          method: 'did-navigate',
-        }} });
+      if (!isMainFrame)
+        return;
+      sender.send('message', {
+        method: 'browserView-message',
+        params: {
+          uuid,
+          trusted: true,
+          message: {
+            method: 'did-navigate', params: {
+              url,
+              canGoBack: browserView.webContents.navigationHistory.canGoBack(),
+              canGoForward: browserView.webContents.navigationHistory.canGoForward(),
+            }
+          }
+        }
+      });
     });
+    browserView.webContents.on('page-title-updated', (event, title) => {
+      sender.send('message', {
+        method: 'browserView-message',
+        params: {
+          uuid,
+          trusted: true,
+          message: { method: 'page-title-updated', params: { title } }
+        }
+      });
+    });
+    browserView.webContents.on('input-event', (event, inputEvent) => {
+      if (inputEvent.type !== 'rawKeyDown')
+        return;
+      sender.send('message', {
+        method: 'browserView-message',
+        params: {
+          uuid,
+          trusted: true,
+          message: { method: 'input-event', params: inputEvent }
+        }
+      });      
+    })
   },
   focusBrowserView({uuid}, client, sender) {
     browserViews.get(sender)?.get(uuid)?.webContents.focus();
@@ -415,6 +449,12 @@ const overrides = {
   },
   refreshBrowserView({uuid}, client, sender) {
     browserViews.get(sender)?.get(uuid)?.webContents.reloadIgnoringCache();
+  },
+  backBrowserView({uuid}, client, sender) {
+    browserViews.get(sender)?.get(uuid)?.webContents.navigationHistory.goBack();
+  },
+  forwardBrowserView({uuid}, client, sender) {
+    browserViews.get(sender)?.get(uuid)?.webContents.navigationHistory.goForward();
   },
   hideBrowserView({uuid}, client, sender) {
     const window = BrowserWindow.fromWebContents(sender);

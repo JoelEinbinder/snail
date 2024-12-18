@@ -3,9 +3,9 @@ import type { WebContentView } from "./IFrameBlock";
 import { randomUUID } from "./uuid";
 import type { DebuggingInfo } from './CDPManager';
 
-const browserViewMessageHandler = new Map<string, (data: any) => void>();
-host.onEvent('browserView-message', ({uuid, message}) => {
-  browserViewMessageHandler.get(uuid)?.(message);
+const browserViewMessageHandler = new Map<string, (data: any, trusted: boolean) => void>();
+host.onEvent('browserView-message', ({uuid, message, trusted}) => {
+  browserViewMessageHandler.get(uuid)?.(message, !!trusted);
 });
 
 let cachedBrowserView: {url: string, uuid:string}|null = null;
@@ -65,7 +65,7 @@ export class BrowserView implements WebContentView {
   private _closed = false;
   private _uuid: string;
   private _url = 'about:blank';
-  constructor(url: string|undefined, handler: (data: any) => void) {
+  constructor(url: string|undefined, handler: (data: any, trusted: boolean) => void) {
     this._dummyElement.classList.add('browser-view-dummy');
     this._dummyElement.tabIndex = 0;
     if (url)
@@ -143,6 +143,21 @@ export class BrowserView implements WebContentView {
       params: {uuid: this._uuid},
     });
   }
+
+  goBack() {
+    host.notify({
+      method: 'backBrowserView',
+      params: {uuid: this._uuid},
+    });
+  }
+
+  goForward() {
+    host.notify({
+      method: 'forwardBrowserView',
+      params: {uuid: this._uuid},
+    });
+  }
+
 
   requestInspect() {
     host.notify({

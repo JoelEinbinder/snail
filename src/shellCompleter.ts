@@ -22,6 +22,12 @@ registry.set('sudo', async (shell, line, abortSignal) => {
 registry.set('cd', async (shell, line, abortSignal) => {
   return fileCompleter(shell, line, { directoriesOnly: true });
 });
+registry.set('browse', async () => {
+  return {
+    anchor: 0,
+    suggestions: [],
+  };
+});
 
 export function makeShellCompleter(shell: Shell): Completer {
   return async (line: string, abortSignal: AbortSignal) => {

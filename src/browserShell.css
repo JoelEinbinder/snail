@@ -1,0 +1,74 @@
+.browser-shell.fullscreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 100%;
+  z-index: 2000;
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.browser-shell > .browser-view-dummy {
+  flex: 1;
+}
+
+.navbar {
+  display: flex;
+  padding: 2px;
+  border-bottom: 1px solid var(--tab-border);
+}
+
+.navbar > .domain {
+  flex: 1;
+  font-family: system-ui;
+  text-align: center;
+  padding: 2px;
+  cursor: text;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.navbar > input:not([type="range"]):not([type="checkbox"]) {
+  flex: 1;
+  border: none;
+  text-align: center;
+  background: none;
+  font-family: system-ui;
+}
+
+.navbar > button {
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.navbar > button:not(:disabled):hover {
+  background-color: var(--color-hover);
+}
+.navbar > button:not(:disabled):active {
+  background-color: var(--border-color);
+}
+.navbar > button:disabled {
+  opacity: 0.5;
+}
+.navbar > button.back {
+  background-image: url(./icons/arrow-left.svg);
+}
+.navbar > button.forward {
+  background-image: url(./icons/arrow-right.svg);
+}
+.navbar > button.reload {
+  background-image: url(./icons/refresh.svg);
+}
+.navbar > button.close {
+  background-image: url(./icons/close.svg);
+  margin-left: calc(24px * 2);
+}
