@@ -16,6 +16,7 @@ type Entry = {
   link?: string,
   mode: number,
   size: number,
+  isGitIgnored: boolean,
   isSymbolicLink: boolean,
   isDirectory: boolean,
   isFIFO: boolean,
@@ -34,6 +35,7 @@ const {dirs, cwd, showHidden, platform, args} = await snail.waitForMessage<{
   platform: string;
   args: string[];
 }>();
+
 const initialDpr = await snail.getDevicePixelRatio();
 const useTable = args.some(a => a.startsWith('-') && a.includes('l'));
 const now = new Date(Date.now());
@@ -299,12 +301,19 @@ function inlineMode() {
   const gridContainers: GridContainer[] = [];
   const imageLoadPromises: Promise<any>[] = [];
   let activeGridContainer = new GridContainer();
+  let unsortedDirs: Entry[];
+  let isTopLevel = false;
   if (dirs.length === 1 && dirs[0].children) {
-    for (const info of dirs[0].children)
-      processDir(info, false);
-  } else for (const info of dirs) {
-    processDir(info, true);
+    unsortedDirs = dirs[0].children;
+    isTopLevel = false;
+  } else {
+    isTopLevel = true;
+    unsortedDirs = dirs;
   }
+  for (const dir of unsortedDirs.filter(x => !x.isGitIgnored))
+    processDir(dir, isTopLevel);
+  for (const dir of unsortedDirs.filter(x => x.isGitIgnored))
+    processDir(dir, isTopLevel);
   function processDir(info: Entry, topLevel: boolean) {
     const {dir, fullPath, isGitIgnored} = info;
     if (!topLevel && !showHidden && dir.startsWith('.'))
