@@ -91,6 +91,7 @@ async function buildItemInfo(parentDir, filePath, depth, isGitIgnored) {
       isFile: stat.isFile(),
       mimeType: mimeTypes.lookup(resolved) || '',
       isGitIgnored,
+      isHidden: path.basename(resolved).startsWith('.'),
       children: isDirectory ? await makeChildrenForDirectory(isGitIgnored) : undefined,
     }
   }

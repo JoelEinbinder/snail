@@ -25,6 +25,7 @@ type Entry = {
   isCharacterDevice: boolean,
   isFile: boolean,
   mimeType: string,
+  isHidden: boolean,
   fullPath: string,
   children?: Entry[],
 };
@@ -275,7 +276,7 @@ async function renderTable() {
   });
   await dataGrid.loadAllData();
   const dirsToShow = (dirs.length === 1 && dirs[0].children) ? dirs[0].children : dirs;
-  dataGrid.setItems(dirsToShow.filter(x => showHidden || !x.dir.startsWith('.')));
+  dataGrid.setItems(dirsToShow.filter(x => showHidden || !x.isHidden));
   document.body.append(dataGrid.element);
   snail.setHeight(document.body.getBoundingClientRect().height);
   snail.setToJSON(() => {
