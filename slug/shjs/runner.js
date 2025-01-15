@@ -1,3 +1,4 @@
+const { makeExecutor } = require('./executor');
 const {spawn, spawnSync, exec} = require('child_process');
 const {Writable, Readable} = require('stream');
 const fs = require('fs');
@@ -8,14 +9,7 @@ const pathService = require('../path_service/');
 let changes = null;
 
 /**
- * @typedef {Object} ExectuionArgs
- * @property {string[]} args
- * @property {Writable} stdout
- * @property {Writable} stderr
- * @property {Readable} stdin
- * @property {NodeJS.ProcessEnv} env
- * @property {boolean} noSideEffects
- * @property {AbortSignal} signal
+ * @typedef {import('./platform').ExecutionArgs<Readable, Writable>} ExectuionArgs
  */
 
 /** @type {Object<string, (params: ExectuionArgs) => Promise<number>|'pass'>} */
@@ -683,73 +677,6 @@ function treatAsDirectory(executable) {
     }
 }
 
-/**
- * @param {string} executable
- * @param {string[]} args
- */
-function processAlias(executable, args) {
-    const seen = new Set();
-    while (executable in aliases && !seen.has(executable)) {
-        seen.add(executable);
-        const [newExecutable, ...newArgs] = aliases[executable];
-        executable = newExecutable;
-        args.unshift(...newArgs);
-    }
-    return {
-        executable,
-        args,
-    }
-}
-
-class UserError extends Error {}
-
-/**
- * @param {import('./ast').Word} word
- * @return {string[]}
- */
-function processWord(word) {
-    if (typeof word === 'string')
-        return [word];
-    /** @type {(string|{glob: string})[]} */
-    const parts = [];
-    for (const part of word) {
-        if (typeof part === 'string')
-            parts.push(part);
-        else if ('replacement' in part)
-            parts.push(computeReplacement(part.replacement));
-        else
-            parts.push(part);
-    }
-    if (parts.some(x => typeof x !== 'string')) {
-        const glob = require('fast-glob');
-        const globStr = parts.map(p => typeof p === 'string' ? glob.escapePath(p) : p.glob).join('');
-        const output = glob.sync(globStr, {
-            onlyFiles: false,
-        });
-        if (!output.length)
-            throw new UserError(`No matches found: ${globStr}`);
-        return output;
-    }
-    return [parts.join('')];
-}
-
-/**
- * @param {string} replacement
- */
-function computeReplacement(replacement) {
-    if (replacement === '~')
-        return process.env.HOME || pathService.homedir();
-    if (replacement === '~+')
-        return process.cwd();
-    if (replacement === '~-')
-        return process.env.OLDPWD || '~-';
-    if (replacement.startsWith('$')) {
-        const key = replacement.substring(1);
-        return key in process.env ? process.env[key] : '';
-    }
-    throw new Error(`Unknown replacement: ${replacement}`);
-}
-
 const safeExecutables = buildSafeExecutables([
     {name: 'cat'},
     {name: 'ls'},
@@ -870,192 +797,6 @@ function signalToCode(signal) {
     return (signals[signal] || 1) + 128;
 }
 
-/**
- * @param {import('./ast').Expression|null} expression
- * @param {boolean} noSideEffects
- * @param {Writable} stdout
- * @param {Writable} stderr
- * @param {Readable|null=} stdin
- * @return {{stdin: Writable|null, kill: (signal: number) => boolean, closePromise: Promise<number>}}
- */
-function execute(expression, noSideEffects, stdout, stderr, stdin) {
-    if (!expression) {
-        return {
-            closePromise: Promise.resolve(0),
-            stdin: createNullWriter(),
-            kill: () => false,        
-        }
-    }
-    try {
-        if ('executable' in expression) {
-            const { redirects } = expression;
-            if (noSideEffects && redirects?.length)
-                throw new UserError('side effect');
-            const {executable, args} = processAlias(processWord(expression.executable)[0], expression.args.flatMap(processWord));
-            const env = {...process.env};
-            if (noSideEffects && expression.assignments?.length)
-                throw new UserError('side effect');
-            for (const {name, value} of expression.assignments || [])
-                env[name] = processWord(value)[0];
-            if (noSideEffects) {
-                const entry = safeExecutables.get(executable);
-                if (!entry)
-                    throw new UserError('side effect');
-                if (!entry.args.has(undefined) && !entry.args.has(args[0]))
-                    throw new UserError('side effect');
-            }
-            if (bashFunctions.includes(executable)) {
-                return {
-                    closePromise: runBashAndExtractEnvironment('eval', [executable, ...args], stdout, stderr, stdin),
-                    stdin: createNullWriter(),
-                    kill: () => void 0,
-                }
-            }
-            if (executable in builtins) {
-                const controller = new AbortController();
-                const signal = controller.signal;
-                const closePromise = builtins[executable]({args, stdout, stderr, stdin, env, noSideEffects, signal});
-                if (closePromise !== 'pass') {
-                    return {
-                        closePromise,
-                        stdin: createNullWriter(),
-                        kill: () => void controller.abort(),
-                    }
-                }
-            } 
-            if (args.length === 0 && !expression.assignments?.length && treatAsDirectory(executable)) {
-                return execute({executable: 'cd', args: [executable], redirects}, noSideEffects, stdout, stderr, stdin);
-            } else {
-                /** @type {(Readable|Writable|number|undefined|null)[]} */
-                const stdio = [stdin, stdout, stderr];
-                const openFds = [];
-                for (const redirect of redirects || []) {
-                    const file = processWord(redirect.to)[0];
-                    const fd = fs.openSync(file, {
-                        'write': 'w',
-                        'append': 'a',
-                        'read': 'r',
-                    }[redirect.type]);
-
-                    stdio[redirect.from] = fd;
-                    openFds.push(fd);
-                }
-                const defaultStdio = [process.stdin, process.stdout, process.stderr];
-                const child = spawn(executable, args, {
-                    stdio: stdioToPipe(stdio),
-                    env,
-                });
-                const closePromise = new Promise(resolve => {
-                    child.on('close', (code, signal) => {
-                        if (code !== null)
-                            resolve(code);
-                        else
-                            resolve(signalToCode(signal))
-                    });
-                    child.on('error', (/** @type {Error & {code?: string, path?: string}} */ err) => {
-                        if (err?.code === 'ENOENT')
-                            stderr.write(`command not found: ${err?.path}\n`);
-                        else
-                            stderr.write(err.message + '\n');
-                        resolve(127);
-                    });
-                });
-                closePromise.then(() => {
-                    for (const fd of openFds)
-                        fs.close(fd);
-                });
-                hookUpStdio(stdio, child);
-                return {stdin: child.stdin, kill: child.kill.bind(child), closePromise};
-            }
-        } else if ('pipe' in expression) {
-            const callbacks = new Set();
-            let pipeClosed = false;
-            const interruptableStdin = new Writable({
-                write(chunk, encoding, callback) {
-                    if (pipeClosed || pipe.stdin.destroyed) {
-                        callback();
-                        return;
-                    }
-                    callbacks.add(callback);
-                    pipe.stdin.write(chunk, encoding, err => {
-                        // EPIPE is fine, it just means the pipe process was closed
-                        if (err?.['code'] === 'EPIPE')
-                            err = null;
-                        callbacks.delete(callback);
-                        callback(err);
-                    });
-                }
-            });
-            const pipe = execute(expression.pipe, noSideEffects, stdout, stderr);
-            pipe.stdin.on('error', err => {
-                if (err?.['code'] === 'EPIPE')
-                    return;
-                throw err;
-            });
-            const main = execute(expression.main, noSideEffects, interruptableStdin, stderr, stdin);
-            const closePromise = main.closePromise.then(() => {
-                pipe.stdin.end();
-                return pipe.closePromise;
-            });
-            pipe.closePromise.then(() => {
-                pipeClosed = true;
-                for (const callback of callbacks)
-                    callback();
-                callbacks.clear();
-            });
-            return {stdin: main.stdin, kill: (...args) => {
-                const result1 = main.kill(...args);
-                const result2 = pipe.kill(...args);
-                return result1 && result2;
-            }, closePromise};
-        } else if ('left' in expression) {
-            const writableStdin = new Writable({
-                write(chunk, encoding, callback) {
-                    active.stdin.write(chunk, encoding, callback);
-                }
-            });
-            const left = execute(expression.left, noSideEffects, stdout, stderr, stdin);
-            let active = left;
-            let killed = false;
-            const closePromise = left.closePromise.then(async code => {
-                if (killed)
-                    return code;
-                if (!!code === (expression.type === 'or')) {
-                    const right = execute(expression.right, noSideEffects, stdout, stderr, stdin);
-                    active = right;
-                    return right.closePromise;
-                }
-                return code;   
-            });
-            return {
-                stdin: writableStdin,
-                kill: (...args) => {
-                    killed = true;
-                    return active.kill(...args);
-                },
-                closePromise,
-            };
-        }
-    } catch(error) {
-        if (!(error instanceof UserError))
-            throw error;
-        stderr.write(`shjs: ${error.message}\n`);
-        return {
-            closePromise: Promise.resolve(1),
-            stdin: createNullWriter(),
-            kill: () => void 0,
-        }
-    }
-}
-
-function createNullWriter() {
-    return new Writable({
-        write(chunk, encoding, callback) {
-            callback();
-        }
-    });
-}
-
 function arrayWriter(datas) {
     return new Writable({
         write(chunk, encoding, callback) {
@@ -1138,5 +879,75 @@ async function joelSearch(searchPrefix, query, signal) {
         searchCache.set(query, json);
     return json;
 }
+
+/**
+ * @param {(Readable|Writable|number|undefined|null)[]} stdio
+ * @param {{from: number, file: string, type: 'write'|'append'|'read'}[]} redirects
+ * @param {string} executable
+ * @param {string[]} args
+ * @param {NodeJS.ProcessEnv} env
+ */
+function launchProcess(stdio, redirects, executable, args, env) {
+    const openFds = [];
+    for (const redirect of redirects || []) {
+        const fd = fs.openSync(redirect.file, {
+            'write': 'w',
+            'append': 'a',
+            'read': 'r',
+        }[redirect.type]);
+
+        stdio[redirect.from] = fd;
+        openFds.push(fd);
+    }
+    const child = spawn(executable, args, {
+        stdio: stdioToPipe(stdio),
+        env,
+    });
+    /** @type {Promise<number>} */
+    const closePromise = new Promise(resolve => {
+        child.on('close', (code, signal) => {
+            if (code !== null)
+            resolve(code);
+            else
+            resolve(signalToCode(signal))
+        });
+        const stderr = /** @type {Writable|null} */(stdio[2]);
+        child.on('error', (/** @type {Error & {code?: string, path?: string}} */ err) => {
+            if (err?.code === 'ENOENT')
+                stderr?.write(`command not found: ${err?.path}\n`);
+            else
+                stderr?.write(err.message + '\n');
+            resolve(127);
+        });
+    });
+    closePromise.then(() => {
+    for (const fd of openFds)
+        fs.close(fd);
+    });
+    hookUpStdio(stdio, child);
+    return { stdin: child.stdin, kill: child.kill.bind(child), closePromise };
+}
+
+const {execute, processAlias} = makeExecutor({
+    aliases,
+    getBashFunctions: () => bashFunctions,
+    builtins,
+    homedir: () => pathService.homedir(),
+    launchProcess,
+    runBashAndExtractEnvironment,
+    safeExecutables,
+    treatAsDirectory,
+    createWritable: write => new Writable({write}),
+    getEnv: () => process.env,
+    getCwd: () => process.cwd(),
+    glob: parts => {
+      const glob = require('fast-glob');
+      const globStr = parts.map(p => typeof p === 'string' ? glob.escapePath(p) : p.glob).join('');
+      const output = glob.sync(globStr, {
+        onlyFiles: false,
+      });
+      return output;
+    }
+});
 
 module.exports = {execute, getResult, getAndResetChanges, setAlias, getAliases, setAllAliases, setBashState, setBashFunctions};
