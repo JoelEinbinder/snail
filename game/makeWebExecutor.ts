@@ -1,21 +1,24 @@
-import { makeExecute } from '../slug/shjs/execute';
+import { makeExecutor } from '../slug/shjs/executor';
 import { pathResolve, pathJoin, pathBasename, pathRelative } from './path';
 import { dungeon } from './dungeon';
+import type { ExecutionArgs } from '../slug/shjs/platform';
 declare var process;
 export function makeWebExecutor() {
-    type Writable = {
+  type Writable = {
     write: (chunk: any, encoding?: any, callback?: (error?: Error) => void) => void;
     end: () => void;
+    destroyed: boolean;
+    on: (event: 'error', listener: (error: Error) => void) => Writable;
   }
   const aliases = {};
-  const builtins = {
+  const builtins:{[key: string]: (params: ExecutionArgs<never, Writable>) => Promise<number>|'pass'} = {
     __git_ref_name: async () => {
       return 0;
     },
     __is_git_dirty: async () => {
       return 0;
     },
-    __command_completions: async (args, stdout, stderr, stdin, env) => {
+    __command_completions: async ({stdout}) => {
       for (const key of Object.keys(builtins)) {
         if (key.startsWith('__'))
           continue;
@@ -35,7 +38,7 @@ export function makeWebExecutor() {
       // }));
       return 0;
     },
-    __file_completions: async (args, stdout, stderr) => {
+    __file_completions: async ({args, stdout}) => {
       const type = args[0];
       const dir = pathResolve(dungeon.cwd.current, args[1] || '');
       const names = await dungeon.readdir(dir).catch(e => []);
@@ -55,7 +58,7 @@ export function makeWebExecutor() {
       return 0;
     },
   
-    __find_all_files: async (args, stdout, stderr, stdin, env) => {
+    __find_all_files: async ({args, stdout}) => {
       const maxFiles = parseInt(args[0] || '1');
       let filesSeen = 0;
       async function traverse(path: string) {
@@ -76,11 +79,11 @@ export function makeWebExecutor() {
       return 0;
     },
 
-    __environment_variables: async (args, stdout, stderr, stdin, env) => {
+    __environment_variables: async ({stdout, env}) => {
         stdout.write(JSON.stringify(env) + '\n');
         return 0;
     },
-    help: async(args, stdout, stderr) => {
+    help: async({args, stdout}) => {
       const command = args[0];
       if (!command) {
         stdout.write('cd: traverse directories\r\n');
@@ -108,11 +111,11 @@ export function makeWebExecutor() {
       }
       return 0;
     },
-    cd: async (args, stdout, stderr, stdin) => {
+    cd: async ({args, stdout, stderr, stdin}) => {
       const [dir = process.env.HOME] = args;
       return dungeon.chdir(pathResolve(dungeon.cwd.current, dir), stdout, stderr, stdin);
     },
-    cat: async (args, stdout, stderr, stdin, env ) => {
+    cat: async ({args, stdout, stderr, stdin} ) => {
       for (const arg of args) {
         const dir = pathResolve(dungeon.cwd.current, arg);
         const stat = await dungeon.lstat(dir).catch(e => e);
@@ -129,22 +132,22 @@ export function makeWebExecutor() {
       }
       return 0;
     },
-    echo: async (args, stdout, stderr, stdin, env) => {
+    echo: async ({args, stdout, stderr, stdin}) => {
       stdout.write(args.join(' ') + '\n');
       return 0;
     },
-    reconnect: async (args, stdout, stderr, stdin, env) => {
+    reconnect: async ({args, stdout, stderr, stdin}) => {
       return 1;
     },
-    pwd: async (args, stdout, stderr, stdin, env) => {
+    pwd: async ({args, stdout, stderr, stdin}) => {
       stdout.write(dungeon.cwd.current + '\n');
       return 0;
     },
-    clear: async (args, stdout, stderr, stdin, env) => {
+    clear: async ({args, stdout, stderr, stdin}) => {
       stdout.write('\x1b[H\x1b[2J');
       return 0;
     },
-    ls: async (args: string[], stdout, stderr, stdin, env) => {
+    ls: async ({args, stdout, stderr, stdin}) => {
       function send(data) {
         const str = JSON.stringify(data).replace(/[\u007f-\uffff]/g, c => { 
             return '\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
@@ -222,7 +225,7 @@ export function makeWebExecutor() {
       }
       
     },
-    open: async (args, stdout, stderr, stdin, env) => {
+    open: async ({args, stdout, stderr, stdin, env}) => {
       for (const arg of args) {
         const ret = await dungeon.open(pathResolve(dungeon.cwd.current, arg), stdout, stderr, stdin);
         if (ret !== 0)
@@ -230,7 +233,7 @@ export function makeWebExecutor() {
       }
       return 0;
     },
-    use: async (args, stdout, stderr, stdin, env) => {
+    use: async ({args, stdout, stderr, stdin, env}) => {
       for (const arg of args) {
         const ret = dungeon.useItem(arg, stdout, stderr);
         if (ret !== 0)
@@ -239,28 +242,72 @@ export function makeWebExecutor() {
       return 0;
     },
   };
+  function buildSafeExecutables(descriptor: {name: string, arg?: string}[]) {
+    const map = new Map<string, { args: Set<string|undefined>}>();
+    for (const {name, arg} of descriptor) {
+        let entry = map.get(name);
+        if (!entry) {
+            entry = {args: new Set()};
+            map.set(name, entry);
+        }
+        entry.args.add(arg);
+    }
+    return map;
+
+  }
   const env: {[key: string]: string} = { HOME: '/home/adventurer' };
-  const { execute } = makeExecute<any, Writable>({
+  const { execute } = makeExecutor<any, Writable>({
     aliases,
     builtins,
     getEnv: () => env,
     homedir: () => '/home/adventurer',
-    isDirectory: path => {
-      return dungeon.isDirectory(pathResolve(dungeon.cwd.current, path));
+    treatAsDirectory: executable => {
+      return dungeon.isDirectory(pathResolve(dungeon.cwd.current, executable));
     },
-    isExecutable: path => false,
-    makeWritable: write => null as any,
-    runExecutable: ({args, env, executable, inputs}) => {
-      inputs[2].write(`command not found: ${executable}\n`);	
+    createWritable: write => {
+      const writable: Writable = {
+        destroyed: false,
+        end() {
+          writable.destroyed = true;
+        },
+        on(event, listener) {
+          return writable;
+        },
+        write(chunk, encoding, callback) {
+          if (writable.destroyed)
+            return;
+          write(chunk, encoding, callback);
+        },
+      };
+      return writable;
+    },
+    launchProcess(stdio, redirects, executable, args, env) {
+      stdio[2].write(`command not found: ${executable}\n`);	
       return {
         closePromise: Promise.resolve(1),
         kill: () => void 0,
         stdin: undefined,
       }
     },
-    globFiles: parts => {
+    getBashFunctions() {
       return [];
     },
+    getCwd() {
+      return dungeon.cwd.current;
+    },
+    glob(parts) {
+        return [];
+    },
+    runBashAndExtractEnvironment(command, args, stdout, stderr, stdin) {
+        throw new Error('Not implemented');
+    },
+    safeExecutables: buildSafeExecutables([
+      {name: 'cat'},
+      {name: 'ls'},
+      {name: 'pwd'},
+      {name: 'echo'},
+      {name: 'help'},
+    ]),
   });
   return {execute, aliases, env};
 }

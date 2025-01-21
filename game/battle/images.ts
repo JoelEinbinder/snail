@@ -39,3 +39,5 @@ export const images = {
   trainers,
   widgets,
 };
+for (const name in images)
+  images[name] = new URL(images[name], import.meta.url).href;

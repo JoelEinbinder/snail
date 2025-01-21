@@ -238,6 +238,8 @@ const handler = {
           return null;
         if (result.exceptionDetails?.exception?.className === 'EvalError')
           return null;
+        if (result.exceptionDetails?.exception?.className === 'ReferenceError')
+          return null;
       }
       return result.exceptionDetails ? result.exceptionDetails.exception : result.result;
     } else if (language === 'python') {

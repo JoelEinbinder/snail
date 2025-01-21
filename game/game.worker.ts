@@ -83,46 +83,49 @@ self.player = Object.freeze({
 });
 
 const stdin = new JoelEvent<string>('');
-self['bootstrap'] = function(args, { bytes }) {
+self['bootstrap'] = async function(args, { bytes }) {
   dungeon.player.bytes = bytes;
-  
-  const stdout = createTerminalStream();
-  setTimeout(async () => {
-    await dungeon.reset(stdout, stdout, stdin);
-    stdout.end();
-  }, 0)
-  return (message) => {
+  return async (message) => {
     // TODO do something with 'resize'?
     // TODO handle 'input'
     if (message.method === 'input' && message.params.id === terminalId)
       stdin.dispatch(message.params.data);
+    else if (message.method === 'reset') {
+      dungeon.player.bytes = bytes;  
+      const stdout = createTerminalStream();
+      await dungeon.reset(stdout, stdout, stdin);
+      stdout.end();
+    }
   };
 };
 
 let terminalId = 0;
-function createTerminalStream() {
+function createTerminalStream(previewToken?: number) {
   const id = ++terminalId;
-  notify('startTerminal', {id});
+  notify('startTerminal', {id, previewToken});
   return {
-    _ended: false,
+    destroyed: false,
     write(data, encoding, callback?) {
-      notify('data', {id, data});
+      notify('data', {id, data, previewToken});
       callback?.();
     },
     end() {
-      if (this._ended)
+      if (this.destroyed)
         return;
-      this._ended = true;
-      notify('endTerminal', {id});
+      this.destroyed = true;
+      notify('endTerminal', {id, previewToken});
     },
+    on(event, callback) {
+      return this;
+    }
   };
 }
 
-self['pty'] = async function(command) {
+self['pty'] = async function(command: string, previewToken?: number) {
   const {tokens} = tokenize(command);
   const ast = parse(tokens);
-  const stdout = createTerminalStream();
-  const { closePromise, kill } = execute(ast, stdout, stdout, stdin);
+  const stdout = createTerminalStream(previewToken);
+  const { closePromise, kill } = execute(ast, !!previewToken, stdout, stdout, stdin);
   let waitForDoneCallback;
   
   const waitForDonePromise = new Promise(x => waitForDoneCallback = x);
@@ -167,7 +170,9 @@ self['pty'] = async function(command) {
 }
 
 dungeon.cwd.on(cwd => {
-  dispatch({ method: 'Shell.cwdChanged', params: { cwd }});
+  dispatch({ method: 'Shell.notify', params: {
+    payload: {method: 'cwd', params: cwd},
+  }});
 })
 dungeon.bytesEvent.on(() => {
   dispatch({ method: 'Game.setBytes', params: dungeon.player.bytes });
@@ -175,32 +180,49 @@ dungeon.bytesEvent.on(() => {
 
 
 self['__getResult__'] = async function (command) {
+  try {
   const outStream = {
+    destroyed: false,
     write(data, encoding, callback?) {
       datas.push(data);
       callback?.();
     },
     end() {
+      this.destroyed = true;
     },
+    on(event, callback) {
+      return this;
+    }
   };
   const errStream = {
+    destroyed: false,
     write(data, encoding, callback?) {
       errs.push(data);
       callback?.();
     },
     end() {
+      this.destroyed = true;
     },
+    on(event, callback) {
+      return this;
+    }
   };
   const errs = [];
   const datas = [];
-  const {tokens} = tokenize(command);
+  const {tokens} = tokenize(command, code => {
+    return code.substring(0, code.indexOf('}'));
+  });
   const ast = parse(tokens);
-  const {closePromise, stdin} = execute(ast, outStream, errStream);
+  const {closePromise, stdin} = execute(ast, false, outStream, errStream);
   stdin?.end();
   const code = await closePromise;
   const result = datas.join('');
   const stderr = errs.join('');
   return {result, stderr, exitCode: code};
+} catch (error) {
+  console.error(error);
+  throw error;
+}
 }
 function notify(method: string, params: any) {
   dispatch({ method: 'Shell.notify', params: { payload: {method, params} }});

@@ -4,6 +4,7 @@ node_modules
 dist
 /esout
 /repl_out
+/game_out
 /slug-out
 
 /test-results/

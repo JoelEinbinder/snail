@@ -8,7 +8,7 @@ const images = { werewolf, dragon, fish };
 const image_name = await snail.waitForMessage<string>();
 const image = new Image();
 document.body.append(image);
-image.src = images[image_name];
+image.src = new URL(images[image_name], import.meta.url).href;
 image.height = 300;
 image.onload = () => {
   snail.setHeight(document.body.offsetHeight);  

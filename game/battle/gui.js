@@ -300,7 +300,7 @@ function monsterImage(name) {
     };
     if (!monsterImages.has(name)) {
         const img = new Image();
-        img.src = monsterUrls[name];
+        img.src = new URL(monsterUrls[name], import.meta.url).href;
         monsterImages.set(name, img);
     }
     return monsterImages.get(name);

@@ -3,10 +3,14 @@ const http = require('http');
 /** @type {Map<string, import('esbuild').OutputFile>} */
 const compiledFiles = new Map();
 
-async function createDevServer(entryPoint = path.join(__dirname, '..', 'src', 'index.ts'), isREPL = false) {
+/**
+ * @param {string=} entryPoint
+ * @param {'repl'|'game'|'desktop'=} target
+ */
+async function createDevServer(entryPoint = path.join(__dirname, '..', 'src', 'index.ts'), target = 'desktop') {
   const server = http.createServer(async (req, res) => {
     try {
-      const response = await getFileForURL(new URL('http://localhost' + req.url), entryPoint, isREPL);
+      const response = await getFileForURL(new URL('http://localhost' + req.url), entryPoint, target);
       const headers = response.headers || {};
       headers['Content-Type'] = response.mimeType;
       res.writeHead(response.statusCode, headers);
@@ -32,9 +36,9 @@ async function createDevServer(entryPoint = path.join(__dirname, '..', 'src', 'i
 /**
  * @param {URL} url
  * @param {string} entryPoint
- * @param {boolean} isREPL
+ * @param {'repl'|'game'|'desktop'} target
  */
-async function getFileForURL(url, entryPoint, isREPL) {
+async function getFileForURL(url, entryPoint, target) {
   const {searchParams, pathname} = url;
   if (searchParams.has('entry')) {
     const esbuild = require('esbuild');
@@ -48,10 +52,15 @@ async function getFileForURL(url, entryPoint, isREPL) {
       chunkNames: '[name]-[hash]',
       entryNames: '[name]-[hash]',
     };
-    if (isREPL) {
+    if (target === 'repl') {
       define.IS_REPL = 'true';
       entryPoints.push(path.join(__dirname, '..', 'python_repl', 'python.worker.ts'));
       hashThings = {};
+    }
+    else if (target === 'game') {
+      define.IS_GAME = 'true';
+      entryPoints.push(path.join(__dirname, '..', 'game', 'game.worker.ts'));
+      entryPoints.push(path.join(__dirname, '..', 'game', 'game-iframe.ts'));
     }
     const server = await esbuild.build({
       bundle: true,
@@ -60,6 +69,7 @@ async function getFileForURL(url, entryPoint, isREPL) {
       entryPoints,
       loader: {
         '.woff': 'file',
+        '.ogg': 'file',
         '.svg': 'file',
         '.py': 'text',
       },

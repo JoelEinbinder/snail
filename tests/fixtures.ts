@@ -326,7 +326,7 @@ export const test = _test.extend<{
     close();
   }, { scope: 'worker' }],
   replURL: [async ({}, use) => {
-    const {url, close} = await createDevServer(undefined, true);
+    const {url, close} = await createDevServer(undefined, 'repl');
     await use(url);
     close();
   }, { scope: 'worker' }],

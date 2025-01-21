@@ -138,7 +138,7 @@ async function makeReplShellHandler(sendEvent: (eventName: string, data: any) =>
   worker.addEventListener('message', event => {
     transport.onmessage(event.data);
   });
-  for (const event of ['Runtime.consoleAPICalled', 'Runtime.executionContextCreated', 'Runtime.exceptionThrown', 'Shell.notify', 'Shell.cwdChanged'])
+  for (const event of ['Runtime.consoleAPICalled', 'Runtime.executionContextCreated', 'Runtime.exceptionThrown', 'Shell.notify'])
     workerRPC.on(event as never, data => sendEvent(event, data));
   
   type Handler = {

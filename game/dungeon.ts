@@ -1,6 +1,8 @@
 import { JoelEvent } from "../slug/cdp-ui/JoelEvent";
 import { createPokemon, forceLevelUp } from "./battle/battle/js/logic";
 import { moves } from './battle/battle/js/moves';
+const fast = new URL(self.location.href).host.includes('fast');
+
 const neighbors_house: DungeonDescriptor = {
   type: 'directory',
   children: {
@@ -384,6 +386,10 @@ class LiveDungeon {
 }
 
 async function writeTextSlowly(text:string, stdout, stdin?: JoelEvent<string>) {
+  if (fast) {
+    stdout.write(text);
+    return;
+  }
   let skipping = false;
   stdin?.once().then(() => skipping = true);
   for (const char of text) {

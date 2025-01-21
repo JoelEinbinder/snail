@@ -2,6 +2,7 @@ import { items } from './battle/js/items';
 import './css/style.css';
 import {gamescreen, initGameScreen} from './gamescreen';
 import { battleState, drawBattleGUI, setBattleMode, startBattle } from './gui';
+document.body.classList.toggle('battle');
 function redraw(){
     draw();
     window.requestAnimationFrame(redraw);
@@ -13,7 +14,6 @@ initGameScreen();
 gamescreen.classList.add("loaded");
 redraw();
 const { player, enemy, items: playerItems } = await snail.waitForMessage<{player: Pokemon, enemy: Pokemon, items: { [key: string] : number }}>();
-console.log(player, enemy);
 battleState.self.party.push(player);
 const opponent = {
     items: new Map(),

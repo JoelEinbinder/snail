@@ -8,9 +8,12 @@ export interface IHostAPI {
   type(): string;
 }
 declare var IS_REPL: boolean|undefined;
+declare var IS_GAME: boolean|undefined;
 function makeHostAPI(): IHostAPI {
   if (typeof IS_REPL !== 'undefined' && IS_REPL)
     return new REPLHost();
+  if (typeof IS_GAME !== 'undefined' && IS_GAME)
+    return new GameHost();
   if ('electronAPI' in window)
     return window['electronAPI'] as IHostAPI;
   if ('acquireVsCodeApi' in window) {
@@ -88,7 +91,8 @@ function makeHostAPI(): IHostAPI {
     window['webkit_callback'] = callback;
     return host;
   }
-  return new GameHost();
+
+  throw new Error('no host found');
 }
 
 function hostApiHelper(type: string, postMessage: (message: any) => void) {

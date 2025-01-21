@@ -2,11 +2,11 @@ import type { IHostAPI } from '../src/host';
 import type { ShellHost } from '../host/ShellHost';
 import { ClientMethods } from '../src/JSConnection';
 import { RPC, type Transport } from '../slug/protocol/RPC-ts';
-import makeWorker from 'worker-loader!./game.worker';
 import { preprocessTopLevelAwaitExpressions } from './top-level-await';
 import doorbell from './trick-or-treat/Sound_Effect_-_Door_Bell.ogg'
+import gameIframe from './game-iframe.html';
 const sounds = {
-  doorbell: new Audio(doorbell),
+  doorbell: new Audio(new URL(doorbell, import.meta.url).href),
 };
 export class GameHost implements IHostAPI {
   private _game: Game = new Game((eventName, events) => {
@@ -29,7 +29,7 @@ export class GameHost implements IHostAPI {
   }
   type(): string {
     return 'game';
-  }  
+  }
 }
 type ShellHostInterface = {
   [Key in keyof ShellHost]?: (params: Parameters<ShellHost[Key]>[0]) => Promise<ReturnType<ShellHost[Key]>>;
@@ -47,6 +47,15 @@ class Game implements ShellHostInterface {
       bootstrapPath: '',
       nodePath: '',
     }
+  }
+  async reportTime(params: { name: string; }) {
+  }
+  async loadItem(params: { key: string; }): Promise<any> {
+    return JSON.parse(localStorage.getItem('snail_game_' + params.key) || 'null');
+  }
+  async saveItem(params: { key: string; value: any }) {
+    localStorage.setItem('snail_game_' + params.key, JSON.stringify(params.value));
+    return 0;
   }
   async sendMessageToWebSocket({socketId, message}: { socketId: number; message: { method: string; params: any; id: number; }; }): Promise<void> {
     const shell = this._shells.get(socketId);
@@ -78,7 +87,7 @@ class Game implements ShellHostInterface {
   async close() { }
   async beep() { }
   async urlForIFrame(params: {shellIds: number[], filePath: string}) {
-    const url = new URL('game-iframe.html', self.location.href);
+    const url = new URL(gameIframe, import.meta.url);
     url.searchParams.set('game', '1');
     url.searchParams.set('iframe', params.filePath);
     return url.href;
@@ -90,7 +99,11 @@ type ShellHandler = {
 let bytes = parseInt(localStorage.getItem('snail_game_bytes') || '0');
 let lastStreamId = 0;
 function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void): ShellHandler {
-  const worker = makeWorker();
+  const url = new URL('../game/game.worker.js', import.meta.url);
+  let lastPreviewToken = 0;
+  let bootstrapFunctionId: number|null = null;
+  const previewResults = new Map<number, any>();
+  const worker = new Worker(url.href, {type: 'module'});
   const transport: Transport = {
     send(message) {
         worker.postMessage(message);
@@ -98,9 +111,19 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
   };
   const workerRPC = new RPC(transport);
   worker.addEventListener('message', event => {
+    if (event.data.method === 'Shell.notify') {
+      const { previewToken } = event.data.params.payload.params;
+      if (previewToken) {
+        const notifications = previewResults.get(previewToken);
+        if (notifications) {
+          notifications.push(event.data.params.payload);
+          return;
+        }
+      }
+    }
     transport.onmessage(event.data);
   });
-  for (const event of ['Runtime.consoleAPICalled', 'Runtime.executionContextCreated', 'Runtime.exceptionThrown', 'Shell.notify', 'Shell.cwdChanged'])
+  for (const event of ['Runtime.consoleAPICalled', 'Runtime.executionContextCreated', 'Runtime.exceptionThrown', 'Shell.notify'])
     workerRPC.on(event as never, data => sendEvent(event, data));
   
   workerRPC.on('Game.setBytes' as never, data => {
@@ -117,10 +140,55 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
       await workerRPC.send('Runtime.enable', {});
       const {result: {objectId}} = await workerRPC.send('Runtime.evaluate', {
         expression: `bootstrap(${JSON.stringify(params.args)}, ${JSON.stringify({ bytes })})`,
-        returnByValue: false,
+        awaitPromise: true,
       });
-    
-      return { objectId };
+      bootstrapFunctionId = objectId;
+      await workerRPC.send('Runtime.callFunctionOn', {
+        objectId: bootstrapFunctionId,
+        functionDeclaration: `function(data) { return this(data); }`,
+        awaitPromise: true,
+        arguments: [{
+          value: {method: 'reset'}
+        }]
+      });
+    },
+    'Shell.resize': async (params) => {
+    },
+    'Shell.input': async ({data, id}) => {
+      await workerRPC.send('Runtime.callFunctionOn', {
+        objectId: bootstrapFunctionId,
+        functionDeclaration: `function(data) { return this(data); }`,
+        awaitPromise: true,
+        arguments: [{
+          value: {method: 'input', params: {data, id}}
+        }]
+      });
+  
+    },
+    'Protocol.abort': async params => {
+    },
+    'Shell.previewShellCommand': async ({command}) => {
+      const previewToken = ++lastPreviewToken;
+      const notifications = [];
+      // const abort = () => workerRPC.send('Runtime.evaluate', {
+      //   expression: `global._abortPty(${JSON.stringify(previewToken)})`,
+      //   returnByValue: true,
+      //   generatePreview: false,
+      // }).catch(e => e);
+      // signal.addEventListener('abort', abort);
+      previewResults.set(previewToken, notifications);
+      const result = await workerRPC.send('Runtime.evaluate', {
+        expression: `self.pty(${JSON.stringify(command)}, ${JSON.stringify(previewToken)})`,
+        awaitPromise: true,
+        returnByValue: false,
+        generatePreview: true,
+        userGesture: true,
+        replMode: true,
+        allowUnsafeEvalBlockedByCSP: true,
+      });
+      // signal.removeEventListener('abort', abort);
+      previewResults.delete(previewToken);
+      return {result, notifications};
     },
     'Shell.evaluate': async ({code}) => {
       const expression = `__getResult__(${JSON.stringify(code)})`;
@@ -136,9 +204,38 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
         throw new Error(exceptionDetails.exception.description);
       return result.value;
     },
+    'Shell.previewExpression': async ({expression, language}) => {
+      if (language === 'javascript' || language === 'shjs') {
+        const result = await workerRPC.send('Runtime.evaluate', {
+          expression,
+          replMode: true,
+          returnByValue: false,
+          generatePreview: true,
+          userGesture: true,
+          allowUnsafeEvalBlockedByCSP: true,
+          throwOnSideEffect: (/^[\.A-Za-z0-9_\s]*$/.test(expression) && !expression.includes('debugger')) ? false : true,
+          timeout: 1000,
+          objectGroup: 'eager-eval',
+        });
+        void workerRPC.send('Runtime.releaseObjectGroup', {
+          objectGroup: 'eager-eval',
+        });
+        if (result.exceptionDetails) {
+          if (result.exceptionDetails?.exception?.className === 'SyntaxError')
+            return null;
+          if (result.exceptionDetails?.exception?.className === 'EvalError')
+            return null;
+          if (result.exceptionDetails?.exception?.className === 'ReferenceError')
+            return null;
+        }
+        return result.exceptionDetails ? result.exceptionDetails.exception : result.result;
+      } else {
+        throw new Error('Unsupported preview language: ' + language);
+      }
+    },
+  
 
   'Shell.evaluateStreaming': async (params) => {
-    console.log(params);
     const streamId = ++lastStreamId;
     const { code } = params;
     // make sure the streamId is sent before any evaluateStreamData comes in.
@@ -157,7 +254,7 @@ function makeGameShellHandler(sendEvent: (eventName: string, data: any) => void)
     }, 0);
     return { streamId };
   },
-    'Shell.runCommand': async ({command, expression}) => {
+  'Shell.runCommand': async ({command, expression}) => {
       let transformedExpression =  expression;
       if (expression.includes('await')) {
         try {

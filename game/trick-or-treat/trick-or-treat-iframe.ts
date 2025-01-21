@@ -4,10 +4,9 @@ export {};
 import door1 from './door1.png';
 import door2 from './door2.png';
 const images = [];
-console.log({door1, door2, images});
 for (const src of [door1, door2]) {
   const image = new Image();
-  image.src = src;
+  image.src = new URL(src, import.meta.url).href;
   image.height = 300;
   images.push(image);
 }

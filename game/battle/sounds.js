@@ -32,7 +32,7 @@ function loadSound(sound) {
     if (!soundURLS[sound])
         throw new Error(`Sound ${sound} not found`);
     var s = new Audio();
-    s.src = soundURLS[sound];
+    s.src = new URL(soundURLS[sound], import.meta.url).href;
     s.preload = "auto";
     var channels = [s];
     for (var i = 0; i < NUM_CHANNELS - 1; i++)

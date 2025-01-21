@@ -4,7 +4,7 @@ const objectGroups = new Map<string, Set<string>>();
 const objects = new Map<string, any>();
 let lastObjectId = 0;
 type ProtocolInterface = {
-  [Key in keyof ClientMethods]?: (params: Parameters<ClientMethods[Key]>[0], dispatch: (message: {method: string, params: any}) => void) => Promise<ReturnType<ClientMethods[Key]>>;
+  [Key in keyof ClientMethods]?: (params: Parameters<ClientMethods[Key]>[0], dispatch: (message: { method: string, params: any }) => void) => Promise<ReturnType<ClientMethods[Key]>>;
 };
 export const runtimeHandler: ProtocolInterface = {
   async 'Runtime.evaluate'(params) {
@@ -40,7 +40,11 @@ export const runtimeHandler: ProtocolInterface = {
     } catch (error) {
       return {
         result: { type: 'undefined' },
-        exceptionDetails: { exceptionId: 0, text: '', lineNumber: 0, columnNumber: 0, exception: { type: 'object', description: error.toString() } }
+        exceptionDetails: {
+          exceptionId: 0, text: '', lineNumber: 0, columnNumber: 0, exception: {
+            type: 'object', description: error.toString(), className: error?.constructor?.name
+          }
+        }
       };
     }
   },
@@ -62,7 +66,7 @@ export const runtimeHandler: ProtocolInterface = {
             name, value: makeRemoteObject(obj[name], generatePreview), configurable: false, enumerable: true
           });
           seen.add(name);
-        } catch(e) { }
+        } catch (e) { }
       }
       if (ownProperties)
         obj = null;
@@ -105,13 +109,13 @@ export const runtimeHandler: ProtocolInterface = {
       console.error(params, error);
       return {
         result: { type: 'undefined' },
-        exceptionDetails: { exceptionId: 0, text: '', lineNumber: 0, columnNumber: 0, exception: { type: 'object', description: error.toString() } }
+        exceptionDetails: { exceptionId: 0, text: '', lineNumber: 0, columnNumber: 0, exception: { type: 'object', description: error.toString(), className: error?.constructor?.name } }
       };
     }
   },
   async 'Runtime.releaseObject'(params) {
     relaseObject(params.objectId);
-    return { };
+    return {};
   },
   async 'Runtime.releaseObjectGroup'(params) {
     const group = objectGroups.get(params.objectGroup);;
@@ -161,7 +165,7 @@ function subtypeOfObject(value) {
     return 'array';
   return undefined;
 }
-function makeRemoteObject(value, generatePreview=false): Protocol.Runtime.RemoteObject {
+function makeRemoteObject(value, generatePreview = false): Protocol.Runtime.RemoteObject {
   if (value === null || !['object', 'function', 'symbol'].includes(typeof value))
     return serializeValue(value);
   const id = String(++lastObjectId);
@@ -187,12 +191,12 @@ function serializeValue(value): Protocol.Runtime.RemoteObject {
   }
 }
 
-export function hookConsole(dispatch: (message: {method: string, params: any}) => void) {
+export function hookConsole(dispatch: (message: { method: string, params: any }) => void) {
   console.log = makeConsoleHook('log');
   console.error = makeConsoleHook('error');
   console.warn = makeConsoleHook('warning');
   console.debug = makeConsoleHook('debug');
-  console.info = makeConsoleHook('info');  
+  console.info = makeConsoleHook('info');
 
   function makeConsoleHook(type: Protocol.Runtime.consoleAPICalledPayload['type']) {
     return (...args) => {
