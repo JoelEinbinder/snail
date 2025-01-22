@@ -5,6 +5,7 @@ dist
 /esout
 /repl_out
 /slug-out
+/game_out
 
 /test-results/
 /playwright-report/
