@@ -231,13 +231,14 @@ const builtins = {
             // throttle if we are in side effect mode
             await new Promise(x => setTimeout(x, 250));
             if (signal.aborted)
-                return;
+                return 1;
         }
         const {link, title} = await joelSearch(env.SNAIL_SEARCH_PREFIX, query, signal);
 
         if (noSideEffects) {
             stdout.write(`${title} - ${link}\n`);
-            return 0;
+            // 82 is the code for an uncachable result
+            return 82;
         }
         process.stdout.write(`\x1b\x1aB${link}\x00`);
         return 0;

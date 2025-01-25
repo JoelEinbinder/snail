@@ -109,6 +109,7 @@ export class Shell {
   private _language = new JoelEvent<Language>(shellLanguages[0]);
   private _prompt: Editor|null = null;
   private _commandPrefix: Element|null = null;
+  private _tryToTransferPreview: null|((command: string) => null|Protocol.Runtime.evaluateReturnValue) = null; 
   constructor(private _delegate: ShellDelegate) {
     console.time('create shell');
     host.notify({ method: 'reportTime', params: {name: 'start create shell' } });
@@ -206,7 +207,7 @@ export class Shell {
           console.error('terminal already exists', id);
         const sendInputToThisTerminal = (data: string) => {
           return sendInput({data, id});
-        }    
+        };
         const unlockPrompt = shouldLockPrompt ? this._lockPrompt('startTerminal ' + id) : () => void 0;
         let activeTerminalBlock: TerminalBlock = null;
         let activeIframeBlock: IFrameBlock = null;
@@ -784,6 +785,7 @@ export class Shell {
     if (!command)
       return;
     this._setActiveCommandBlock(commandBlock);
+    const transferResult = this._tryToTransferPreview?.(command);
     const unlockPrompt = this._lockPrompt('runCommand');
     this._activeItem.dispatch(commandBlock);
     const updateHistory = await this._addToHistory(command, language);
@@ -793,7 +795,7 @@ export class Shell {
     const connection = this.connection;
     this._clearCache();
     const beforeCwd = connection.cwd;
-    const result: ReturnType<ExtraClientMethods['Shell.runCommand']> = await connection.send('Shell.runCommand', {
+    const result: ReturnType<ExtraClientMethods['Shell.runCommand']> = transferResult || await connection.send('Shell.runCommand', {
       expression,
       command,
       language,
@@ -1140,18 +1142,21 @@ export class Shell {
     element.appendChild(belowPrompt);
     let abortController = new AbortController();
     let lastPreviewValue = '';
-    let belowPromptItems = [];
-    function clearBelowPrompt() {
+    let belowPromptItems: LogItem[] = [];
+    const clearBelowPrompt = () => {
       willResizeEvent.dispatch();
       belowPrompt.textContent = '';
       for (const item of belowPromptItems)
         item.dispose();
       belowPromptItems = [];
+      this._tryToTransferPreview = null;
     }
     let dontCancelLLM = false;
     const onChange = wrapAsyncFunction('shell preview', async () => {
-      if (this._language.current === 'bash')
+      if (this._language.current === 'bash') {
+        clearBelowPrompt();
         return;
+      }
       if (!dontCancelLLM)
         this._delegate.cancelLLMRequest();
       const value = autocomplete.valueWithSuggestion();
@@ -1178,7 +1183,11 @@ export class Shell {
         await new Promise(requestAnimationFrame);
         if (signal.aborted)
           return;
-        if (result.result?.type !== 'string' || result.result.value !== 'this is the secret secret string:0') {
+        const exitCode = result.result?.type === 'string' ?
+          parseInt(result.result.value.substring('this is the secret secret string:'.length)) :
+          1;
+        // 82 to match the exit code of an uncachable command
+        if (exitCode !== 0 && exitCode !== 82) {
           clearBelowPrompt();
           return;
         }
@@ -1214,7 +1223,19 @@ export class Shell {
           const element = item.render();
           if (element)
             newDiv.appendChild(element);
+          item?.wasShown();
         }
+        this._tryToTransferPreview = (command: string) => {
+          if (command !== value)
+            return null;
+          if (exitCode !== 0)
+            return null;
+          for (const item of belowPromptItems)
+            this.addItem(item);
+          belowPromptItems = [];
+          clearBelowPrompt();
+          return result;
+        };
         didDraw();
         await flickerPromise;
         newDiv.style.removeProperty('visibility');

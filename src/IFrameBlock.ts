@@ -429,6 +429,12 @@ export class IFrameBlock implements LogItem {
       this._webContentView.postMessage(message);
   }
 
+  wasTransferred(): void {
+    // TODO this is unecessary for browser views, but we don't have any of those in previews
+    // TODO use Node.moveBefore if available to preserve iframe state
+    this.refresh();
+  }
+
   async serializeForTest(): Promise<any> {
     if (this._lastHeight === 0 && !this._isFullscreen)
       return null;

@@ -20,6 +20,7 @@ export interface LogItem extends Findable {
   isFullscreen?(): boolean;
   onScroll?(): void;
   wasShown?(): void;
+  wasTransferred?(): void;
   willHide?(): void;
   aysncActions?(): Promise<Action[]>;
   recieveFilePath?(filePath: string): void;

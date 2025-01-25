@@ -154,9 +154,10 @@ export class TerminalBlock implements LogItem {
   }
 
   wasShown(): void {
-    // the terminal size is delayed for the resize event to work
-    // but if its shown when the tab is not visible, it will get a height
-    // of 0px. So to fix that whenever the tab is shown we re-run willResize.
+    // hack to ensure the terminal measures itself
+    // there is code in xterm that uses an intersection observer
+    // but we disable it and just run the measure code here immediately
+    (this._terminal as any)._core._charSizeService.measure();
     this._willResize();
   }
 

@@ -203,6 +203,7 @@ export class LogView implements Block, ShellDelegate, Findable {
         this._lockScroll();
     });
     this._lockScroll();
+    const wasConnected = element.isConnected;
     if (parent) {
       const parentWrapper = this._itemToElement.get(parent);
       parentWrapper.appendChild(element);
@@ -215,6 +216,10 @@ export class LogView implements Block, ShellDelegate, Findable {
       else
         this._scroller.appendChild(element);
     }
+    if (wasConnected)
+      item?.wasTransferred?.();
+    else
+      item.wasShown?.();
     this._itemToRetainers.set(item, new Set([item]));
     if (item === this._activeItem)
       item.focus();
