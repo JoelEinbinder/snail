@@ -1223,7 +1223,7 @@ export class Shell {
           const element = item.render();
           if (element)
             newDiv.appendChild(element);
-          item?.wasShown();
+          item?.wasShown?.();
         }
         this._tryToTransferPreview = (command: string) => {
           if (command !== value)
