@@ -1,7 +1,6 @@
 //@ts-check
 const { EventEmitter } = require('stream');
 const {setAlias, getAliases, setBashState, setBashFunctions} = require('../shjs/index');
-const path = require('path');
 const child_process = require('child_process');
 
 class Shell extends EventEmitter {
@@ -108,14 +107,17 @@ class Shell extends EventEmitter {
   }
 
   async flushStdin() {
-    const stdinEndToken = String(Math.random()) + '\n';
-    this._process.send({method: 'fush-stdin', params: {stdinEndToken}});
-    this.write(stdinEndToken);
-    return Promise.race([
-      this.closePromise.then(() => ({data: ''})),
+    this._stream.setRawMode(true);
+    const stdinEndToken = String('fstdin' + Math.random()) + '\n';
+    this._process.send({method: 'flush-stdin', params: {stdinEndToken}});
+    this._stream.write(stdinEndToken);
+    /** @type {string} */
+    const output = await Promise.race([
+      this.closePromise.then(() => ''),
       new Promise(x => this._process.once('message', x)),
     ]);
-
+    this._stream.setRawMode(false);
+    return output;
   }
 }
 

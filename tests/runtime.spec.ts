@@ -94,3 +94,22 @@ test('should still work after a syntax error', async ({ runtime }) => {
     expect(await runtime.pty('&', 1), 'this is the secret secret string:1');
     expect(await runtime.pty('echo foo'), 'this is the secret secret string:0');
 });
+
+
+test('pty should have clean stdout after stdin', async ({runtime}) => {
+    runtime.setNotify(method => {
+        if (method === 'startTerminal')
+            runtime.respond({method: 'input', params: { data: '\u0003'}});
+    });
+    await runtime.pty('sleep 1');
+    const datas: string[] = [];
+    runtime.setNotify((method, params) => {
+        if (method === 'data')
+            datas.push((params as {data: string}).data);
+    });
+    await runtime.pty('echo hello');
+    expect(datas.join('').split('\r\n')).toEqual([
+        'hello',
+        '',
+    ]);
+});

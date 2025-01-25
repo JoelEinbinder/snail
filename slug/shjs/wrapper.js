@@ -5,8 +5,7 @@ takeControl(process.stdout.fd);
 process.stdin.pause();
 process.on('message', async (/** @type {any} */ event) => {
   const {method, params} = event;
-  if (method === 'fush-stdin') {
-
+  if (method === 'flush-stdin') {
     const leftoverData = await new Promise(resolve => {
       let buffer = '';
       process.stdin.resume();
