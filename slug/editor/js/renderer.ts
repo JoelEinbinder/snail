@@ -734,6 +734,8 @@ class Layer {
   private _translation = { x: 0, y: 0 };
   constructor(private _draw: (ctx: CanvasRenderingContext2D, rect: Rect[]) => void) {
     this.canvas.style.setProperty('font-kerning', 'none');
+    this.canvas.height = 0;
+    this.canvas.width = 0;
   }
 
   refresh() {

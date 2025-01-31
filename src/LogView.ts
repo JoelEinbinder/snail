@@ -18,6 +18,12 @@ import { FakeScrollBar } from './FakeScrollBar';
 import { sendStreamingCommandToHost } from './host';
 
 declare var IS_REPL: boolean|undefined;
+declare global {
+  interface Node {
+    moveBefore?<T extends Node>(node: T, child: Node | null): T;
+  }
+}
+
 export class LogView implements Block, ShellDelegate, Findable {
   private _element = document.createElement('div');
   private _scroller = document.createElement('div');
@@ -204,20 +210,30 @@ export class LogView implements Block, ShellDelegate, Findable {
     });
     this._lockScroll();
     const wasConnected = element.isConnected;
+    const hasMoveBefore = !!element.moveBefore;
     if (parent) {
       const parentWrapper = this._itemToElement.get(parent);
-      parentWrapper.appendChild(element);
+      if (wasConnected && hasMoveBefore)
+        parentWrapper.moveBefore(element, null);
+      else
+        parentWrapper.appendChild(element);
+      
       this._itemToParent.set(item, parent);
       this.addRetainer({item, parent});
     } else {
       const promptElement = this._prompt?.render();
-      if (promptElement && promptElement.parentElement === this._scroller)
-        this._scroller.insertBefore(element, this._prompt.render());
-      else
+      if (promptElement && promptElement.parentElement === this._scroller) {
+        if (wasConnected && hasMoveBefore) {
+          this._scroller.moveBefore(element, promptElement);
+        } else {
+          this._scroller.insertBefore(element, promptElement);
+        }
+      } else {
         this._scroller.appendChild(element);
+      }
     }
     if (wasConnected)
-      item?.wasTransferred?.();
+      !hasMoveBefore && item?.wasTransferred?.();
     else
       item.wasShown?.();
     this._itemToRetainers.set(item, new Set([item]));

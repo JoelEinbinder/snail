@@ -2,6 +2,7 @@
 .editor-line {
   display: flex;
   flex-direction: row;
+  min-height: 20px;
 }
 .command > .prefix {
   cursor: pointer;

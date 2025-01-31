@@ -13,6 +13,7 @@ if (headless)
 if (process.env.SNAIL_TEST_USER_DATA_DIR)
   app.setPath('userData', process.env.SNAIL_TEST_USER_DATA_DIR);
 app.setName('snail');
+app.commandLine.appendSwitch('enable-features', 'AtomicMoveAPI');
 const isDevMode = process.argv.includes('--dev-mode');
 
 if (isDevMode && os.platform() == 'darwin') {
