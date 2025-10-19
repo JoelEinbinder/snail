@@ -443,6 +443,32 @@ export class Shell {
         return;
       this.addItem(new JSLogBlock(message, connection, this._size));
     });
+    connection.on('Runtime.inspectRequested', async message => {
+      if (message.hints.copyToClipboard) {
+        async function getStrToCopy() {
+          if (!message.object.objectId)
+            return String(message.object.value);
+          const out = await connection.send('Runtime.callFunctionOn', {
+            objectId: message.object.objectId,
+            functionDeclaration: 'function() { return JSON.stringify(this); }',
+          });
+          if (out.result.value)
+            return out.result.value;
+          return message.object.description;
+        }
+        navigator.clipboard.writeText(await getStrToCopy());
+      } else {
+        this.addItem(new JSLogBlock({
+          type: 'error',
+          args: [{
+            type: 'string',
+            value: `Inspection ${JSON.stringify(message.hints)} not supported yet`,
+          }],
+          executionContextId: message.executionContextId,
+          timestamp: Date.now(),
+        }, connection, this._size));
+      }
+    });
     connection.on('Shell.askPassword', ({ id, message}) => {
       const item = new AskPasswordBlock(message, password => {
         connection.send('Shell.providePassword', { id, password });
@@ -687,6 +713,42 @@ export class Shell {
         accessorPropertiesOnly: false,
       });
       const globalNames = result.filter(x => !x.symbol).map(x => x.name);
+      // devtools command line api
+      globalNames.push(
+        // console api are already present with console.*
+        // 'dir',
+        // 'dirxml',
+        // 'profile',
+        // 'profileEnd',
+        // 'clear',
+        // 'table',
+
+        // these work but who needs them with Object.*
+        // 'keys',
+        // 'values',
+
+        // debug api not useful until we can pause
+        // 'debug',
+        // 'undebug',
+
+        // monitor doesn't seem to work
+        // 'monitor',
+        // 'unmonitor',
+
+        // inspet not useful until we can select objects
+        // 'inspect',
+        
+        'copy',
+
+        // not supported yet
+        // 'queryObjects',
+        // '$_',
+        // '$0',
+        // '$1',
+        // '$2',
+        // '$3',
+        // '$4',
+      );
       this._cachedGlobalVars = new Set(names.concat(globalNames));
       return this._cachedGlobalVars;
     } catch (e) {

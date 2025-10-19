@@ -134,6 +134,7 @@ const handler = {
         userGesture: true,
         replMode: true,
         allowUnsafeEvalBlockedByCSP: true,
+        includeCommandLineAPI: true,
       });
     } else if (language === 'python') {
       lastCommandPromise = getOrCreatePythonController().runCommand(expression);
@@ -229,6 +230,7 @@ const handler = {
         throwOnSideEffect: /^[\.A-Za-z0-9_\s]*$/.test(expression) ? false : true,
         timeout: 1000,
         objectGroup: 'eager-eval',
+        includeCommandLineAPI: true,
       });
       void send('Runtime.releaseObjectGroup', {
         objectGroup: 'eager-eval',
