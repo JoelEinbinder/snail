@@ -77,3 +77,79 @@ test('show a progress bar between some logs', async ({ shell, populateFilesystem
     prompt: { value: '' }
   })
 });
+test('full screen content', async ({ shell, populateFilesystem, workingDir, headless }) => {
+  await populateFilesystem({
+    'backend.js': `
+      const sdk = require(${JSON.stringify(require.resolve('../slug/sdk'))});
+      sdk.display(${JSON.stringify(path.join(workingDir, 'web.ts'))});
+      const rpc = sdk.makeRPC({
+        async save({file, content}) {
+          await fs.promises.writeFile(file, content);
+        },
+        async close(x) {
+          console.log('closing');
+          process.exit();
+        }
+      });
+      rpc.notify('setContent', {
+        content: 'content from the backend',
+      });
+    `,
+    'web.ts': `
+      document.body.textContent = 'This is some full screen content. Press any key to exit.';
+      snail.setToJSON({ content: '<none>' });
+      snail.setIsFullscreen(true);
+      document.body.addEventListener('keydown', (event) => {
+        if (!event.ctrlKey)
+          return;
+        if (event.code !== 'KeyC')
+          return;
+        lastMessageDone();
+        snail.sendInput(JSON.stringify({ method: 'close' }) + '\\n');
+        // this should be prevented by the user,
+        // but if they dont we shouldnt put ctrl+c into the prompt
+        // event.preventDefault();
+      });
+      window.onfocus = () => {
+        document.body.style.backgroundColor = 'white';
+      };
+      let lastMessageDone = () => void 0;
+      while (true) {
+        const message = await snail.waitForMessage();
+        snail.setToJSON({ message });
+        lastMessageDone();
+        lastMessageDone = snail.expectingUserInput();
+      }
+    `,
+  });
+  await shell.runCommand('node backend.js');
+  expect(await shell.serialize()).toEqual({
+    message: {
+      method: 'setContent',
+      params: { content: 'content from the backend' },
+    },
+  });
+
+  if (headless) {
+    // headless playwright bug where it doesnt send the event to the iframe
+    await shell.page.frames()[1].evaluate(() => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'c',
+        code: 'KeyC',
+        ctrlKey: true,
+        bubbles: true,
+      });
+      document.body.dispatchEvent(event);
+    });
+  } else {
+    await shell.page.keyboard.press('Control+C');
+  }
+  await new Promise(f => setTimeout(f, 200)); // catch bug where stdin was ending up in the prompt
+  expect(await shell.serialize()).toEqual({
+    log: [
+      '> node backend.js',
+      'closing',
+    ],
+    prompt: { value: '' }  });
+});
+

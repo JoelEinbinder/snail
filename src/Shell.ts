@@ -1188,7 +1188,9 @@ export class Shell {
     editorLine.appendChild(editorWrapper);
     const {editor, autocomplete} = makePromptEditor(this, this._language);
     this._prompt = editor;
-    const loc = editor.replaceRange(this._leftoverStdin, { start: { line: 0, column: 0 }, end: { line: 0, column: 0 } });
+    // remove ctrl-c or ctrl-d signals from leftover stdin
+    const filteredLeftoverStdin = this._leftoverStdin.replace(/\x03/g, '').replace(/\x04/g, '');
+    const loc = editor.replaceRange(filteredLeftoverStdin, { start: { line: 0, column: 0 }, end: { line: 0, column: 0 } });
     editor.selections = [{ start: loc, end: loc }];
     this._leftoverStdin = '';
     editorWrapper.appendChild(editor.element);

@@ -63,7 +63,7 @@ class IFrameView implements WebContentView {
     // This will focus the body in the iframe, so try not to disturb things if there is already focus.
     if (this._iframe.ownerDocument.activeElement === this._iframe)
       return;
-    this._iframe.focus();
+    this._iframe.contentWindow.focus();
   }
   postMessage(message: any) {
     this._iframe.contentWindow?.postMessage(message, '*');
