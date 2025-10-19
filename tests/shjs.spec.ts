@@ -586,12 +586,9 @@ describe('kill', () => {
 
 describe('api', () => {
     it('should fail on an unsafe command', async () => {
-        const output = await apiGetResult('rm', true);
-        expect(output).toEqual({
-            code: 1,
-            output: '',
-            stderr: 'shjs: side effect\n',
-        });
+        let error: Error|null = null;
+        await apiGetResult('rm', true).catch(e => error = e);
+        expect((error as Error|null)?.message).toBe('side effect');
     });
     it('should work with a comment line', async () => {
         const output = await apiGetResult('# i am a comment', true);

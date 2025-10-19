@@ -99,19 +99,19 @@ function makeExecutor(platform) {
       if ('executable' in expression) {
         const { redirects } = expression;
         if (noSideEffects && redirects?.length)
-          throw new UserError('side effect');
+          throw new Error('side effect');
         const { executable, args } = processAlias(processWord(expression.executable)[0], expression.args.flatMap(processWord));
         const env = { ...platform.getEnv() };
         if (noSideEffects && expression.assignments?.length)
-          throw new UserError('side effect');
+          throw new Error('side effect');
         for (const { name, value } of expression.assignments || [])
           env[name] = processWord(value)[0];
         if (noSideEffects) {
           const entry = platform.safeExecutables.get(executable);
           if (!entry)
-            throw new UserError('side effect');
+            throw new Error('side effect');
           if (!entry.args.has(undefined) && !entry.args.has(args[0]))
-            throw new UserError('side effect');
+            throw new Error('side effect');
         }
         if (platform.getBashFunctions().includes(executable)) {
           return {
