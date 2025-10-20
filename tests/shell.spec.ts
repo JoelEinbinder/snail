@@ -577,3 +577,49 @@ test('refocus the prompt on enter', async ({ shell }) => {
   await shell.page.keyboard.press('Enter'); 
   expect(await shell.activeFrame().evaluate(() => document.activeElement?.tagName)).toBe('TEXTAREA');
 });
+
+test('can reconnect to a really long command', async ({ shellFactory }) => {
+  const shell1 = await shellFactory();
+  shell1.runCommand('seq 200 && bash -c \'read -p "Yes or no?" yn\'').catch(e => {});
+  await shell1.waitForLine(/Yes or no\?/);
+  expect(await shell1.scrollTop()).toBeGreaterThan(0);
+  await shell1.close();
+
+  const shell2 = await shellFactory();
+  const reconnect = shell2.runCommand('reconnect');
+  await shell2.waitForLine(/Yes or no\?/);
+  await new Promise(x => setTimeout(x, 100));
+  expect(await shell2.scrollTop()).toBeGreaterThan(100);
+  await shell2.page.keyboard.type('y');
+  await shell2.page.keyboard.press('Enter');
+  await reconnect;
+  const serialized = await shell2.serialize();
+  serialized.log[1][0].socketPath = '<redacted>';
+  serialized.log[1][0].task.started = '<redacted>';
+
+  function* seq(n) {
+    for (let i = 1; i <= n; i++)
+      yield String(i);
+  }
+  expect(serialized).toEqual({
+    log: [
+      '> reconnect --list',
+      [{
+        connected: false,
+        socketPath: '<redacted>',
+        task: {
+          command: 'seq 200 && bash -c \'read -p "Yes or no?" yn\'',
+          started: '<redacted>',
+        },
+      }],
+      '> reconnect',
+      Array.from(seq(200)).join('\n') + '\nYes or no?y',
+    ],
+    prompt: {
+      value: '',
+    },
+  });
+  await shell2.runCommand('exit');
+  const shell3 = await shellFactory();
+  expect(await shell3.serialize()).toEqual({ log: [], prompt: { value: '' } })
+});

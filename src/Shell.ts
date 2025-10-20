@@ -109,6 +109,7 @@ export class Shell {
   private _language = new JoelEvent<Language>(shellLanguages[0]);
   private _prompt: Editor|null = null;
   private _commandPrefix: Element|null = null;
+  private _reconnectingCommandBlock: CommandBlock|null = null;
   private _tryToTransferPreview: null|((command: string) => null|Protocol.Runtime.evaluateReturnValue) = null; 
   constructor(private _delegate: ShellDelegate) {
     console.time('create shell');
@@ -550,10 +551,13 @@ export class Shell {
         done();
       },
       reconnect: async (socketPath: string) => {
+        this._reconnectingCommandBlock = this._activeCommandBlock;
         const done = startAsyncWork('reconnect');
         const unlockPrompt = this._lockPrompt('reconnect');
         const reconnectCore = await this._createSubshell(connection, core, { socketPath });
         await this._setupConnectionInner(reconnectCore, [], this._connectionToSSHAddress.get(connection));
+        this._reconnectingCommandBlock = null;
+        this._setActiveCommandBlock(null);
         unlockPrompt();
         done();
       },
@@ -915,8 +919,8 @@ export class Shell {
     if (language !== 'python' || result.result?.type !== 'undefined')
       this._addJSBlock(result, connection, commandBlock);
     this._lastCommandWasNew = isNewCommand;
-    this._setActiveCommandBlock(null);
-    delete this._activeCommandBlock;
+    if (this._reconnectingCommandBlock !== commandBlock)
+      this._setActiveCommandBlock(null);
     unlockPrompt();
     if (beforeCwd !== connection.cwd && await this.evaluate('echo $SNAIL_SHOULD_INVESTIGATE'))
       this._delegate.triggerLLMInvestigation();
