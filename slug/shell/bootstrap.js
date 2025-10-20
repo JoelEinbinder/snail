@@ -1,6 +1,8 @@
 //@ts-check
 const worker_threads = require('node:worker_threads');
 const worker = new worker_threads.Worker(require.resolve('./bootstrapWorker'));
+const { createRequire } = require('module');
+
 worker.on('exit', code => {
   process.exit(code);
 });
@@ -29,6 +31,10 @@ global.sh = sh;
 global.pty = runtime.pty.bind(runtime);
 global._abortPty = runtime.abortPty.bind(runtime);
 
+function updateRequire() {
+  global.require = createRequire(process.cwd() + '/[eval]');
+}
+
 global.bootstrap = (args) => {
   delete global.bootstrap;
   const binding = global.magic_binding;
@@ -44,12 +50,14 @@ global.bootstrap = (args) => {
     const before = process.cwd();
     const returnValue = origChangeDir.apply(this, arguments);
     const after = process.cwd();
-    if (before !== after)
+    if (before !== after) {
+      updateRequire();
       notify('cwd', after);
+    }
 
     return returnValue;
   }
-
+  updateRequire();
   return runtime.respond.bind(runtime);
 };
 
@@ -68,3 +76,4 @@ process.on('uncaughtException', e => {
     return;
   console.error(e);
 });
+

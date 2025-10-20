@@ -623,3 +623,21 @@ test('can reconnect to a really long command', async ({ shellFactory }) => {
   const shell3 = await shellFactory();
   expect(await shell3.serialize()).toEqual({ log: [], prompt: { value: '' } })
 });
+
+test('require a nodejs script', async ({ shell, populateFilesystem }) => {
+  await populateFilesystem({
+    'foo/script.js': `
+      module.exports = { hello: 'world' };
+    `,
+  });
+  await shell.runCommand('cd foo');
+  await shell.runCommand('require("./script.js")');
+  expect((await shell.serialize())).toEqual({
+    log: [
+      '> cd foo',
+      '> require("./script.js")',
+      `{ hello: 'world' }`,
+    ],
+    prompt: { value: '' }
+  });
+});
