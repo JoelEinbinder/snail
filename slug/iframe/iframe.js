@@ -71,6 +71,8 @@ function onMessage(data) {
     } else if (method === 'requestJSON') {
       const json = typeof _toJSON === 'function' ? _toJSON() : _toJSON;
       sendMessageToParent({id, result: {json}});
+    } else if (method === 'restoreFromJSON') {
+      _fromJSON?.(params.json);
     } else if (method === 'setActiveShortcuts') {
       activeShortcuts = params;
     } else if (method === 'requestActions') {
@@ -321,6 +323,11 @@ function setToJSON(toJSON) {
   _toJSON = toJSON;
 }
 
+let _fromJSON;
+function setFromJSON(fromJSON) {
+  _fromJSON = fromJSON;
+}
+
 let myActions;
 let actionCallbacks;
 function setActions(actions) {
@@ -371,6 +378,7 @@ window.snail = {
   attachToCDP,
   openDevTools,
   setToJSON,
+  setFromJSON,
   setActions,
   startAsyncWork,
   expectingUserInput,

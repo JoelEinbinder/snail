@@ -10,6 +10,7 @@ declare var snail: {
   attachToCDP(listener: {onMessage: (message: any, browserViewUUID?: string) => void, onDebuggeesChanged: (debuggees: {[key: string]: import('../../src/CDPManager').DebuggingInfo}) => void}): Promise<(message: any, browserViewUUID?: string) => void>;
   openDevTools(): void;
   setToJSON(toJSON: any | (()=>any)): void;
+  setFromJSON(fromJSON: (json: any) => void): void;
   setActions(actions: import('../../src/actions').Action[] | (()=>import('../../src/actions').Action[])): void;
   startAsyncWork(name?: string): () => void;
   expectingUserInput(name?: string): () => void;

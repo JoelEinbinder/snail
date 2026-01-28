@@ -423,10 +423,24 @@ export class IFrameBlock implements LogItem {
     const cachedMessages = [...this._cachedMessages];
     this._cleanupAsyncWorkIfNeeded();
     this._resetReadyPromise();
+
+    const id = ++this._lastMessageId;
+    const {json} = await new Promise<any>(resolve => {
+      this._messageCallbacks.set(id, resolve);
+      this._webContentView.postMessage({id, method: 'requestJSON'});
+    });
+    this._messageCallbacks.delete(id);
+
     this._webContentView.refresh();
     await this.readyPromise;
     for (const message of cachedMessages)
       this._webContentView.postMessage(message);
+
+    {
+      const id = ++this._lastMessageId;
+      this._webContentView.postMessage({id, method: 'restoreFromJSON', params: {json}});
+      this._messageCallbacks.delete(id);
+    }
   }
 
   wasTransferred(): void {
